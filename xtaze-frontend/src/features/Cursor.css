@@ -1,0 +1,26 @@
+body {
+  background-color: #1b1b1f;
+  cursor: none; /* Hide default cursor */
+}
+
+.cursor-dot {
+  width: 5px;
+  height: 5px;
+  background-color: white;
+  position: fixed;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  z-index: 9999;
+  pointer-events: none;
+}
+
+.cursor-outline {
+  width: 30px;
+  height: 30px;
+  border: 2px solid hsla(0, 0%, 100%, 0.5);
+  position: fixed;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  z-index: 9998;
+  pointer-events: none;
+}

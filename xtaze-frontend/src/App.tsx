@@ -1,20 +1,37 @@
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-
-import Signup from './pages/SignUp';  // Import the Signup component
-import { Toaster } from 'sonner';
-import SignupFormDemo from './pages/SignIn';
-// import la from './components/ui/label';  // Import the Signup component
-// import Login from './pages/Login';    // Import the Login component (you can create this page)
+import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import { Toaster } from "sonner";
+import Login from "./pages/Login";
+import Cursor from "./features/cursor"; // Import custom cursor
+import Signup from "./pages/SignIn";
+import OTPVerification from "./pages/OtpPage";
 
 const App = () => {
-  return (
-    <Router >
-      <Toaster/>
 
+  return (
+    <Router>
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          style: {
+            background: 'rgba(255, 255, 255, 0.1)', 
+            color: '#fff',
+            borderRadius: '12px', 
+            border: '0.1px solid rgba(255, 255, 255, 0.3)', 
+            padding: '16px',
+            backdropFilter: 'blur(10px)', 
+            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)', 
+            transition: 'all 0.3s ease-in-out', 
+          },
+          className: 'premium-toaster backdrop-blur-md',
+        }}
+      />
+
+
+      <Cursor />
       <Routes>
-        <Route path="/" element={<Signup />} />
-        {/* <Route path="/a" element={<la />} /> */}
-        <Route path="/login" element={<SignupFormDemo />} />
+        <Route path="/" element={<Login />} />
+        <Route path="/Signup" element={<Signup />} />
+        <Route path="/Otp" element={<OTPVerification />} />
       </Routes>
     </Router>
   );
