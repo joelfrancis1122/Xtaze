@@ -5,6 +5,9 @@ import Cursor from "./features/cursor"; // Import custom cursor
 import Signup from "./pages/SignIn";
 import OTPVerification from "./pages/OtpPage";
 
+import UploadMusicPage from "./pages/Artist/UploadMusicPage";
+import MusicInterface from "./components/GuestPage";
+import Home from "./pages/User/Home";
 const App = () => {
 
   return (
@@ -32,6 +35,10 @@ const App = () => {
         <Route path="/" element={<Login />} />
         <Route path="/Signup" element={<Signup />} />
         <Route path="/Otp" element={<OTPVerification />} />
+        <Route path="/GuestHome" element={<MusicInterface/>} />
+        <Route path="/uploadTrack" element={<UploadMusicPage />} />
+        <Route path="/Home" element={<Home/>} />
+     
       </Routes>
     </Router>
   );

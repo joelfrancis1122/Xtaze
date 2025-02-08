@@ -41,8 +41,8 @@ const Signup = () => {
     }
 
     try {
-      const response = await axios.post("http://localhost:3000/api/register", formData);
-      toast.success("User registered successfully!", { position: "top-center" });
+      const response = await axios.post("http://localhost:3000/user/register", formData);
+      toast.success("User registered successfully!", { position:"top-right"});
       console.log(response.data, "this is the data");
     } catch (error: any) {
       toast.error(
