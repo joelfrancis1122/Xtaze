@@ -3,7 +3,7 @@ import { useEffect, useState, } from "react";
 import "./AudioPlayer.css"
 import PreviewModal from "../PreviewPage";
 
-import profileImg from "../../../public/spidey.jpeg"; // Adjust the path
+import profileImg from "../../assets/spidey.jpeg"; // Adjust the path
 
 
 export interface Track {

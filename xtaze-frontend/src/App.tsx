@@ -2,7 +2,7 @@ import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import { Toaster } from "sonner";
 import Login from "./pages/Login";
 import Cursor from "./features/cursor"; // Import custom cursor
-import Signup from "./pages/SignIn";
+import Signup from "./pages/SignUp";
 import OTPVerification from "./pages/OtpPage";
 
 import UploadMusicPage from "./pages/Artist/UploadMusicPage";
