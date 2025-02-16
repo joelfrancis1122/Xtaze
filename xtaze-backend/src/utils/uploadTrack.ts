@@ -1,4 +1,3 @@
-// src/services/cloudinaryService.ts
 
 import cloudinary from '../../src/utils/cloudinaryConfig'; // Cloudinary configuration
 import { UploadApiResponse } from 'cloudinary'; // Import Cloudinary response type
