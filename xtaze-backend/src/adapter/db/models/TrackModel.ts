@@ -7,7 +7,7 @@ export interface ITrack extends Document {
   fileUrl: string;
   img: string;
   createdAt: Date;
-  listeners: number;
+  listeners?: number;
   artists: string[]; // Array of artist names
 }
 

@@ -27,29 +27,23 @@ export class GenreUseCase {
     const genre = await this._genreRepository.getGenreById(id);
     if (!genre) {
       throw new Error("Genre not found");
-      return null
     }
 
     // const newStatus = genre.isBlocked==true ? false : true;
     const newStatus = !genre.isBlocked;
     console.log(newStatus, "povunu");
-
     return await this._genreRepository.updateGenreStatus(id, newStatus);
   }
 
 
- async editGenre(id: string, name: string): Promise<IGenre|null> {
+  async editGenre(id: string, name: string): Promise<{ success: boolean, message: string, genre?: IGenre }> {
     console.log("Editing Genre:", id)
-
-    // const genre = await this._genreRepository.getGenreById(id);
-    // if (!genre) {
-    //   throw new Error("Genre not found");
-    // }
-
-    // genre.name = name;   
+    const dupe = await this._genreRepository.findDupe(id, name)
+    if (dupe) {
+      return { success: false, message: "Genre exisists try another name!" }
+    }
     const updatedGenre = await this._genreRepository.editGenre(id, name);
-
-    return updatedGenre;
+    return { success: true, message: "Genre updated Successfully!", genre: updatedGenre ?? undefined }
 
   }
 

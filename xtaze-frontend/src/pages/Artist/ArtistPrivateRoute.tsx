@@ -4,7 +4,7 @@ import { RootState } from "../../store/store";
 
 const ArtistProtectRoute = () => {
     console.log("entha role ")
-  const token = localStorage.getItem("token");
+  const token = localStorage.getItem("artistToken");
   const role = useSelector((state: RootState) => state.artist.signupData?.role);
   console.log(role,"entha role  ")
   if (!token || role !== "artist") {

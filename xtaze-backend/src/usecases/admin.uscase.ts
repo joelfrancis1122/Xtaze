@@ -47,4 +47,19 @@ export default class AdminUseCase{
           admin
         };
       }
+
+      async toggleBlockUnblockArtist(id: string): Promise<IUser | null> {
+    console.log("Artist coming to the toggle");
+    const artist = await this._adminRepository.getArtistById(id);
+    console.log("kittiyo",artist)
+    if (!artist) {
+      throw new Error("Artist not found");
+    }
+  
+    const newStatus = !artist.isActive;
+    console.log(newStatus, "new status");
+  
+    return await this._adminRepository.updateArtistStatus(id, newStatus);
+  }
+  
 }

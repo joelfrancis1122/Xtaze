@@ -48,8 +48,14 @@ export default class GenreController{
     try{
       const {id} = req.params;
       const {name} = req.body;
+
       const editedGenre = await this._genreUseCase.editGenre(id,name);
       console.log(id,"this is the edit id")
+      if (typeof editedGenre === "string") {
+        res.status(400).json({ message: editedGenre });
+        return 
+      }
+  
       res.status(200).json({ success: true, message: "Genre status updated", data: editedGenre });
 
     }catch(error){

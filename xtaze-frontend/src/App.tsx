@@ -21,6 +21,8 @@ import AdminProtectedRoute from "./pages/Admin/AdminPrivateRoute";
 import ArtistLogin from "./pages/Artist/ArtistLogin";
 import ArtistProtectRoute from "./pages/Artist/ArtistPrivateRoute";
 import NotFound from "./pages/404";
+import ArtistUploadTracks from "./pages/Artist/ArtistUploadTracks";
+import ProfilePage from "./pages/User/ProfilePage";
 
 const App = () => {
 
@@ -55,6 +57,7 @@ const App = () => {
             <Route path="/Otp" element={<OTPVerification />} />
             <Route path="/Ghome" element={<MusicInterface />} />
             <Route path="/uploadTrack" element={<UploadMusicPage />} />
+            <Route path="/profile" element={<ProfilePage />} />
             {/* <Route path="/Home" element={<Home/>} /> */}
 
 
@@ -68,6 +71,7 @@ const App = () => {
          
          {/* artist */}
             <Route path="/artist" element={<ArtistLogin />} />
+            <Route path="/artist/releases" element={<ArtistUploadTracks />} />
             {/* <Route path="/artist/dashboard" element={<ArtistDashboard />} /> */}
          
          
@@ -82,7 +86,6 @@ const App = () => {
             <Route element={<UserPrivateRoute />}>
               <Route path="/Home" element={<Home />} />
             </Route>
-
             <Route path="*" element={<NotFound />} />
 
           </Routes>

@@ -2,6 +2,7 @@ import cloudinary from "../../utils/cloudinaryConfig";
 import * as mm from "music-metadata";
 import { Readable } from "stream";
 import { UploadApiResponse } from "cloudinary";
+import { v4 as uuidv4 } from "uuid"; // Import UUID for unique IDs
 
 export interface UploadSongResponse {
   secure_url: string;
@@ -12,7 +13,7 @@ export interface UploadSongResponse {
 }
 export const uploadSongToCloud = async (file: Express.Multer.File): Promise<UploadSongResponse> => {
   try {
-  // buffer to stream for metadata extraction
+    // buffer to stream for metadata extraction
     const stream = new Readable();
     stream.push(file.buffer);
     stream.push(null);
@@ -22,7 +23,7 @@ export const uploadSongToCloud = async (file: Express.Multer.File): Promise<Uplo
     // Extract metadata 
     console.log(metadata.common, "as pic undo")
     const songTitle = metadata.common.title || "Unknown_Title";
-    const artist = metadata.common.artist? [metadata.common.artist].flatMap(g => g.split("/")).map(g => g.trim()).filter(g => g.length > 0): ["Unknown_Artist"];
+    const artist = metadata.common.artist ? [metadata.common.artist].flatMap(g => g.split("/")).map(g => g.trim()).filter(g => g.length > 0) : ["Unknown_Artist"];
     const album = metadata.common.album || "Unknown_Album";
     const genre = metadata.common.genre ? metadata.common.genre.flatMap(g => g.split("/")).map(g => g.trim()).filter(g => g.length > 0) : ["Unknown_Genre"];
     console.log("📀 Extracted Metadata:", { songTitle, artist, album, genre });
@@ -31,12 +32,12 @@ export const uploadSongToCloud = async (file: Express.Multer.File): Promise<Uplo
 
 
     console.log("🚀 Uploading song to Cloudinary...");
-  
+
     const folderName = file.originalname
-    .replace(/\.[^/.]+$/, "") // Remove file extension
-    .replace(/[^a-zA-Z0-9_-]/g, "_") // Replace special characters with "_"
-    .trim();
-  
+      .replace(/\.[^/.]+$/, "") // Remove file extension
+      .replace(/[^a-zA-Z0-9_-]/g, "_") // Replace special characters with "_"
+      .trim();
+
     //  large chunk size (10MB) for speed
     const uploadedSong = await new Promise<UploadApiResponse>((resolve, reject) => {
       cloudinary.uploader.upload_stream(
@@ -45,9 +46,9 @@ export const uploadSongToCloud = async (file: Express.Multer.File): Promise<Uplo
           folder: `xtaze/music/${folderName}`,
           public_id: "song",
           context: { artist: artist.join(", "), album, genre: genre.join(", ") },
-          chunk_size: 6000000, 
+          chunk_size: 6000000,
           eager: [],
-          invalidate: true, 
+          invalidate: true,
         },
         (error, result) => (error ? reject(error) : resolve(result as UploadApiResponse))
       ).end(file.buffer);
@@ -70,17 +71,17 @@ export const uploadSongToCloud = async (file: Express.Multer.File): Promise<Uplo
 
 export const uploadImageToCloud = async (file: Express.Multer.File): Promise<UploadApiResponse> => {
   const folderName = file.originalname
-  .replace(/\.[^/.]+$/, "") 
-  .replace(/[^a-zA-Z0-9_-]/g, "_") 
-  .trim();
+    .replace(/\.[^/.]+$/, "")
+    .replace(/[^a-zA-Z0-9_-]/g, "_")
+    .trim();
 
-  console.log("Uploading image to folder:", folderName); 
+  console.log("Uploading image to folder:", folderName);
 
   return new Promise((resolve, reject) => {
     cloudinary.uploader.upload_stream(
       {
         resource_type: "image",
-        folder: `xtaze/music/${folderName}`, 
+        folder: `xtaze/music/${folderName}`,
         public_id: "cover"
       },
       (error, result) => {
@@ -90,6 +91,38 @@ export const uploadImageToCloud = async (file: Express.Multer.File): Promise<Upl
         } else {
           console.log("Image uploaded:", result);
           resolve(result as UploadApiResponse);
+        }
+      }
+    ).end(file.buffer);
+  });
+};
+
+
+
+export const uploadProfileCloud = async (file: Express.Multer.File): Promise<UploadApiResponse> => {
+  const folderName = file.originalname
+    .replace(/\.[^/.]+$/, "") // Remove file extension
+    .replace(/[^a-zA-Z0-9_-]/g, "_") // Replace special characters with "_"
+    .trim();
+  const uniqueName = `${file.originalname.replace(/\.[^/.]+$/, "")}_${uuidv4()}`;
+  console.log("Uploading profile picture to folder:", folderName);
+
+  return new Promise((resolve, reject) => {
+    cloudinary.uploader.upload_stream(
+      {
+        resource_type: "image",
+        folder: "xtaze/profiles", // All images go into this single folder
+        public_id: uniqueName,
+        unique_filename: true, // Ensure unique filenames in Cloudinary
+        overwrite: true, // Overwrite if the same name exists
+      },
+      (error, result) => {
+        if (error) {
+          console.error("Profile image upload error:", error);
+          reject(error);
+        } else {
+          console.log("Profile image uploaded:", result);
+          resolve(result as UploadApiResponse); // Return the secure URL of the uploaded image
         }
       }
     ).end(file.buffer);

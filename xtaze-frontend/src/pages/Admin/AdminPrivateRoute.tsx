@@ -3,8 +3,7 @@ import { useSelector } from "react-redux";
 import { RootState } from "../../store/store";
 
 const AdminProtectedRoute = () => {
-    console.log("entha role ")
-  const token = localStorage.getItem("token");
+  const token = localStorage.getItem("adminToken");
   const role = useSelector((state: RootState) => state.admin.signupData?.role);
   // console.log(role,"entha role sss ")  
   if (!token || role !== "admin") {

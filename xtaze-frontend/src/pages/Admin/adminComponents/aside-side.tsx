@@ -29,7 +29,7 @@ export default function Sidebar() {
   const dispatch = useDispatch()
   const menuItems = [
     { icon: LayoutDashboard, label: "Dashboard", path: "/admin/dashboard" },
-    { icon: Mic2, label: "Artists", path: "/admin/artists" },
+    { icon: Mic2, label: "Users", path: "/admin/artists" },
     { icon: Music, label: "Genre", path: "/admin/genre" }, // ✅ Genre route
     { icon: Video, label: "Videos", path: "/admin/videos" },
     { icon: Image, label: "Banner", path: "/admin/banner" },
@@ -40,7 +40,7 @@ export default function Sidebar() {
   // Handle logout
   const handleLogout = () => {
     // Clear user-related data (e.g., JWT token, user data)
-    localStorage.removeItem("token");
+    localStorage.removeItem("adminToken");
             dispatch(clearAdminData())
     
     navigate("/admin") // Redirect to login page after logout
@@ -50,41 +50,38 @@ export default function Sidebar() {
   return (
     <>
       {/* Sidebar */}
-      <aside
-        className={`fixed inset-y-0 left-0 z-50 w-64 transform border-r bg-background/95 backdrop-blur transition-transform duration-200 ease-in-out lg:translate-x-0 ${
-          sidebarOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
+     <aside className=" top-0 left-0 z-50 w-64 h-full border-r bg-background/95 backdrop-blur fixed">
+  <div className="flex h-16 items-center gap-2 border-b px-6">
+    <Headphones className="h-6 w-6 text-primary" />
+    <span className="font-bold text-xl">Xtaze</span>
+  </div>
+  <nav className="space-y-2 px-2 py-4">
+    {menuItems.map((item, index) => (
+      <Button
+        key={index}
+        variant="ghost"
+        className="w-full justify-start gap-2"
+        onClick={() => navigate(item.path)}
       >
-        <div className="flex h-16 items-center gap-2 border-b px-6">
-          <Headphones className="h-6 w-6 text-primary" />
-          <span className="font-bold text-xl">Xtaze</span>
-        </div>
-        <nav className="space-y-2 px-2 py-4">
-          {menuItems.map((item, index) => (
-            <Button
-              key={index}
-              variant="ghost"
-              className="w-full justify-start gap-2"
-              onClick={() => navigate(item.path)}
-            >
-              <item.icon className="h-4 w-4" />
-              {item.label}
-            </Button>
-          ))}
-        </nav>
+        <item.icon className="h-4 w-4" />
+        {item.label}
+      </Button>
+    ))}
+  </nav>
 
-        {/* Logout Button */}
-        <div className="absolute bottom-4 w-full px-2">
-          <Button
-            variant="ghost"
-            className="w-full justify-start gap-2"
-            onClick={handleLogout}
-          >
-            <LogOut className="h-4 w-4" />
-            Logout
-          </Button>
-        </div>
-      </aside>
+  {/* Logout Button */}
+  <div className="absolute bottom-4 w-full px-2">
+    <Button
+      variant="ghost"
+      className="w-full justify-start gap-2"
+      onClick={handleLogout}
+    >
+      <LogOut className="h-4 w-4" />
+      Logout
+    </Button>
+  </div>
+</aside>
+
 
       {/* Sidebar Toggle Button (for mobile) */}
       <Button

@@ -5,13 +5,13 @@ import UserModel from "../db/models/UserModel"; // Assuming your User model is i
 export default class UserRepository implements IUserRepository {
 
   async add(userData: IUser): Promise<IUser> {
-    try{
-      const user=await UserModel.create(userData)
-      console.log("workk avanee repo",user);
-      
+    try {
+      const user = await UserModel.create(userData)
+      console.log("workk avanee repo", user);
+
       return user as unknown as IUser
     } catch (error) {
-     throw error
+      throw error
     }
   }
 
@@ -32,8 +32,20 @@ export default class UserRepository implements IUserRepository {
       throw error
     }
   }
-  // async findByEmail(email: string): Promise<IUser | null> {
-  //   return await UserModel.findOne({ email });
-  // }
-  
+
+
+  async updateProfile(userId: string, pic: string): Promise<IUser | null> {
+    try {
+        const updatedUser = await UserModel.findByIdAndUpdate(
+            userId,
+            { profilePic: pic },
+            { new: true, runValidators: true } 
+        ).lean(); // Convert Mongoose document to a plain object
+
+        return updatedUser as IUser | null; // Explicitly cast to IUser
+    } catch (error) {
+        console.log(error);
+        return null;
+    }
+}
 }

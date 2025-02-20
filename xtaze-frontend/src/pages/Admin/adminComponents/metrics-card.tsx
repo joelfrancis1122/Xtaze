@@ -5,15 +5,11 @@ import type React from "react" // Added import for React
 interface MetricsCardProps {
   title: string
   value: string
-  change: {
-    value: string
-    percentage: string
-    isPositive: boolean
-  }
+
   chart?: React.ReactNode
 }
 
-export function MetricsCard({ title, value, change, chart }: MetricsCardProps) {
+export function MetricsCard({ title, value, chart }: MetricsCardProps) {
   return (
     <Card className="p-4 bg-background/50 backdrop-blur">
       <div className="flex items-center justify-between mb-4">
@@ -24,10 +20,7 @@ export function MetricsCard({ title, value, change, chart }: MetricsCardProps) {
         <div>
           <p className="text-2xl font-bold">{value}</p>
           <div className="flex items-center gap-1 mt-1">
-            <span className="text-sm">+{change.value}</span>
-            <span className={`text-sm ${change.isPositive ? "text-green-500" : "text-red-500"}`}>
-              {change.percentage}
-            </span>
+          
           </div>
         </div>
         {chart}

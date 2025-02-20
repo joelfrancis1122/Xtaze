@@ -16,8 +16,9 @@ const userSchema = new mongoose.Schema(
       required: true,
       default: "user",
     },
-    isActive: { type: Boolean, default: true }, // Default is active (not blocked)
-  },
+    isActive: { type: Boolean, default: true },
+    profilePic:{type:String,default:null}
+    },
   { timestamps: true }
 );
 

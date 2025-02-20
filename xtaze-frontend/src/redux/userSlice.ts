@@ -4,6 +4,7 @@ import storage from "redux-persist/lib/storage";
 
 interface UserState {
   signupData: {
+    _id:string;
     username: string;
     country: string;
     gender: string;
@@ -13,6 +14,7 @@ interface UserState {
     role?: string; // Added role
     isActive?: boolean; // Added isActive
     premium?: boolean;
+    profilePic:String;
   } | null;
 }
 

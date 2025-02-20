@@ -4,10 +4,11 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { Button } from "../../components/ui/button";
 import { Card } from "../../components/ui/card";
-import { Table, TableRow, TableCell, TableBody } from "../../components/ui/table";
+import { Table, TableRow, TableCell, TableBody, TableHead } from "../../components/ui/table";
 import { Ban, CheckCircle, Plus, Edit, Save } from "lucide-react";
 import Sidebar from "./adminComponents/aside-side";
 import { toast } from "sonner";
+import { motion } from "framer-motion";
 
 interface Genre {
   _id: string;
@@ -22,14 +23,14 @@ export default function GenreManagement() {
   const [editedGenreName, setEditedGenreName] = useState<string>("");
 
   useEffect(() => {
-    const token = localStorage.getItem("token"); // Get the token from localStorage
+    const token = localStorage.getItem("adminToken"); 
 
     axios.get("http://localhost:3000/admin/genreList", {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      })
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    })
       .then((res) => setGenres(res.data.data))
       .catch((err) => console.error("Error fetching genres:", err));
   }, [])
@@ -74,15 +75,21 @@ export default function GenreManagement() {
         event.preventDefault();
         return
       }
-      await axios.put(`http://localhost:3000/admin/genreUpdate/${id}`, { name: editedGenreName });
+      const response = await axios.put(`http://localhost:3000/admin/genreUpdate/${id}`, { name: editedGenreName.trim().toLowerCase() });
       setGenres((prevGenres) =>
         prevGenres.map((genre) =>
           genre._id === id ? { ...genre, name: editedGenreName } : genre
         )
       );
+      if(response.data.data.success==true){
+console.log(response.data.data.success==true)
+        setEditingGenreId(null);
+        toast.success(response?.data.data.message);
+      }else{
+        event.preventDefault()
+        toast.success(response?.data?.data.message);
 
-      setEditingGenreId(null);
-      toast.success("Genre updated successfully!");
+      }
     } catch (error) {
       console.error("Error updating genre:", error);
       toast.error("Failed to update genre. Please try again.");
@@ -116,13 +123,14 @@ export default function GenreManagement() {
         <Card className="mt-6 p-4 w-full bg- var(--foreground) !important; text-white shadow-lg">
           <h2 className="text-lg font-semibold mb-4">Genre List</h2>
           <Table className="w-full">
-            <thead>
+            <TableHead>
               <TableRow className="bg- var(--foreground) !important;">
-                <th className="text-left p-4 min-w-[200px]">Genre Name</th>
-                <th className="text-left p-4 min-w-[150px]">Status</th>
-                <th className="text-left p-4 min-w-[250px]">Actions</th>
+                <TableCell className="text-left p-4 mt-7">Genre Name</TableCell>
+                <TableCell className="text-left p-4 ">Status</TableCell>
+                <TableCell className="text-left p-4 "></TableCell>
+                <TableCell className="text-left p-4 ">Actions</TableCell>
               </TableRow>
-            </thead>
+            </TableHead>
             <TableBody>
               {genres.map((genre) => (
                 <TableRow key={genre._id} className="border-b h-16 hover:bg-[#2f2f2f]">
@@ -138,11 +146,22 @@ export default function GenreManagement() {
                       <span className="truncate">{genre.name}</span>
                     )}
                   </TableCell>
-
                   <TableCell className="p-4 w-[120px] text-center">
-                    <span className={`px-3 py-1 text-sm font-semibold rounded-full w-[90px] h-[32px] flex items-center justify-center ${genre.isBlocked ? "bg- var(--foreground) !important; text-white" : "bg- var(--foreground) !important; text-white"}`}>
-                      {genre.isBlocked ? "Blocked" : "Active"}
-                    </span>
+                    <motion.span
+                      className={`blur relative px-6 py-2 text-sm font-semibold text-white shadow transition-all duration-300 ease-in-out
+                    ${genre.isBlocked ? "bg-red-900/70 shadow-red-500/50 hover:bg-red-700" : "bg-green-900/70 shadow-green-500/50 hover:bg-green-700"}`}
+                      style={{
+                        borderRadius: "50%",
+                        paddingLeft: "15px",
+                        paddingRight: "15px",
+                        paddingTop: "10px",
+                        paddingBottom: "10px",
+                        display: "inline-block",
+                        backdropFilter: "blur(1px)",
+                      }}
+                    >
+                      {genre.isBlocked ? "O" : "O"}
+                    </motion.span>
                   </TableCell>
 
                   <TableCell className="p-4 w-[250px] flex justify-center gap-2">
@@ -163,6 +182,10 @@ export default function GenreManagement() {
                         <Edit className="h-4 w-4" /> Edit
                       </Button>
                     )}
+
+                  </TableCell>
+
+                  <TableCell className="p-4 w-[250px]  justify-center gap-2">
 
                     <Button
                       size="sm"

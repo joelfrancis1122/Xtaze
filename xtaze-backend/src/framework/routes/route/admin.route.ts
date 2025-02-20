@@ -12,12 +12,14 @@ const adminController = new AdminController(adminDependencies)
 // router.post("/login", (req: Request, res: Response, next: NextFunction) => adminController.loginUser(req, res, next));
 
 
-router.get("/genreList",authenticateUser,(req:Request,res:Response,next:NextFunction)=>genreController.listGenre(req,res,next))
+router.get("/genreList",(req:Request,res:Response,next:NextFunction)=>genreController.listGenre(req,res,next))
 router.post("/genreCreate",(req:Request,res:Response,next:NextFunction)=>genreController.createGenre(req,res,next))
 router.put("/genreToggleBlockUnblock/:id", (req: Request, res: Response, next: NextFunction) =>genreController.toggleBlockUnblockGenre(req, res, next));
 router.put("/genreUpdate/:id",(req:Request,res:Response,next:NextFunction)=>genreController.editGenre(req,res,next))
 
 router.post("/login",(req:Request,res:Response,next:NextFunction)=>adminController.login(req,res,next))
+
+router.patch("/toggleBlock/:id",(req:Request,res:Response,next:NextFunction)=>adminController.toggleblockArtist(req,res,next))
 
 export default router;
 

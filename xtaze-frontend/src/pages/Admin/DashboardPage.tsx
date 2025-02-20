@@ -7,7 +7,7 @@ import { MetricsCard } from "./adminComponents/metrics-card"
 import { StatsChart } from "./adminComponents/stats-chart"
 import { PopularTracks } from "./adminComponents/popular-tracks"
 import { PopularArtists } from "./adminComponents/popular-artists"
-import "../Admin/adminComponents/zashboard.css"
+import "../../styles/zashboard.css"
 import Sidebar from "./adminComponents/aside-side"
 
 export default function Page() {
@@ -54,17 +54,14 @@ export default function Page() {
                         <MetricsCard
                             title="Total Listeners"
                             value="0"
-                            change={{ value: "12,345", percentage: "+2.1%", isPositive: true }}
                         />
                         <MetricsCard
                             title="Total Artists"
                             value="0"
-                            change={{ value: "1,234", percentage: "+3.2%", isPositive: true }}
                         />
                         <MetricsCard
                             title="Total Revenue"
                             value="$0"
-                            change={{ value: "$23,456", percentage: "+5.6%", isPositive: true }}
                         />
                     </div>
 

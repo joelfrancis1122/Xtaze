@@ -6,6 +6,6 @@ export interface ITrack {
   fileUrl: string;
   img: string;
   createdAt?: Date;
-  listeners: number;
+  listeners?: number;
   artists: string[];
 }

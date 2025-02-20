@@ -5,10 +5,7 @@ import { uploadSongToCloud, uploadImageToCloud } from "../framework/service/clou
 export class UploadTrackUseCase {
   constructor(private trackRepository: ITrackRepository) {}
 
-  async execute(data: {
-    songFile: Express.Multer.File;
-    imageFile: Express.Multer.File;
-  }): Promise<ITrack> {
+  async execute(data: {songFile: Express.Multer.File;imageFile: Express.Multer.File}): Promise<ITrack> {
     const songUpload = await uploadSongToCloud(data.songFile);
     const imageUpload = await uploadImageToCloud(data.imageFile);
     console.log("2um varunundo",songUpload)

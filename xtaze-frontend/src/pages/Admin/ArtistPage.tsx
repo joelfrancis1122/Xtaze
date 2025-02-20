@@ -1,57 +1,79 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import axios from "axios"
 import { Button } from "../../components/ui/button"
 import { Card } from "../../components/ui/card"
 import { Table, TableHead, TableRow, TableCell, TableBody } from "../../components/ui/table"
 import { Eye, Ban, CheckCircle } from "lucide-react"
-import profileImg from "../../assets/spidey.jpeg"
+import profileImg from "../../assets/spidey.jpeg" // You can replace this with the actual fetched images.
 import Sidebar from "./adminComponents/aside-side"
+import { motion } from "framer-motion";
 
 interface Artist {
-    id: number
+    id: string  // Changed to string if you're using MongoDB (_id is a string)
     name: string
-    genre: string
+    role: string
     image: string
-    status: "active" | "blocked"
+    isActive: boolean
 }
 
 export default function ArtistList() {
-    const [artists, setArtists] = useState<Artist[]>([
-        { id: 1, name: "The Weeknd", genre: "R&B", image: profileImg, status: "active" },
-        { id: 2, name: "Billie Eilish", genre: "Pop", image: profileImg, status: "blocked" },
-        { id: 3, name: "Eminem", genre: "Hip-Hop", image: profileImg, status: "active" },
-    ])
+    const [artists, setArtists] = useState<Artist[]>([])
+    const [loading, setLoading] = useState<boolean>(true)
+    const [error, setError] = useState<string | null>(null)
 
     useEffect(() => {
-        const styles = `
-            body, * {
-                color: var(--foreground) !important;
-                background-color: var(--background) !important;
+        const fetchArtists = async () => {
+            const token = localStorage.getItem("adminToken"); 
+            try {
+                const response = await axios.get("http://localhost:3000/artist/listArtists",{
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`,
+                      },
+                }) // Adjust the endpoint
+                const artistData = response.data.data.map((artist: any) => ({
+                    id: artist._id,
+                    name: artist.username,
+                    role: artist.role,
+                    image: artist.image || profileImg,
+                    isActive: artist.isActive ? true : false,
+                }))
+                setArtists(artistData)
+                console.log(artistData, "sasd")
+            } catch (error: any) {
+                setError("Failed to fetch artists")
+                console.error(error)
+            } finally {
+                setLoading(false)
             }
-        `
-        const styleSheet = document.createElement("style")
-        styleSheet.type = "text/css"
-        styleSheet.innerText = styles
-        document.head.appendChild(styleSheet)
-
-        return () => {
-            document.head.removeChild(styleSheet)
         }
+
+        fetchArtists()
     }, [])
 
-    const toggleBlockArtist = (id: number) => {
-        setArtists(artists.map((artist) =>
-            artist.id === id ? { ...artist, status: artist.status === "active" ? "blocked" : "active" } : artist
-        ))
+    const toggleBlockArtist = async (id: string, currentStatus: boolean) => {
+        try {
+            console.log(currentStatus, "s")
+            // Making an Axios request to toggle the artist's block status
+            const newStatus = currentStatus === true ? false : true
+            await axios.patch(`http://localhost:3000/admin/toggleBlock/${id}`, { status: newStatus })
+            setArtists(artists.map((artist) =>
+                artist.id === id ? { ...artist, isActive: newStatus } : artist
+            ))
+        } catch (error) {
+            console.error("Error toggling block status:", error)
+            setError("Failed to update artist status")
+        }
     }
+
+    if (error) return <div>{error}</div>
 
     return (
         <div className="flex">
-            {/* Sidebar */}
             <Sidebar />
 
-            {/* Main Content */}
             <div className="min-h-screen p-6 ml-64 w-[calc(100%-16rem)] max-w-full">
                 <h1 className="text-2xl font-bold mb-4">Artists</h1>
                 <Card className="p-4 w-full"> {/* Ensure full width */}
@@ -59,12 +81,12 @@ export default function ArtistList() {
                         <TableHead>
                             <TableRow>
                                 <TableCell className="text-left p-4 min-w-[200px]">Artist</TableCell>
-                                <TableCell className="text-left p-4 min-w-[150px]">Genre</TableCell>
+                                <TableCell className="text-left p-4 min-w-[150px]">Role</TableCell>
                                 <TableCell className="text-left p-4 min-w-[150px]">Status</TableCell>
                                 <TableCell className="text-left p-4 min-w-[200px]">Actions</TableCell>
                             </TableRow>
                         </TableHead>
-                        <TableBody className="p-4 overflow-x-auto">
+                        <TableBody>
                             {artists.map((artist) => (
                                 <TableRow key={artist.id} className="border-b">
                                     {/* Artist Image & Name */}
@@ -73,32 +95,43 @@ export default function ArtistList() {
                                         <span className="font-medium">{artist.name}</span>
                                     </TableCell>
 
-                                    {/* Genre */}
-                                    <TableCell className="p-4">{artist.genre}</TableCell>
-
-                                    {/* Status Indicator */}
+                                    <TableCell className="p-4">{artist.role}</TableCell>
                                     <TableCell className="p-4">
-                                        <span className={`px-3 py-1 text-sm font-semibold rounded-full ${artist.status === "active" ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600"}`}>
-                                            {artist.status === "active" ? "Active" : "Blocked"}
-                                        </span>
+                                        <motion.span
+                                            className={` blur relative px-6 py-2 text-sm font-semibold text-white shadow transition-all duration-300 ease-in-out
+                                         ${artist.isActive ? "bg-green-900/70 shadow-green-500/50 hover:bg-green-700" : "bg-red-900/70 shadow-red-500/50 hover:bg-red-700"}`}  
+                                            style={{
+                                                borderRadius: "50%", 
+                                                paddingLeft: "15px",
+                                                paddingRight: "15px",
+                                                paddingTop: "10px",
+                                                paddingBottom: "10px",
+                                                display: "inline-block",
+                                                backdropFilter: "blur(1px)",  
+                                            }}
+                                        >
+                                            {artist.isActive ? "O" : "O "}
+                                        </motion.span>
+
+
+
                                     </TableCell>
 
-                                    {/* Actions */}
-                                   <TableCell className="p-4 w-[100px] flex justify-center">
-                                        {/* View Profile */}
-                                        <Button size="sm" variant="outline" className="flex items-center gap-1">
+
+
+                                    <TableCell className="p-4 w-[100px] flex justify-center gap-3" style={{ transform: "translateY(-10px)" }}>
+                                    <Button size="sm" variant="outline" className="flex items-center gap-1">
                                             <Eye className="h-4 w-4" /> View
                                         </Button>
 
-                                        {/* Block/Unblock Button */}
                                         <Button
                                             size="sm"
-                                            variant={artist.status === "active" ? "destructive" : "outline"}
-                                            onClick={() => toggleBlockArtist(artist.id)}
+                                            variant={artist.isActive === true ? "destructive" : "outline"}
+                                            onClick={() => toggleBlockArtist(artist.id, artist.isActive)}
                                             className="flex items-center gap-1"
                                         >
-                                            {artist.status === "active" ? <Ban className="h-4 w-4" /> : <CheckCircle className="h-4 w-4" />}
-                                            {artist.status === "active" ? "Block" : "Unblock"}
+                                            {artist.isActive === true ? <Ban className="h-4 w-4" /> : <CheckCircle className="h-4 w-4" />}
+                                            {artist.isActive === true ? "Block" : "Unblock"}
                                         </Button>
                                     </TableCell>
                                 </TableRow>
@@ -107,7 +140,6 @@ export default function ArtistList() {
                     </Table>
                 </Card>
             </div>
-
         </div>
     )
 }

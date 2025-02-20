@@ -87,7 +87,8 @@ export default function OTPVerification() {
             const response = await axios.post("http://localhost:3000/user/verify-otp", {
                 otp: otpCode,
             });
-
+                console.log(response,"from backend response");
+                
             if (response.data.success) {
                 toast.success("OTP verified successfully!");
                 await axios.post(
@@ -100,11 +101,12 @@ export default function OTPVerification() {
                     }
                 );
                 navigate("/home"); 
-            } else {
-                toast.error("Invalid OTP. Please try again.");
             }
+      
         } catch (error:any) {
-            toast.error(error);
+            console.log(error,"error in console");
+            
+            toast.error(error.response.data.message);
         } finally {
             setIsSubmitting(false);
         }

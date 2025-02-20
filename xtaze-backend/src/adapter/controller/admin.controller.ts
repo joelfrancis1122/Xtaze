@@ -25,5 +25,10 @@ async login(req: Request, res: Response, next: NextFunction): Promise<void> {
       next(error);
     }
   }
-    
+      async toggleblockArtist(req: Request, res: Response, next: NextFunction): Promise<void> {
+    const { id } = req.params;
+    console.log("id kitty ",id)
+    const updatedStatus = await this._adminUseCase.toggleBlockUnblockArtist(id);
+    res.status(200).json({ success: true, message: "Genre status updated", data: updatedStatus });
+  }
 }

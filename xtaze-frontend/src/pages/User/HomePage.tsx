@@ -1,4 +1,4 @@
-import { Search, Bell, Play, Pause, Plus, Heart, MoreHorizontal } from "lucide-react"
+import { Search, Power, Play, Pause, Plus, Heart, MoreHorizontal } from "lucide-react"
 import { useEffect, useState } from "react"
 import Sidebar from "./userComponents/SideBar"
 import MusicPlayer from "./userComponents/TrackBar"
@@ -194,7 +194,7 @@ export default function Home() {
               />
             </div>
             <button className="p-2 hover:bg-[#242424] rounded-full" onClick={handleClick}>
-              <Bell size={20} />
+              <Power size={20} />
             </button>
           </header>
 

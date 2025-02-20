@@ -12,7 +12,7 @@ interface AuthenticatedRequest extends Request {
 
 export const authenticateUser = (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
   const token = req.headers.authorization?.split(" ")[1]; // Extract token from "Bearer <token>"
-
+console.log("kitty")
   if (!token) {
     res.status(401).json({ success: false, message: "Unauthorized: No token provided" });
     return; 
@@ -20,6 +20,7 @@ export const authenticateUser = (req: AuthenticatedRequest, res: Response, next:
 
   try {
     const decoded = jwt.verify(token, SECRET_KEY);
+    
     req.user = decoded; 
     next();
   } catch (error) {

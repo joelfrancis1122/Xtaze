@@ -13,7 +13,7 @@ import { RootState } from "../../store/store";
 const AdminLogin = () => {
   const navigate = useNavigate(); 
   const dispatch = useDispatch()
-  const token = localStorage.getItem("token");
+  const token = localStorage.getItem("adminToken");
     const role = useSelector((state: RootState) => state.admin.signupData?.role);
 
   useEffect(() => {
@@ -54,7 +54,7 @@ const AdminLogin = () => {
         toast.error(response.data.message,{ position: "top-right" }); // Show error message
       }
 
-      localStorage.setItem("token", response.data.token);
+      localStorage.setItem("adminToken", response.data.token);
       navigate("/admin/dashboard")
       console.log(response.data);
     } catch (error: any) {
@@ -107,6 +107,8 @@ const AdminLogin = () => {
             type="submit"
           >
             Log In &rarr;
+            <BottomGradient />
+
           </button>
 
          
@@ -144,6 +146,12 @@ const PasswordInput = ({ id, name, value, onChange }: any) => {
     </div>
   );
 };
+const BottomGradient = () => (
+  <>
+    <span className="group-hover/btn:opacity-100 block transition duration-500 opacity-0 absolute h-px w-full -bottom-px inset-x-0 bg-gradient-to-r from-transparent via-pink-500 to-transparent" />
+    <span className="group-hover/btn:opacity-100 blur-sm block transition duration-500 opacity-0 absolute h-px w-1/2 mx-auto -bottom-px inset-x-10 bg-gradient-to-r from-transparent via-red-800 to-transparent" />
+  </>
+);
 
 /* ======= Label Input Container ======= */
 const LabelInputContainer = ({ children, className }: { children: React.ReactNode; className?: string }) => (

@@ -14,4 +14,18 @@ async findByEmail(email: string): Promise<IUser | null> {
       throw error
     }
   }
+  
+  async getArtistById(id: string): Promise<IUser|null> {
+    return await UserModel.findById(id);
+  }
+  
+  async updateArtistStatus(id: string, status: boolean): Promise<IUser|null> {
+      console.log(status,"ss");
+      
+
+    return  await UserModel.findByIdAndUpdate(id, { isActive:status}, { new: true });
+  
+  }
 }
+
+

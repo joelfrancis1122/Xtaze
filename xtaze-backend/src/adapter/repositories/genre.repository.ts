@@ -22,18 +22,25 @@ export class GenreRepository implements IGenreRepository {
   }
   
   async updateGenreStatus(id: string, status: boolean): Promise<IGenre|null> {
-      console.log(status,"ss");
-      
+    console.log(status,"ss");
     const cn =  await GenreModel.findByIdAndUpdate(id, { isBlocked:status}, { new: true });
     console.log(cn,"ithun ed")
     return cn
   }
-  async editGenre(id: string, name: string): Promise<IGenre | null> {
+
+  async editGenre(id: string, name: string): Promise<IGenre|null> {  
     const editedGenre = await GenreModel.findByIdAndUpdate(id,{name:name},{new:true})
     return editedGenre
   }
   
+  async findDupe(id: string, name: string): Promise<boolean> {
+    const existingGenre = await GenreModel.findOne({ name: name });
+    if(existingGenre){
+     console.log("odi kitty")
+    return true
+  }
+  return false 
 }
 
-
+}
 

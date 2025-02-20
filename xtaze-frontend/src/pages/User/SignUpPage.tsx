@@ -45,7 +45,18 @@ const Signup = () => {
 
 const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
+    if (!formData.username.trim()) {
+      toast.error("Username cannot be empty or only spaces.");
+      return;
+    }
+    if (!formData.country.trim()) { 
+      toast.error("Country cannot be empty or only spaces.");
+      return;
+    }
+    if (!formData.password.trim()) {
+      toast.error("password cannot be only spaces.");
+      return;
+    }
     if (isButtonDisabled) {
       toast.info("Please wait before trying again.", { position: "top-right" });
       return;
@@ -79,6 +90,12 @@ const handleSubmit = async (e: React.FormEvent) => {
         position: "top-right",
       });
     }
+};
+const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const value = e.target.value;
+  if (/^\d*$/.test(value)) {  // Allows only numbers
+    setFormData({ ...formData, phone: value });
+  }
 };
 
 
@@ -149,7 +166,18 @@ const handleSubmit = async (e: React.FormEvent) => {
           {/* Phone */}
           <LabelInputContainer className="mb-4">
             <Label htmlFor="phone">Phone</Label>
-            <Input id="phone" name="phone" placeholder="+123456789" type="tel" minLength={10} maxLength={10} value={formData.phone} onChange={handleChange} required />
+            <Input
+  id="phone"
+  name="phone"
+  placeholder="+123456789"
+  type="tel"
+  minLength={10}
+  maxLength={10}
+  value={formData.phone}
+  onChange={handlePhoneChange}
+  required
+/>
+
           </LabelInputContainer>
 
           {/* Email */}

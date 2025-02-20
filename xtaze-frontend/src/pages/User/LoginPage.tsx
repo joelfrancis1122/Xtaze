@@ -50,8 +50,8 @@ const Login = () => {
       console.log(response,'ith enth');
       dispatch(saveSignupData(response.data.user))
     } catch (error: any) {
-      toast.error(
-        "Error registering user: " + (error.response?.data?.message || error.message),
+      toast.warning(
+        error.response?.data?.message || error.message,
         { position: "top-right" }
       );
     }
@@ -101,6 +101,8 @@ const Login = () => {
             type="submit"
           >
             Log In &rarr;
+            <BottomGradient />
+
           </button>
 
           <div className="mt-4 text-center">
@@ -108,6 +110,7 @@ const Login = () => {
               Don't have an account?{" "}
               <button onClick={goToSignup} className="text-blue-500 hover:underline">
                 Sign Up
+           
               </button>
             </p>
           </div>
@@ -147,6 +150,13 @@ const PasswordInput = ({ id, name, value, onChange }: any) => {
 };
 
 /* ======= Label Input Container ======= */
+const BottomGradient = () => (
+  <>
+    <span className="group-hover/btn:opacity-100 block transition duration-500 opacity-0 absolute h-px w-full -bottom-px inset-x-0 bg-gradient-to-r from-transparent via-red-500 to-transparent" />
+    <span className="group-hover/btn:opacity-100 blur-sm block transition duration-500 opacity-0 absolute h-px w-1/2 mx-auto -bottom-px inset-x-10 bg-gradient-to-r from-transparent via-red-800 to-transparent" />
+  </>
+);
+
 const LabelInputContainer = ({ children, className }: { children: React.ReactNode; className?: string }) => (
   <div className={cn("flex flex-col space-y-2 w-full", className)}>{children}</div>
 );

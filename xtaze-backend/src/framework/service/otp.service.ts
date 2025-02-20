@@ -46,11 +46,12 @@ export default class OtpService implements IOtpService {
     }
 
     async verifyOTP(otp: string): Promise<boolean> {
-        console.log("Verifying OTP...");
+        console.log("Verifying OTP...",OtpService.otpStore['otp'],"ithen th",otp);
         
         if (!OtpService.otpStore[otp]) {
             console.log(`No OTP stored for ${otp}. Current otpStore:`, OtpService.otpStore);
             return false;
+
         }
         
         console.log("Verifying verified...");
@@ -59,5 +60,12 @@ export default class OtpService implements IOtpService {
         delete OtpService.otpStore[otp];
 
         return true;
+    }
+
+    async isEmpty():Promise<boolean>{
+        if(Object.keys(OtpService.otpStore).length==0){
+            return true 
+        }
+        return false
     }
 }
