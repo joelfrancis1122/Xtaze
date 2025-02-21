@@ -6,7 +6,7 @@ import { Button } from "../../components/ui/button"
 import { Card } from "../../components/ui/card"
 import { Table, TableHead, TableRow, TableCell, TableBody } from "../../components/ui/table"
 import { Eye, Ban, CheckCircle } from "lucide-react"
-import profileImg from "../../assets/spidey.jpeg" // You can replace this with the actual fetched images.
+import profileImg from "../../assets/profile6.jpeg" // You can replace this with the actual fetched images.
 import Sidebar from "./adminComponents/aside-side"
 import { motion } from "framer-motion";
 
@@ -27,7 +27,7 @@ export default function ArtistList() {
         const fetchArtists = async () => {
             const token = localStorage.getItem("adminToken"); 
             try {
-                const response = await axios.get("http://localhost:3000/artist/listArtists",{
+                const response = await axios.get("http://localhost:3000/artist/listUsers",{
                     headers: {
                         "Content-Type": "application/json",
                         Authorization: `Bearer ${token}`,
@@ -37,13 +37,12 @@ export default function ArtistList() {
                     id: artist._id,
                     name: artist.username,
                     role: artist.role,
-                    image: artist.image || profileImg,
+                    image: artist.profilePic || profileImg,
                     isActive: artist.isActive ? true : false,
                 }))
                 setArtists(artistData)
                 console.log(artistData, "sasd")
             } catch (error: any) {
-                setError("Failed to fetch artists")
                 console.error(error)
             } finally {
                 setLoading(false)
@@ -120,9 +119,9 @@ export default function ArtistList() {
 
 
                                     <TableCell className="p-4 w-[100px] flex justify-center gap-3" style={{ transform: "translateY(-10px)" }}>
-                                    <Button size="sm" variant="outline" className="flex items-center gap-1">
+                                    {/* <Button size="sm" variant="outline" className="flex items-center gap-1">
                                             <Eye className="h-4 w-4" /> View
-                                        </Button>
+                                        </Button> */}
 
                                         <Button
                                             size="sm"

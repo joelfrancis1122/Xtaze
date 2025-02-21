@@ -91,7 +91,7 @@ export default class UserUseCase {
     if (!user) {
       return { success: false, message: "user not found" };
     }
-    if (user.role == "admin") {
+    if (user.role == "admin"||user.role=="artist") {
       return { success: false, message: "This login form is for users" };
     }
     if (user.isActive == false) {
@@ -135,6 +135,10 @@ export default class UserUseCase {
     }
 
 }
+
+ async getUpdatedArtist(artistId:string): Promise<IUser|null> {
+    return await this._userRepository.getupdatedArtist(artistId);
+  }
 
 }
 

@@ -23,6 +23,9 @@ import ArtistProtectRoute from "./pages/Artist/ArtistPrivateRoute";
 import NotFound from "./pages/404";
 import ArtistUploadTracks from "./pages/Artist/ArtistUploadTracks";
 import ProfilePage from "./pages/User/ProfilePage";
+import ArtistProfile from "./pages/Artist/ArtistProfile";
+import SubscriptionPlans from "./pages/User/Subscription";
+import { WavyBackgroundDemo } from "./pages/User/rough";
 
 const App = () => {
 
@@ -53,6 +56,8 @@ const App = () => {
           <Routes>
          {/* user */}
             <Route path="/" element={<Login />} />
+            <Route path="/rough" element={<WavyBackgroundDemo/>} />
+            <Route path="/plans" element={<SubscriptionPlans/>} />
             <Route path="/Signup" element={<Signup />} />
             <Route path="/Otp" element={<OTPVerification />} />
             <Route path="/Ghome" element={<MusicInterface />} />
@@ -71,13 +76,14 @@ const App = () => {
          
          {/* artist */}
             <Route path="/artist" element={<ArtistLogin />} />
-            <Route path="/artist/releases" element={<ArtistUploadTracks />} />
+            <Route path="/artist/profile" element={<ArtistProfile />} />
             {/* <Route path="/artist/dashboard" element={<ArtistDashboard />} /> */}
          
          
          {/* protected */}
-         
             <Route element={<ArtistProtectRoute/>}>
+         
+            <Route path="/artist/releases" element={<ArtistUploadTracks />} />
               <Route path="/artist/dashboard" element={<ArtistDashboard />} />
             </Route>
             <Route element={<AdminProtectedRoute/>}>

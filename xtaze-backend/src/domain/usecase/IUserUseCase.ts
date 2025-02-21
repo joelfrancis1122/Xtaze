@@ -6,5 +6,6 @@ export default interface IuserUseCase{
     verifyOTP(otp:string):Promise<{success:boolean,message:string}>
     login(email: string, password: string): Promise<{ success: boolean; message: string; token?: string; user?: IUser }>;
     uploadProfile(userID:string,file:Express.Multer.File): Promise<{ success: boolean; message: string }>
+    getUpdatedArtist(artistId:string): Promise<IUser|null>
 }
 

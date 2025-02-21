@@ -3,10 +3,15 @@
 import * as React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Minimize2, Maximize2, ListMusic, Info } from "lucide-react";
-import { Track } from "./GuestPage";
+import { Track } from "./Types";
 
-const PreviewModal: React.FC<{ track: Track }> = ({ track }) => {
-  const [isOpen, setIsOpen] = React.useState(true);
+interface PreviewModalProps {
+  track: Track;
+  isOpen: boolean; // Receive isOpen from parent
+  toggleModal: () => void; // Receive toggleModal from parent
+}
+
+const PreviewModal: React.FC<PreviewModalProps> = ({ track, isOpen, toggleModal }) => {
   const [isFullscreen, setIsFullscreen] = React.useState(false);
 
   const toggleFullscreen = () => {
@@ -34,10 +39,20 @@ const PreviewModal: React.FC<{ track: Track }> = ({ track }) => {
             <div className="flex items-center justify-between p-4 bg-zinc-900">
               <h2 className="text-lg font-bold"></h2>
               <div className="flex gap-2">
-                <button className="p-2 rounded-md bg-zinc-700 hover:bg-zinc-600" onClick={toggleFullscreen}>
-                  {isFullscreen ? <Minimize2 className="h-4 w-4 text-white" /> : <Maximize2 className="h-4 w-4 text-white" />}
+                <button
+                  className="p-2 rounded-md bg-zinc-700 hover:bg-zinc-600"
+                  onClick={toggleFullscreen}
+                >
+                  {isFullscreen ? (
+                    <Minimize2 className="h-4 w-4 text-white" />
+                  ) : (
+                    <Maximize2 className="h-4 w-4 text-white" />
+                  )}
                 </button>
-                <button className="p-2 rounded-md bg-red-600 hover:bg-red-500" onClick={() => setIsOpen(false)}>
+                <button
+                  className="p-2 rounded-md bg-red-600 hover:bg-red-500"
+                  onClick={toggleModal} // Use toggleModal from parent
+                >
                   <X className="h-4 w-4 text-white" />
                 </button>
               </div>
@@ -45,13 +60,26 @@ const PreviewModal: React.FC<{ track: Track }> = ({ track }) => {
 
             {/* Content */}
             <div className="flex flex-1 p-6 gap-6 overflow-y-auto">
-              {/* Left side - Artwork */}
+              {/* Left side - Artwork with Blurry Effect on All Sides */}
               <div className="flex-1 flex flex-col items-center justify-center">
-                <img
-                  src={track.img || "/default-track.jpg"}
-                  alt="Track artwork"
-                  className="w-[380.66px] h-[380.66px] rounded-lg object-cover shadow-lg"
-                />
+                <div className="relative w-[400px] h-[400px] flex items-center justify-center">
+                  {/* Blurred Background */}
+                  <div
+                    className="absolute inset-0 bg-zinc-900 shadow-lg filter blur-2xl"
+                    style={{
+                      backgroundImage: `url(${track.img || "/default-track.jpg"})`,
+                      backgroundSize: "cover",
+                      backgroundPosition: "center",
+                      backgroundRepeat: "no-repeat",
+                    }}
+                  />
+                  {/* Clear Image */}
+                  <img
+                    src={track.img || "/default-track.jpg"}
+                    alt="Track artwork"
+                    className="relative w-[360px] h-[360px] object-cover rounded-lg shadow-lg z-10"
+                  />
+                </div>
                 <div className="mt-4 text-center">
                   <h2 className="text-2xl font-bold">{track.title}</h2>
                   <p className="text-zinc-400">
@@ -62,9 +90,6 @@ const PreviewModal: React.FC<{ track: Track }> = ({ track }) => {
 
               {/* Right side - Buttons & Queue */}
               <div className="flex-1 rounded-lg p-21 transform translate-x-[-140px] translate-y-[5px]">
-
-
-
                 {/* Buttons (All grouped together) */}
                 <div className="flex items-center gap-10 mb-4">
                   <button className="flex items-center gap-2 bg-zinc-800 p-4 w-40 rounded-md hover:bg-zinc-700">

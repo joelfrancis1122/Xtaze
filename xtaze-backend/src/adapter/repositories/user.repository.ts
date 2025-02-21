@@ -33,19 +33,27 @@ export default class UserRepository implements IUserRepository {
     }
   }
 
+  async getUserUpdated(userId: string): Promise<IUser | null> {
+    return await UserModel.findById({ _id: userId });
+  }
 
   async updateProfile(userId: string, pic: string): Promise<IUser | null> {
     try {
-        const updatedUser = await UserModel.findByIdAndUpdate(
-            userId,
-            { profilePic: pic },
-            { new: true, runValidators: true } 
-        ).lean(); // Convert Mongoose document to a plain object
+      const updatedUser = await UserModel.findByIdAndUpdate(
+        userId,
+        { profilePic: pic },
+        { new: true, runValidators: true }
+      ).lean();
 
-        return updatedUser as IUser | null; // Explicitly cast to IUser
+      return updatedUser as IUser | null; 
     } catch (error) {
-        console.log(error);
-        return null;
+      console.log(error);
+      return null;
     }
+  }
+  async getupdatedArtist(artistId: string): Promise<IUser | null> {
+    const updatedArtist = await UserModel.findOne({ _id: artistId }); 
+    return updatedArtist as unknown as IUser   
 }
+
 }

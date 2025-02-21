@@ -8,9 +8,13 @@ import axios from "axios";
 import { Label } from "../../components/ui/label";
 import { Select } from "../../components/ui/select";
 import { cn } from "../../../lib/utils";
+import { RootState } from "../../store/store";
+import { useDispatch, useSelector } from "react-redux";
+import { saveArtistData } from "../../redux/artistSlice";
 
 const UploadMusicPage = () => {
-
+    const artist = useSelector((state: RootState) => state.artist.signupData);
+    const dispatch = useDispatch()
     const [songData, setSongData] = useState({
         songName: "",
         artist: "",
@@ -23,7 +27,6 @@ const UploadMusicPage = () => {
     const [isUploading, setIsUploading] = useState(false); // Track upload state
     const [genres, setGenres] = useState<IGenre[]>([]);
 
-    console.log(genres, "ithih")
     interface IGenre {
         _id: string;
         name: string;
@@ -63,10 +66,12 @@ const UploadMusicPage = () => {
         formData.append("album", songData.album);
         if (songData.image) formData.append("image", songData.image);
         if (songData.song) formData.append("file", songData.song);
-
+      
         try {
-            const response = await axios.post("http://localhost:3000/artist/upload", formData, {
-                headers: { "Content-Type": "multipart/form-data" },
+            const response = await axios.post(`http://localhost:3000/artist/upload`, formData, {
+                headers: {
+                     "Content-Type": "multipart/form-data",
+                 },
             });
 
             toast.success("Song uploaded successfully! 🎶");
@@ -88,14 +93,22 @@ const UploadMusicPage = () => {
             setIsUploading(false); // Reset uploading state
         }
     };
-
+console.log(artist,"itheee")
     useEffect(() => {
         // Fetch genres from the backendmap
         const fetchGenres = async () => {
             try {
-                const response = await axios.get("http://localhost:3000/artist/listGenres"); // API endpoint for genres
+                const token = localStorage.getItem("artistToken"); 
+
+                const response = await axios.get(`http://localhost:3000/artist/listActiveGenres?artistId=${artist?._id}`,{
+                    headers:{
+                        "Content-Type":"application/json",
+                        Authorization:`Bearer ${token}`
+                    }
+                }); // API endpoint for genres
+                dispatch(saveArtistData(response.data.artist))
                 setGenres(response.data.data);
-                console.log(response.data)
+                console.log(response.data,"ooooodia")
             } catch (error) {
                 toast.error("Error fetching genres. Please try again.");
                 console.error("Error fetching genres:", error);

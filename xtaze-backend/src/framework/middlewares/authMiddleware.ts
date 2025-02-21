@@ -11,17 +11,17 @@ interface AuthenticatedRequest extends Request {
 }
 
 export const authenticateUser = (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
+  console.log("vannila")
   const token = req.headers.authorization?.split(" ")[1]; // Extract token from "Bearer <token>"
-console.log("kitty")
-  if (!token) {
-    res.status(401).json({ success: false, message: "Unauthorized: No token provided" });
-    return; 
-  }
+  console.log("vannil22a")
+if (!token) {
+  res.status(401).json({ success: false, message: "Unauthorized: No token provided" });
+  return; 
+}
 
-  try {
-    const decoded = jwt.verify(token, SECRET_KEY);
-    
-    req.user = decoded; 
+try {
+  const decoded = jwt.verify(token, SECRET_KEY);
+  req.user = decoded; 
     next();
   } catch (error) {
     res.status(403).json({ success: false, message: "Forbidden: Invalid token" });

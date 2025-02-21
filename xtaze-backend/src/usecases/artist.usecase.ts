@@ -36,7 +36,9 @@ export default class ArtistUseCase {
     if (artist.role !== "artist") {
       return { success: false, message: "Only artists are allowed to login!" };
     }
-
+    if (artist.isActive == false) {
+      return { success: false, message: "You're account is suspended !" };
+    }
     const isPasswordValid = await this._passwordService.comparePassword(password, artist.password);
     if (!isPasswordValid) {
       return { success: false, message: "Invalid credentials!" };

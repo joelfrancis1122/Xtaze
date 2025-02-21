@@ -13,10 +13,10 @@ const service = {
     OtpService:new OtpService()
 }
 
-const useCase = {
+export const userCase = {
     userUseCase: new UserUseCase({ repository, service })
 }
 
-const userDependencies = useCase
+const userDependencies = userCase
 
 export default userDependencies

@@ -1,22 +1,13 @@
-import { Heart, MoreHorizontal, Plus, Search, Bell, Play, Pause, Volume2, SkipBack, SkipForward, Repeat, Shuffle } from "lucide-react";
-import { useEffect, useState, } from "react";
+"use client";
+
+import { Search, Power, Play, Pause, Plus, Heart, MoreHorizontal } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import Sidebar from "./userComponents/SideBar"; // Assuming reusable Sidebar
+import MusicPlayer from "./userComponents/TrackBar";
 import PreviewModal from "./PreviewPage";
-import profileImg from "../../assets/profile5.jpeg";
-
-export interface Track {
-  title: string;
-  artist: string;
-  fileUrl: string;
-  img: string;
-  genre: string;
-}
-
-const formatTime = (time: number): string => {
-  if (!time || isNaN(time)) return "0:00";
-  const minutes = Math.floor(time / 60);
-  const seconds = Math.floor(time % 60);
-  return `${minutes}:${seconds.toString().padStart(2, '0')}`;
-};
+import type { Track } from "./Types";
+import { audio } from "../../utils/audio";
+import { PlaceholdersAndVanishInput } from "../../utils/placeholders-and-vanish-input";
 
 export default function MusicInterface() {
   const [tracks, setTracks] = useState<Track[]>([]);
@@ -25,19 +16,11 @@ export default function MusicInterface() {
   const [currentTrack, setCurrentTrack] = useState<Track | null>(null);
   const [audio] = useState(new Audio());
   const [isPlaying, setIsPlaying] = useState(false);
-  const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0);
-  const [volume, setVolume] = useState(1);
   const [isShuffled, setIsShuffled] = useState(false);
   const [isRepeating, setIsRepeating] = useState(false);
   const [shuffleIndices, setShuffleIndices] = useState<number[]>([]);
   const [currentShuffleIndex, setCurrentShuffleIndex] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
-
-  const toggleModal = () => {
-    setIsModalOpen((prevState) => !prevState);
-    console.log("prevss s")
-  };
 
   useEffect(() => {
     const fetchTracks = async () => {
@@ -48,7 +31,6 @@ export default function MusicInterface() {
         }
         const data = await response.json();
         setTracks(data.songs);
-        console.log(data.songs, "data")
       } catch (error) {
         console.error("Error fetching tracks:", error);
       } finally {
@@ -58,6 +40,10 @@ export default function MusicInterface() {
 
     fetchTracks();
   }, []);
+
+  const toggleModal = () => {
+    setIsModalOpen((prevState) => !prevState);
+  };
 
   const handlePlay = (track: Track) => {
     if (currentlyPlaying === track.fileUrl) {
@@ -77,19 +63,6 @@ export default function MusicInterface() {
     }
   };
 
-  const handleTimeUpdate = () => {
-    if (audio.currentTime >= audio.duration) {
-      setCurrentTime(audio.duration);
-    } else {
-      setCurrentTime(audio.currentTime);
-    }
-  };
-
-  const handleVolumeChange = (value: number) => {
-    setVolume(value);
-    audio.volume = value;
-  };
-
   const generateShuffleIndices = () => {
     const indices = Array.from({ length: tracks.length }, (_, i) => i);
     for (let i = indices.length - 1; i > 0; i--) {
@@ -101,13 +74,12 @@ export default function MusicInterface() {
 
   const handleSkipForward = () => {
     if (!currentTrack || tracks.length === 0) return;
-
     if (isShuffled) {
       const nextShuffleIndex = (currentShuffleIndex + 1) % shuffleIndices.length;
       setCurrentShuffleIndex(nextShuffleIndex);
       handlePlay(tracks[shuffleIndices[nextShuffleIndex]]);
     } else {
-      const currentIndex = tracks.findIndex(track => track.fileUrl === currentlyPlaying);
+      const currentIndex = tracks.findIndex((track) => track.fileUrl === currentlyPlaying);
       const nextIndex = (currentIndex + 1) % tracks.length;
       handlePlay(tracks[nextIndex]);
     }
@@ -115,66 +87,51 @@ export default function MusicInterface() {
 
   const handleSkipBack = () => {
     if (!currentTrack || tracks.length === 0) return;
-
     if (isShuffled) {
       const prevShuffleIndex = currentShuffleIndex === 0 ? shuffleIndices.length - 1 : currentShuffleIndex - 1;
       setCurrentShuffleIndex(prevShuffleIndex);
       handlePlay(tracks[shuffleIndices[prevShuffleIndex]]);
     } else {
-      const currentIndex = tracks.findIndex(track => track.fileUrl === currentlyPlaying);
+      const currentIndex = tracks.findIndex((track) => track.fileUrl === currentlyPlaying);
       const prevIndex = currentIndex === 0 ? tracks.length - 1 : currentIndex - 1;
       handlePlay(tracks[prevIndex]);
     }
   };
 
-  const toggleShuffle = () => {
+  const handleToggleShuffle = () => {
     if (!isShuffled) {
       const newShuffleIndices = generateShuffleIndices();
       setShuffleIndices(newShuffleIndices);
       if (currentTrack) {
-        const currentIndex = tracks.findIndex(track => track.fileUrl === currentlyPlaying);
+        const currentIndex = tracks.findIndex((track) => track.fileUrl === currentlyPlaying);
         setCurrentShuffleIndex(newShuffleIndices.indexOf(currentIndex));
       }
     }
     setIsShuffled(!isShuffled);
   };
 
-  const toggleRepeat = () => {
+  const handleToggleRepeat = () => {
     setIsRepeating(!isRepeating);
     audio.loop = !isRepeating;
   };
 
   useEffect(() => {
-    audio.addEventListener("timeupdate", handleTimeUpdate);
-    audio.addEventListener("loadedmetadata", () => {
-      setDuration(audio.duration);
-    });
-
     const handleEnded = () => {
       if (isRepeating) {
-        // If repeat is on, replay the same song
         audio.currentTime = 0;
         audio.play();
       } else if (isShuffled) {
-        // If shuffle is on, play a random next song
         const nextShuffleIndex = (currentShuffleIndex + 1) % shuffleIndices.length;
         setCurrentShuffleIndex(nextShuffleIndex);
         handlePlay(tracks[shuffleIndices[nextShuffleIndex]]);
       } else {
-        // Normal play - go to next song
-        const currentIndex = tracks.findIndex(track => track.fileUrl === currentlyPlaying);
+        const currentIndex = tracks.findIndex((track) => track.fileUrl === currentlyPlaying);
         const nextIndex = (currentIndex + 1) % tracks.length;
         handlePlay(tracks[nextIndex]);
       }
     };
-
     audio.addEventListener("ended", handleEnded);
-
-    return () => {
-      audio.removeEventListener("timeupdate", handleTimeUpdate);
-      audio.removeEventListener("loadedmetadata", () => { });
-      audio.removeEventListener("ended", handleEnded);
-    };
+    return () => audio.removeEventListener("ended", handleEnded);
   }, [audio, isRepeating, isShuffled, currentShuffleIndex, tracks, currentlyPlaying]);
 
   useEffect(() => {
@@ -182,249 +139,210 @@ export default function MusicInterface() {
       audio.pause();
     };
   }, [audio]);
-  // console.log(isModalOpen, "modal enganaaan ippa ");
+
+  const handleClick = () => {
+    audio.pause();
+    audio.src = "";
+    // No token or Redux state to clear for guest user
+  };
+
+  const placeholders = ["Cout me out?", "What's the first rule of Fight Club?", "Send me an angel"];
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => console.log(e.target.value);
+  const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    console.log("submitted");
+  };
+
+  const newArrivals = tracks.slice(0, 5);
+  const otherSongs = tracks.slice(5);
+  const randomIndex = useMemo(() => Math.floor(Math.random() * tracks.length), [tracks]);
 
   return (
     <div className="flex h-screen flex-col bg-black text-white">
       <div className="flex flex-1">
-        {/* Sidebar */}
-        <aside className="fixed w-64 p-6 bg-[#121212] h-full">
-          {/* Profile Section */}
-          <div className="flex items-center justify-between mb-6">
-            {/* Profile Icon & Name */}
-            <div className="flex items-center gap-3">
-              <img src={profileImg} alt="Profile" className="w-10 h-10 rounded-full" />
-
-              <span className="text-white font-medium">Free User</span>
-            </div>
-
-            {/* More Options Icon */}
-            <button className="text-gray-400 hover:text-white">
-              <MoreHorizontal size={20} />
-            </button>
-          </div>
-
-          {/* Navigation */}
-          <nav className="space-y-6">
-            <div className="space-y-2">
-              <a href="#" className="text-white hover:text-primary block">Home</a>
-              <a href="#" className="text-white hover:text-primary block">Explore</a>
-              <a href="#" className="text-white hover:text-primary block">Videos</a>
-            </div>
-
-            {/* Collection Section */}
-            <div className="pt-4">
-              <h3 className="text-sm uppercase text-gray-400 mb-4">MY COLLECTION</h3>
-              <div className="space-y-2">
-                <a href="#" className="text-gray-300 hover:text-white block">Mixes & Radio</a>
-                <a href="#" className="text-gray-300 hover:text-white block">Playlists</a>
-                <a href="#" className="text-gray-300 hover:text-white block">Albums</a>
-                <a href="#" className="text-gray-300 hover:text-white block">Tracks</a>
-                <a href="#" className="text-gray-300 hover:text-white block">Videos</a>
-                <a href="#" className="text-gray-300 hover:text-white block">Artists</a>
-              </div>
-            </div>
-          </nav>
-        </aside>
-
-        {/* Main Content */}
-        <main className="flex-1 min-h-screen ml-64 bg-black">
-
-          <header className="flex justify-between items-center p-4">
+        <Sidebar />
+        <main className="flex-1 min-h-screen ml-64 bg-black overflow-y-auto">
+          <header className="flex justify-between items-center p-4 sticky top-0 bg-black z-10">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-              <input
-                type="search"
-                placeholder="Search"
-                className="bg-[#242424] rounded-full py-2 pl-10 pr-4 w-[300px] text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-              />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 z-10" size={20} />
+              <PlaceholdersAndVanishInput placeholders={placeholders} onChange={handleChange} onSubmit={onSubmit} />
             </div>
-            <button className="p-2 hover:bg-[#242424] rounded-full">
-              <Bell size={20} />
+            <button className="p-2 hover:bg-[#242424] rounded-full" onClick={handleClick}>
+              <Power size={20} />
             </button>
           </header>
 
-          {/* Tracks Section */}
-          <section className="px-6 py-4 pb-25"> 
-          <h2 className="text-2xl font-bold mb-4">Trending Tracks</h2>
-            {loading ? (
-              <div className="text-center py-4">Loading tracks...</div>
-            ) : (
-              <table className="w-full text-left">
-                <thead>
-                  <tr className="border-b border-gray-800 text-sm text-gray-400">
-                    <th className="relative flex items-center w-10  ml-5">#</th>
-                    <th className="pb-2 -ml-2">TITLE</th>
+          <section className="px-6 py-4 pb-25">
+            <div className="mb-8">
+              <h2 className="text-3xl font-bold mb-4">Featured Today</h2>
+              <div
+                className="relative w-full h-[300px] bg-[#1d1d1d] rounded-lg overflow-hidden cursor-pointer shadow-lg"
+                onClick={() => tracks[randomIndex] && handlePlay(tracks[randomIndex])}
+              >
+                <img
+                  src={tracks[randomIndex]?.img || "/placeholder.svg"}
+                  alt="Featured Banner"
+                  className="w-full h-full object-cover opacity-80"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent shadow-inner z-10 pointer-events-none" />
+                <div className="absolute inset-0 flex items-center justify-center z-20">
+                  <button className="p-4 bg-black/50 rounded-full hover:bg-black/70 transition-colors">
+                    <Play size={32} className="text-white" />
+                  </button>
+                </div>
+                <div className="absolute bottom-4 left-4 z-20">
+                  <h3 className="text-2xl font-bold text-white shadow-text">
+                    {tracks[randomIndex]?.title || "Featured Track"}
+                  </h3>
+                  <p className="text-gray-300 shadow-text">
+                    {tracks[randomIndex]?.artist
+                      ? Array.isArray(tracks[randomIndex].artist)
+                        ? tracks[randomIndex].artist.join(", ")
+                        : tracks[randomIndex].artist
+                      : "Various Artists"}
+                  </p>
+                </div>
+              </div>
+            </div>
 
-                    <th className="pb-2">ARTIST</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {tracks.map((track, index) => (
-                      <tr key={index} className="group hover:bg-[#1d1d1d]">
-                        {/* Track Image and Play Button */}
-                        <td className="py-2 w-16 relative rounded-l-lg">
-
-                          <div className="relative flex items-center w-10 h-10 ml-2">
-                            <div className="relative w-10 h-10">
-                              <img
-                                src={track.img}
-                                alt="Profile"
-                                className="w-full h-full object-cover rounded relative z-1"
-                              />
-                              <div className="absolute inset-0.5 bg-red-500 opacity-50 rounded-full blur-md"></div>
-                            </div>
-                            <button
-                              onClick={() => handlePlay(track)}
-                              className="absolute inset-0 flex items-center justify-center p-1 rounded-full opacity-0 group-hover:opacity-100 z-2"
-                            >
-                              {currentlyPlaying === track.fileUrl && isPlaying ? <Pause size={16} /> : <Play size={16} />}
-                            </button>
-                          </div>
-                        </td>
-
-
-                        {/* Track Title */}
-                        <td className="py-2 ">
-                          <div className="flex items-center gap-2 ">
-                            <span className="truncate">{track.title}</span>
-                          </div>
-                        </td>
-
-                        {/* Track Artist */}
-                        <td className="py-2 text-gray-400">{track.artist}</td>
-
-                        {/* Actions */}
-                        <td className="py-2 rounded-r-lg">
-                          <div className="flex gap-2 opacity-0 group-hover:opacity-100">
-                            <button className="p-1 hover:bg-[#333333] rounded-full">
-                              <Plus size={16} />
-                            </button>
-                            <button className="p-1 hover:bg-[#333333] rounded-full">
-                              <Heart size={16} />
-                            </button>
-                            <button className="p-1 hover:bg-[#333333] rounded-full">
-                              <MoreHorizontal size={16} />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
+            <div className="mb-8">
+              <h2 className="text-2xl font-bold mb-4">New Arrivals</h2>
+              {loading ? (
+                <div className="text-center py-4">Loading tracks...</div>
+              ) : (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                  {newArrivals.map((track, index) => (
+                    <div
+                      key={index}
+                      className="group bg-[#1d1d1d] rounded-lg p-4 hover:bg-[#242424] transition-colors flex flex-col"
+                    >
+                      <div className="w-full h-[200px] flex flex-col mb-3">
+                        <div className="relative w-full h-[90%]">
+                          <img
+                            src={track.img || "/placeholder.svg"}
+                            alt="Track Cover Top"
+                            className="w-full h-full object-cover rounded-t-md"
+                          />
+                          <button
+                            onClick={() => handlePlay(track)}
+                            className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity z-10 rounded-t-md"
+                          >
+                            {currentlyPlaying === track.fileUrl && isPlaying ? (
+                              <Pause size={24} className="text-white" />
+                            ) : (
+                              <Play size={24} className="text-white" />
+                            )}
+                          </button>
+                        </div>
+                        <img
+                          src={track.img || "/placeholder.svg"}
+                          alt="Track Cover Bottom"
+                          className="w-full h-[10%] object-cover rounded-b-md blur-lg"
+                        />
+                      </div>
+                      <div className="text-white font-semibold truncate">{track.title}</div>
+                      <div className="text-gray-400 text-sm truncate">
+                        {Array.isArray(track.artist) ? track.artist.join(", ") : track.artist}
+                      </div>
+                      <div className="flex gap-2 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button className="p-1 hover:bg-[#333333] rounded-full">
+                          <Plus size={16} />
+                        </button>
+                        <button className="p-1 hover:bg-[#333333] rounded-full">
+                          <Heart size={16} />
+                        </button>
+                        <button className="p-1 hover:bg-[#333333] rounded-full">
+                          <MoreHorizontal size={16} />
+                        </button>
+                      </div>
+                    </div>
                   ))}
-                </tbody>
-              </table>
+                </div>
+              )}
+            </div>
 
-            )}
+            <div>
+              <h2 className="text-2xl font-bold mb-4">Explore More</h2>
+              {loading ? (
+                <div className="text-center py-4">Loading tracks...</div>
+              ) : (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                  {otherSongs.map((track, index) => (
+                    <div
+                      key={index}
+                      className="group bg-[#1d1d1d] rounded-lg p-4 hover:bg-[#242424] transition-colors flex flex-col"
+                    >
+                      <div className="w-full h-[200px] flex flex-col mb-3">
+                        <div className="relative w-full h-[90%]">
+                          <img
+                            src={track.img || "/placeholder.svg"}
+                            alt="Track Cover Top"
+                            className="w-full h-full object-cover rounded-t-md"
+                          />
+                          <button
+                            onClick={() => handlePlay(track)}
+                            className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity z-10 rounded-t-md"
+                          >
+                            {currentlyPlaying === track.fileUrl && isPlaying ? (
+                              <Pause size={24} className="text-white" />
+                            ) : (
+                              <Play size={24} className="text-white" />
+                            )}
+                          </button>
+                        </div>
+                        <img
+                          src={track.img || "/placeholder.svg"}
+                          alt="Track Cover Bottom"
+                          className="w-full h-[10%] object-cover rounded-b-md blur-lg"
+                        />
+                      </div>
+                      <div className="text-white font-semibold truncate">{track.title}</div>
+                      <div className="text-gray-400 text-sm truncate">
+                        {Array.isArray(track.artist) ? track.artist.join(", ") : track.artist}
+                      </div>
+                      <div className="flex gap-2 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button className="p-1 hover:bg-[#333333] rounded-full">
+                          <Plus size={16} />
+                        </button>
+                        <button className="p-1 hover:bg-[#333333] rounded-full">
+                          <Heart size={16} />
+                        </button>
+                        <button className="p-1 hover:bg-[#333333] rounded-full">
+                          <MoreHorizontal size={16} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </section>
         </main>
       </div>
 
-      {/* Sticky Music Player */}
-      {currentlyPlaying && (
-        <div className="fixed bottom-0 left-0 right-0 py-4 px-6 flex items-center justify-between z-50 backdrop-blur-md bg-[#121212]/80 bg-gradient-to-t from-[#121212]/90 to-[#121212]/30">
-
-        <div className="flex items-center w-[300px] relative group">
-            <div className="relative" onClick={toggleModal} >
-              <img
-                src={currentTrack?.img || "/default-track.jpg"}
-                alt="Track Cover"
-                className="w-14 h-14 rounded cursor-pointer"
-              />
-              <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded flex items-center justify-center">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <polyline points="5 12 12 5 19 12" />
-                </svg>
-              </div>
-            </div>
-            <div className="ml-4 overflow-hidden">
-              <p className="text-sm font-bold truncate">{currentTrack?.title}</p>
-              <p className="text-xs text-gray-400 truncate">{currentTrack?.artist}</p>
-            </div>
-          </div>
-          <div className="flex flex-col items-center gap-2">
-            <div className="flex items-center gap-4">
-              <button
-                onClick={toggleShuffle}
-                className={`p-2 hover:bg-[#333333] rounded-full ${isShuffled ? 'text-red-500' : ''}`}
-              >
-                <Shuffle size={20} />
-              </button>
-              <button
-                onClick={handleSkipBack}
-                className="p-2 hover:bg-[#333333] rounded-full"
-              >
-                <SkipBack size={20} />
-              </button>
-              <button
-                onClick={() => currentTrack && handlePlay(currentTrack)}
-                className="hover:opacity-80"
-              >
-                {isPlaying ? <Pause size={32} /> : <Play size={32} />}
-              </button>
-              <button
-                onClick={handleSkipForward}
-                className="p-2 hover:bg-[#333333] rounded-full"
-              >
-                <SkipForward size={20} />
-              </button>
-              <button
-                onClick={toggleRepeat}
-                className={`p-2 hover:bg-[#333333] rounded-full ${isRepeating ? 'text-red-500' : ''}`}
-              >
-                <Repeat size={20} />
-              </button>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-gray-400 w-[30px] text-right">
-                {formatTime(currentTime)}
-              </span>
-              <input
-                type="range"
-                min="0"
-                max={duration || 0}
-                value={currentTime || 0}
-                step="0.02"
-                className="w-96 h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:bg-black"
-                onChange={(e) => {
-                  const newTime = parseFloat(e.target.value);
-                  audio.currentTime = newTime;
-                  setCurrentTime(newTime);
-                }}
-              />
-              <span className="text-xs text-gray-400 w-[30px]">
-                {formatTime(duration)}
-              </span>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 w-[300px] justify-end">
-            <Volume2 size={20} />
-            <input
-              type="range"
-              min="0"
-              max="1"
-              step="0.1"
-              value={volume}
-              className="w-24 h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:bg-black"
-              onChange={(e) => handleVolumeChange(parseFloat(e.target.value))}
-            />
-          </div>
-        </div>
+      {currentTrack && (
+        <MusicPlayer
+          currentTrack={currentTrack}
+          isPlaying={isPlaying}
+          handlePlay={handlePlay}
+          handleSkipBack={handleSkipBack}
+          handleSkipForward={handleSkipForward}
+          toggleShuffle={handleToggleShuffle}
+          toggleRepeat={handleToggleRepeat}
+          isShuffled={isShuffled}
+          isRepeating={isRepeating}
+          audio={audio}
+          toggleModal={toggleModal}
+        />
       )}
 
-      {isModalOpen && (
-        <PreviewModal track={currentTrack!} />
-      )}
-
-
+      <div
+        className={`fixed inset-0 bg-black/50 flex items-center justify-center z-50 transition-all duration-300 ease-in-out ${
+          isModalOpen ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-full pointer-events-none"
+        }`}
+      >
+        {isModalOpen && currentTrack && <PreviewModal track={currentTrack} isOpen={isModalOpen} toggleModal={toggleModal} />}
+      </div>
     </div>
   );
 }

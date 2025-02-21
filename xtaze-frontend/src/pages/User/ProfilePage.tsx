@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import Cropper, { Area } from "react-easy-crop";
 import { Camera, Power, Search } from "lucide-react";
 import Sidebar from "./userComponents/SideBar";
-import ProfilePage from "./s";
+import ProfilePage from "../../assets/profile6.jpeg";
 
 export default function Home() {
     const user = useSelector((state: RootState) => state.user.signupData);
@@ -119,6 +119,9 @@ export default function Home() {
         }
     };
 
+    const handleSubscribe =()=>{
+        navigate('/plans')
+    }
     return (
         <div className="flex h-screen flex-col bg-black text-white">
             {showCropper && (
@@ -225,7 +228,7 @@ export default function Home() {
                             ) : (
                                 <div className="text-center">
                                     <p className="text-gray-400">You are not subscribed to any plan.</p>
-                                    <button className="bg-blue-500 px-5 py-2 mt-3 text-white rounded-lg hover:bg-blue-600 transition">
+                                    <button className="bg-blue-500 px-5 py-2 mt-3 text-white rounded-lg hover:bg-blue-600 transition" onClick={handleSubscribe}>
                                         Upgrade Now
                                     </button>
                                 </div>
@@ -252,6 +255,7 @@ export default function Home() {
                     </section>
                 </main>
             </div>
+            
         </div>
     )
 }

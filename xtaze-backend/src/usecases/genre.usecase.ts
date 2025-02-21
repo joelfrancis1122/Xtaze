@@ -15,6 +15,9 @@ export class GenreUseCase {
   async listGenre(): Promise<IGenre[]> {
     return await this._genreRepository.getAllGenres() as IGenre[];
   }
+  async listActiveGenres(): Promise<IGenre[]> {
+    return await this._genreRepository.getAllActiveGenres() as IGenre[];
+  }
 
 
   async createGenre(name: string): Promise<IGenre> {

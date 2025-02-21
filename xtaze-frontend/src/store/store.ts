@@ -1,7 +1,9 @@
+// store/store.ts
 import { configureStore } from "@reduxjs/toolkit";
 import userReducer from "../redux/userSlice";
 import adminReducer from "../redux/adminSlice";
 import artistReducer from "../redux/artistSlice";
+import audioReducer from "../redux/audioSlice";
 import { persistStore, persistReducer } from "redux-persist";
 import { combineReducers } from "redux";
 import storage from "redux-persist/lib/storage";
@@ -9,13 +11,14 @@ import storage from "redux-persist/lib/storage";
 const persistConfig = {
   key: "root",
   storage,
-  whitelist: ["user"], // ✅ Only persist user data
+  whitelist: ["user", "audio"], // Persist both user and audio slices
 };
 
 const rootReducer = combineReducers({
   user: userReducer,
-  admin:adminReducer,
-  artist:artistReducer
+  admin: adminReducer,
+  artist: artistReducer,
+  audio: audioReducer,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);
@@ -25,7 +28,7 @@ export const store = configureStore({
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: {
-        ignoredActions: ["persist/PERSIST", "persist/REHYDRATE"], 
+        ignoredActions: ["persist/PERSIST", "persist/REHYDRATE"],
       },
     }),
 });

@@ -33,7 +33,7 @@ export default class ArtistController {
     try{
       console.log("page")
       const listArtists = await this._artistnUseCase.listArtists()
-      // console.log(listArtists,"othila")
+      console.log(listArtists,"othila")
       res.status(200).json({success:true,message:"List Of Artists",data:listArtists})
     }catch(error){
       next(error)

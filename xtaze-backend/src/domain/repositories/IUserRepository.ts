@@ -5,4 +5,5 @@ export interface IUserRepository {
   findByEmail: (email: string) => Promise<IUser|null>;
   findByPhone: (phone: number) => Promise<IUser | null>;
   updateProfile: (userId: string,pic:string) => Promise<IUser | null>;
+  getupdatedArtist: (userId: string) => Promise<IUser | null>;
 }

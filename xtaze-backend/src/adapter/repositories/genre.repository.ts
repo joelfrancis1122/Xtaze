@@ -11,6 +11,9 @@ export class GenreRepository implements IGenreRepository {
   async getAllGenres(): Promise<IGenre[]> {
     return await GenreModel.find().sort({ createdAt: -1 });
   }
+  async getAllActiveGenres(): Promise<IGenre[]> {
+    return await GenreModel.find({isBlocked:false}).sort({ createdAt: -1 });
+  }
 
   async findGenreByName(name: string): Promise<IGenre | null> {
     return await GenreModel.findOne({ name });

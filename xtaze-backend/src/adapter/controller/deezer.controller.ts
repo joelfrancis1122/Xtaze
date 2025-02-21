@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { FetchDeezerSongsUseCase } from "../../usecases/deezer.usecase";
-
+import UserRepository from "../repositories/user.repository";
+const userRepository = new UserRepository();
 export class DeezerController {
   private fetchDeezerSongsUseCase: FetchDeezerSongsUseCase;
 
@@ -11,11 +12,17 @@ export class DeezerController {
   async getDeezerSongs(req: Request, res: Response): Promise<void> {
     try {
       const songs = await this.fetchDeezerSongsUseCase.execute();
-
+      const userId = req.query.userId as string;
+      console.log(userId,"odi")
+      let userData = null; // Declare once
+      if (userId) {
+        userData = await userRepository.getUserUpdated(userId); // Assign value
+      }
+  
       if (songs.length === 0) {
         res.status(404).json({ error: "No songs found with previews" });
       } else {
-        res.json({ songs });
+        res.json({ songs,user:userData });
       }
     } catch (error: any) {
       console.error("Error fetching Deezer songs:", error.message);

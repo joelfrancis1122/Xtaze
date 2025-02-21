@@ -24,7 +24,7 @@ async findByEmail(email: string): Promise<IUser> {
   }
   async getAllArtists(): Promise<IUser[]> {
     console.log("ithset")
-    return await UserModel.find();
+    return await UserModel.find({ role: { $ne: "admin" } });
   }
 
   // async getArtistById(id: string): Promise<IUser|null> {
