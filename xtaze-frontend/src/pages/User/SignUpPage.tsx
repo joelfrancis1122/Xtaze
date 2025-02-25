@@ -1,17 +1,22 @@
-import React, { useEffect, useState } from "react";
+"use client";
+import React, { useEffect, useState, useCallback } from "react";
 import { toast } from "sonner";
 import { Label } from "../../components/ui/label";
 import { Input } from "../../components/ui/input";
 import { cn } from "../../../lib/utils";
-import { IconBrandGoogle, IconEye, IconEyeOff } from "@tabler/icons-react";
+import { IconBrandGoogle, IconEye, IconEyeOff, IconCheck, IconX } from "@tabler/icons-react";
 import { Select } from "../../components/ui/select";
-import { useNavigate } from "react-router-dom"; // Import useNavigate
+import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
-import { saveSignupData } from '../../redux/userSlice'
+import { saveSignupData } from "../../redux/userSlice";
 import axios from "axios";
+import { motion } from "framer-motion";
+
+import debounce from "lodash/debounce";
+
 const Signup = () => {
-  const dispatch = useDispatch()
-  const navigate = useNavigate(); // Initialize navigate
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -32,43 +37,86 @@ const Signup = () => {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-  };
-
+  const [usernameStatus, setUsernameStatus] = useState<"idle" | "checking" | "unique" | "taken">("idle"); // Track username status
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
 
-const handleSubmit = async (e: React.FormEvent) => {
+  // Debounced function to check username availability
+  const checkUsernameAvailability = useCallback(
+    debounce(async (username: string) => {
+      if (!username.trim()) {
+        setUsernameStatus("idle");
+        return;
+      }
+
+      setUsernameStatus("checking");
+      try {
+        let userName = username.trim()
+        const response = await axios.post("http://localhost:3000/user/checkUsername", {
+          userName,
+        });
+        if (response.data.available) {
+          setUsernameStatus("unique");
+        } else {
+          setUsernameStatus("taken");
+        }
+      } catch (error) {
+        console.error("Error checking username:", error);
+        setUsernameStatus("taken"); // Default to taken on error for safety
+        toast.error("Error checking username availability", { position: "top-right" });
+      }
+    }, 500), // 500ms debounce delay
+    []
+  );
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+
+    // Check username availability when username changes
+    if (name === "username") {
+      checkUsernameAvailability(value);
+    }
+  };
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    if (/^\d*$/.test(value)) {
+      setFormData({ ...formData, phone: value });
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.username.trim()) {
       toast.error("Username cannot be empty or only spaces.");
       return;
     }
-    if (!formData.country.trim()) { 
+    if (!formData.country.trim()) {
       toast.error("Country cannot be empty or only spaces.");
       return;
     }
     if (!formData.password.trim()) {
-      toast.error("password cannot be only spaces.");
+      toast.error("Password cannot be only spaces.");
       return;
     }
     if (isButtonDisabled) {
       toast.info("Please wait before trying again.", { position: "top-right" });
       return;
     }
-
     if (formData.password !== formData.confirmPassword) {
       toast.error("Passwords do not match!", { position: "top-right" });
       return;
     }
+    if (usernameStatus !== "unique") {
+      toast.error("Please choose a unique username.", { position: "top-right" });
+      return;
+    }
 
-    setIsButtonDisabled(true); 
-    setTimeout(() => setIsButtonDisabled(false), 10000); 
+    setIsButtonDisabled(true);
+    setTimeout(() => setIsButtonDisabled(false), 10000);
 
     dispatch(saveSignupData(formData));
 
@@ -79,7 +127,6 @@ const handleSubmit = async (e: React.FormEvent) => {
 
       if (response.data.success) {
         toast.success("OTP sent successfully!", { position: "top-right" });
-
         dispatch(saveSignupData(formData));
         navigate("/otp", { state: { otpSent: true } });
       } else {
@@ -90,14 +137,7 @@ const handleSubmit = async (e: React.FormEvent) => {
         position: "top-right",
       });
     }
-};
-const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  const value = e.target.value;
-  if (/^\d*$/.test(value)) {  // Allows only numbers
-    setFormData({ ...formData, phone: value });
-  }
-};
-
+  };
 
   const goToLogin = () => {
     navigate("/");
@@ -115,14 +155,62 @@ const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
           {/* Username */}
           <LabelInputContainer className="mb-4">
             <Label htmlFor="username">Username</Label>
-            <Input id="username" name="username" placeholder="Your username" type="text" value={formData.username} onChange={handleChange} required />
+            <div className="relative flex items-center w-full">
+              <Input
+                id="username"
+                name="username"
+                placeholder="Your username"
+                type="text"
+                value={formData.username}
+                onChange={handleChange}
+                maxLength={15}
+                required
+                className="w-full mr-100"
+              />
+              <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                {usernameStatus === "checking" && (
+                  <span className="animate-spin h-5 w-5 border-2 border-t-transparent border-gray-400 rounded-full"></span>
+                )}
+
+                {usernameStatus === "unique" && (
+                  <motion.div
+                    initial={{ scale: 0, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ duration: 0.3, ease: "easeOut" }}
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                  >
+                    <IconCheck size={20} className="text-green-500" />
+                  </motion.div>
+
+                )}
+
+                {usernameStatus === "taken" && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.5, rotate: 90 }}
+                    animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                    transition={{ duration: 0.3, ease: "easeOut" }}
+                  >
+                    <IconX size={20} className="text-red-500" />
+                  </motion.div>
+                )}
+              </div>
+            </div>
           </LabelInputContainer>
 
           {/* Country, Gender & DOB */}
           <div className="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-2 mb-4">
             <LabelInputContainer>
               <Label htmlFor="country">Country</Label>
-              <Input id="country" name="country" placeholder="Your country" type="text" value={formData.country} onChange={handleChange} required />
+              <Input
+                id="country"
+                name="country"
+                placeholder="Your country"
+                type="text"
+                value={formData.country}
+                onChange={handleChange}
+                required
+              />
             </LabelInputContainer>
 
             <LabelInputContainer>
@@ -135,7 +223,7 @@ const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
                 value={formData.year}
                 onChange={(e) => {
                   const value = e.target.value;
-                  if (value.length <= 4) { 
+                  if (value.length <= 4) {
                     handleChange(e);
                   }
                 }}
@@ -167,31 +255,49 @@ const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
           <LabelInputContainer className="mb-4">
             <Label htmlFor="phone">Phone</Label>
             <Input
-  id="phone"
-  name="phone"
-  placeholder="+123456789"
-  type="tel"
-  minLength={10}
-  maxLength={10}
-  value={formData.phone}
-  onChange={handlePhoneChange}
-  required
-/>
-
+              id="phone"
+              name="phone"
+              placeholder="+123456789"
+              type="tel"
+              minLength={10}
+              maxLength={10}
+              value={formData.phone}
+              onChange={handlePhoneChange}
+              required
+            />
           </LabelInputContainer>
 
           {/* Email */}
           <LabelInputContainer className="mb-4">
             <Label htmlFor="email">Email Address</Label>
-            <Input id="email" name="email" placeholder="your@email.com" type="email" value={formData.email} onChange={handleChange} required />
+            <Input
+              id="email"
+              name="email"
+              placeholder="your@email.com"
+              type="email"
+              value={formData.email}
+              onChange={handleChange}
+              required
+            />
           </LabelInputContainer>
 
           {/* Password & Confirm Password */}
           <LabelInputContainer className="mb-6 relative">
             <Label htmlFor="password">Password</Label>
             <div className="relative">
-              <Input id="password" name="password" placeholder="asd" type={showPassword ? "text" : "password"} value={formData.password} onChange={handleChange} required />
-              <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-2 text-gray-600"
+              <Input
+                id="password"
+                name="password"
+                placeholder="asd"
+                type={showPassword ? "text" : "password"}
+                value={formData.password}
+                onChange={handleChange}
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-2 text-gray-600"
               >
                 {showPassword ? <IconEyeOff size={18} /> : <IconEye size={18} />}
               </button>
@@ -201,19 +307,33 @@ const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
           <LabelInputContainer className="mb-6 relative">
             <Label htmlFor="confirmPassword">Confirm Password</Label>
             <div className="relative">
-              <Input id="confirmPassword" name="confirmPassword" placeholder="asd" type={showConfirmPassword ? "text" : "password"} value={formData.confirmPassword} onChange={handleChange} required />
-              <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              <Input
+                id="confirmPassword"
+                name="confirmPassword"
+                placeholder="asd"
+                type={showConfirmPassword ? "text" : "password"}
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 className="absolute right-3 top-2 text-gray-600"
               >
                 {showConfirmPassword ? <IconEyeOff size={18} /> : <IconEye size={18} />}
               </button>
             </div>
           </LabelInputContainer>
+
           {/* Submit Button */}
-          <button className="bg-gradient-to-br relative group/btn from-black dark:from-zinc-900 dark:to-zinc-900 to-neutral-600 block dark:bg-zinc-800 w-full text-white rounded-md h-10 font-medium shadow-[0px_1px_0px_0px_#ffffff40_inset,0px_-1px_0px_0px_#ffffff40_inset] dark:shadow-[0px_1px_0px_0px_var(--zinc-800)_inset,0px_-1px_0px_0px_var(--zinc-800)_inset]" type="submit">
-            Sign Up &rarr;
+          <button
+            className="bg-gradient-to-br relative group/btn from-black dark:from-zinc-900 dark:to-zinc-900 to-neutral-600 block dark:bg-zinc-800 w-full text-white rounded-md h-10 font-medium shadow-[0px_1px_0px_0px_#ffffff40_inset,0px_-1px_0px_0px_#ffffff40_inset] dark:shadow-[0px_1px_0px_0px_var(--zinc-800)_inset,0px_-1px_0px_0px_var(--zinc-800)_inset]"
+            type="submit"
+            disabled={isButtonDisabled}
+          >
+            Sign Up →
             <BottomGradient />
-            
           </button>
 
           {/* Divider */}
@@ -221,7 +341,10 @@ const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 
           {/* Social Login */}
           <div className="flex flex-col space-y-4">
-            <button className="relative group/btn flex space-x-2 items-center justify-start px-4 w-full text-black rounded-md h-10 font-medium shadow-input bg-gray-50 dark:bg-zinc-900 dark:shadow-[0px_0px_1px_1px_var(--neutral-800)]" type="button">
+            <button
+              className="relative group/btn flex space-x-2 items-center justify-start px-4 w-full text-black rounded-md h-10 font-medium shadow-input bg-gray-50 dark:bg-zinc-900 dark:shadow-[0px_0px_1px_1px_var(--neutral-800)]"
+              type="button"
+            >
               <IconBrandGoogle className="h-4 w-4 text-neutral-800 dark:text-neutral-300" />
               <span className="text-neutral-700 dark:text-neutral-300 text-sm">Sign up with Google</span>
               <BottomGradient />
@@ -243,8 +366,6 @@ const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
   );
 };
 
-export default Signup;
-
 /* Helper Components */
 const BottomGradient = () => (
   <>
@@ -256,3 +377,5 @@ const BottomGradient = () => (
 const LabelInputContainer = ({ children, className }: { children: React.ReactNode; className?: string }) => (
   <div className={cn("flex flex-col space-y-2 w-full", className)}>{children}</div>
 );
+
+export default Signup;

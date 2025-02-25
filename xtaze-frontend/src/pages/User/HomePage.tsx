@@ -1,3 +1,5 @@
+"use client";
+
 import { Search, Power, Play, Pause, Plus, Heart, MoreHorizontal } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import Sidebar from "./userComponents/SideBar";
@@ -20,11 +22,13 @@ import { RootState } from "../../store/store";
 import { PlaceholdersAndVanishInput } from "../../utils/placeholders-and-vanish-input";
 import { audio } from "../../utils/audio";
 import { WavyBackground } from "../../components/ui/wavy-background";
+import axios from "axios";
 
 export default function Home() {
   const [tracks, setTracks] = useState<Track[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [playedSongs, setPlayedSongs] = useState<Set<string>>(new Set()); // Track played songs
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const user = useSelector((state: RootState) => state.user.signupData);
@@ -43,7 +47,6 @@ export default function Home() {
       try {
         let response;
         if (user?.premium) {
-          // Premium users: Fetch from provider endpoint
           response = await fetch(`http://localhost:3000/provider/getAllTracks?userId=${user?._id}`, {
             method: "GET",
             headers: {
@@ -55,16 +58,17 @@ export default function Home() {
           const data = await response.json();
           dispatch(saveSignupData(data.user));
           const formattedTracks: Track[] = data.tracks.map((track: any) => ({
+            _id: track._id, // Ensure _id is included
             title: track.title,
             album: track.album,
             artist: Array.isArray(track.artists) ? track.artists : JSON.parse(track.artists),
             genre: track.genre,
             fileUrl: track.fileUrl,
             img: track.img,
+            listeners: track.listeners || 0,
           }));
           setTracks(formattedTracks);
         } else {
-          // Free users: Fetch from Deezer API
           response = await fetch(`http://localhost:3000/api/songs/deezer?userId=${user?._id}`, {
             method: "GET",
             headers: {
@@ -73,15 +77,17 @@ export default function Home() {
           });
           if (!response.ok) throw new Error("Failed to fetch free tracks from Deezer");
           const data = await response.json();
-          console.log(data,"odi")
+          console.log(data, "odi");
           dispatch(saveSignupData(data.user));
           const formattedTracks: Track[] = data.songs.map((track: any) => ({
+            _id: track._id || track.fileUrl, // Fallback to fileUrl if _id isn’t provided
             title: track.title,
             album: track.album || "Unknown Album",
             artist: track.artist,
             genre: track.genre || "Unknown Genre",
             fileUrl: track.fileUrl,
             img: track.img,
+            listeners: track.listeners || 0,
           }));
           setTracks(formattedTracks);
         }
@@ -95,8 +101,31 @@ export default function Home() {
     fetchTracks();
   }, [dispatch, user?._id, user?.premium]);
 
-  const toggleModal = () => {
-    setIsModalOpen((prevState) => !prevState);
+  const incrementListeners = async (trackId: string) => {
+    const token = localStorage.getItem("token");
+    if (!token || !trackId) return;
+
+    try {
+      const response = await axios.post(
+        `http://localhost:3000/artist/incrementListeners`,
+        { trackId }, // Now using _id instead of fileUrl
+        {
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      if (response.data.success) {
+        setTracks((prevTracks) =>
+          prevTracks.map((track) =>
+            track._id === trackId ? { ...track, listeners: (track.listeners || 0) + 1 } : track
+          )
+        );
+      }
+    } catch (error) {
+      console.error("Error incrementing listeners:", error);
+    }
   };
 
   const handlePlay = (track: Track) => {
@@ -113,7 +142,17 @@ export default function Home() {
       audio.play();
       dispatch(setCurrentTrack(track));
       dispatch(setIsPlaying(true));
+
+      // Increment listeners only if not already played in this session
+      if (!playedSongs.has(track._id || track.fileUrl)) { // Use _id with fallback to fileUrl
+        incrementListeners(track._id || track.fileUrl); // Use _id if available
+        setPlayedSongs((prev) => new Set(prev).add(track._id || track.fileUrl));
+      }
     }
+  };
+
+  const toggleModal = () => {
+    setIsModalOpen((prevState) => !prevState);
   };
 
   const generateShuffleIndices = () => {
@@ -208,7 +247,7 @@ export default function Home() {
   const randomIndex = useMemo(() => Math.floor(Math.random() * tracks.length), [tracks]);
 
   const handleUpgradeClick = () => {
-    navigate("/plans"); // Assuming this is your subscription page route
+    navigate("/plans");
   };
 
   return (
@@ -260,20 +299,17 @@ export default function Home() {
                 </>
               ) : (
                 <>
-                  <h2 className="text-3xl font-bold mb-4">Enhance Your Experience
-                  </h2>
+                  <h2 className="text-3xl font-bold mb-4">Enhance Your Experience</h2>
                   <div
                     className="relative w-full h-[300px] bg-[#000000] rounded-lg shadow-lg cursor-pointer overflow-hidden"
                     onClick={handleUpgradeClick}
                   >
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent shadow-inner z-10 pointer-events-none" />
-
-                    {/* Content wrapper */}
                     <div className="absolute inset-0 flex items-center justify-center z-20">
                       <div className="overflow-visible w-full h-full flex items-center justify-center">
                         <WavyBackground
-                          className="w-full h-[400px] flex flex-col items-center justify-center" // Increased height to 400px
-                          style={{ transform: "translateY(-50px)" }} // Shift wave upward by 50px
+                          className="w-full h-[400px] flex flex-col items-center justify-center"
+                          style={{ transform: "translateY(-50px)" }}
                         >
                           <p className="text-2xl md:text-4xl lg:text-7xl text-white font-bold inter-var text-center">
                             Listen. Discover. Repeat

@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect, useState, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -5,11 +7,20 @@ import { RootState } from "../../store/store";
 import axios from "axios";
 import { toast } from "sonner";
 import Cropper, { Area } from "react-easy-crop";
-import { Camera, Power, Search, Music, Star } from "lucide-react";
+import { Camera, Power } from "lucide-react";
 import ProfilePage from "../../assets/profile6.jpeg";
 import ArtistSidebar from "./artistComponents/artist-aside";
 import { clearArtistData, saveArtistData } from "../../redux/artistSlice";
-import { motion } from "framer-motion";
+import { Button } from "../../components/ui/button";
+import { Card } from "../../components/ui/card";
+
+// Define the Track type based on your expected API response
+interface Track {
+    _id: string;
+    title: string;
+    releaseDate: string;
+    listeners: number;
+}
 
 export default function ArtistProfile() {
     const user = useSelector((state: RootState) => state.artist.signupData);
@@ -17,35 +28,70 @@ export default function ArtistProfile() {
     const navigate = useNavigate();
 
     const [imageSrc, setImageSrc] = useState<string | null>(null);
+    const [coverMediaSrc, setCoverMediaSrc] = useState<string | null>(null);
     const [crop, setCrop] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
     const [zoom, setZoom] = useState<number>(1);
     const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
     const [croppedImage, setCroppedImage] = useState<string | undefined>(undefined);
-    const [showCropper, setShowCropper] = useState<boolean>(false);
+    const [croppedCoverMedia, setCroppedCoverMedia] = useState<string | undefined>(undefined);
+    const [showCropper, setShowCropper] = useState<"profile" | "cover" | null>(null);
+    const [isEditingBio, setIsEditingBio] = useState(false);
+    const [bioText, setBioText] = useState<string>(String(user?.bio || ""));
+    const [tracks, setTracks] = useState<Track[]>([]); // State to store fetched tracks
 
     useEffect(() => {
         const token = localStorage.getItem("artistToken");
         if (!token) {
             console.error("No token found. Please login.");
             navigate("/login");
+            return;
         }
-    }, [navigate]);
 
-    const handleLogout = () => {
-        localStorage.removeItem("artistToken");
-        dispatch(clearArtistData());
-        navigate("/", { replace: true });
-    };
+        const fetchTracks = async () => {
+            if (!user?._id) return;
 
-    const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+            try {
+                const response = await fetch(`http://localhost:3000/artist/getAllTracksArtist?userId=${user._id}`, {
+                    method: "GET",
+                    headers: {
+                        "Authorization": `Bearer ${token}`, 
+                    },
+                });
+                const data = await response.json();
+                if (data.success && Array.isArray(data.tracks)) {
+                    setTracks(data.tracks); 
+                } else {
+                    console.error("Failed to fetch tracks:", data.message);
+                    setTracks([]);
+                }
+            } catch (error) {
+                console.error("Error fetching tracks:", error);
+                setTracks([]);
+            }
+        };
+
+        fetchTracks();
+    }, [navigate, user?._id]);
+
+    const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>, type: "profile" | "cover") => {
         const file = event.target.files?.[0];
         if (!file) return;
 
         const reader = new FileReader();
         reader.readAsDataURL(file);
         reader.onload = () => {
-            setImageSrc(reader.result as string);
-            setShowCropper(true);
+            const dataUrl = reader.result as string;
+            if (type === "profile") {
+                setImageSrc(dataUrl);
+                setShowCropper("profile");
+            } else {
+                setCoverMediaSrc(dataUrl);
+                if (file.type.startsWith("video/")) {
+                    uploadCroppedMedia(dataUrl, "coverImage");
+                } else {
+                    setShowCropper("cover");
+                }
+            }
         };
     };
 
@@ -54,15 +100,15 @@ export default function ArtistProfile() {
     }, []);
 
     const getCroppedImage = async (): Promise<string | null> => {
-        if (!imageSrc || !croppedAreaPixels) return null;
+        if (!imageSrc && !coverMediaSrc) return null;
 
         return new Promise<string | null>((resolve) => {
             const image = new Image();
-            image.src = imageSrc;
+            image.src = (showCropper === "profile" ? imageSrc : coverMediaSrc) as string;
             image.onload = () => {
                 const canvas = document.createElement("canvas");
                 const ctx = canvas.getContext("2d");
-                if (!ctx) return resolve(null);
+                if (!ctx || !croppedAreaPixels) return resolve(null);
 
                 canvas.width = croppedAreaPixels.width;
                 canvas.height = croppedAreaPixels.height;
@@ -87,16 +133,21 @@ export default function ArtistProfile() {
     const handleCropConfirm = async () => {
         const cropped = await getCroppedImage();
         if (cropped) {
-            setCroppedImage(cropped);
-            setShowCropper(false);
-            uploadCroppedImage(cropped);
+            if (showCropper === "profile") {
+                setCroppedImage(cropped);
+                uploadCroppedMedia(cropped, "profileImage");
+            } else {
+                setCroppedCoverMedia(cropped);
+                uploadCroppedMedia(cropped, "coverImage");
+            }
+            setShowCropper(null);
         }
     };
 
-    const uploadCroppedImage = async (base64Image: string) => {
-        const blob = await (await fetch(base64Image)).blob();
+    const uploadCroppedMedia = async (mediaData: string, field: "profileImage" | "coverImage") => {
+        const blob = await (await fetch(mediaData)).blob();
         const formData = new FormData();
-        formData.append("profileImage", blob, "cropped-image.jpg");
+        formData.append(field, blob, `artist-${field}.${field === "profileImage" ? "jpg" : blob.type.startsWith("video/") ? "mp4" : "jpg"}`);
 
         if (user?._id) {
             formData.append("userId", user._id);
@@ -106,168 +157,234 @@ export default function ArtistProfile() {
         }
 
         try {
-            const response = await axios.post<{ success: boolean; user?: any }>(
-                "http://localhost:3000/user/uploadProfilepic",
+            const route = field === "profileImage" ? "/user/uploadProfilepic" : "/user/updateBanner";
+            const response = await axios.post<{
+                success: boolean;
+                message: string;
+                user?: any;
+            }>(
+                `http://localhost:3000${route}`,
                 formData,
                 { headers: { "Content-Type": "multipart/form-data" } }
+            );
+            console.log("Upload response:", response.data);
+
+            if (response.data.success && response.data.user) {
+                dispatch(saveArtistData(response.data.user));
+                setCroppedCoverMedia(response.data.user.banner);
+                toast.success(`${field === "profileImage" ? "Profile picture" : "Banner"} updated!`);
+            } else {
+                toast.error(`Failed to update ${field === "profileImage" ? "profile picture" : "banner"}: ${response.data.message}`);
+            }
+        } catch (error) {
+            console.error(`Error uploading ${field}:`, error);
+            toast.error("Something went wrong. Please try again.");
+        }
+    };
+
+    const handleBioSave = async () => {
+        if (!bioText.trim()) {
+            toast.error("Bio cannot be empty.");
+            return;
+        }
+
+        try {
+            const response = await axios.put<{ success: boolean; user?: any }>(
+                "http://localhost:3000/user/updateBio",
+                { userId: user?._id, bio: bioText },
+                { headers: { "Content-Type": "application/json" } }
             );
 
             if (response.data.success && response.data.user) {
                 dispatch(saveArtistData(response.data.user));
-                toast.success("Profile picture updated!");
+                setIsEditingBio(false);
+                toast.success("Bio updated successfully!");
+            } else {
+                toast.error("Failed to update bio.");
             }
         } catch (error) {
-            console.error("Error uploading image:", error);
+            console.error("Error updating bio:", error);
+            toast.error("Something went wrong. Please try again.");
         }
     };
 
-    return (
-        <div className="relative min-h-screen bg-gradient-to-b from-black to-gray-900 text-white overflow-hidden">
-            {/* Dynamic Background */}
-            
 
+    return (
+        <div className="min-h-screen bg-black text-white">
             {showCropper && (
-                <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-md flex items-center justify-center z-50"
-                >
-                    <div className="bg-gray-900 p-6 rounded-xl shadow-2xl border border-gray-800">
-                        <h2 className="text-white text-xl font-bold mb-4">Crop Your Image</h2>
-                        <div className="relative w-[400px] h-[400px] bg-gray-800 rounded-lg overflow-hidden">
+                <div className="fixed inset-0 bg-black flex items-center justify-center z-50">
+                    <Card className="p-6 bg-black border border-white">
+                        <h2 className="text-lg font-semibold text-white mb-4">
+                            Crop Your {showCropper === "profile" ? "Profile" : "Banner"} Image
+                        </h2>
+                        <div className="relative w-[400px] h-[400px] bg-black border border-white">
                             <Cropper
-                                image={imageSrc!}
+                                image={(showCropper === "profile" ? imageSrc : coverMediaSrc) as string}
                                 crop={crop}
                                 zoom={zoom}
-                                aspect={1}
+                                aspect={showCropper === "profile" ? 1 : 16 / 9}
                                 onCropChange={setCrop}
                                 onZoomChange={setZoom}
                                 onCropComplete={onCropComplete}
                             />
                         </div>
-                        <div className="flex justify-end mt-6 gap-3">
-                            <button className="px-5 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition" onClick={() => setShowCropper(false)}>
+                        <div className="flex justify-end mt-6 gap-2">
+                            <Button className="bg-black text-white border border-white" onClick={() => setShowCropper(null)}>
                                 Cancel
-                            </button>
-                            <button className="px-5 py-2 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-lg hover:from-purple-600 hover:to-blue-600 transition" onClick={handleCropConfirm}>
+                            </Button>
+                            <Button className="bg-black text-white border border-white" onClick={handleCropConfirm}>
                                 Crop & Upload
-                            </button>
+                            </Button>
                         </div>
-                    </div>
-                </motion.div>
+                    </Card>
+                </div>
             )}
 
-            <div className="flex flex-1 relative z-10">
+            <div className="grid lg:grid-cols-[280px_1fr]">
                 <ArtistSidebar />
-                <main className="flex-1 pl-5 pr-6 pt-5 pb-6">
-                <header className="flex justify-between items-center mb-8">
-                       
-                    </header>
+                <main className="flex-1 pl-0.4 pr-6 pt-5 pb-6">
+                    <div className="mb-6 flex items-center justify-between">
+                        <div className="space-y-1">
+                            <h1 className="text-2xl font-bold text-white">Artist Profile</h1>
+                            <div className="text-sm text-white">Your artist details</div>
+                        </div>
+                      
+                    </div>
 
-                    <section className="space-y-10">
-                        {/* Profile Header */}
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.5 }}
-                            className="flex items-center gap-8"
-                        >
-                            <div className="relative w-40 h-40 group">
-                                <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full blur-md opacity-50 group-hover:opacity-0 transition z-0"></div>
-                                <img
-                                    src={(croppedImage as string) ?? user?.profilePic as string ?? ProfilePage}
-                                    alt="Artist Profile"
-                                    className="w-40 h-40 rounded-full object-cover relative z-10 border-4 border-gray-900"
-                                />
+                    <div className="space-y-6">
+                        {/* Cover Banner with Profile Picture */}
+                        <Card className="bg-black border border-white">
+                            <div className="relative w-full h-66">
+                                {(croppedCoverMedia?.endsWith(".mp4") || user?.banner?.endsWith(".mp4")) ? (
+                                    <video
+                                        src={croppedCoverMedia as string ?? user?.banner}
+                                        autoPlay
+                                        loop
+                                        muted
+                                        className="w-full h-full object-cover"
+                                        style={{ maxHeight: "100%" }}
+                                    />
+                                ) : (
+                                    <img
+                                        src={croppedCoverMedia as string ?? user?.banner ?? ProfilePage}
+                                        alt="Cover Banner"
+                                        className="w-full h-full object-cover"
+                                    />
+                                )}
                                 <label
-                                    htmlFor="profile-upload"
-                                    className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-60 rounded-full opacity-0 group-hover:opacity-100 transition cursor-pointer z-20"
+                                    htmlFor="cover-upload"
+                                    className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-60 opacity-0 hover:opacity-100 cursor-pointer"
                                 >
                                     <Camera size={28} className="text-white" />
                                 </label>
-                                <input type="file" id="profile-upload" accept="image/*" className="hidden" onChange={handleImageChange} />
+                                <input
+                                    type="file"
+                                    id="cover-upload"
+                                    accept="image/*,video/*"
+                                    className="hidden"
+                                    onChange={(e) => handleImageChange(e, "cover")}
+                                />
+                                <div className="absolute bottom-0 left-6 transform translate-y-1/2">
+                                    <div className="relative w-32 h-32">
+                                        <img
+                                            src={(croppedImage as string) ?? (user?.profilePic as string) ?? ProfilePage}
+                                            alt="Artist Profile"
+                                            className="w-32 h-32 rounded-full object-cover border-4 border-black bg-black"
+                                        />
+                                        <label
+                                            htmlFor="profile-upload"
+                                            className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-60 rounded-full opacity-0 hover:opacity-100 cursor-pointer"
+                                        >
+                                            <Camera size={28} className="text-white" />
+                                        </label>
+                                        <input
+                                            type="file"
+                                            id="profile-upload"
+                                            accept="image/*"
+                                            className="hidden"
+                                            onChange={(e) => handleImageChange(e, "profile")}
+                                        />
+                                    </div>
+                                </div>
                             </div>
-                            <div>
-                                <h2 className="text-4xl font-extrabold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
-                                    {user?.username} <span className="text-yellow-400"><Star size={20} className="inline" /></span>
-                                </h2>
-                                <p className="text-gray-400 text-lg">{user?.email}</p>
-                                <p className="text-gray-300 mt-2 font-semibold">Premium Artist | {user?.gender || "Genre not specified"}</p>
+                            <div className="pt-20 px-6 pb-6">
+                                <h2 className="text-xl font-semibold text-white">{user?.username}</h2>
+                                <p className="text-white">{user?.email}</p>
+                                <p className="text-white">{user?.gender || "Genre not specified"}</p>
                             </div>
-                        </motion.div>
+                        </Card>
 
                         {/* Artist Bio */}
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.5, delay: 0.2 }}
-                            className="bg-gray-900 p-8 rounded-xl shadow-lg border border-gray-800"
-                        >
-                            <h3 className="text-2xl font-bold mb-4 bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">About the Artist</h3>
-                            <p className="text-gray-300 leading-relaxed">
-                                {user?.gender || "Craft your story here. Share your journey, inspirations, and what drives your music."}
-                            </p>
-                            <motion.button
-                                whileHover={{ scale: 1.05 }}
-                                className="mt-6 bg-gradient-to-r from-purple-500 to-blue-500 px-6 py-2 text-white rounded-lg hover:from-purple-600 hover:to-blue-600 transition"
-                            >
-                                Edit Bio
-                            </motion.button>
-                        </motion.div>
+                        <Card className="p-6 bg-black border border-white w-full">
+                            <h2 className="text-lg font-semibold text-white mb-4">About the Artist</h2>
+                            {isEditingBio ? (
+                                <div className="max-w-full">
+                                    <textarea
+                                        value={bioText}
+                                        onChange={(e) => setBioText(e.target.value)}
+                                        className="w-full h-32 p-2 bg-black text-white border border-white rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-white break-words whitespace-pre-wrap"
+                                        placeholder="Enter your bio here..."
+                                        maxLength={300}
+                                    />
+                                    <div className="flex gap-2">
+                                        <Button className="bg-black text-white border border-white" onClick={() => setIsEditingBio(false)}>
+                                            Cancel
+                                        </Button>
+                                        <Button className="bg-black text-white border border-white" onClick={handleBioSave}>
+                                            Save
+                                        </Button>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div>
+                                    <p className="text-white min-h-[120px] break-words whitespace-pre-wrap">
+                                        {user?.bio || "Craft your story here. Share your journey, inspirations, and what drives your music. This space is for a detailed bio to let your fans know more about you, your influences, and your artistic path."}
+                                    </p>
+                                    <Button
+                                        className="mt-4 bg-black text-white border border-white"
+                                        onClick={() => setIsEditingBio(true)}
+                                    >
+                                        Edit Bio
+                                    </Button>
+                                </div>
+                            )}
+                        </Card>
 
                         {/* Artist Releases */}
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.5, delay: 0.4 }}
-                            className="bg-gray-900 p-8 rounded-xl shadow-lg border border-gray-800"
-                        >
-                            <h3 className="text-2xl font-bold mb-4 bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">Premium Releases</h3>
-                            <div className="space-y-6">
-                                <motion.div whileHover={{ x: 10 }} className="flex items-center gap-4 bg-gray-800 p-4 rounded-lg">
-                                    <Music size={28} className="text-purple-400" />
-                                    <div>
-                                        <p className="text-white font-semibold text-lg">Song Title 1</p>
-                                        <p className="text-gray-400 text-sm">Release Date: Feb 10, 2025 | Streams: 1.2M</p>
-                                    </div>
-                                </motion.div>
-                                <motion.div whileHover={{ x: 10 }} className="flex items-center gap-4 bg-gray-800 p-4 rounded-lg">
-                                    <Music size={28} className="text-purple-400" />
-                                    <div>
-                                        <p className="text-white font-semibold text-lg">Song Title 2</p>
-                                        <p className="text-gray-400 text-sm">Release Date: Jan 15, 2025 | Streams: 850K</p>
-                                    </div>
-                                </motion.div>
+                        <Card className="p-6 bg-black border border-white">
+                            <h2 className="text-lg font-semibold text-white mb-4">Releases</h2>
+                            <div className="space-y-4">
+                                {tracks.length > 0 ? (
+                                    tracks.map((track) => (
+                                        <div key={track._id} className="bg-black p-4 border border-white">
+                                            <p className="text-white font-semibold">{track.title}</p>
+                                            <p className="text-white text-sm">
+                                                 Listeners: {track.listeners.toLocaleString()}
+                                            </p>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <p className="text-white">No tracks available.</p>
+                                )}
                             </div>
-                            <motion.button
-                                whileHover={{ scale: 1.05 }}
-                                className="mt-6 bg-gradient-to-r from-purple-500 to-blue-500 px-6 py-2 text-white rounded-lg hover:from-purple-600 hover:to-blue-600 transition"
-                            >
-                                Add New Release
-                            </motion.button>
-                        </motion.div>
+                        </Card>
 
                         {/* Social Media & Stats */}
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.5, delay: 0.6 }}
-                            className="bg-gray-900 p-8 rounded-xl shadow-lg border border-gray-800"
-                        >
-                            <h3 className="text-2xl font-bold mb-4 bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">Connect & Stats</h3>
+                        <Card className="p-6 bg-black border border-white">
+                            <h2 className="text-lg font-semibold text-white mb-4">Connect & Stats</h2>
                             <div className="flex justify-between items-center">
                                 <div className="flex gap-6">
-                                    <a href="#" className="text-purple-400 hover:text-purple-300 transition font-semibold">Twitter</a>
-                                    <a href="#" className="text-purple-400 hover:text-purple-300 transition font-semibold">Instagram</a>
-                                    <a href="#" className="text-purple-400 hover:text-purple-300 transition font-semibold">Spotify</a>
+                                    <a href="#" className="text-white">Twitter</a>
+                                    <a href="#" className="text-white">Instagram</a>
+                                    <a href="#" className="text-white">Spotify</a>
                                 </div>
-                                <div className="text-gray-300">
-                                    <p>Fans: <span className="text-purple-400 font-bold">12.5K</span></p>
-                                    <p>Total Streams: <span className="text-purple-400 font-bold">3.8M</span></p>
+                                <div className="text-white">
+                                    <p>Fans: <span className="font-semibold">12.5K</span></p>
+                                    <p>Total Streams: <span className="font-semibold">3.8M</span></p>
                                 </div>
                             </div>
-                        </motion.div>
-                    </section>
+                        </Card>
+                    </div>
                 </main>
             </div>
         </div>

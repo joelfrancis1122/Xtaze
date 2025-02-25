@@ -52,16 +52,28 @@ export default class GenreController{
 
 
 
-  async createGenre(req:Request,res:Response,next:NextFunction):Promise<void>{
-    try{
-      const {name} = req.body
-      console.log("inside varuninnd",req.body)
-      const genre = await this._genreUseCase.createGenre(name)
-      res.status(201).json({success:true,message:"Genre Created Successfully",data:genre})
-    }catch(error){
-    console.log(error)
-    }
+async createGenre(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+      const { name } = req.body;
+
+      console.log("📌 Incoming request to create genre:", name);
+
+      const genre = await this._genreUseCase.createGenre(name);
+
+      if (!genre.success) {
+          console.log("⚠️ Genre already exists, returning 400.");
+          res.status(400).json({ success: false, message: genre.message });
+          return 
+      }
+
+      console.log("✅ Genre successfully created:", genre.genre);
+      res.status(201).json({ success: true, message: genre.message, data: genre.genre  });
+  } catch (error) {
+      console.error("❌ Error in createGenre:", error);
+      next(error); // Pass error to global error handler
   }
+}
+
 
   async toggleBlockUnblockGenre(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {

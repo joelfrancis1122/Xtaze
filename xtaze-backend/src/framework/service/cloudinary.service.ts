@@ -95,7 +95,7 @@ export const uploadImageToCloud = async (file: Express.Multer.File): Promise<Upl
       }
     ).end(file.buffer);
   });
-};
+}; 
 
 
 
@@ -105,26 +105,32 @@ export const uploadProfileCloud = async (file: Express.Multer.File): Promise<Upl
     .replace(/[^a-zA-Z0-9_-]/g, "_") // Replace special characters with "_"
     .trim();
   const uniqueName = `${file.originalname.replace(/\.[^/.]+$/, "")}_${uuidv4()}`;
-  console.log("Uploading profile picture to folder:", folderName);
+
+  console.log("Uploading profile media to folder:", folderName);
+
+  // ✅ Determine resource type dynamically based on file MIME type
+  const resourceType = file.mimetype.startsWith("video") ? "video" : "image";
 
   return new Promise((resolve, reject) => {
     cloudinary.uploader.upload_stream(
       {
-        resource_type: "image",
-        folder: "xtaze/profiles", // All images go into this single folder
+        resource_type: resourceType, // Dynamic resource type (image or video)
+        folder: "xtaze/profiles",
         public_id: uniqueName,
-        unique_filename: true, // Ensure unique filenames in Cloudinary
+        unique_filename: true, // Ensure unique filenames
         overwrite: true, // Overwrite if the same name exists
       },
       (error, result) => {
         if (error) {
-          console.error("Profile image upload error:", error);
+          console.error("Profile media upload error:", error);
           reject(error);
         } else {
-          console.log("Profile image uploaded:", result);
-          resolve(result as UploadApiResponse); // Return the secure URL of the uploaded image
+          console.log("Profile media uploaded:", result);
+          resolve(result as UploadApiResponse);
         }
       }
     ).end(file.buffer);
   });
 };
+
+

@@ -23,7 +23,7 @@ export default function GenreManagement() {
   const [editedGenreName, setEditedGenreName] = useState<string>("");
 
   useEffect(() => {
-    const token = localStorage.getItem("adminToken"); 
+    const token = localStorage.getItem("adminToken");
 
     axios.get("http://localhost:3000/admin/genreList", {
       headers: {
@@ -35,17 +35,31 @@ export default function GenreManagement() {
       .catch((err) => console.error("Error fetching genres:", err));
   }, [])
 
-  const handleAddGenre = async () => {
-    if (newGenre.trim()) {
-      try {
-        const res = await axios.post("http://localhost:3000/admin/genreCreate", { name: newGenre });
-        setGenres([res.data.data, ...genres]);
-        setNewGenre("");
-      } catch (err) {
-        console.error("Error adding genre:", err);
+  const handleAddGenre = async (event: React.FormEvent) => {
+    event.preventDefault();
+  
+    if (!newGenre.trim()) return;
+  
+    try {
+      const res = await axios.post("http://localhost:3000/admin/genreCreate", { name: newGenre.toLowerCase() });
+  
+      console.log(res.data,"odi odioi")
+      setGenres([res.data.data, ...genres]);
+      setNewGenre("");
+      toast.success(res.data.message);
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response) {
+        if (error.response.status === 400) {
+          toast.error(error.response.data.message);
+          return;
+        }
       }
+      toast.error("Something went wrong. Please try again.");
+      console.error("Error adding genre:", error);
     }
   };
+  
+  
 
   const toggleBlockGenre = async (id: string) => {
     try {
@@ -81,11 +95,11 @@ export default function GenreManagement() {
           genre._id === id ? { ...genre, name: editedGenreName } : genre
         )
       );
-      if(response.data.data.success==true){
-console.log(response.data.data.success==true)
+      if (response.data.data.success == true) {
+        console.log(response.data.data.success == true)
         setEditingGenreId(null);
         toast.success(response?.data.data.message);
-      }else{
+      } else {
         event.preventDefault()
         toast.success(response?.data?.data.message);
 

@@ -77,6 +77,18 @@ export default class ArtistUseCase {
 
   } 
 
+  async listArtistReleases(userId:string): Promise<ITrack[]> {
+    
+    return await this._artistRepository.getAllTracksByArtist(userId) as ITrack[];
+
+  } 
+  async increment(trackId:string): Promise<ITrack|null> {
+    
+    return await this._artistRepository.increment(trackId);
+    
+
+  } 
+
   // async toggleBlockUnblockArtist(id: string): Promise<IUser | null> {
   //   console.log("Artist coming to the toggle");
   //   const artist = await this._artistRepository.getArtistById(id);

@@ -68,6 +68,12 @@ export default class UserUseCase {
 
     return this._otpService.sendOTP(email);
   }
+  async checkUnique(username: string): Promise<boolean> {
+    const user = await this._userRepository.findByUsername(username);
+    return user === null;
+  }
+
+   
 
   async verifyOTP(otp: string): Promise<{ success: boolean; message: string }> {
     console.log("email ila ennn ariya otp enda", otp)
@@ -129,6 +135,39 @@ export default class UserUseCase {
       }
   
       return { success: true, message: "Profile updated successfully" ,user:updatedUser};
+    } catch (error) {
+      console.error("Error during profile upload:", error);
+      return { success: false, message: "An error occurred while updating the profile" };
+    }
+
+}
+  async uploadBanner(userId: string,file: Express.Multer.File,isVideo:boolean): Promise<{ success: boolean; message: string ,user?:IUser,isVideo?:boolean}> {
+    try {
+      const cloudinaryResponse = await uploadProfileCloud(file);
+  
+      const BannerPicUrl = cloudinaryResponse.secure_url;
+      const updatedUser = await this._userRepository.uploadBanner(userId, BannerPicUrl);
+      if (!updatedUser) {
+        return { success: false, message: "Failed to update profile" };
+      }
+  
+      return { success: true, message: "Banner updated successfully" ,user:updatedUser,isVideo:isVideo};
+    } catch (error) {
+      console.error("Error during Banner upload:", error);
+      return { success: false, message: "An error occurred while updating the profile" };
+    }
+
+}
+  async updateBio(userId: string,bio: string): Promise<{ success: boolean; message: string ,user?:IUser}> {
+    try {
+  
+      const updated = await this._userRepository.updateBio(userId, bio);
+  
+      if (!updated) {
+        return { success: false, message: "Failed to update profile" };
+      }
+  
+      return { success: true, message: "Profile updated successfully" ,user:updated};
     } catch (error) {
       console.error("Error during profile upload:", error);
       return { success: false, message: "An error occurred while updating the profile" };

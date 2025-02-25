@@ -12,4 +12,7 @@ export default interface IUser {
   premium?: boolean;
   role?: "user" | "artist" | "provider" | "admin";
   isActive?: boolean; 
+  profilePic?:string;
+  bio?:string;
+  banner?:string;
 }

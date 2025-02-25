@@ -72,25 +72,86 @@ export default class UserController {
       next(error);
     }
   }
+  async checkUsername(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { userName } = req.body;
+      let username = userName
+      const available = await this._userUseCase.checkUnique(username);
+      console.log("Checking username:", username, "Available:", available);
+      res.status(200).json({ available });
+    } catch (error) {
+      next(error);
+    }
+  }
+
   async uploadProfilepic(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       console.log("hey this is ")
       console.log(req.file)
       console.log(req.body.userId)
 
-      const {userId} = req.body
+      const { userId } = req.body
       const file = req.file
 
       if (!userId || !file) {
         res.status(400).json({ success: false, message: "User ID and image are required" });
         return;
       }
-
-
       const result = await this._userUseCase.uploadProfile(userId, file);
-      if(result?.success==true){
+      if (result?.success == true) {
         res.status(200).json(result)
-      }else{
+      } else {
+        res.status(400).json(result)
+      }
+    }
+    catch (error) {
+      next(error);
+    }
+  }
+  async uploadBanner(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      console.log("📌 Received banner upload request");
+      console.log("File:", req.file);
+      console.log("User ID:", req.body.userId);
+  
+      const { userId } = req.body;
+      const file = req.file;
+      
+      if (!userId || !file) {
+        res.status(400).json({ success: false, message: "User ID and file are required" });
+        return; 
+      }
+      const isVideo = file.mimetype.startsWith("video/");
+      console.log("📌 Is this a video?", isVideo);
+      const result = await this._userUseCase.uploadBanner(userId, file, isVideo);
+  
+      if (result.success) {
+        res.status(200).json(result);
+      } else {
+        res.status(400).json(result);
+      }
+    } catch (error) {
+      console.error("❌ Error in uploadBanner Controller:", error);
+      next(error);
+    }
+  }
+  
+  async updateBio(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      console.log(req.body, "whats comming")
+
+      const { userId, bio } = req.body
+
+      if (!bio) {
+        res.status(400).json({ success: false, message: "Bio required" });
+        return;
+      }
+
+
+      const result = await this._userUseCase.updateBio(userId, bio);
+      if (result?.success == true) {
+        res.status(200).json(result)
+      } else {
         res.status(400).json(result)
 
       }

@@ -47,15 +47,15 @@ const ArtistUploadTracks = () => {
           <div className="grid gap-4 md:grid-cols-3">
             <MetricsCard
               title="Monthly Listeners"
-              value="292,000"
+              value="0"
             />
             <MetricsCard
               title="Total Streams"
-              value="1.5M"
+              value="0"
             />
             <MetricsCard
               title="Total Earnings"
-              value="$12,892"
+              value="$0"
             />
           </div>
           <Card className="mt-6 p-6">

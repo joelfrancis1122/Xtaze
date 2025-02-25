@@ -36,7 +36,7 @@ export class GenreRepository implements IGenreRepository {
     return editedGenre
   }
   
-  async findDupe(id: string, name: string): Promise<boolean> {
+  async findDupe(name: string): Promise<boolean> {
     const existingGenre = await GenreModel.findOne({ name: name });
     if(existingGenre){
      console.log("odi kitty")

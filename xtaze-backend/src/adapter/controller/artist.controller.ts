@@ -39,6 +39,33 @@ export default class ArtistController {
       next(error)
     }
   }
+  async getAllTracksArtist(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try{
+      console.log("artist release ")
+      const {userId} = req.query
+      console.log(req.query)
+      let tracks = null
+      if(userId){
+       tracks = await this._artistnUseCase.listArtistReleases(userId as string)
+      }
+      console.log(tracks,"othila")
+      res.status(200).json({success:true,message:"List Of Artists",tracks})
+    }catch(error){
+      next(error)
+    }
+  }
+  async incrementListeners(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try{
+      console.log("increment")
+      const {trackId} = req.body
+     const track = await this._artistnUseCase.increment(trackId as string)
+
+      console.log(req.body)
+      res.status(200).json({success:true,message:"List Of Artists"})
+    }catch(error){
+      next(error)
+    }
+  }
   
   // async toggleblockArtist(req: Request, res: Response, next: NextFunction): Promise<void> {
   //   const { id } = req.params;

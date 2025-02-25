@@ -51,9 +51,45 @@ export default class UserRepository implements IUserRepository {
       return null;
     }
   }
+  async uploadBanner(userId: string, BannerPicUrl: string): Promise<IUser | null> {
+    try {
+      const updatedUser = await UserModel.findByIdAndUpdate(
+        userId,
+        { banner: BannerPicUrl },
+        { new: true, runValidators: true }
+      ).lean();
+
+      return updatedUser as IUser | null; 
+    } catch (error) {
+      console.log(error);
+      return null;
+    }
+  }
+  async updateBio(userId: string, bio: string): Promise<IUser | null> {
+    try {
+      const updatedUser = await UserModel.findByIdAndUpdate(
+        userId,
+        { bio: bio },
+        { new: true, runValidators: true }
+      ).lean();
+
+      return updatedUser as IUser | null; 
+    } catch (error) {
+      console.log(error);
+      return null;
+    }
+  }
+
+
   async getupdatedArtist(artistId: string): Promise<IUser | null> {
     const updatedArtist = await UserModel.findOne({ _id: artistId }); 
     return updatedArtist as unknown as IUser   
+}
+
+async findByUsername(username: string): Promise<IUser | null>{
+  return await UserModel.findOne({ username:{$regex:`^${username}$`,$options:"i"} });
+  
+
 }
 
 }

@@ -17,6 +17,8 @@ router.post("/login",(req:Request,res:Response,next:NextFunction)=>artistControl
 router.post("/upload",upload.fields([{ name: "file", maxCount: 1 }, { name: "image", maxCount: 1 }]),(req:Request,res:Response,next:NextFunction)=>artistController.uploadTracks(req,res,next))
 router.get("/listActiveGenres",authenticateUser,(req:Request,res:Response,next:NextFunction)=>genreController.listActiveGenres(req,res,next))
 router.get("/listUsers",authenticateUser,(req:Request,res:Response,next:NextFunction)=>artistController.listArtists(req,res,next))
+router.get("/getAllTracksArtist",authenticateUser,(req:Request,res:Response,next:NextFunction)=>artistController.getAllTracksArtist(req,res,next))
+router.post("/incrementListeners",authenticateUser,(req:Request,res:Response,next:NextFunction)=>artistController.incrementListeners(req,res,next))
 
 
 // router.get("/toggleBlock/:id:",(req:Request,res:Response,next:NextFunction)=>artistController.toggleblockArtist(req,res,next))

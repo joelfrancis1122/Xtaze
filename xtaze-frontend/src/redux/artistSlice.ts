@@ -15,6 +15,8 @@ interface ArtistState {
     isActive?: boolean;
     premium?: boolean;
     profilePic:String;
+    bio:String;
+    banner:String;
 
   } | null;
 }

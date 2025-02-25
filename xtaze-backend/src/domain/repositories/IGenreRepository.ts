@@ -7,6 +7,6 @@ export interface IGenreRepository {
   getGenreById(id: string): Promise<IGenre | null>;
   updateGenreStatus(id: string, status: boolean): Promise<IGenre|null>;
   editGenre(id: string,genre:string): Promise<IGenre|null>;
-  findDupe(id: string,name:string): Promise<boolean>;
+  findDupe(name:string): Promise<boolean>;
 
 }
