@@ -1,14 +1,16 @@
 
 import { NextFunction, Request, Response } from "express";
 import IuserUseCase from "../../domain/usecase/IUserUseCase";
+import { Track } from "../db/models/TrackModel";
+import UserModel from "../db/models/UserModel";
 // import { sendOTPService } from "../../framework/service/otp.service";
-
 interface Dependencies {
   userUseCase: IuserUseCase
 }
 
 export default class UserController {
-  private _userUseCase: IuserUseCase
+  private _userUseCase: IuserUseCase;
+
   constructor(dependencies: Dependencies) {
     this._userUseCase = dependencies.userUseCase
   }
@@ -72,6 +74,17 @@ export default class UserController {
       next(error);
     }
   }
+  async googleLogin(req: Request, res: Response, next: NextFunction): Promise<void> {
+    const { token } = req.body;
+    const Token = token
+    try {
+      const response = await this._userUseCase.googleLogin(Token);
+      res.status(200).json(response);
+    } catch (error) {
+      console.error("Error with Google signup:", error);
+      res.status(400).json({ success: false, message: "Google signup failed" });
+    }
+  }
   async checkUsername(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { userName } = req.body;
@@ -110,32 +123,32 @@ export default class UserController {
   }
   async uploadBanner(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      console.log("📌 Received banner upload request");
+      console.log(" Received banner upload request");
       console.log("File:", req.file);
       console.log("User ID:", req.body.userId);
-  
+
       const { userId } = req.body;
       const file = req.file;
-      
+
       if (!userId || !file) {
         res.status(400).json({ success: false, message: "User ID and file are required" });
-        return; 
+        return;
       }
       const isVideo = file.mimetype.startsWith("video/");
-      console.log("📌 Is this a video?", isVideo);
+      console.log("Is this a video?", isVideo);
       const result = await this._userUseCase.uploadBanner(userId, file, isVideo);
-  
+
       if (result.success) {
         res.status(200).json(result);
       } else {
         res.status(400).json(result);
       }
     } catch (error) {
-      console.error("❌ Error in uploadBanner Controller:", error);
+      console.error("error in uploadBanner:", error);
       next(error);
     }
   }
-  
+
   async updateBio(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       console.log(req.body, "whats comming")
@@ -161,6 +174,63 @@ export default class UserController {
     }
   }
 
+  async checkOut(req: Request, res: Response, next: NextFunction) {
+    const { userId, priceId } = req.body;
 
+    try {
+      if (!userId || !priceId) {
+        return res.status(400).json({ success: false, message: "User ID and Price ID are required" });
+      }
+
+      const session = await this._userUseCase.execute(userId, priceId);
+
+      res.status(200).json({ success: true, sessionId: session?.id });
+    } catch (error: any) {
+      console.error("Error in checkOut:", error);
+      res.status(500).json({ success: false, message: error.message || "Failed to create checkout session" });
+    }
+  }
+  async toggleLike(req: Request, res: Response, next: NextFunction) {
+    const { trackId} = req.body;
+    const {userId} = req.query
+    console.log(req.query)
+    console.log(req.body,"asdas")
+    try {   
+      const user = await this._userUseCase.addToLiked(userId as string,trackId);
+      res.status(200).json({ success: true, user:user });
+
+    } catch (error: any) {
+      console.error("Error in likedsongs:", error);
+      res.status(500).json({ success: false, message: error.message || "sa" });
+    }
+  }
+  async getliked(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { songIds } = req.body;
+      const userId = req.query.userId;
+      
+      console.log("0",songIds)
+      if (!userId || !songIds || !Array.isArray(songIds)) {
+       res.status(400).json({ success: false, message: 'Invalid request' });
+      }
+  
+      // Fetch the user to verify (optional step)
+      const user = await UserModel.findById(userId);
+      if (!user) {
+      res.status(404).json({ success: false, message: 'User not found' });
+      }
+  
+      // Fetch full track details based on songIds
+      const tracks = await Track.find({ _id: { $in: songIds } });
+  
+      res.json({
+        success: true,
+        tracks,
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ success: false, message: 'Server error' });
+    }
+  };
 
 }

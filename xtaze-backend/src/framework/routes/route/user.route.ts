@@ -2,6 +2,7 @@ import express, { NextFunction, Request, Response } from "express";
 import UserController from "../../../adapter/controller/user.controller";
 import userDependencies from "../../dependencies/user.dependencies";
 import upload from "../../middlewares/uploadMiddleware";
+import { authenticateUser } from "../../middlewares/authMiddleware";
 
 const router = express.Router();
 
@@ -12,10 +13,13 @@ router.post("/register", (req: Request, res: Response, next: NextFunction) => us
 router.post("/send-otp", (req: Request, res: Response, next: NextFunction) => userController.sendOTP(req, res, next));
 router.post("/verify-otp", (req:Request, res:Response, next:NextFunction) => userController.verifyOTP(req,res,next))
 router.post("/login", (req: Request, res: Response, next: NextFunction) => userController.loginUser(req, res, next));
+router.post("/google-login", (req: Request, res: Response, next: NextFunction) => userController.googleLogin(req, res, next));
 console.log("ith")
 // router.post("/uploadProfilepic", upload.fields([ { name: "profileImage", maxCount: 1 }]),(req:Request,res:Response,next:NextFunction)=>userController.uploadProfilepic(req,res,next))
-   router.post("/uploadProfilepic", upload.single("profileImage"),(req:Request,res:Response,next:NextFunction)=>userController.uploadProfilepic(req,res,next))
-   router.post("/updateBanner", upload.single("coverImage"),(req:Request,res:Response,next:NextFunction)=>userController.uploadBanner(req,res,next))
-   router.put("/updateBio",(req:Request,res:Response,next:NextFunction)=>userController.updateBio(req,res,next))
-
+router.post("/uploadProfilepic", upload.single("profileImage"),(req:Request,res:Response,next:NextFunction)=>userController.uploadProfilepic(req,res,next))
+router.post("/updateBanner", upload.single("coverImage"),(req:Request,res:Response,next:NextFunction)=>userController.uploadBanner(req,res,next))
+router.put("/updateBio",(req:Request,res:Response,next:NextFunction)=>userController.updateBio(req,res,next))
+router.post("/checkOut",authenticateUser, async (req: Request, res: Response, next: NextFunction) => {await userController.checkOut(req, res, next)});
+router.post("/toggle-like",authenticateUser,(req:Request,res:Response,next:NextFunction)=>userController.toggleLike(req,res,next))
+router.post("/getliked",authenticateUser,(req:Request,res:Response,next:NextFunction)=>userController.getliked(req,res,next))
 export default router;

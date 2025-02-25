@@ -26,6 +26,10 @@ import ProfilePage from "./pages/User/ProfilePage";
 import ArtistProfile from "./pages/Artist/ArtistProfile";
 import SubscriptionPlans from "./pages/User/Subscription";
 import { WavyBackgroundDemo } from "./pages/User/rough";
+import SuccessPage from "./pages/User/success";
+import CancelPage from "./pages/User/cancelPage";
+import PlaylistsPage from "./pages/User/playlistPage";
+import LikedSongsPage from "./pages/User/LikedSongs";
 
 const App = () => {
 
@@ -63,6 +67,10 @@ const App = () => {
             <Route path="/Ghome" element={<MusicInterface />} />
             <Route path="/uploadTrack" element={<UploadMusicPage />} />
             <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/success" element={<SuccessPage />} />
+            <Route path="/cancel" element={<CancelPage />} />
+            <Route path="/playlist" element={<PlaylistsPage />} />
+            <Route path="/likedSongs" element={<LikedSongsPage />} />
             {/* <Route path="/Home" element={<Home/>} /> */}
 
 

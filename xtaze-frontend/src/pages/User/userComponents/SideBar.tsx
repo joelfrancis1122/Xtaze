@@ -13,6 +13,9 @@ export default function Sidebar() {
   const handleProfileClick = () => {
     navigate("/profile");
   };
+  const likedSongs =()=>{
+    navigate('/likedSongs')
+  }
 
   return (
     <aside className="fixed w-64 p-6 bg-[#121212] h-full border-r border-gray-800 shadow-lg">
@@ -52,6 +55,9 @@ export default function Sidebar() {
         <div className="pt-4">
           <h3 className="text-xs uppercase text-gray-400 mb-4 tracking-wider">My Collection</h3>
           <div className="space-y-3">
+            <a onClick={likedSongs} className="text-gray-300 hover:text-white block transition-colors">
+              Liked Songs
+            </a>
             <a href="#" className="text-gray-300 hover:text-white block transition-colors">
               Mixes & Radio
             </a>

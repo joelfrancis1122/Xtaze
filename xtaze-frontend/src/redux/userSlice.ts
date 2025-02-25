@@ -15,6 +15,7 @@ interface UserState {
     isActive?: boolean;
     premium?: boolean;
     profilePic?:String;
+    likedSongs?:String[];
   } | null;
 }
 

@@ -9,4 +9,7 @@ export interface IUserRepository {
   uploadBanner: (userId: string,file:string) => Promise<IUser | null>;
   updateBio: (userId: string,bio:string) => Promise<IUser | null>;
   getupdatedArtist: (userId: string) => Promise<IUser | null>;
+  updateUserSubscription: (userId: string,isPremium:boolean) => Promise<IUser | null>;
+  findById(userId: string): Promise<IUser | null>;
+  addToLiked(userId: string,trackId: string): Promise<IUser | null>;
 }

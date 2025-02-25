@@ -15,4 +15,5 @@ export default interface IUser {
   profilePic?:string;
   bio?:string;
   banner?:string;
+  likedSongs?:string[];
 }

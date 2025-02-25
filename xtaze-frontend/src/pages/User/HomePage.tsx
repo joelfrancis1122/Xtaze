@@ -28,13 +28,23 @@ export default function Home() {
   const [tracks, setTracks] = useState<Track[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [playedSongs, setPlayedSongs] = useState<Set<string>>(new Set()); // Track played songs
+  const [playedSongs, setPlayedSongs] = useState<Set<string>>(new Set());
+  const [likedSongs, setLikedSongs] = useState<Set<string>>(new Set());
+  
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const user = useSelector((state: RootState) => state.user.signupData);
   const { currentTrack, isPlaying, isShuffled, isRepeating, shuffleIndices, currentShuffleIndex } = useSelector(
     (state: RootState) => state.audio
   );
+
+  // Initialize likedSongs from Redux on mount
+  useEffect(() => {
+    if (user?.likedSongs) {
+      setLikedSongs(new Set(user.likedSongs?.map(String) || []));
+
+    }
+  }, [user?.likedSongs]);
 
   useEffect(() => {
     const fetchTracks = async () => {
@@ -58,7 +68,7 @@ export default function Home() {
           const data = await response.json();
           dispatch(saveSignupData(data.user));
           const formattedTracks: Track[] = data.tracks.map((track: any) => ({
-            _id: track._id, // Ensure _id is included
+            _id: track._id,
             title: track.title,
             album: track.album,
             artist: Array.isArray(track.artists) ? track.artists : JSON.parse(track.artists),
@@ -77,10 +87,9 @@ export default function Home() {
           });
           if (!response.ok) throw new Error("Failed to fetch free tracks from Deezer");
           const data = await response.json();
-          console.log(data, "odi");
           dispatch(saveSignupData(data.user));
           const formattedTracks: Track[] = data.songs.map((track: any) => ({
-            _id: track._id || track.fileUrl, // Fallback to fileUrl if _id isn’t provided
+            _id: track._id || track.fileUrl,
             title: track.title,
             album: track.album || "Unknown Album",
             artist: track.artist,
@@ -108,7 +117,7 @@ export default function Home() {
     try {
       const response = await axios.post(
         `http://localhost:3000/artist/incrementListeners`,
-        { trackId }, // Now using _id instead of fileUrl
+        { trackId },
         {
           headers: {
             "Authorization": `Bearer ${token}`,
@@ -143,11 +152,46 @@ export default function Home() {
       dispatch(setCurrentTrack(track));
       dispatch(setIsPlaying(true));
 
-      // Increment listeners only if not already played in this session
-      if (!playedSongs.has(track._id || track.fileUrl)) { // Use _id with fallback to fileUrl
-        incrementListeners(track._id || track.fileUrl); // Use _id if available
+      if (!playedSongs.has(track._id || track.fileUrl)) {
+        incrementListeners(track._id || track.fileUrl);
         setPlayedSongs((prev) => new Set(prev).add(track._id || track.fileUrl));
       }
+    }
+  };
+
+  const handleLike = async (trackId: string) => {
+    const token = localStorage.getItem("token");
+    if (!token || !trackId) return;
+
+    const isCurrentlyLiked = likedSongs.has(trackId);
+    
+    try {
+      const response = await axios.post(
+        `http://localhost:3000/user/toggle-like?userId=${user?._id}`,
+        { trackId },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (response.data.success) {
+        console.log(response.data, "ith an correct");
+        dispatch(saveSignupData(response.data.user));
+        setLikedSongs((prev) => {
+          const newLiked = new Set(prev);
+          if (isCurrentlyLiked) {
+            newLiked.delete(trackId);
+          } else {
+            newLiked.add(trackId);
+          }
+          return newLiked;
+        });
+      }
+    } catch (error) {
+      console.error("Error toggling like:", error);
     }
   };
 
@@ -269,7 +313,7 @@ export default function Home() {
             <div className="mb-8">
               {user?.premium ? (
                 <>
-                  <h2 className="text-3xl font-bold mb-4">Featured Today</h2>
+                  <h2 className="text-3xl font-bold mb-4 font-sans">Featured Today</h2>
                   <div
                     className="relative w-full h-[300px] bg-[#1d1d1d] rounded-lg overflow-hidden cursor-pointer shadow-lg"
                     onClick={() => tracks[randomIndex] && handlePlay(tracks[randomIndex])}
@@ -368,8 +412,16 @@ export default function Home() {
                         <button className="p-1 hover:bg-[#333333] rounded-full">
                           <Plus size={16} />
                         </button>
-                        <button className="p-1 hover:bg-[#333333] rounded-full">
-                          <Heart size={16} />
+                        <button 
+                          onClick={() => handleLike(track._id || track.fileUrl)}
+                          className={`p-1 hover:bg-[#333333] rounded-full ${
+                            likedSongs.has(track._id || track.fileUrl) ? 'text-red-500' : 'text-white'
+                          }`}
+                        >
+                          <Heart 
+                            size={16} 
+                            fill={likedSongs.has(track._id || track.fileUrl) ? 'currentColor' : 'none'}
+                          />
                         </button>
                         <button className="p-1 hover:bg-[#333333] rounded-full">
                           <MoreHorizontal size={16} />
@@ -424,8 +476,16 @@ export default function Home() {
                         <button className="p-1 hover:bg-[#333333] rounded-full">
                           <Plus size={16} />
                         </button>
-                        <button className="p-1 hover:bg-[#333333] rounded-full">
-                          <Heart size={16} />
+                        <button 
+                          onClick={() => handleLike(track._id || track.fileUrl)}
+                          className={`p-1 hover:bg-[#333333] rounded-full ${
+                            likedSongs.has(track._id || track.fileUrl) ? 'text-red-500' : 'text-white'
+                          }`}
+                        >
+                          <Heart 
+                            size={16} 
+                            fill={likedSongs.has(track._id || track.fileUrl) ? 'currentColor' : 'none'}
+                          />
                         </button>
                         <button className="p-1 hover:bg-[#333333] rounded-full">
                           <MoreHorizontal size={16} />

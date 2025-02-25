@@ -176,7 +176,7 @@ export default function Home() {
                                     <div className="absolute inset-0.5 bg-red-500 opacity-50 rounded-full blur-md z-0"></div>
 
                                 <img
-                                    src={(croppedImage as string) ?? user?.profilePic ?? ProfilePage
+                                    src={(croppedImage as string) ?? user?.profilePic 
 
 
                                         
@@ -215,25 +215,29 @@ export default function Home() {
                         </div>
 
                         {/* Subscription Plan */}
-                        <h3 className="text-xl font-bold mt-1 mb-4 text-white">Subscription Plan</h3>
-                        <div className="bg-[#1d1d1d] p-6 rounded-lg shadow-md flex flex-col items-center">
-                            {user?.premium ? (
-                                <div className="text-center">
-                                    <p className="text-lg text-white font-semibold">Premium Plan</p>
-                                    <p className="text-gray-400">Expires on: {user.year}</p>
-                                    <button className="bg-red-500 px-5 py-2 mt-3 text-white rounded-lg hover:bg-red-600 transition">
-                                        Cancel Subscription
-                                    </button>
-                                </div>
-                            ) : (
-                                <div className="text-center">
-                                    <p className="text-gray-400">You are not subscribed to any plan.</p>
-                                    <button className="bg-blue-500 px-5 py-2 mt-3 text-white rounded-lg hover:bg-blue-600 transition" onClick={handleSubscribe}>
-                                        Upgrade Now
-                                    </button>
-                                </div>
-                            )}
-                        </div>
+            <h3 className="text-2xl font-bold text-white mb-6">Your Subscription Plan</h3>
+            <div className="bg-[#1d1d1d] p-6 rounded-xl shadow-lg flex flex-col items-center border border-gray-800 transition-all hover:shadow-xl">
+              {user?.premium ? (
+                <div className="text-center space-y-2">
+                  <p className="text-xl font-semibold text-white">Premium Plan</p>
+                  <p className="text-sm text-gray-300">Enjoy full access to all features!</p>
+                  <span className="inline-block bg-green-500 text-white text-xs font-medium px-2.5 py-1 rounded-full">
+                    Active
+                  </span>
+                </div>
+              ) : (
+                <div className="text-center space-y-4">
+                  <p className="text-base text-gray-400">You’re on the Free Plan</p>
+                  <p className="text-sm text-gray-500">Upgrade to unlock premium features.</p>
+                  <button
+                    onClick={handleSubscribe}
+                    className="bg-blue-600 text-white px-6 py-2.5 rounded-lg font-medium hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 transition-all duration-200 ease-in-out transform hover:scale-105"
+                  >
+                    Upgrade Now
+                  </button>
+                </div>
+              )}
+            </div>
 
                         {/* Advanced Settings */}
                         <h3 className="text-xl font-bold mt-8 mb-4 text-white">Advanced Settings</h3>

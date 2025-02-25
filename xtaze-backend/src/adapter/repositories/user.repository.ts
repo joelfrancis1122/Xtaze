@@ -92,4 +92,66 @@ async findByUsername(username: string): Promise<IUser | null>{
 
 }
 
+async findById(userId: string): Promise<IUser | null> {
+  try {
+    return await UserModel.findById(userId);
+  } catch (error) {
+    console.error("Error finding user by ID:", error);
+    return null;
+  }
+}
+
+async updateUserSubscription(userId: string, isPremium: boolean): Promise<IUser | null> {
+  try {
+    const updatedUser = await UserModel.findByIdAndUpdate(
+      userId,
+      { premium: isPremium },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedUser) {
+      throw new Error("User not found or update failed");
+    }
+
+    return updatedUser.toObject<IUser>(); // Convert Mongoose document to plain object
+  } catch (error) {
+    console.error("Error updating user subscription:", error);
+    throw error; // Propagate error to use case
+  }
+}
+async addToLiked(userId: string, trackId: string): Promise<IUser | null> {
+  try {
+    const user = await UserModel.findById(userId);
+    
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    let updatedUser;
+    if (user.likedSongs.includes(trackId)) {
+      updatedUser = await UserModel.findByIdAndUpdate(
+        userId,
+        { $pull: { likedSongs: trackId } }, // Remove from likedSongs
+        { new: true }
+      );
+    } else {
+      updatedUser = await UserModel.findByIdAndUpdate(
+        userId,
+        { $addToSet: { likedSongs: trackId } }, // Add to likedSongs
+        { new: true }
+      );
+    }
+
+    if (!updatedUser) {
+      throw new Error("User update failed");
+    }
+
+    return updatedUser.toObject<IUser>(); // Convert Mongoose document to plain object
+  } catch (error) {
+    console.error("Error in toggling liked song:", error);
+    throw error;
+  }
+}
+
+
 }
