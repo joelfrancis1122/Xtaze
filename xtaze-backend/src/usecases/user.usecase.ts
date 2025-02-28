@@ -138,12 +138,16 @@ export default class UserUseCase {
 
       const payload = ticket.getPayload();
       if (!payload) throw new Error("Invalid Google token");
-
       const { email } = payload;
       console.log("Google Payload:", payload);
-
+      
       const user = await UserModel.findOne({ email });
-
+      if (user?.isActive == false) {
+        return { success: false, message: "You're account is suspended !" };
+      }
+      if (user?.role == "admin"||user?.role=="artist") {
+        return { success: false, message: "This login form is for users" };
+      }
       if (!user) {
         return {
           success: false,

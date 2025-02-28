@@ -9,7 +9,7 @@ const SECRET_KEY = process.env.JWT_SECRET || "your_secret_key"; // Store in .env
 interface AuthenticatedRequest extends Request {
   user?: any;
 }
-
+//token check
 export const authenticateUser = (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
   console.log("vannila")
   const token = req.headers.authorization?.split(" ")[1]; // Extract token from "Bearer <token>"

@@ -8,6 +8,7 @@ import PreviewModal from "./PreviewPage";
 import type { Track } from "./Types";
 import { audio } from "../../utils/audio";
 import { PlaceholdersAndVanishInput } from "../../utils/placeholders-and-vanish-input";
+import axios from "axios";
 
 export default function MusicInterface() {
   const [tracks, setTracks] = useState<Track[]>([]);
@@ -25,11 +26,11 @@ export default function MusicInterface() {
   useEffect(() => {
     const fetchTracks = async () => {
       try {
-        const response = await fetch("http://localhost:3000/api/songs/deezer");
-        if (!response.ok) {
+        const response = await axios.get("http://localhost:3000/api/songs/deezer");
+        if (!response.data) {
           throw new Error("Failed to fetch tracks");
         }
-        const data = await response.json();
+        const data = await response.data();
         setTracks(data.songs);
       } catch (error) {
         console.error("Error fetching tracks:", error);

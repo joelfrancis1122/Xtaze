@@ -51,13 +51,12 @@ export default function ArtistProfile() {
             if (!user?._id) return;
 
             try {
-                const response = await fetch(`http://localhost:3000/artist/getAllTracksArtist?userId=${user._id}`, {
-                    method: "GET",
+                const response = await axios.get(`http://localhost:3000/artist/getAllTracksArtist?userId=${user._id}`, {
                     headers: {
                         "Authorization": `Bearer ${token}`, 
                     },
                 });
-                const data = await response.json();
+                const data = await response.data;
                 if (data.success && Array.isArray(data.tracks)) {
                     setTracks(data.tracks); 
                 } else {

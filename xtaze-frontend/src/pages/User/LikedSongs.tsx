@@ -10,30 +10,9 @@ import { PlayCircle, PauseCircle } from "lucide-react";
 import axios from "axios";
 import { audio } from "../../utils/audio";
 import { setCurrentTrack, setIsPlaying } from "../../redux/audioSlice";
+import { Track } from "./Types"; // Import from same Types.ts as Home
 
-// Define the Track interface for this component
-interface Track {
-  id: string;
-  name: string;
-  artist: string;
-  fileUrl: string;
-  img?: string;
-  album: string;
-}
-
-// Define the AudioTrack interface for Redux audio slice (consistent with Home)
-interface AudioTrack {
-  _id: string;
-  title: string;
-  artist: string[];
-  fileUrl: string;
-  img?: string;
-  album: string;
-  genre: string[];
-  listeners: number;
-}
-
-// Define the UserSignupData interface based on your error message
+// Define the UserSignupData interface based on your schema
 interface UserSignupData {
   _id?: string;
   username: string;
@@ -45,14 +24,14 @@ interface UserSignupData {
   role?: string;
   isActive?: boolean;
   premium?: boolean;
-  profilePic?: string; // Changed String to string (lowercase)
-  likedSongs?: string[]; // Optional array of song IDs
+  profilePic?: string;
+  likedSongs?: string[];
 }
 
 export default function LikedSongsPage() {
   const user = useSelector((state: RootState) => state.user.signupData) as UserSignupData | null;
   const { currentTrack, isPlaying } = useSelector((state: RootState) => state.audio) as {
-    currentTrack: AudioTrack | null;
+    currentTrack: Track | null;
     isPlaying: boolean;
   };
   const dispatch = useDispatch();
@@ -85,12 +64,14 @@ export default function LikedSongsPage() {
         if (response.data.success) {
           setLikedSongs(
             response.data.tracks.map((song: any) => ({
-              id: song._id,
-              name: song.title,
-              artist: Array.isArray(song.artists) ? song.artists.join(", ") : "Unknown Artist",
+              _id: song._id,
+              title: song.title,
+              artist: Array.isArray(song.artists) ? song.artists : [song.artists || "Unknown Artist"],
               fileUrl: song.fileUrl,
               img: song.img,
               album: song.album || "Unknown Album",
+              genre: song.genre ? (Array.isArray(song.genre) ? song.genre : [song.genre]) : [],
+              listeners: song.listeners || 0,
             }))
           );
         } else {
@@ -130,14 +111,14 @@ export default function LikedSongsPage() {
       audio.src = song.fileUrl;
       audio.play();
       dispatch(setCurrentTrack({
-        _id: song.id,
-        title: song.name,
-        artist: song.artist.split(", "),
+        _id: song._id, 
+        title: song.title,
+        artist: song.artist, 
         fileUrl: song.fileUrl,
         img: song.img,
         album: song.album,
-        genre: [],
-        listeners: 0,
+        genre: song.genre,
+        listeners: song.listeners || 0,
       }));
       dispatch(setIsPlaying(true));
     }
@@ -174,7 +155,7 @@ export default function LikedSongsPage() {
               {/* Songs List */}
               {likedSongs.map((song, index) => (
                 <div
-                  key={song.id}
+                  key={song._id} // Use _id instead of id
                   className="grid grid-cols-[48px_2fr_1fr_1fr_48px] gap-4 px-6 py-4 hover:bg-[#212121] transition-all duration-200 cursor-pointer items-center group"
                 >
                   <span className="text-gray-400 text-lg text-center">{index + 1}</span>
@@ -183,20 +164,22 @@ export default function LikedSongsPage() {
                   <div className="flex items-center space-x-4 truncate">
                     <div className="w-10 h-10 bg-gray-700 rounded-md flex items-center justify-center overflow-hidden flex-shrink-0">
                       {song.img ? (
-                        <img src={song.img} alt={song.name} className="w-full h-full object-cover" />
+                        <img src={song.img} alt={song.title} className="w-full h-full object-cover" />
                       ) : (
                         <span className="text-gray-400">🎵</span>
                       )}
                     </div>
                     <div className="truncate">
-                      <h3 className="text-white font-medium text-lg truncate">{song.name}</h3>
+                      <h3 className="text-white font-medium text-lg truncate">{song.title}</h3>
                     </div>
                   </div>
 
-                  <span className="text-gray-400 text-lg truncate">{song.artist}</span>
+                  <span className="text-gray-400 text-lg truncate">{Array.isArray(song.artist) ? song.artist.join(", ") : song.artist}
+          </span>
                   <span className="text-gray-400 text-lg truncate">{song.album}</span>
 
                   {/* Actions */}
+                  
                   <div className="flex items-center justify-end opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                     <button
                       onClick={(e: React.MouseEvent<HTMLButtonElement>) => {

@@ -1,50 +1,46 @@
-"use client";
 
 import { Search, Power, Play, Pause, Plus, Heart, MoreHorizontal } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import Sidebar from "./userComponents/SideBar";
-import MusicPlayer from "./userComponents/TrackBar";
-import PreviewModal from "./PreviewPage";
-import type { Track } from "./Types";
+import Sidebar from "./userComponents/SideBar"; //Sidebar component for navigation.
+import MusicPlayer from "./userComponents/TrackBar"; //Music player component for playback controls.
+import PreviewModal from "./PreviewPage"; //Modal for previewing track details.
+import { WavyBackground } from "../../components/ui/wavy-background";
+import type { Track } from "./Types"; //Defines the structure of a track object (e.g., _id, title, artist).
 import { useDispatch, useSelector } from "react-redux";
 import { clearSignupData, saveSignupData } from "../../redux/userSlice";
-import {
-  setCurrentTrack,
-  setIsPlaying,
-  toggleShuffle,
-  setShuffleIndices,
-  setCurrentShuffleIndex,
-  toggleRepeat,
-  clearAudioState,
-} from "../../redux/audioSlice";
-import { useNavigate } from "react-router-dom";
+import { setCurrentTrack, setIsPlaying, toggleShuffle, setShuffleIndices, setCurrentShuffleIndex, toggleRepeat, clearAudioState } from "../../redux/audioSlice";
 import { RootState } from "../../store/store";
+import { useNavigate } from "react-router-dom";
+import { audio } from "../../utils/audio"; //Likely an HTML Audio instance for playing tracks.
 import { PlaceholdersAndVanishInput } from "../../utils/placeholders-and-vanish-input";
-import { audio } from "../../utils/audio";
-import { WavyBackground } from "../../components/ui/wavy-background";
 import axios from "axios";
 
 export default function Home() {
+  //State to store the list of tracks fetched from the server.
   const [tracks, setTracks] = useState<Track[]>([]);
+  //State to indicate if tracks are currently loading.
   const [loading, setLoading] = useState(true);
+  //State to control the visibility of the preview modal.
   const [isModalOpen, setIsModalOpen] = useState(false);
+  //State to track which songs have been played (to increment listeners only once).
   const [playedSongs, setPlayedSongs] = useState<Set<string>>(new Set());
+  //State to track which songs the user has liked.
   const [likedSongs, setLikedSongs] = useState<Set<string>>(new Set());
-  
   const dispatch = useDispatch();
   const navigate = useNavigate();
+
   const user = useSelector((state: RootState) => state.user.signupData);
+  //Select audio related current track ,  playback status
   const { currentTrack, isPlaying, isShuffled, isRepeating, shuffleIndices, currentShuffleIndex } = useSelector(
     (state: RootState) => state.audio
   );
-
-  // Initialize likedSongs from Redux on mount
+  //Effect to initialize likedSongs state from Redux user data on mount or when likedSongs changes.
   useEffect(() => {
     if (user?.likedSongs) {
+      //likedSongs array to array.
       setLikedSongs(new Set(user.likedSongs?.map(String) || []));
-
     }
-  }, [user?.likedSongs]);
+  }, [user?.likedSongs]); //rerun when user.likedSongs changes.
 
   useEffect(() => {
     const fetchTracks = async () => {
@@ -57,15 +53,15 @@ export default function Home() {
       try {
         let response;
         if (user?.premium) {
-          response = await fetch(`http://localhost:3000/provider/getAllTracks?userId=${user?._id}`, {
-            method: "GET",
+          //For premium users
+          response = await axios.get(`http://localhost:3000/provider/getAllTracks?userId=${user?._id}`, {
             headers: {
               "Content-Type": "application/json",
               Authorization: `Bearer ${token}`,
             },
           });
-          if (!response.ok) throw new Error("Failed to fetch premium tracks");
-          const data = await response.json();
+          if (!response.data) throw new Error("Failed to fetch premium tracks");
+          const data = response.data;
           dispatch(saveSignupData(data.user));
           const formattedTracks: Track[] = data.tracks.map((track: any) => ({
             _id: track._id,
@@ -77,16 +73,16 @@ export default function Home() {
             img: track.img,
             listeners: track.listeners || 0,
           }));
-          setTracks(formattedTracks);
+          setTracks(formattedTracks); //Update tracks state
         } else {
-          response = await fetch(`http://localhost:3000/api/songs/deezer?userId=${user?._id}`, {
-            method: "GET",
+          //For free users,
+          response = await axios.get(`http://localhost:3000/api/songs/deezer?userId=${user?._id}`, {
             headers: {
               "Content-Type": "application/json",
             },
           });
-          if (!response.ok) throw new Error("Failed to fetch free tracks from Deezer");
-          const data = await response.json();
+          if (!response.data) throw new Error("Failed to fetch free tracks from Deezer");
+          const data = await response.data;
           dispatch(saveSignupData(data.user));
           const formattedTracks: Track[] = data.songs.map((track: any) => ({
             _id: track._id || track.fileUrl,
@@ -98,7 +94,7 @@ export default function Home() {
             img: track.img,
             listeners: track.listeners || 0,
           }));
-          setTracks(formattedTracks);
+          setTracks(formattedTracks); //Update tracks state.
         }
       } catch (error) {
         console.error("Error fetching tracks:", error);
@@ -108,19 +104,19 @@ export default function Home() {
     };
 
     fetchTracks();
-  }, [dispatch, user?._id, user?.premium]);
+  }, [dispatch, user?._id, user?.premium]); //re-run if these change.
 
+  //increment the listener count
   const incrementListeners = async (trackId: string) => {
     const token = localStorage.getItem("token");
     if (!token || !trackId) return;
-
     try {
       const response = await axios.post(
         `http://localhost:3000/artist/incrementListeners`,
         { trackId },
         {
           headers: {
-            "Authorization": `Bearer ${token}`,
+            Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
         }
@@ -137,35 +133,41 @@ export default function Home() {
     }
   };
 
+  //play/pause of a track.
   const handlePlay = (track: Track) => {
     if (currentTrack?.fileUrl === track.fileUrl) {
+      //If the same track is clicked
       if (isPlaying) {
         audio.pause();
-        dispatch(setIsPlaying(false));
+        dispatch(setIsPlaying(false)); //Update Redux
       } else {
-        audio.play();
-        dispatch(setIsPlaying(true));
+        audio.play(); //Resume playing.
+        dispatch(setIsPlaying(true)); //Update Redux 
       }
     } else {
-      audio.src = track.fileUrl;
-      audio.play();
-      dispatch(setCurrentTrack(track));
-      dispatch(setIsPlaying(true));
+      //If a new track is selected
+      audio.src = track.fileUrl; //Set the new track URL
+      audio.play(); //Start playing.
+      dispatch(setCurrentTrack(track)); //Update Redux with the current track.
+      dispatch(setIsPlaying(true)); //Update Redux state to playing.
 
+      //Increment listeners if the track hasn’t been played before.
       if (!playedSongs.has(track._id || track.fileUrl)) {
-        incrementListeners(track._id || track.fileUrl);
-        setPlayedSongs((prev) => new Set(prev).add(track._id || track.fileUrl));
+        incrementListeners(track._id || track.fileUrl); //Call increment.
+        setPlayedSongs((prev) => new Set(prev).add(track._id || track.fileUrl)); //Add to played songs
       }
     }
   };
 
+  //Function to toggle liking a track.
   const handleLike = async (trackId: string) => {
     const token = localStorage.getItem("token");
     if (!token || !trackId) return;
 
-    const isCurrentlyLiked = likedSongs.has(trackId);
-    
+    const isCurrentlyLiked = likedSongs.has(trackId); //if the track is already liked
+
     try {
+      //toggle the like status.
       const response = await axios.post(
         `http://localhost:3000/user/toggle-like?userId=${user?._id}`,
         { trackId },
@@ -179,13 +181,14 @@ export default function Home() {
 
       if (response.data.success) {
         console.log(response.data, "ith an correct");
-        dispatch(saveSignupData(response.data.user));
+        dispatch(saveSignupData(response.data.user)); //Update Redux with new data
+        //Update likedSongs state locally.
         setLikedSongs((prev) => {
           const newLiked = new Set(prev);
           if (isCurrentlyLiked) {
-            newLiked.delete(trackId);
+            newLiked.delete(trackId); //Unlike the track
           } else {
-            newLiked.add(trackId);
+            newLiked.add(trackId); //Like the track.
           }
           return newLiked;
         });
@@ -195,100 +198,124 @@ export default function Home() {
     }
   };
 
+  //toggle preview modal visibility.
   const toggleModal = () => {
-    setIsModalOpen((prevState) => !prevState);
+    setIsModalOpen((prevState) => !prevState); //Toggle the isModal
   };
 
+  //generate shuffled indices for tracks.
   const generateShuffleIndices = () => {
-    const indices = Array.from({ length: tracks.length }, (_, i) => i);
+    const indices = Array.from({ length: tracks.length }, (_, i) => i); //[0, 1, 2, ...].
     for (let i = indices.length - 1; i > 0; i--) {
+      //Fisher-Yates shuffle algorithm.
       const j = Math.floor(Math.random() * (i + 1));
-      [indices[i], indices[j]] = [indices[j], indices[i]];
+      [indices[i], indices[j]] = [indices[j], indices[i]]; //swap
     }
-    return indices;
+    return indices; //shuffled indices.
   };
 
+  //skip to the next track.
   const handleSkipForward = () => {
-    if (!currentTrack || tracks.length === 0) return;
+    if (!currentTrack || tracks.length === 0) return; //Exit if no track is playing or no tracks exist
     if (isShuffled) {
-      const nextShuffleIndex = (currentShuffleIndex + 1) % shuffleIndices.length;
-      dispatch(setCurrentShuffleIndex(nextShuffleIndex));
-      handlePlay(tracks[shuffleIndices[nextShuffleIndex]]);
+      //If shuffle is on
+      const nextShuffleIndex = (currentShuffleIndex + 1) % shuffleIndices.length; //Get next index (loop back if at end).
+
+      dispatch(setCurrentShuffleIndex(nextShuffleIndex)); //Update Redux with new shuffle index.
+      handlePlay(tracks[shuffleIndices[nextShuffleIndex]]); //Play the next shuffled track.
     } else {
-      const currentIndex = tracks.findIndex((track) => track.fileUrl === currentTrack.fileUrl);
-      const nextIndex = (currentIndex + 1) % tracks.length;
-      handlePlay(tracks[nextIndex]);
+      //shuffle is disabled...
+      const currentIndex = tracks.findIndex((track) => track.fileUrl === currentTrack.fileUrl); //Find current track index.
+      const nextIndex = (currentIndex + 1) % tracks.length; //Get next index (loop back if at end).
+      handlePlay(tracks[nextIndex]); //Play the next track.
     }
   };
 
+  //Function to skip to the previous track.
   const handleSkipBack = () => {
-    if (!currentTrack || tracks.length === 0) return;
+    if (!currentTrack || tracks.length === 0) return; //Exit if no track is playing or no tracks exist
     if (isShuffled) {
-      const prevShuffleIndex = currentShuffleIndex === 0 ? shuffleIndices.length - 1 : currentShuffleIndex - 1;
-      dispatch(setCurrentShuffleIndex(prevShuffleIndex));
-      handlePlay(tracks[shuffleIndices[prevShuffleIndex]]);
+      //If shuffle is enabled
+      const prevShuffleIndex = currentShuffleIndex === 0 ? shuffleIndices.length - 1 : currentShuffleIndex - 1; //Get previous index.
+      dispatch(setCurrentShuffleIndex(prevShuffleIndex)); //Update Redux with new shuffle index.
+      handlePlay(tracks[shuffleIndices[prevShuffleIndex]]); //Play the previous shuffled track.
     } else {
-      const currentIndex = tracks.findIndex((track) => track.fileUrl === currentTrack.fileUrl);
-      const prevIndex = currentIndex === 0 ? tracks.length - 1 : currentIndex - 1;
-      handlePlay(tracks[prevIndex]);
+      //If shuffle is disabled...
+      const currentIndex = tracks.findIndex((track) => track.fileUrl === currentTrack.fileUrl); //Find current track index.
+      const prevIndex = currentIndex === 0 ? tracks.length - 1 : currentIndex - 1; //Get previous index (loop back if at start).
+      handlePlay(tracks[prevIndex]); //Play the previous track.
     }
   };
 
+  //Function to toggle shuffle mode.
   const handleToggleShuffle = () => {
-    dispatch(toggleShuffle());
+    dispatch(toggleShuffle()); //Toggle shuffle state in Redux.
     if (!isShuffled) {
-      const newShuffleIndices = generateShuffleIndices();
-      dispatch(setShuffleIndices(newShuffleIndices));
+      const newShuffleIndices = generateShuffleIndices(); //Generate new shuffled indices.
+      dispatch(setShuffleIndices(newShuffleIndices)); //Update Redux with shuffle indices.
       if (currentTrack) {
-        const currentIndex = tracks.findIndex((track) => track.fileUrl === currentTrack.fileUrl);
-        dispatch(setCurrentShuffleIndex(newShuffleIndices.indexOf(currentIndex)));
+        //If a track is playing...
+        const currentIndex = tracks.findIndex((track) => track.fileUrl === currentTrack.fileUrl); //Find current track index.
+        dispatch(setCurrentShuffleIndex(newShuffleIndices.indexOf(currentIndex))); //Set the current shuffle index.
       }
     }
   };
 
+  //Function to toggle repeat mode.
   const handleToggleRepeat = () => {
-    dispatch(toggleRepeat());
-    audio.loop = !isRepeating;
+    dispatch(toggleRepeat()); //Toggle repeat state in Redux.
+    audio.loop = !isRepeating; //Set the audio loop property (true if enabling repeat).
   };
 
+  //Effect to handle what happens when a track ends.
   useEffect(() => {
     const handleEnded = () => {
       if (isRepeating) {
-        audio.currentTime = 0;
-        audio.play();
+        //If repeat is enabled...
+        audio.currentTime = 0; //Reset to start.
+        audio.play(); //Replay the track.
       } else if (isShuffled) {
-        const nextShuffleIndex = (currentShuffleIndex + 1) % shuffleIndices.length;
-        dispatch(setCurrentShuffleIndex(nextShuffleIndex));
-        handlePlay(tracks[shuffleIndices[nextShuffleIndex]]);
+        //If shuffle is enabled...
+        const nextShuffleIndex = (currentShuffleIndex + 1) % shuffleIndices.length; //Get next shuffled index.
+        dispatch(setCurrentShuffleIndex(nextShuffleIndex)); //Update Redux.
+        handlePlay(tracks[shuffleIndices[nextShuffleIndex]]); //Play next shuffled track.
       } else {
-        const currentIndex = tracks.findIndex((track) => track.fileUrl === currentTrack?.fileUrl);
-        const nextIndex = (currentIndex + 1) % tracks.length;
-        handlePlay(tracks[nextIndex]);
+        //If neither repeat nor shuffle is enabled...
+        const currentIndex = tracks.findIndex((track) => track.fileUrl === currentTrack?.fileUrl); //Find current track index.
+        const nextIndex = (currentIndex + 1) % tracks.length; //Get next index (loop back if at end).
+        handlePlay(tracks[nextIndex]); //Play the next track.
       }
     };
-    audio.addEventListener("ended", handleEnded);
-    return () => audio.removeEventListener("ended", handleEnded);
-  }, [audio, isRepeating, isShuffled, currentShuffleIndex, tracks, currentTrack, dispatch]);
+    audio.addEventListener("ended", handleEnded); //Add event listener for when audio ends.
+    return () => audio.removeEventListener("ended", handleEnded); //Cleanup listener on unmount.
+  }, [audio, isRepeating, isShuffled, currentShuffleIndex, tracks, currentTrack, dispatch]); //Dependencies for effect.
 
+  //Function to handle logout.
   const handleClick = () => {
     audio.pause();
     audio.src = "";
     localStorage.removeItem("token");
-    dispatch(clearSignupData());
-    dispatch(clearAudioState());
-    navigate("/", { replace: true });
+    dispatch(clearSignupData()); //Clear user data from Redux.
+    dispatch(clearAudioState()); //Clear audio state from Redux.
+    navigate("/", { replace: true }); //Navigate to root route and replace history.
   };
 
+  //Placeholder text for the search input.
   const placeholders = ["Cout me out?", "What's the first rule of Fight Club?", "Send me an angel"];
+  //Handle search input change (currently just logs the value).
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => console.log(e.target.value);
+  //Handle search form submission (currently just logs "submitted").
   const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     console.log("submitted");
   };
 
+  //Slice tracks into "New Arrivals" (first 5) and "Explore More" (rest).
   const newArrivals = tracks.slice(0, 5);
   const otherSongs = tracks.slice(5);
-  const randomIndex = useMemo(() => Math.floor(Math.random() * tracks.length), [tracks]);
+  //Memoized random index for selecting a featured track.
+  const randomIndex = useMemo(() => Math.floor(Math.random() * tracks.length), [tracks]); //Recalculates when tracks change.
+
 
   const handleUpgradeClick = () => {
     navigate("/plans");
@@ -305,7 +332,7 @@ export default function Home() {
               <PlaceholdersAndVanishInput placeholders={placeholders} onChange={handleChange} onSubmit={onSubmit} />
             </div>
             <button className="p-2 hover:bg-[#242424] rounded-full" onClick={handleClick}>
-              <Power size={20} />
+              <Power size={20} /> {/* Power icon for logout */}
             </button>
           </header>
 
@@ -316,10 +343,10 @@ export default function Home() {
                   <h2 className="text-3xl font-bold mb-4 font-sans">Featured Today</h2>
                   <div
                     className="relative w-full h-[300px] bg-[#1d1d1d] rounded-lg overflow-hidden cursor-pointer shadow-lg"
-                    onClick={() => tracks[randomIndex] && handlePlay(tracks[randomIndex])}
+                    onClick={() => tracks[randomIndex] && handlePlay(tracks[randomIndex])} //Play random track on click
                   >
                     <img
-                      src={tracks[randomIndex]?.img || "/placeholder.svg"}
+                      src={tracks[randomIndex]?.img}
                       alt="Featured Banner"
                       className="w-full h-full object-cover opacity-80"
                     />
@@ -353,8 +380,7 @@ export default function Home() {
                       <div className="overflow-visible w-full h-full flex items-center justify-center">
                         <WavyBackground
                           className="w-full h-[400px] flex flex-col items-center justify-center"
-                          style={{ transform: "translateY(-50px)" }}
-                        >
+                          style={{ transform: "translateY(-50px)" }}                        >
                           <p className="text-2xl md:text-4xl lg:text-7xl text-white font-bold inter-var text-center">
                             Listen. Discover. Repeat
                           </p>
@@ -369,35 +395,41 @@ export default function Home() {
               )}
             </div>
 
+            {/* New Arrivals section */}
             <div className="mb-8">
               <h2 className="text-2xl font-bold mb-4">New Arrivals</h2>
-              {loading ? (
+              {loading ? ( //Show loading message if tracks are still fetching
                 <div className="text-center py-4">Loading tracks...</div>
               ) : (
+                
+                //Grid layout for new arrivals
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                  {newArrivals.map((track, index) => (
+                  {newArrivals.map((track, index) => ( //Map over the first 5 tracks
                     <div
-                      key={index}
+                      key={index} //Use index as key (not ideal, better to use track._id if unique)
                       className="group bg-[#1d1d1d] rounded-lg p-4 hover:bg-[#242424] transition-colors flex flex-col"
                     >
                       <div className="w-full h-[200px] flex flex-col mb-3">
                         <div className="relative w-full h-[90%]">
                           <img
-                            src={track.img || "/placeholder.svg"}
+                            src={track.img || "/placeholder.svg"} 
                             alt="Track Cover Top"
                             className="w-full h-full object-cover rounded-t-md"
                           />
+                          
+                          {/* Play/pause button (visible on hover) */}
                           <button
-                            onClick={() => handlePlay(track)}
+                            onClick={() => handlePlay(track)} //Play or pause the track
                             className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity z-10 rounded-t-md"
                           >
                             {currentTrack?.fileUrl === track.fileUrl && isPlaying ? (
-                              <Pause size={24} className="text-white" />
+                              <Pause size={24} className="text-white" /> //Show pause if playing
                             ) : (
-                              <Play size={24} className="text-white" />
+                              <Play size={24} className="text-white" /> //Show play if not playing
                             )}
                           </button>
                         </div>
+                        {/* Blurred bottom image */}
                         <img
                           src={track.img || "/placeholder.svg"}
                           alt="Track Cover Bottom"
@@ -406,25 +438,24 @@ export default function Home() {
                       </div>
                       <div className="text-white font-semibold truncate">{track.title}</div>
                       <div className="text-gray-400 text-sm truncate">
-                        {Array.isArray(track.artist) ? track.artist.join(", ") : track.artist}
+                        {Array.isArray(track.artist) ? track.artist.join(", ") : track.artist} 
                       </div>
                       <div className="flex gap-2 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
                         <button className="p-1 hover:bg-[#333333] rounded-full">
-                          <Plus size={16} />
+                          <Plus size={16} /> 
                         </button>
-                        <button 
-                          onClick={() => handleLike(track._id || track.fileUrl)}
-                          className={`p-1 hover:bg-[#333333] rounded-full ${
-                            likedSongs.has(track._id || track.fileUrl) ? 'text-red-500' : 'text-white'
-                          }`}
+                        <button
+                          onClick={() => handleLike(track._id || track.fileUrl)} //Toggle like status
+                          className={`p-1 hover:bg-[#333333] rounded-full ${likedSongs.has(track._id || track.fileUrl) ? 'text-red-500' : 'text-white' //Red if liked
+                            }`}
                         >
-                          <Heart 
-                            size={16} 
-                            fill={likedSongs.has(track._id || track.fileUrl) ? 'currentColor' : 'none'}
+                          <Heart
+                            size={16}
+                            fill={likedSongs.has(track._id || track.fileUrl) ? 'currentColor' : 'none'} //Filled if liked
                           />
                         </button>
                         <button className="p-1 hover:bg-[#333333] rounded-full">
-                          <MoreHorizontal size={16} />
+                          <MoreHorizontal size={16} /> 
                         </button>
                       </div>
                     </div>
@@ -433,35 +464,40 @@ export default function Home() {
               )}
             </div>
 
+            {/* Explore More section */}
             <div>
               <h2 className="text-2xl font-bold mb-4">Explore More</h2>
-              {loading ? (
+              {loading ? ( //Show loading message if tracks are still fetching
                 <div className="text-center py-4">Loading tracks...</div>
               ) : (
+                //Grid layout for remaining tracks
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                  {otherSongs.map((track, index) => (
+                  {otherSongs.map((track, index) => ( //Map over remaining tracks
                     <div
-                      key={index}
+                      key={index} //Use index as key (not ideal, better to use track._id if unique)
                       className="group bg-[#1d1d1d] rounded-lg p-4 hover:bg-[#242424] transition-colors flex flex-col"
                     >
+                      {/* Track image container */}
                       <div className="w-full h-[200px] flex flex-col mb-3">
                         <div className="relative w-full h-[90%]">
                           <img
-                            src={track.img || "/placeholder.svg"}
+                            src={track.img || "/placeholder.svg"} //Track image or fallback
                             alt="Track Cover Top"
                             className="w-full h-full object-cover rounded-t-md"
                           />
+                          {/* Play/pause button (visible on hover) */}
                           <button
-                            onClick={() => handlePlay(track)}
+                            onClick={() => handlePlay(track)} //Play or pause the track
                             className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity z-10 rounded-t-md"
                           >
                             {currentTrack?.fileUrl === track.fileUrl && isPlaying ? (
-                              <Pause size={24} className="text-white" />
+                              <Pause size={24} className="text-white" /> //Show pause if playing
                             ) : (
-                              <Play size={24} className="text-white" />
+                              <Play size={24} className="text-white" /> //Show play if not playing
                             )}
                           </button>
                         </div>
+                        {/* Blurred bottom image */}
                         <img
                           src={track.img || "/placeholder.svg"}
                           alt="Track Cover Bottom"
@@ -470,25 +506,24 @@ export default function Home() {
                       </div>
                       <div className="text-white font-semibold truncate">{track.title}</div>
                       <div className="text-gray-400 text-sm truncate">
-                        {Array.isArray(track.artist) ? track.artist.join(", ") : track.artist}
+                        {Array.isArray(track.artist) ? track.artist.join(", ") : track.artist} 
                       </div>
                       <div className="flex gap-2 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
                         <button className="p-1 hover:bg-[#333333] rounded-full">
-                          <Plus size={16} />
+                          <Plus size={16} /> 
                         </button>
-                        <button 
-                          onClick={() => handleLike(track._id || track.fileUrl)}
-                          className={`p-1 hover:bg-[#333333] rounded-full ${
-                            likedSongs.has(track._id || track.fileUrl) ? 'text-red-500' : 'text-white'
-                          }`}
+                        <button
+                          onClick={() => handleLike(track._id || track.fileUrl)} //Toggle like status
+                          className={`p-1 hover:bg-[#333333] rounded-full ${likedSongs.has(track._id || track.fileUrl) ? 'text-red-500' : 'text-white' //Red if liked
+                            }`}
                         >
-                          <Heart 
-                            size={16} 
-                            fill={likedSongs.has(track._id || track.fileUrl) ? 'currentColor' : 'none'}
+                          <Heart
+                            size={16}
+                            fill={likedSongs.has(track._id || track.fileUrl) ? 'currentColor' : 'none'} //Filled if liked
                           />
                         </button>
                         <button className="p-1 hover:bg-[#333333] rounded-full">
-                          <MoreHorizontal size={16} />
+                          <MoreHorizontal size={16} /> 
                         </button>
                       </div>
                     </div>
@@ -500,24 +535,30 @@ export default function Home() {
         </main>
       </div>
 
+      {/* Render bottom bar if a track is selected */}
       {currentTrack && (
         <MusicPlayer
-          currentTrack={currentTrack}
-          isPlaying={isPlaying}
-          handlePlay={handlePlay}
-          handleSkipBack={handleSkipBack}
-          handleSkipForward={handleSkipForward}
-          toggleShuffle={handleToggleShuffle}
-          toggleRepeat={handleToggleRepeat}
-          isShuffled={isShuffled}
-          isRepeating={isRepeating}
-          audio={audio}
-          toggleModal={toggleModal}
+          currentTrack={currentTrack} //Pass the current track
+          isPlaying={isPlaying} //Pass playback status
+          handlePlay={handlePlay} //Pass play/pause func
+          handleSkipBack={handleSkipBack} //Pass skip back func
+          handleSkipForward={handleSkipForward} //Pass skip forward func
+          toggleShuffle={handleToggleShuffle} //Pass shuffle toggle func
+          toggleRepeat={handleToggleRepeat} //Pass repeat toggle func
+          isShuffled={isShuffled} //Pass shuffle status
+          isRepeating={isRepeating} //Pass repeat status
+          audio={audio} //Pass audio object
+          toggleModal={toggleModal} //Pass modal toggle fun
         />
       )}
 
+      {/* Render PreviewModal if a track is selected */}
       {currentTrack && (
-        <PreviewModal track={currentTrack} isOpen={isModalOpen} toggleModal={toggleModal} />
+        <PreviewModal
+          track={currentTrack} //Pass the current track
+          isOpen={isModalOpen} //Pass modal open status
+          toggleModal={toggleModal} //Pass modal toggle function
+        />
       )}
     </div>
   );
