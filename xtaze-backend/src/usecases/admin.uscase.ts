@@ -38,7 +38,7 @@ export default class AdminUseCase{
           if (!isPasswordValid) {
             return { success: false, message: "Invalid credentials!" };
           }
-        const token = jwt.sign({ userId: admin._id, email: admin.email }, process.env.JWT_SECRET!, { expiresIn: "7d" });
+        const token = jwt.sign({ userId: admin._id, email: admin.email,role: "admin" }, process.env.JWT_SECRET!, { expiresIn: "7d" });
       
         return {
           success: true,

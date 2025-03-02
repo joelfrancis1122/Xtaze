@@ -44,14 +44,12 @@ const AdminLogin = () => {
       );
       
       if (response.data.success) {
-        // Handle successful login, e.g., store the token and redirect
         console.log('Login successful', response.data.token);
         dispatch(saveAdminData(response.data.admin))
         console.log(response.data.admin,"sasd")
         toast.success("Admin Login success!", { position: "top-right" });
       } else {
-        // Show the error message from the response
-        toast.error(response.data.message,{ position: "top-right" }); // Show error message
+        toast.error(response.data.message,{ position: "top-right" });
       }
 
       localStorage.setItem("adminToken", response.data.token);

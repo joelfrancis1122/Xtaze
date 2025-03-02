@@ -71,6 +71,7 @@ const UploadMusicPage = () => {
             const response = await axios.post(`http://localhost:3000/artist/upload`, formData, {
                 headers: {
                      "Content-Type": "multipart/form-data",
+                     "Authorization": `Bearer ${token}`
                  },
             });
 
@@ -94,11 +95,11 @@ const UploadMusicPage = () => {
         }
     };
 console.log(artist,"itheee")
+const token = localStorage.getItem("artistToken"); 
     useEffect(() => {
         // Fetch genres from the backendmap
         const fetchGenres = async () => {
             try {
-                const token = localStorage.getItem("artistToken"); 
 
                 const response = await axios.get(`http://localhost:3000/artist/listActiveGenres?artistId=${artist?._id}`,{
                     headers:{

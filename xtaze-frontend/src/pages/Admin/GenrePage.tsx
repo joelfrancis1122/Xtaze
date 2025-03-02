@@ -22,8 +22,8 @@ export default function GenreManagement() {
   const [editingGenreId, setEditingGenreId] = useState<string | null>(null);
   const [editedGenreName, setEditedGenreName] = useState<string>("");
 
+  const token = localStorage.getItem("adminToken");
   useEffect(() => {
-    const token = localStorage.getItem("adminToken");
 
     axios.get("http://localhost:3000/admin/genreList", {
       headers: {
@@ -37,13 +37,20 @@ export default function GenreManagement() {
 
   const handleAddGenre = async (event: React.FormEvent) => {
     event.preventDefault();
-  
+
     if (!newGenre.trim()) return;
-  
+
     try {
-      const res = await axios.post("http://localhost:3000/admin/genreCreate", { name: newGenre.toLowerCase() });
-  
-      console.log(res.data,"odi odioi")
+      const res = await axios.post(
+        "http://localhost:3000/admin/genreCreate",
+        { name: newGenre.toLowerCase() },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      console.log(res.data, "odi odioi")
       setGenres([res.data.data, ...genres]);
       setNewGenre("");
       toast.success(res.data.message);
@@ -58,8 +65,8 @@ export default function GenreManagement() {
       console.error("Error adding genre:", error);
     }
   };
-  
-  
+
+
 
   const toggleBlockGenre = async (id: string) => {
     try {
@@ -69,7 +76,16 @@ export default function GenreManagement() {
         )
       );
 
-      await axios.put(`http://localhost:3000/admin/genreToggleBlockUnblock/${id}`);
+      await axios.put(
+        `http://localhost:3000/admin/genreToggleBlockUnblock/${id}`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
       toast.success("Genre status updated successfully!");
     } catch (error) {
       console.error("Error updating genre status:", error);
@@ -89,8 +105,15 @@ export default function GenreManagement() {
         event.preventDefault();
         return
       }
-      const response = await axios.put(`http://localhost:3000/admin/genreUpdate/${id}`, { name: editedGenreName.trim().toLowerCase() });
-      setGenres((prevGenres) =>
+      const response = await axios.put(
+        `http://localhost:3000/admin/genreUpdate/${id}`,
+        { name: editedGenreName.trim().toLowerCase() },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      ); setGenres((prevGenres) =>
         prevGenres.map((genre) =>
           genre._id === id ? { ...genre, name: editedGenreName } : genre
         )

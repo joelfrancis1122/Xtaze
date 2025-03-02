@@ -43,7 +43,7 @@ export default class ArtistUseCase {
     if (!isPasswordValid) {
       return { success: false, message: "Invalid credentials!" };
     }
-    const token = jwt.sign({ userId: artist._id, email: artist.email }, process.env.JWT_SECRET!, { expiresIn: "7d" });
+    const token = jwt.sign({ userId: artist._id, email: artist.email,role: "artist" }, process.env.JWT_SECRET!, { expiresIn: "7d" });
 
     return {
       success: true,

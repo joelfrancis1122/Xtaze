@@ -1,5 +1,5 @@
 
-import { Search, Power, Play, Pause, Plus, Heart, MoreHorizontal } from "lucide-react";
+import { Search, Power, Play, Pause, Plus, Heart, MoreHorizontal, Beaker } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import Sidebar from "./userComponents/SideBar"; //Sidebar component for navigation.
 import MusicPlayer from "./userComponents/TrackBar"; //Music player component for playback controls.
@@ -79,6 +79,8 @@ export default function Home() {
           response = await axios.get(`http://localhost:3000/api/songs/deezer?userId=${user?._id}`, {
             headers: {
               "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+
             },
           });
           if (!response.data) throw new Error("Failed to fetch free tracks from Deezer");

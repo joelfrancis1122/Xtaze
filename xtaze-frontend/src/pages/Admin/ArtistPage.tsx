@@ -27,7 +27,7 @@ export default function ArtistList() {
         const fetchArtists = async () => {
             const token = localStorage.getItem("adminToken"); 
             try {
-                const response = await axios.get("http://localhost:3000/artist/listUsers",{
+                const response = await axios.get("http://localhost:3000/admin/listUsers",{
                     headers: {
                         "Content-Type": "application/json",
                         Authorization: `Bearer ${token}`,

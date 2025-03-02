@@ -5,18 +5,18 @@ import PasswordService from "../service/password.service"
 
 
 const repository = {
-    userRepository: new UserRepository()
+    userRepository: new UserRepository()  //  gives the mongoDB box(toy storage)
 }
 
 const service = {
-    PasswordService:new PasswordService(),
-    OtpService:new OtpService()
+    PasswordService:new PasswordService(), // makes paint brush 
+    OtpService:new OtpService() // makes another tool
 }
 
 export const userCase = {
-    userUseCase: new UserUseCase({ repository, service })
+    userUseCase: new UserUseCase({ repository, service }) // makes a toy maker and giving the tools to him
 }
 
-const userDependencies = userCase
+const userDependencies = userCase //boss packing everything into toy bag (userDependencies)
 
 export default userDependencies

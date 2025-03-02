@@ -23,15 +23,14 @@ interface useCaseDependencies {
 }
 
 export default class UserUseCase {
-  private _userRepository: IUserRepository
-  private _passwordService: IPasswordService
-  private _otpService: IOtpService;
+  private _userRepository: IUserRepository //space for storage box 
+  private _passwordService: IPasswordService // space for painting brush 
+  private _otpService: IOtpService; // space for another tool
   private stripe: Stripe;
 
-
-  constructor(dependencies: useCaseDependencies) {
-    this._userRepository = dependencies.repository.userRepository
-    this._passwordService = dependencies.service.PasswordService
+  constructor(dependencies: useCaseDependencies) { // boss giving the toys here 
+    this._userRepository = dependencies.repository.userRepository // got the storage box 
+    this._passwordService = dependencies.service.PasswordService // got the paint brush 
     this._otpService = dependencies.service.OtpService;
     this.stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
       apiVersion: "2023-08-16", 
@@ -69,7 +68,7 @@ export default class UserUseCase {
 
   async sendOTP(email: string): Promise<string> {
 
-    const findEmail = await this._userRepository.findByEmail(email)
+    const findEmail = await this._userRepository.findByEmail(email) //using the storage 
 
     if (findEmail) {
       console.log("lml");
@@ -118,8 +117,7 @@ export default class UserUseCase {
       throw new Error("Invalid credentials!");
     }
 
-    // Generate JWT Token
-    const token = jwt.sign({ userId: user._id, email: user.email }, process.env.JWT_SECRET!, { expiresIn: "7d" });
+    const token = jwt.sign({ userId: user._id, email: user.email,role: "user" }, process.env.JWT_SECRET!, { expiresIn: "7d" });
 
     return {
       success: true,
@@ -162,7 +160,7 @@ export default class UserUseCase {
       };
 
       const token = jwt.sign(
-        { userId: user._id.toString(), email: user.email },
+        { userId: user._id.toString(), email: user.email,role: "user" },
         process.env.JWT_SECRET!,
         { expiresIn: "7d" }
       );

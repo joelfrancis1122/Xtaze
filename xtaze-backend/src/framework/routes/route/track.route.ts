@@ -5,8 +5,15 @@ import { authenticateUser } from "../../middlewares/authMiddleware";
 
 const router = express.Router();
 
-router.post("/upload", upload.fields([{ name: "song", maxCount: 1 }, { name: "image", maxCount: 1 }]), uploadTrack);
 router.get("/getAllTracks",authenticateUser, getAllTracks);
 
 
+
+
+
+
+
+
+//special 
+router.post("/upload", upload.fields([{ name: "song", maxCount: 1 }, { name: "image", maxCount: 1 }]), uploadTrack);
 export default router;

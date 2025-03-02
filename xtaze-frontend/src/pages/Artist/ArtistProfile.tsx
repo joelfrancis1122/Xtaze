@@ -39,8 +39,8 @@ export default function ArtistProfile() {
     const [bioText, setBioText] = useState<string>(String(user?.bio || ""));
     const [tracks, setTracks] = useState<Track[]>([]); // State to store fetched tracks
 
+    const token = localStorage.getItem("artistToken");
     useEffect(() => {
-        const token = localStorage.getItem("artistToken");
         if (!token) {
             console.error("No token found. Please login.");
             navigate("/login");
@@ -164,7 +164,10 @@ export default function ArtistProfile() {
             }>(
                 `http://localhost:3000${route}`,
                 formData,
-                { headers: { "Content-Type": "multipart/form-data" } }
+                { headers: { "Content-Type": "multipart/form-data" ,
+                Authorization: `Bearer ${token}`,
+
+                } }
             );
             console.log("Upload response:", response.data);
 
@@ -188,10 +191,14 @@ export default function ArtistProfile() {
         }
 
         try {
+
             const response = await axios.put<{ success: boolean; user?: any }>(
                 "http://localhost:3000/user/updateBio",
                 { userId: user?._id, bio: bioText },
-                { headers: { "Content-Type": "application/json" } }
+                { headers: { "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+
+                 } }
             );
 
             if (response.data.success && response.data.user) {
