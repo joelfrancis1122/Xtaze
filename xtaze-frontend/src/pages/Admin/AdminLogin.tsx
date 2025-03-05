@@ -15,7 +15,7 @@ const AdminLogin = () => {
   const dispatch = useDispatch()
   const token = localStorage.getItem("adminToken");
     const role = useSelector((state: RootState) => state.admin.signupData?.role);
-
+    const baseUrl = import.meta.env.VITE_BASE_URL;
   useEffect(() => {
     if (token&&role=="admin") {
       navigate("/admin/dashboard", { replace: true });
@@ -39,7 +39,7 @@ const AdminLogin = () => {
     e.preventDefault();
     try {
       const response = await axios.post(
-        "http://localhost:3000/admin/login",
+        `${baseUrl}/admin/login`,
         formData
       );
       

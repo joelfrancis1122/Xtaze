@@ -23,6 +23,7 @@ interface Track {
 }
 
 export default function ArtistProfile() {
+    const baseUrl = import.meta.env.VITE_BASE_URL;
     const user = useSelector((state: RootState) => state.artist.signupData);
     const dispatch = useDispatch();
     const navigate = useNavigate();
@@ -51,7 +52,7 @@ export default function ArtistProfile() {
             if (!user?._id) return;
 
             try {
-                const response = await axios.get(`http://localhost:3000/artist/getAllTracksArtist?userId=${user._id}`, {
+                const response = await axios.get(`${baseUrl}/artist/getAllTracksArtist?userId=${user._id}`, {
                     headers: {
                         "Authorization": `Bearer ${token}`, 
                     },
@@ -162,7 +163,7 @@ export default function ArtistProfile() {
                 message: string;
                 user?: any;
             }>(
-                `http://localhost:3000${route}`,
+                `${baseUrl}${route}`,
                 formData,
                 { headers: { "Content-Type": "multipart/form-data" ,
                 Authorization: `Bearer ${token}`,
@@ -193,7 +194,7 @@ export default function ArtistProfile() {
         try {
 
             const response = await axios.put<{ success: boolean; user?: any }>(
-                "http://localhost:3000/user/updateBio",
+                `${baseUrl}/user/updateBio`,
                 { userId: user?._id, bio: bioText },
                 { headers: { "Content-Type": "application/json",
                     Authorization: `Bearer ${token}`,

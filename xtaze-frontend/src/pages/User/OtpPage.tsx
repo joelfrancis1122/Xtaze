@@ -16,7 +16,7 @@ export default function OTPVerification() {
 
 
     const signupData = useSelector((state: RootState) => state.user.signupData);
- 
+    const baseUrl = import.meta.env.VITE_BASE_URL;
 
     // Function to handle OTP resend
 
@@ -32,7 +32,7 @@ export default function OTPVerification() {
         try {
             setIsSubmitting(false);
             const response = await axios.post(
-                "http://localhost:3000/user/send-otp",
+            `${baseUrl}/user/send-otp`,
                 signupData,
                 {
                     headers: {
@@ -84,7 +84,7 @@ export default function OTPVerification() {
 
         try {
             setIsSubmitting(true);
-            const response = await axios.post("http://localhost:3000/user/verify-otp", {
+            const response = await axios.post(`${baseUrl}/user/verify-otp`, {
                 otp: otpCode,
             });
                 console.log(response,"from backend response");
@@ -92,7 +92,7 @@ export default function OTPVerification() {
             if (response.data.success) {
                 toast.success("OTP verified successfully!");
                 await axios.post(
-                    "http://localhost:3000/user/register",
+                    `${baseUrl}/user/register`,
                     signupData,
                     {
                         headers: {

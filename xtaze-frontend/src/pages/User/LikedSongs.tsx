@@ -7,12 +7,11 @@ import { RootState } from "../../store/store";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { PlayCircle, PauseCircle } from "lucide-react";
-import axios from "axios";
 import { audio } from "../../utils/audio";
 import { setCurrentTrack, setIsPlaying } from "../../redux/audioSlice";
-import { Track } from "./Types"; // Import from same Types.ts as Home
+import { Track } from "./Types";
+import { fetchLikedSongs } from "../../services/userService";
 
-// Define the UserSignupData interface based on your schema
 interface UserSignupData {
   _id?: string;
   username: string;
@@ -30,55 +29,31 @@ interface UserSignupData {
 
 export default function LikedSongsPage() {
   const user = useSelector((state: RootState) => state.user.signupData) as UserSignupData | null;
-  const { currentTrack, isPlaying } = useSelector((state: RootState) => state.audio) as {
-    currentTrack: Track | null;
-    isPlaying: boolean;
-  };
+  const { currentTrack, isPlaying } = useSelector((state: RootState) => state.audio);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [likedSongs, setLikedSongs] = useState<Track[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState(true);
 
-  // Fetch full track details from backend using liked song IDs from Redux
   useEffect(() => {
-    const fetchLikedSongsDetails = async () => {
+    const getLikedSongs = async () => {
       const token = localStorage.getItem("token");
       if (!token || !user?._id || !user?.likedSongs || user.likedSongs.length === 0) {
         setLikedSongs([]);
         setLoading(false);
         return;
       }
+      if (user.premium === false) {
+        toast.error("You have to be a premium user for this functionality");
+        setLikedSongs([]);
+        setLoading(false);
+        return;
+      }
 
       try {
-        const response = await axios.post(
-          `http://localhost:3000/user/getliked?userId=${user._id}`,
-          { songIds: user.likedSongs },
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          }
-        );
-
-        if (response.data.success) {
-          setLikedSongs(
-            response.data.tracks.map((song: any) => ({
-              _id: song._id,
-              title: song.title,
-              artist: Array.isArray(song.artists) ? song.artists : [song.artists || "Unknown Artist"],
-              fileUrl: song.fileUrl,
-              img: song.img,
-              album: song.album || "Unknown Album",
-              genre: song.genre ? (Array.isArray(song.genre) ? song.genre : [song.genre]) : [],
-              listeners: song.listeners || 0,
-            }))
-          );
-        } else {
-          toast.error("Failed to fetch liked songs details", { position: "top-right" });
-        }
+        const tracks = await fetchLikedSongs(user._id, token, user.likedSongs);
+        setLikedSongs(tracks);
       } catch (error) {
-        console.error("Error fetching liked songs details:", error);
         toast.error("Error fetching liked songs", { position: "top-right" });
       } finally {
         setLoading(false);
@@ -86,18 +61,16 @@ export default function LikedSongsPage() {
     };
 
     if (user?._id) {
-      fetchLikedSongsDetails();
+      getLikedSongs();
     }
   }, [user?._id, user?.likedSongs, navigate]);
 
-  // Redirect if not logged in
   useEffect(() => {
     if (!user?._id) {
       navigate("/", { replace: true });
     }
   }, [user, navigate]);
 
-  // Handle play/pause button click
   const handlePlay = (song: Track) => {
     if (currentTrack?.fileUrl === song.fileUrl) {
       if (isPlaying) {
@@ -111,9 +84,9 @@ export default function LikedSongsPage() {
       audio.src = song.fileUrl;
       audio.play();
       dispatch(setCurrentTrack({
-        _id: song._id, 
+        _id: song._id,
         title: song.title,
-        artist: song.artist, 
+        artist: song.artist,
         fileUrl: song.fileUrl,
         img: song.img,
         album: song.album,
@@ -127,23 +100,18 @@ export default function LikedSongsPage() {
   return (
     <div className="min-h-screen bg-black text-white flex">
       <Sidebar />
-      
       <main className="flex-1 ml-[240px] py-16 px-6">
         <div className="max-w-7xl mx-auto space-y-10">
-          {/* Header */}
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <h1 className="text-5xl font-bold">Liked Songs</h1>
             </div>
             <p className="text-gray-400 text-base">{likedSongs.length} songs</p>
           </div>
-
-          {/* Liked Songs List */}
           {loading ? (
             <div className="text-center py-4 text-gray-400">Loading liked songs...</div>
           ) : likedSongs.length > 0 ? (
             <div className="bg-[#151515] rounded-xl shadow-lg border border-black-900 overflow-hidden">
-              {/* Table Header */}
               <div className="grid grid-cols-[48px_2fr_1fr_1fr_48px] gap-4 px-6 py-4 text-gray-400 text-lg font-semibold border-b border-gray-700">
                 <span className="text-center">#</span>
                 <span>Title</span>
@@ -151,16 +119,12 @@ export default function LikedSongsPage() {
                 <span>Album</span>
                 <span></span>
               </div>
-
-              {/* Songs List */}
               {likedSongs.map((song, index) => (
                 <div
-                  key={song._id} // Use _id instead of id
+                  key={song._id}
                   className="grid grid-cols-[48px_2fr_1fr_1fr_48px] gap-4 px-6 py-4 hover:bg-[#212121] transition-all duration-200 cursor-pointer items-center group"
                 >
                   <span className="text-gray-400 text-lg text-center">{index + 1}</span>
-
-                  {/* Song Info */}
                   <div className="flex items-center space-x-4 truncate">
                     <div className="w-10 h-10 bg-gray-700 rounded-md flex items-center justify-center overflow-hidden flex-shrink-0">
                       {song.img ? (
@@ -173,16 +137,13 @@ export default function LikedSongsPage() {
                       <h3 className="text-white font-medium text-lg truncate">{song.title}</h3>
                     </div>
                   </div>
-
-                  <span className="text-gray-400 text-lg truncate">{Array.isArray(song.artist) ? song.artist.join(", ") : song.artist}
-          </span>
+                  <span className="text-gray-400 text-lg truncate">
+                    {Array.isArray(song.artist) ? song.artist.join(", ") : song.artist}
+                  </span>
                   <span className="text-gray-400 text-lg truncate">{song.album}</span>
-
-                  {/* Actions */}
-                  
                   <div className="flex items-center justify-end opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                     <button
-                      onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+                      onClick={(e) => {
                         e.stopPropagation();
                         handlePlay(song);
                       }}

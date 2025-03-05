@@ -21,11 +21,11 @@ export default function GenreManagement() {
   const [newGenre, setNewGenre] = useState<string>("");
   const [editingGenreId, setEditingGenreId] = useState<string | null>(null);
   const [editedGenreName, setEditedGenreName] = useState<string>("");
-
+  const baseUrl = import.meta.env.VITE_BASE_URL;
   const token = localStorage.getItem("adminToken");
   useEffect(() => {
 
-    axios.get("http://localhost:3000/admin/genreList", {
+    axios.get(`${baseUrl}/admin/genreList`, {
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
@@ -42,7 +42,7 @@ export default function GenreManagement() {
 
     try {
       const res = await axios.post(
-        "http://localhost:3000/admin/genreCreate",
+        `${baseUrl}/admin/genreCreate`,
         { name: newGenre.toLowerCase() },
         {
           headers: {
@@ -77,7 +77,7 @@ export default function GenreManagement() {
       );
 
       await axios.put(
-        `http://localhost:3000/admin/genreToggleBlockUnblock/${id}`,
+        `${baseUrl}/admin/genreToggleBlockUnblock/${id}`,
         {},
         {
           headers: {
@@ -106,7 +106,7 @@ export default function GenreManagement() {
         return
       }
       const response = await axios.put(
-        `http://localhost:3000/admin/genreUpdate/${id}`,
+        `${baseUrl}/admin/genreUpdate/${id}`,
         { name: editedGenreName.trim().toLowerCase() },
         {
           headers: {

@@ -22,12 +22,12 @@ export default function ArtistList() {
     const [artists, setArtists] = useState<Artist[]>([])
     const [loading, setLoading] = useState<boolean>(true)
     const [error, setError] = useState<string | null>(null)
-
+    const baseUrl = import.meta.env.VITE_BASE_URL;
     useEffect(() => {
         const fetchArtists = async () => {
             const token = localStorage.getItem("adminToken"); 
             try {
-                const response = await axios.get("http://localhost:3000/admin/listUsers",{
+                const response = await axios.get(`${baseUrl}/admin/listUsers`,{
                     headers: {
                         "Content-Type": "application/json",
                         Authorization: `Bearer ${token}`,
@@ -57,7 +57,7 @@ export default function ArtistList() {
             console.log(currentStatus, "s")
             // Making an Axios request to toggle the artist's block status
             const newStatus = currentStatus === true ? false : true
-            await axios.patch(`http://localhost:3000/admin/toggleBlock/${id}`, { status: newStatus })
+            await axios.patch(`${baseUrl}/admin/toggleBlock/${id}`, { status: newStatus })
             setArtists(artists.map((artist) =>
                 artist.id === id ? { ...artist, isActive: newStatus } : artist
             ))

@@ -68,11 +68,11 @@ const Login = () => {
       [e.target.name]: e.target.value,
     });
   };
-
+  const baseUrl = import.meta.env.VITE_BASE_URL;
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await axios.post("http://localhost:3000/user/login", formData);
+      const response = await axios.post(`${baseUrl}/user/login`, formData);
       toast.success("User Login success!", { position: "top-right" });
       localStorage.setItem("token", response.data.token);
       dispatch(saveSignupData(response.data.user));
@@ -87,7 +87,7 @@ const Login = () => {
     const idToken = response.credential;
 
     try {
-      const res = await axios.post("http://localhost:3000/user/google-login", {
+      const res = await axios.post(`${baseUrl}/user/google-login`, {
         token: idToken,
       });
 

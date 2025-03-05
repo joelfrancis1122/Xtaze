@@ -10,6 +10,7 @@ const UploadMusicPage: React.FC = () => {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const baseUrl = import.meta.env.VITE_BASE_URL;
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>, type: "song" | "image") => {
     const file = event.target.files ? event.target.files[0] : null;
     if (file) {
@@ -36,7 +37,7 @@ const UploadMusicPage: React.FC = () => {
       formData.append("image", imageFile);
 
 
-      const response = await axios.post("http://localhost:3000/provider/upload", formData, {
+      const response = await axios.post(`${baseUrl}/provider/upload`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },

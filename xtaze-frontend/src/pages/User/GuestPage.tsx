@@ -22,11 +22,11 @@ export default function MusicInterface() {
   const [shuffleIndices, setShuffleIndices] = useState<number[]>([]);
   const [currentShuffleIndex, setCurrentShuffleIndex] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
-
+  const baseUrl = import.meta.env.VITE_BASE_URL;
   useEffect(() => {
     const fetchTracks = async () => {
       try {
-        const response = await axios.get("http://localhost:3000/api/songs/deezer");
+        const response = await axios.get(`${baseUrl}/api/songs/deezer`);
         if (!response.data) {
           throw new Error("Failed to fetch tracks");
         }

@@ -22,7 +22,7 @@ export default function PlaylistsPage() {
   const [playlists, setPlaylists] = useState(initialPlaylists);
   const [showAddForm, setShowAddForm] = useState(false);
   const [newPlaylistName, setNewPlaylistName] = useState("");
-
+  const baseUrl = import.meta.env.VITE_BASE_URL;
   // Redirect if not logged in and fetch playlists
   useEffect(() => {
     if (!user?._id) {
@@ -49,7 +49,7 @@ export default function PlaylistsPage() {
 
     try {
       const response = await axios.post(
-        "http://localhost:3000/user/playlists",
+        `${baseUrl}/user/playlists`,
         { name: newPlaylistName },
         {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },

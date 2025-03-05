@@ -15,7 +15,7 @@ const ArtistLogin = () => {
   const dispatch = useDispatch()
   const token = localStorage.getItem("artistToken");
   const role = useSelector((state: RootState) => state.artist.signupData?.role);
-
+  const baseUrl = import.meta.env.VITE_BASE_URL;
   useEffect(() => {
     if (token&&role=="artist") {
       navigate("/artist/dashboard", { replace: true });
@@ -39,7 +39,7 @@ const ArtistLogin = () => {
     e.preventDefault();
     try {
       const response = await axios.post(
-        "http://localhost:3000/artist/login",
+        `${baseUrl}/artist/login`,
         formData
       );
       

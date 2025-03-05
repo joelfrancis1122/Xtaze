@@ -21,7 +21,7 @@ export function TopSongsTable() {
   const [playingSongId, setPlayingSongId] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const user = useSelector((state: RootState) => state.artist.signupData);
-
+  const baseUrl = import.meta.env.VITE_BASE_URL;
   useEffect(() => {
     const fetchSongs = async () => {
       const token = localStorage.getItem("artistToken");
@@ -36,7 +36,7 @@ export function TopSongsTable() {
           success: boolean;
           tracks?: Song[];
           message?: string;
-        }>(`http://localhost:3000/artist/getAllTracksArtist?userId=${user._id}`, {
+        }>(`${baseUrl}/artist/getAllTracksArtist?userId=${user._id}`, {
           headers: {
             "Authorization": `Bearer ${token}`,
           },

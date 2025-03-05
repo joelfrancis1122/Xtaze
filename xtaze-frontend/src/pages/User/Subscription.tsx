@@ -37,7 +37,7 @@ const plans = [
 export default function PricingPage() {
   const user = useSelector((state: RootState) => state.user.signupData);
   const navigate = useNavigate(); // Hook for redirection
-
+  const baseUrl = import.meta.env.VITE_BASE_URL;
   // Check premium status and redirect if true
   useEffect(() => {
     if (user?.premium === true) {
@@ -54,7 +54,7 @@ export default function PricingPage() {
 
     try {
       const response = await axios.post(
-        "http://localhost:3000/user/checkOut",
+        `${baseUrl}/user/checkOut`,
         {
           userId: user._id,
           priceId: "price_1QwLeQQV9aXBcHmZhnzqbz5G",

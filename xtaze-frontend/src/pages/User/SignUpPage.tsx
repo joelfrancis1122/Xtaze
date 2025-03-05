@@ -15,6 +15,7 @@ import { motion } from "framer-motion";
 import debounce from "lodash/debounce";
 
 const Signup = () => {
+  const baseUrl = import.meta.env.VITE_BASE_URL;
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -51,7 +52,7 @@ const Signup = () => {
       setUsernameStatus("checking");
       try {
         let userName = username.trim()
-        const response = await axios.post("http://localhost:3000/user/checkUsername", {
+        const response = await axios.post(`${baseUrl}/user/checkUsername`, {
           userName,
         });
         if (response.data.available) {
@@ -121,7 +122,7 @@ const Signup = () => {
     dispatch(saveSignupData(formData));
 
     try {
-      const response = await axios.post("http://localhost:3000/user/send-otp", {
+      const response = await axios.post(`${baseUrl}/user/user/send-otp`, {
         email: formData.email,
       });
 

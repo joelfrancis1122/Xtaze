@@ -36,7 +36,7 @@ export const uploadTrack = async (req: Request, res: Response, next: NextFunctio
   } catch (error) {
     next(error); 
   }
-};
+};  
 
 
 export const getAllTracks = async (req: Request, res: Response, next: NextFunction): Promise<void> => {

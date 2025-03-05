@@ -12,7 +12,9 @@ import { RootState } from "../../store/store";
 import { useDispatch, useSelector } from "react-redux";
 import { saveArtistData } from "../../redux/artistSlice";
 
-const UploadMusicPage = () => {
+const UploadMusicPage = () =>{
+    const baseUrl = import.meta.env.VITE_BASE_URL;
+
     const artist = useSelector((state: RootState) => state.artist.signupData);
     const dispatch = useDispatch()
     const [songData, setSongData] = useState({
@@ -68,7 +70,7 @@ const UploadMusicPage = () => {
         if (songData.song) formData.append("file", songData.song);
       
         try {
-            const response = await axios.post(`http://localhost:3000/artist/upload`, formData, {
+            const response = await axios.post(`${baseUrl}/artist/upload`, formData, {
                 headers: {
                      "Content-Type": "multipart/form-data",
                      "Authorization": `Bearer ${token}`
@@ -101,7 +103,7 @@ const token = localStorage.getItem("artistToken");
         const fetchGenres = async () => {
             try {
 
-                const response = await axios.get(`http://localhost:3000/artist/listActiveGenres?artistId=${artist?._id}`,{
+                const response = await axios.get(`${baseUrl}/artist/listActiveGenres?artistId=${artist?._id}`,{
                     headers:{
                         "Content-Type":"application/json",
                         Authorization:`Bearer ${token}`
