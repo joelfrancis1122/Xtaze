@@ -6,7 +6,7 @@ import { authenticateUser } from "../../middlewares/authMiddleware";
 
 const router = express.Router();
 
-const userController = new UserController(userDependencies) //Boss hands toys to cashier
+const userController = new UserController(userDependencies)
 
 router.post("/checkUsername", (req: Request, res: Response, next: NextFunction) => userController.checkUsername(req, res, next));
 router.post("/register", (req: Request, res: Response, next: NextFunction) => userController.registerUser(req, res, next));
