@@ -12,6 +12,6 @@ const fetchDeezerSongsUseCase = new FetchDeezerSongsUseCase(deezerRepository);
 const deezerController = new DeezerController(fetchDeezerSongsUseCase);
 
 // Route
-router.get("/deezer", authenticateUser, (req, res) => deezerController.getDeezerSongs(req, res));
+router.get("/deezer", (req, res) => deezerController.getDeezerSongs(req, res));
 
 export default router;

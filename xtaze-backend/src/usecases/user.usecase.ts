@@ -33,7 +33,7 @@ export default class UserUseCase {
     this._passwordService = dependencies.service.PasswordService // got the paint brush 
     this._otpService = dependencies.service.OtpService;
     this.stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-      apiVersion: "2023-08-16",
+      apiVersion: "2023-08-16", 
     });
   }
 
@@ -82,7 +82,7 @@ export default class UserUseCase {
     return user === null;
   }
 
-
+   
 
   async verifyOTP(otp: string): Promise<{ success: boolean; message: string }> {
     console.log("email ila ennn ariya otp enda", otp)
@@ -99,47 +99,39 @@ export default class UserUseCase {
 
   }
 
-
-
-  async login(email: string, password: string): Promise<{ success: boolean; message: string; accessToken?: string;refreshToken?:string; user?: IUser }> {
+  async login(email: string, password: string): Promise<{ success: boolean; message: string; token?: string; refreshToken?: string; user?: IUser }> {
     const user = await this._userRepository.findByEmail(email);
-    if (!user) {
-      return { success: false, message: "User not found" };
-    }
-    if (user.role === "admin" || user.role === "artist") {
-      return { success: false, message: "This login form is for users" };
-    }
-    if (user.isActive === false) {
-      return { success: false, message: "Your account is suspended!" };
-    }
-    const isPasswordValid = await this._passwordService.comparePassword(password, user.password);
-    if (!isPasswordValid) {
-      throw new Error("Invalid credentials!");
-    }
+    if (!user) return { success: false, message: "User not found" };
+    if (user.role === "admin" || user.role === "artist") return { success: false, message: "This login form is for users" };
+    if (user.isActive === false) return { success: false, message: "Your account is suspended!" };
 
-    const accessToken = jwt.sign(
+    const isPasswordValid = await this._passwordService.comparePassword(password, user.password);
+    if (!isPasswordValid) throw new Error("Invalid credentials!");
+
+    console.log("ith unda");
+    const token = jwt.sign(
       { userId: user._id, email: user.email, role: "user" },
       process.env.JWT_SECRET!,
-      { expiresIn: "15m" } // Short-lived
+      { expiresIn: "10s" } // Short-lived access token
     );
-
+    console.log("ith unda refresh all jwt");
     const refreshToken = jwt.sign(
       { userId: user._id },
       process.env.JWT_REFRESH_SECRET!,
-      { expiresIn: "7d" } // Long-lived
+      { expiresIn: "7d" } // Long-lived refresh token
     );
+    console.log("ith unda asaa", refreshToken);
 
-    // No DB storage—cookie handles it in controller
     return {
       success: true,
       message: "Login successful!",
-      accessToken,
+      token,
+      refreshToken,
       user,
-      refreshToken // Send to controller to set in cookie
     };
   }
 
-  async googleLogin(Token: string): Promise<{ success: boolean; message: string; accessToken?: string; refreshToken?: string; user?: IUser | null }> {
+  async googleLogin(Token: string): Promise<{ success: boolean; message: string; token?: string; refreshToken?: string; user?: IUser | null }> {
     try {
       const ticket = await client.verifyIdToken({
         idToken: Token,
@@ -149,26 +141,20 @@ export default class UserUseCase {
       const payload = ticket.getPayload();
       if (!payload) throw new Error("Invalid Google token");
       const { email } = payload;
+      console.log("Google Payload:", payload);
 
       const user = await UserModel.findOne({ email });
-      if (user?.isActive === false) {
-        return { success: false, message: "Your account is suspended!" };
-      }
-      if (user?.role === "admin" || user?.role === "artist") {
-        return { success: false, message: "This login form is for users" };
-      }
-      if (!user) {
-        return { success: false, message: "User not found. Please sign up." };
-      }
+      if (user?.isActive === false) return { success: false, message: "Your account is suspended!" };
+      if (user?.role === "admin" || user?.role === "artist") return { success: false, message: "This login form is for users" };
+      if (!user) return { success: false, message: "User not found. Please sign up." };
 
       const userObj: IUser = { ...user.toObject(), _id: user._id.toString() };
 
-      const accessToken = jwt.sign(
+      const token = jwt.sign(
         { userId: user._id.toString(), email: user.email, role: "user" },
         process.env.JWT_SECRET!,
-        { expiresIn: "15m" }
+        { expiresIn: "10s" }
       );
-
       const refreshToken = jwt.sign(
         { userId: user._id.toString() },
         process.env.JWT_REFRESH_SECRET!,
@@ -178,8 +164,8 @@ export default class UserUseCase {
       return {
         success: true,
         message: "Login successful!",
-        accessToken,
-        refreshToken, // Send to controller for cookie
+        token,
+        refreshToken,
         user: userObj,
       };
     } catch (error) {
@@ -188,24 +174,19 @@ export default class UserUseCase {
     }
   }
 
-  async refresh(refreshToken: string): Promise<{ success: boolean; message: string; accessToken?: string; refreshToken?: string }> {
+  async refresh(refreshToken: string): Promise<{ success: boolean; message: string; token?: string; refreshToken?: string }> {
     try {
-      // Verify refresh token from cookie
+      console.log("yeaah ithil varunind");
       const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET!) as { userId: string };
       const user = await this._userRepository.findById(decoded.userId);
+      if (!user) return { success: false, message: "User not found" };
+      if (user.isActive === false) return { success: false, message: "Your account is suspended!" };
 
-      if (!user) {
-        return { success: false, message: "User not found" };
-      }
-
-      // Generate new access token
-      const newAccessToken = jwt.sign(
+      const newToken = jwt.sign(
         { userId: user._id, email: user.email, role: "user" },
         process.env.JWT_SECRET!,
-        { expiresIn: "15m" }
+        { expiresIn: "10s" }
       );
-
-      // Optional: Rotate refresh token
       const newRefreshToken = jwt.sign(
         { userId: user._id },
         process.env.JWT_REFRESH_SECRET!,
@@ -215,8 +196,8 @@ export default class UserUseCase {
       return {
         success: true,
         message: "Token refreshed successfully",
-        accessToken: newAccessToken,
-        refreshToken: newRefreshToken // Send back for cookie update
+        token: newToken,
+        refreshToken: newRefreshToken,
       };
     } catch (error) {
       console.error("Refresh Token Error:", error);
@@ -224,76 +205,77 @@ export default class UserUseCase {
     }
   }
 
-  async uploadProfile(userId: string, file: Express.Multer.File): Promise<{ success: boolean; message: string, user?: IUser }> {
+  
+  async uploadProfile(userId: string,file: Express.Multer.File): Promise<{ success: boolean; message: string ,user?:IUser}> {
     try {
       const cloudinaryResponse = await uploadProfileCloud(file);
-
+  
       const profilePicUrl = cloudinaryResponse.secure_url;
-
+  
       // Update the user profile with the new image URL
       const updatedUser = await this._userRepository.updateProfile(userId, profilePicUrl);
-
+  
       if (!updatedUser) {
         return { success: false, message: "Failed to update profile" };
       }
-
-      return { success: true, message: "Profile updated successfully", user: updatedUser };
+  
+      return { success: true, message: "Profile updated successfully" ,user:updatedUser};
     } catch (error) {
       console.error("Error during profile upload:", error);
       return { success: false, message: "An error occurred while updating the profile" };
     }
 
-  }
-  async uploadBanner(userId: string, file: Express.Multer.File, isVideo: boolean): Promise<{ success: boolean; message: string, user?: IUser, isVideo?: boolean }> {
+}
+  async uploadBanner(userId: string,file: Express.Multer.File,isVideo:boolean): Promise<{ success: boolean; message: string ,user?:IUser,isVideo?:boolean}> {
     try {
       const cloudinaryResponse = await uploadProfileCloud(file);
-
+  
       const BannerPicUrl = cloudinaryResponse.secure_url;
       const updatedUser = await this._userRepository.uploadBanner(userId, BannerPicUrl);
       if (!updatedUser) {
         return { success: false, message: "Failed to update profile" };
       }
-
-      return { success: true, message: "Banner updated successfully", user: updatedUser, isVideo: isVideo };
+  
+      return { success: true, message: "Banner updated successfully" ,user:updatedUser,isVideo:isVideo};
     } catch (error) {
       console.error("Error during Banner upload:", error);
       return { success: false, message: "An error occurred while updating the profile" };
     }
 
-  }
-  async updateBio(userId: string, bio: string): Promise<{ success: boolean; message: string, user?: IUser }> {
+}
+  async updateBio(userId: string,bio: string): Promise<{ success: boolean; message: string ,user?:IUser}> {
     try {
-
+  
       const updated = await this._userRepository.updateBio(userId, bio);
-
+  
       if (!updated) {
         return { success: false, message: "Failed to update profile" };
       }
-
-      return { success: true, message: "Profile updated successfully", user: updated };
+  
+      return { success: true, message: "Profile updated successfully" ,user:updated};
     } catch (error) {
       console.error("Error during profile upload:", error);
       return { success: false, message: "An error occurred while updating the profile" };
     }
 
-  }
-  async addToLiked(userId: string, trackId: string): Promise<IUser | null> {
-    try {
-      const user = await this._userRepository.addToLiked(userId, trackId);
+}
+ async addToLiked(userId: string, trackId: string): Promise<IUser | null> {
+  try {
+    const user = await this._userRepository.addToLiked(userId, trackId);
 
-      if (!user) {
-        return null;
-      }
-
-      return user; // Directly return the user object
-    } catch (error) {
-      console.error("Error during adding liked song:", error);
-      throw new Error("An error occurred while updating liked songs.");
+    if (!user) {
+      return null;
     }
+
+    return user; // Directly return the user object
+  } catch (error) {
+    console.error("Error during adding liked song:", error);
+    throw new Error("An error occurred while updating liked songs.");
   }
+}
 
 
-  async getUpdatedArtist(artistId: string): Promise<IUser | null> {
+ async getUpdatedArtist(artistId:string): Promise<IUser|null> {
     return await this._userRepository.getupdatedArtist(artistId);
   }
   async execute(userId: string, priceId: string): Promise<Stripe.Checkout.Session> {
@@ -327,6 +309,6 @@ export default class UserUseCase {
     }
   }
 }
-
+  
 
 

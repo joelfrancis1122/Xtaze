@@ -128,7 +128,7 @@ async addToLiked(userId: string, trackId: string): Promise<IUser | null> {
     }
 
     let updatedUser;
-    if (user.likedSongs.includes(trackId)) {
+    if (user.likedSongs?.includes(trackId)) {
       updatedUser = await UserModel.findByIdAndUpdate(
         userId,
         { $pull: { likedSongs: trackId } }, // Remove from likedSongs

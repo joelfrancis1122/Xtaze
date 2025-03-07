@@ -63,7 +63,7 @@ const authenticateToken = (req: AuthenticatedRequest, res: Response, next: NextF
     req.user = decoded;
     next();
   } catch (error) {
-    throw new AppError("Forbidden: Invalid token", 403);
+    throw new AppError("Forbidden: Invalid token", 401);
   }
 };
 

@@ -4,18 +4,16 @@ import { toast } from "sonner";
 import { Label } from "../../components/ui/label";
 import { Input } from "../../components/ui/input";
 import { cn } from "../../../lib/utils";
-import { IconBrandGoogle, IconEye, IconEyeOff, IconCheck, IconX } from "@tabler/icons-react";
+import { IconEye, IconEyeOff, IconCheck, IconX } from "@tabler/icons-react";
 import { Select } from "../../components/ui/select";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { saveSignupData } from "../../redux/userSlice";
-import axios from "axios";
 import { motion } from "framer-motion";
-
 import debounce from "lodash/debounce";
+import { checkUsername, sendOtp } from "../../services/userService"; // Import service functions
 
 const Signup = () => {
-  const baseUrl = import.meta.env.VITE_BASE_URL;
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -38,7 +36,7 @@ const Signup = () => {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [usernameStatus, setUsernameStatus] = useState<"idle" | "checking" | "unique" | "taken">("idle"); // Track username status
+  const [usernameStatus, setUsernameStatus] = useState<"idle" | "checking" | "unique" | "taken">("idle");
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
 
   // Debounced function to check username availability
@@ -51,19 +49,12 @@ const Signup = () => {
 
       setUsernameStatus("checking");
       try {
-        let userName = username.trim()
-        const response = await axios.post(`${baseUrl}/user/checkUsername`, {
-          userName,
-        });
-        if (response.data.available) {
-          setUsernameStatus("unique");
-        } else {
-          setUsernameStatus("taken");
-        }
-      } catch (error) {
+        const isAvailable = await checkUsername(username.trim());
+        setUsernameStatus(isAvailable ? "unique" : "taken");
+      } catch (error: any) {
         console.error("Error checking username:", error);
         setUsernameStatus("taken"); // Default to taken on error for safety
-        toast.error("Error checking username availability", { position: "top-right" });
+        toast.error(error.message || "Error checking username availability", { position: "top-right" });
       }
     }, 500), // 500ms debounce delay
     []
@@ -76,7 +67,6 @@ const Signup = () => {
       [name]: value,
     }));
 
-    // Check username availability when username changes
     if (name === "username") {
       checkUsernameAvailability(value);
     }
@@ -119,24 +109,13 @@ const Signup = () => {
     setIsButtonDisabled(true);
     setTimeout(() => setIsButtonDisabled(false), 10000);
 
-    dispatch(saveSignupData(formData));
-
     try {
-      const response = await axios.post(`${baseUrl}/user/user/send-otp`, {
-        email: formData.email,
-      });
-
-      if (response.data.success) {
-        toast.success("OTP sent successfully!", { position: "top-right" });
-        dispatch(saveSignupData(formData));
-        navigate("/otp", { state: { otpSent: true } });
-      } else {
-        toast.error(response.data.message, { position: "top-right" });
-      }
+      await sendOtp(formData.email); // Use sendOtp from service
+      toast.success("OTP sent successfully!", { position: "top-right" });
+      dispatch(saveSignupData(formData));
+      navigate("/otp", { state: { otpSent: true } });
     } catch (error: any) {
-      toast.error(error.response?.data?.message || "Error sending OTP", {
-        position: "top-right",
-      });
+      toast.error(error.message || "Error sending OTP", { position: "top-right" });
     }
   };
 
@@ -172,7 +151,6 @@ const Signup = () => {
                 {usernameStatus === "checking" && (
                   <span className="animate-spin h-5 w-5 border-2 border-t-transparent border-gray-400 rounded-full"></span>
                 )}
-
                 {usernameStatus === "unique" && (
                   <motion.div
                     initial={{ scale: 0, opacity: 0 }}
@@ -183,9 +161,7 @@ const Signup = () => {
                   >
                     <IconCheck size={20} className="text-green-500" />
                   </motion.div>
-
                 )}
-
                 {usernameStatus === "taken" && (
                   <motion.div
                     initial={{ opacity: 0, scale: 0.5, rotate: 90 }}
@@ -213,7 +189,6 @@ const Signup = () => {
                 required
               />
             </LabelInputContainer>
-
             <LabelInputContainer>
               <Label htmlFor="year">Year of Birth</Label>
               <Input
@@ -339,18 +314,6 @@ const Signup = () => {
 
           {/* Divider */}
           <div className="bg-gradient-to-r from-transparent via-neutral-300 dark:via-neutral-700 to-transparent my-8 h-[1px] w-full" />
-
-          {/* Social Login */}
-          {/* <div className="flex flex-col space-y-4">
-            <button
-              className="relative group/btn flex space-x-2 items-center justify-start px-4 w-full text-black rounded-md h-10 font-medium shadow-input bg-gray-50 dark:bg-zinc-900 dark:shadow-[0px_0px_1px_1px_var(--neutral-800)]"
-              type="button"
-            >
-              <IconBrandGoogle className="h-4 w-4 text-neutral-800 dark:text-neutral-300" />
-              <span className="text-neutral-700 dark:text-neutral-300 text-sm">Sign up with Google</span>
-              <BottomGradient />
-            </button>
-          </div> */}
 
           {/* Link to login page */}
           <div className="mt-4 text-center">

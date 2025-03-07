@@ -2,17 +2,15 @@
 
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import axios from "axios";
 import { Label } from "../../components/ui/label";
 import { Input } from "../../components/ui/input";
 import { cn } from "../../../lib/utils";
 import { useNavigate } from "react-router-dom";
 import { IconEye, IconEyeOff, IconBrandGoogle } from "@tabler/icons-react";
 import { useDispatch, useSelector } from "react-redux";
-import { saveSignupData } from "../../redux/userSlice";
 import { RootState } from "../../store/store";
+import { loginUser, googleLogin } from "../../services/userService";
 
-// Declare Google object for TypeScript
 declare global {
   interface Window {
     google: any;
@@ -31,25 +29,27 @@ const Login = () => {
       return;
     }
 
-    // Load Google Identity Services script
     const script = document.createElement("script");
     script.src = "https://accounts.google.com/gsi/client";
     script.async = true;
     script.onload = () => {
+      console.log("GSI script loaded, initializing...");
       window.google.accounts.id.initialize({
         client_id: "132673285232-qlck5fpb2ak6n2ge8boj4g509vm7qbqh.apps.googleusercontent.com",
         callback: handleGoogleLogin,
+        // Optional: Switch to redirect mode if popup fails
+        // ux_mode: "redirect",
+        // login_uri: "http://localhost:3000/user/google-login",
       });
-      window.google.accounts.id.renderButton(
-        document.getElementById("googleLoginButton"),
-        {
-          theme: "outline",
-          size: "large",
-          text: "signin_with",
-          shape: "rectangular",
-        }
-      );
+      window.google.accounts.id.renderButton(document.getElementById("googleLoginButton"), {
+        theme: "outline",
+        size: "large",
+        text: "signin_with",
+        shape: "rectangular",
+      });
+      console.log("Google button rendered");
     };
+    script.onerror = () => console.error("Failed to load GSI script");
     document.body.appendChild(script);
 
     return () => {
@@ -68,42 +68,30 @@ const Login = () => {
       [e.target.name]: e.target.value,
     });
   };
-  const baseUrl = import.meta.env.VITE_BASE_URL;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await axios.post(`${baseUrl}/user/login`, formData);
+      console.log("Submitting login with:", formData);
+      await loginUser(formData.email, formData.password, dispatch);
       toast.success("User Login success!", { position: "top-right" });
-      localStorage.setItem("token", response.data.token);
-      dispatch(saveSignupData(response.data.user));
       navigate("/home");
-      console.log(response.data);
     } catch (error: any) {
-      toast.warning(error.response?.data?.message || error.message, { position: "top-right" });
+      console.error("Login failed:", error.message);
+      toast.warning(error.message, { position: "top-right" });
     }
   };
 
   const handleGoogleLogin = async (response: any) => {
     const idToken = response.credential;
-
+    console.log("Google login response received:", response);
     try {
-      const res = await axios.post(`${baseUrl}/user/google-login`, {
-        token: idToken,
-      });
-
-      if (res.data.success) {
-        const { token, user } = res.data;
-        localStorage.setItem("token", token);
-        dispatch(saveSignupData(user));
-        toast.success("Logged in with Google successfully!", { position: "top-right" });
-        navigate("/home", { replace: true });
-      } else {
-        toast.error(res.data.message || "Google login failed", { position: "top-right" });
-      }
+      await googleLogin(idToken, dispatch);
+      toast.success("Logged in with Google successfully!", { position: "top-right" });
+      navigate("/home", { replace: true });
     } catch (error: any) {
-      toast.error(error.response?.data?.message || "Error with Google login", {
-        position: "top-right",
-      });
+      console.error("Google login failed:", error.message);
+      toast.error(error.message, { position: "top-right" });
     }
   };
 
@@ -151,21 +139,15 @@ const Login = () => {
             <BottomGradient />
           </button>
 
-          {/* Divider */}
           <div className="bg-gradient-to-r from-transparent via-neutral-300 dark:via-neutral-700 to-transparent my-8 h-[1px] w-full" />
 
-          {/* Google Login Button */}
           <div className="flex flex-col space-y-4">
-            <div
-              id="googleLoginButton"
-            >
-            </div>
+            <div id="googleLoginButton"></div>
           </div>
-
 
           <div className="mt-4 text-center">
             <p className="text-neutral-600 dark:text-neutral-300">
-              Don't have an account?{" "}
+              Don’t have an account?{" "}
               <button onClick={goToSignup} className="text-blue-500 hover:underline">
                 Sign Up
               </button>

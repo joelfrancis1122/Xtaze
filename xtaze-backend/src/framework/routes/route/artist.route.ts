@@ -4,7 +4,7 @@ import artistDependencies from "../../dependencies/artist.dependencies";
 import upload from "../../middlewares/uploadMiddleware";
 import GenreController from "../../../adapter/controller/genre.controller";
 import genreDependencies from "../../dependencies/genre.dependencies";
-import { authenticateArtist } from "../../middlewares/authMiddleware";
+import { authenticateArtist, authenticateUser } from "../../middlewares/authMiddleware";
 
 
 const artistController = new ArtistController(artistDependencies)
@@ -17,7 +17,7 @@ router.post("/login",(req:Request,res:Response,next:NextFunction)=>artistControl
 router.post("/upload",authenticateArtist,upload.fields([{ name: "file", maxCount: 1 }, { name: "image", maxCount: 1 }]),(req:Request,res:Response,next:NextFunction)=>artistController.uploadTracks(req,res,next))
 router.get("/listActiveGenres",authenticateArtist,(req:Request,res:Response,next:NextFunction)=>genreController.listActiveGenres(req,res,next))
 router.get("/getAllTracksArtist",authenticateArtist,(req:Request,res:Response,next:NextFunction)=>artistController.getAllTracksArtist(req,res,next))
-router.post("/incrementListeners",authenticateArtist,(req:Request,res:Response,next:NextFunction)=>artistController.incrementListeners(req,res,next))
+router.post("/incrementListeners",authenticateUser,(req:Request,res:Response,next:NextFunction)=>artistController.incrementListeners(req,res,next))
 
 
 
