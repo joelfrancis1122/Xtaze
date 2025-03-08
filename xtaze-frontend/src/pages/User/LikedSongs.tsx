@@ -6,11 +6,12 @@ import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "../../store/store";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { PlayCircle, PauseCircle } from "lucide-react";
+import { PlayCircle, PauseCircle, Heart } from "lucide-react";
 import { audio } from "../../utils/audio";
 import { setCurrentTrack, setIsPlaying } from "../../redux/audioSlice";
+import { saveSignupData } from "../../redux/userSlice"; // Import saveSignupData
 import { Track } from "./Types";
-import { fetchLikedSongs } from "../../services/userService";
+import { fetchLikedSongs, toggleLike } from "../../services/userService";
 
 interface UserSignupData {
   _id?: string;
@@ -97,6 +98,24 @@ export default function LikedSongsPage() {
     }
   };
 
+  const handleUnlike = async (trackId: string) => {
+    const token = localStorage.getItem("token");
+    if (!token || !trackId || !user?._id) {
+      toast.error("Unable to unlike song. Please log in again.");
+      return;
+    }
+
+    try {
+      const updatedUser = await toggleLike(user._id, trackId, token); // Toggle like API call
+      dispatch(saveSignupData(updatedUser)); // Update Redux with new user data
+      setLikedSongs((prev) => prev.filter((song) => song._id !== trackId)); // Remove song from list
+      toast.success("Song removed from liked songs!");
+    } catch (error) {
+      console.error("Error unliking song:", error);
+      toast.error("Failed to unlike song.", { position: "top-right" });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-black text-white flex">
       <Sidebar />
@@ -112,17 +131,18 @@ export default function LikedSongsPage() {
             <div className="text-center py-4 text-gray-400">Loading liked songs...</div>
           ) : likedSongs.length > 0 ? (
             <div className="bg-[#151515] rounded-xl shadow-lg border border-black-900 overflow-hidden">
-              <div className="grid grid-cols-[48px_2fr_1fr_1fr_48px] gap-4 px-6 py-4 text-gray-400 text-lg font-semibold border-b border-gray-700">
+              <div className="grid grid-cols-[48px_2fr_1fr_1fr_48px_48px] gap-4 px-6 py-4 text-gray-400 text-lg font-semibold border-b border-gray-700">
                 <span className="text-center">#</span>
                 <span>Title</span>
                 <span>Artist</span>
                 <span>Album</span>
-                <span></span>
+                <span></span> {/* Play button column */}
+                <span></span> {/* Unlike button column */}
               </div>
               {likedSongs.map((song, index) => (
                 <div
                   key={song._id}
-                  className="grid grid-cols-[48px_2fr_1fr_1fr_48px] gap-4 px-6 py-4 hover:bg-[#212121] transition-all duration-200 cursor-pointer items-center group"
+                  className="grid grid-cols-[48px_2fr_1fr_1fr_48px_48px] gap-4 px-6 py-4 hover:bg-[#212121] transition-all duration-200 cursor-pointer items-center group"
                 >
                   <span className="text-gray-400 text-lg text-center">{index + 1}</span>
                   <div className="flex items-center space-x-4 truncate">
@@ -153,6 +173,17 @@ export default function LikedSongsPage() {
                       ) : (
                         <PlayCircle size={24} className="text-red-500" />
                       )}
+                    </button>
+                  </div>
+                  <div className="flex items-center justify-end opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleUnlike(song._id);
+                      }}
+                      title="Unlike this song"
+                    >
+                      <Heart size={24} className="text-red-500 fill-red-500" />
                     </button>
                   </div>
                 </div>

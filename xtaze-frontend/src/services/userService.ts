@@ -117,8 +117,8 @@ export const registerUser = async (signupData: {
   year: string;
   phone: string;
   email: string;
-  password: string;
-  confirmPassword: string;
+  password?: string;
+  confirmPassword?: string;
 }): Promise<void> => {
   const data = await apiCall<{ success: boolean; token?: string; user?: any; message?: string }>(
     userApi,

@@ -5,7 +5,7 @@ import { useSelector } from "react-redux";
 import { RootState } from "../../store/store";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { sendOtp, verifyOtp, registerUser } from "../../services/userService"; // Import service functions
+import { sendOtp, verifyOtp, registerUser } from "../../services/userService";
 
 export default function OTPVerification() {
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
@@ -16,10 +16,15 @@ export default function OTPVerification() {
 
   const signupData = useSelector((state: RootState) => state.user.signupData);
 
-  // Function to handle OTP resend
   const resendOtp = async () => {
     if (isResendDisabled) {
       toast.info("Please wait before resending OTP.", { position: "top-right" });
+      return;
+    }
+
+    if (!signupData?.email) {
+      toast.error("Email is missing. Please try signing up again.");
+      navigate("/signup");
       return;
     }
 
@@ -28,9 +33,9 @@ export default function OTPVerification() {
 
     try {
       setIsSubmitting(true);
-      await sendOtp(signupData.email); // Use sendOtp with email only
+      await sendOtp(signupData.email);
       toast.success("OTP resent successfully!");
-      const otpExpiration = Date.now() + 30000; // 30 seconds
+      const otpExpiration = Date.now() + 30000;
       localStorage.setItem("otpExpirationTime", otpExpiration.toString());
     } catch (error: any) {
       toast.error(error.message || "Failed to resend OTP. Please try again later.");
@@ -44,8 +49,6 @@ export default function OTPVerification() {
       const newOtp = [...otp];
       newOtp[index] = value;
       setOtp(newOtp);
-
-      // Move to next input if value is entered
       if (value && index < 5) {
         inputRefs[index + 1].current?.focus();
       }
@@ -59,17 +62,24 @@ export default function OTPVerification() {
   };
 
   const verifyOTP = async () => {
-    const otpCode = otp.join(""); // string aki
+    const otpCode = otp.join("");
 
     if (otpCode.length !== 6) {
       toast.error("Please enter the full OTP.");
       return;
     }
 
+    if (!signupData) {
+      toast.error("Signup data is missing. Please try signing up again.");
+      navigate("/signup");
+      return;
+    }
+
+    // Type assertion or validation could be added here if needed
     try {
       setIsSubmitting(true);
-      await verifyOtp(otpCode); // Verify OTP
-      await registerUser(signupData); // Register user
+      await verifyOtp(otpCode);
+      await registerUser(signupData); // Type matches if userSlice is updated
       toast.success("OTP verified successfully!");
       navigate("/home");
     } catch (error: any) {
