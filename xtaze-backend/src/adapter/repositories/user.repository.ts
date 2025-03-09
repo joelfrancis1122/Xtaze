@@ -120,7 +120,7 @@ async updateUserSubscription(userId: string, isPremium: boolean): Promise<IUser 
   }
 }
 async addToLiked(userId: string, trackId: string): Promise<IUser | null> {
-    try {
+      try {
     const user = await UserModel.findById(userId);
     
     if (!user) {

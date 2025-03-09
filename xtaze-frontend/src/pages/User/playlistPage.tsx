@@ -52,7 +52,7 @@ export default function PlaylistsPage() {
         `${baseUrl}/user/playlists`,
         { name: newPlaylistName },
         {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }, 
         }
       );
 

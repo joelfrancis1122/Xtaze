@@ -15,7 +15,7 @@ interface Artist {
     name: string
     role: string
     image: string
-    isActive: boolean
+    isActive: boolean 
 }
 
 export default function ArtistList() {

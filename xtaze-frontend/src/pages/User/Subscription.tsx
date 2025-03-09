@@ -57,7 +57,7 @@ export default function PricingPage() {
         `${baseUrl}/user/checkOut`,
         {
           userId: user._id,
-          priceId: "price_1QwLeQQV9aXBcHmZhnzqbz5G",
+          priceId: "price_1QwLeQQV9aXBcHmZhnzqbz5G", 
         },
         {
           headers: {

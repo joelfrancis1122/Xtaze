@@ -37,7 +37,7 @@ const UploadMusicPage: React.FC = () => {
       formData.append("image", imageFile);
 
 
-      const response = await axios.post(`${baseUrl}/provider/upload`, formData, {
+      const response = await axios.post(`${baseUrl}/provider/upload`, formData, { 
         headers: {
           "Content-Type": "multipart/form-data",
         },

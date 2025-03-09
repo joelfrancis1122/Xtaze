@@ -6,7 +6,6 @@ import Signup from "./pages/User/SignUpPage";
 import OTPVerification from "./pages/User/OtpPage"
 
 import UploadMusicPage from "./pages/Provider/UploadTrackPage";
-import MusicInterface from "./pages/User/GuestPage";
 import Home from "./pages/User/HomePage";
 import AdminDashboard from "./pages/Admin/DashboardPage";
 import GenreManagement from "./pages/Admin/GenrePage";
@@ -64,7 +63,6 @@ const App = () => {
             <Route path="/plans" element={<SubscriptionPlans/>} />
             <Route path="/Signup" element={<Signup />} />
             <Route path="/Otp" element={<OTPVerification />} />
-            <Route path="/Ghome" element={<MusicInterface />} />
             <Route path="/uploadTrack" element={<UploadMusicPage />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/success" element={<SuccessPage />} />

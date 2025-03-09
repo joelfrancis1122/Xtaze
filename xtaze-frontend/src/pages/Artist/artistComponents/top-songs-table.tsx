@@ -31,7 +31,7 @@ export function TopSongsTable() {
         return;
       }
 
-      try {
+      try { 
         const response = await axios.get<{
           success: boolean;
           tracks?: Song[];

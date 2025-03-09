@@ -13,7 +13,7 @@ import { motion } from "framer-motion";
 interface Genre {
   _id: string;
   name: string;
-  isBlocked: boolean;
+  isBlocked: boolean; 
 }
 
 export default function GenreManagement() {

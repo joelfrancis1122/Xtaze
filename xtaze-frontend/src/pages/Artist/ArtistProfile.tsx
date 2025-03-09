@@ -45,7 +45,7 @@ export default function ArtistProfile() {
         if (!token) {
             console.error("No token found. Please login.");
             navigate("/login");
-            return;
+            return; 
         }
 
         const fetchTracks = async () => {

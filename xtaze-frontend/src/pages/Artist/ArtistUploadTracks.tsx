@@ -70,7 +70,7 @@ const UploadMusicPage = () =>{
         if (songData.song) formData.append("file", songData.song);
       
         try {
-            const response = await axios.post(`${baseUrl}/artist/upload`, formData, {
+            const response = await axios.post(`${baseUrl}/artist/upload`, formData, { 
                 headers: {
                      "Content-Type": "multipart/form-data",
                      "Authorization": `Bearer ${token}`
@@ -99,7 +99,6 @@ const UploadMusicPage = () =>{
 console.log(artist,"itheee")
 const token = localStorage.getItem("artistToken"); 
     useEffect(() => {
-        // Fetch genres from the backendmap
         const fetchGenres = async () => {
             try {
 

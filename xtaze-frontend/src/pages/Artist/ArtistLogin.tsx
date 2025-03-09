@@ -38,7 +38,7 @@ const ArtistLogin = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await axios.post(
+      const response = await axios.post( 
         `${baseUrl}/artist/login`,
         formData
       );
