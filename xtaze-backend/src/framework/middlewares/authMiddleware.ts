@@ -61,8 +61,10 @@ const authenticateToken = (req: AuthenticatedRequest, res: Response, next: NextF
   try {
     const decoded = jwt.verify(token, SECRET_KEY) as AuthenticatedRequest["user"];
     req.user = decoded;
+    console.log(decoded,"odi ayi")
     next();
   } catch (error) {
+    console.log(error,"sasaaa")
     throw new AppError("Forbidden: Invalid token", 401);
   }
 };

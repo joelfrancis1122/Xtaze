@@ -25,9 +25,48 @@ export default class ArtistController {
       if (!response.success) {
         throw new AppError(response.message || "Login failed", 400); // Use message from use case
       }
-
+      res.cookie("ArefreshToken", response.ArefreshToken, {
+        httpOnly: false,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      });
       res.status(200).json(response);
     } catch (error) {
+      next(error);
+    }
+  }
+
+
+    async refreshToken(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      console.log("refresh token triggereed ")
+      const { ArefreshToken } = req.body;
+    
+      console.log(req.body,"ithan enik kitityees")
+      if (!ArefreshToken) throw new AppError("Refresh token is required", 400);
+
+      const response = await this._artistnUseCase.refresh(ArefreshToken);
+
+      if (response.success && response.token && response.ArefreshToken) {
+        // Only set refreshToken in cookie
+        console.log("ithenthaninaa a")
+        res.cookie("ArefreshToken", response.ArefreshToken, {
+          httpOnly: false,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "lax",
+          maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+        });
+        res.status(200).json({
+          success: true,
+          message: response.message,
+          token: response.token, 
+        });
+      } else {
+        res.status(401).json(response);
+      }
+    } catch (error) {
+      console.error("Refresh Token Error:", error);
       next(error);
     }
   }
@@ -94,7 +133,7 @@ export default class ArtistController {
       const artistArray = artist ? artist.split(",").map((g: string) => g.trim()) : [];
 
       const track = await this._artistnUseCase.trackUpload(songName, artistArray, genreArray, album, songFile, imageFile);
-
+      console.log("set ayo")
       res.status(201).json({
         message: "Track uploaded successfully!",
         track,

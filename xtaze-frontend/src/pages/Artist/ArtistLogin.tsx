@@ -1,23 +1,22 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import axios from "axios";
 import { Label } from "../../components/ui/label";
 import { Input } from "../../components/ui/input";
 import { cn } from "../../../lib/utils";
-import { useNavigate } from "react-router-dom"; 
-import { IconEye, IconEyeOff } from "@tabler/icons-react"; 
+import { useNavigate } from "react-router-dom";
+import { IconEye, IconEyeOff } from "@tabler/icons-react";
 import { useDispatch, useSelector } from "react-redux";
-import { saveArtistData } from "../../redux/artistSlice";
 import { RootState } from "../../store/store";
+import artistService from "../../services/artistService"; // Adjust path as needed
 
 const ArtistLogin = () => {
-  const navigate = useNavigate(); 
-  const dispatch = useDispatch()
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
   const token = localStorage.getItem("artistToken");
   const role = useSelector((state: RootState) => state.artist.signupData?.role);
-  const baseUrl = import.meta.env.VITE_BASE_URL;
+
   useEffect(() => {
-    if (token&&role=="artist") {
+    if (token && role === "artist") {
       navigate("/artist/dashboard", { replace: true });
     }
   }, [token, navigate]);
@@ -26,7 +25,6 @@ const ArtistLogin = () => {
     email: "",
     password: "",
   });
-
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -38,34 +36,13 @@ const ArtistLogin = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await axios.post( 
-        `${baseUrl}/artist/login`,
-        formData
-      );
-      
-      if (response.data.success) {
-        // Handle successful login, e.g., store the token and redirect
-        console.log('Login successful', response.data.token);
-        dispatch(saveArtistData(response.data.artist))
-        console.log(response.data.artist,"sasd")
-        toast.success("Artist Login success!", { position: "top-right" });
-      } else {
-        // Show the error message from the response
-        toast.error(response.data.message,{ position: "top-right" }); // Show error message
-      }
-
-      localStorage.setItem("artistToken", response.data.token);
-      navigate("/artist/dashboard")
-      console.log(response.data);
+      await artistService.loginArtist(formData.email, formData.password, dispatch);
+      toast.success("Artist Login success!", { position: "top-right" });
+      navigate("/artist/dashboard");
     } catch (error: any) {
-      toast.error(
-        (error.response?.data?.message || error.message),
-        { position: "top-right" }
-      );
+      toast.error(error.message || "Login failed", { position: "top-right" });
     }
   };
-
-
 
   return (
     <div className="flex items-center min-h-screen bg-black">
@@ -106,12 +83,9 @@ const ArtistLogin = () => {
             className="bg-gradient-to-br relative group/btn from-black dark:from-zinc-900 dark:to-zinc-900 to-neutral-600 block dark:bg-zinc-800 w-full text-white rounded-md h-10 font-medium"
             type="submit"
           >
-            Log In &rarr;
+            Log In →
             <BottomGradient />
-
           </button>
-
-         
         </form>
       </div>
     </div>

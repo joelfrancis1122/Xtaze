@@ -9,9 +9,9 @@ const ArtistSidebar = () => {
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    localStorage.removeItem("artistToken"); // Remove token from storage
+    localStorage.removeItem("artistToken");
     dispatch(clearArtistData());
-    navigate("/artist"); // Redirect to login page
+    navigate("/artist"); 
   };
 
   return (

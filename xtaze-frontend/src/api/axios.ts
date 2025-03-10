@@ -2,7 +2,7 @@ import axios from "axios";
 
 const axiosBaseConfig = {
   baseURL: import.meta.env.VITE_BASE_URL || "http://localhost:3000",
-  timeout: 10000,
+  timeout: 30000,
 };
 
 // User API instance

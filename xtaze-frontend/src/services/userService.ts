@@ -20,7 +20,10 @@ const addRefreshInterceptor = (apiInstance: any) => {
         originalRequest._retry = true;
         console.log("Calling refresh token due to 401", { cookies: document.cookie });
         const newToken = await refreshToken();
-        if (!newToken) throw new Error("Failed to refresh token");
+        if (!newToken) {
+          console.error("Refresh token failed, clearing auth");
+          throw new Error("Failed to refresh token");
+        }
         originalRequest.headers["Authorization"] = `Bearer ${newToken}`;
         return apiInstance(originalRequest);
       }
@@ -30,13 +33,13 @@ const addRefreshInterceptor = (apiInstance: any) => {
 };
 
 // Apply interceptors
-[userApi, providerApi, artistApi].forEach(addRefreshInterceptor);
+[userApi, providerApi, deezerApi].forEach(addRefreshInterceptor); // Only user-related APIs
 
-// Refresh Token
+// Refresh Token (for users)
 export const refreshToken = async (): Promise<string | null> => {
   try {
     const refreshTokenValue = getCookie("refreshToken");
-    console.log("Refresh token:", refreshTokenValue);
+    console.log("User refresh token:", refreshTokenValue);
     if (!refreshTokenValue) throw new Error("No refresh token available");
 
     const response = await userApi.post("/refresh", { refreshToken: refreshTokenValue }, { withCredentials: true });
@@ -45,7 +48,7 @@ export const refreshToken = async (): Promise<string | null> => {
     if (!data.success) throw new Error(data.message || "Failed to refresh token");
 
     localStorage.setItem("token", data.token);
-    console.log("New token:", data.token);
+    console.log("New user token:", data.token);
     return data.token;
   } catch (error) {
     console.error("Refresh error:", error);
@@ -58,7 +61,7 @@ export const refreshToken = async (): Promise<string | null> => {
 // Generic API Call Helper
 const apiCall = async <T>(
   instance: any,
-  method: "get" | "post",
+  method: "get" | "post" | "put" | "delete",
   url: string,
   data?: any,
   token?: string
@@ -78,34 +81,19 @@ const apiCall = async <T>(
 
 // Check Username Availability
 export const checkUsername = async (username: string): Promise<boolean> => {
-  const data = await apiCall<{ available: boolean }>(
-    userApi,
-    "post",
-    "/checkUsername",
-    { userName: username }
-  );
+  const data = await apiCall<{ available: boolean }>(userApi, "post", "/checkUsername", { userName: username });
   return data.available;
 };
 
-// Send OTP (adjusted path to match Signup component)
+// Send OTP
 export const sendOtp = async (email: string): Promise<void> => {
-  const data = await apiCall<{ success: boolean; message?: string }>(
-    userApi,
-    "post",
-    "/send-otp", // Updated from "/send-otp" to match Signup component
-    { email }
-  );
+  const data = await apiCall<{ success: boolean; message?: string }>(userApi, "post", "/send-otp", { email });
   if (!data.success) throw new Error(data.message || "Failed to send OTP");
 };
 
 // Verify OTP
 export const verifyOtp = async (otp: string): Promise<void> => {
-  const data = await apiCall<{ success: boolean; message?: string }>(
-    userApi,
-    "post",
-    "/verify-otp",
-    { otp }
-  );
+  const data = await apiCall<{ success: boolean; message?: string }>(userApi, "post", "/verify-otp", { otp });
   if (!data.success) throw new Error(data.message || "Failed to verify OTP");
 };
 
@@ -127,7 +115,7 @@ export const registerUser = async (signupData: {
     signupData
   );
   if (!data.success) throw new Error(data.message || "Failed to register user");
-  if (data.token) localStorage.setItem("token", data.token); // Store token if provided
+  if (data.token) localStorage.setItem("token", data.token);
 };
 
 // Login with email and password
@@ -138,7 +126,7 @@ export const loginUser = async (
 ): Promise<void> => {
   const data = await apiCall<{ token: string; user: any }>(userApi, "post", "/login", { email, password });
   console.log("Login response:", data);
-  console.log("Refresh token after login:", getCookie("refreshToken"), { cookies: document.cookie });
+  console.log("Refresh token after login:", getCookie("refreshToken"));
   localStorage.setItem("token", data.token);
   dispatch(saveSignupData(data.user));
 };
@@ -155,7 +143,6 @@ export const googleLogin = async (
     { token: idToken }
   );
   console.log("Google login response:", data);
-  console.log("Refresh token after Google login:", getCookie("refreshToken"), { cookies: document.cookie });
   if (data.success) {
     localStorage.setItem("token", data.token);
     dispatch(saveSignupData(data.user));
@@ -172,6 +159,7 @@ export const fetchTracks = async (
 ): Promise<{ tracks: Track[]; user?: any }> => {
   const instance = isPremium ? providerApi : deezerApi;
   const url = isPremium ? `/getAllTracks?userId=${userId}` : `/songs/deezer?userId=${userId}`;
+  console.log("Fetching tracks with:", { url, token, isPremium });
   const data = await apiCall<{ tracks?: any[]; songs?: any[]; user?: any }>(instance, "get", url, undefined, token);
   const tracks = (isPremium ? data.tracks : data.songs)?.map((track: any) => ({
     _id: track._id || track.fileUrl,
@@ -242,3 +230,17 @@ export const uploadProfileImage = async (userId: string, base64Image: string, to
   if (!data.success || !data.user) throw new Error("Failed to upload profile picture");
   return data.user;
 };
+
+// export default {
+//   checkUsername,
+//   sendOtp,
+//   verifyOtp,
+//   registerUser,
+//   loginUser,
+//   googleLogin,
+//   fetchTracks,
+//   fetchLikedSongs,
+//   incrementListeners,
+//   toggleLike,
+//   uploadProfileImage,
+// };

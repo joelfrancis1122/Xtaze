@@ -6,11 +6,13 @@ import IUser from "../domain/entities/IUser";
 import { IArtistRepository } from "../domain/repositories/IArtistRepository";
 import { ITrack } from "../domain/entities/ITrack";
 import { uploadImageToCloud, uploadSongToCloud } from "../framework/service/cloudinary.service";
+import { IUserRepository } from "../domain/repositories/IUserRepository";
 dotenv.config();
 
 interface useCaseDependencies {
   repository: {
     artistRepository: IArtistRepository
+    userRepository: IUserRepository
   },
   service: {
     passwordService: IPasswordService
@@ -18,15 +20,18 @@ interface useCaseDependencies {
 }
 
 export default class ArtistUseCase {
+  private _userRepository:IUserRepository
   private _artistRepository: IArtistRepository
   private _passwordService: IPasswordService
 
   constructor(dependencies: useCaseDependencies) {
     this._artistRepository = dependencies.repository.artistRepository
     this._passwordService = dependencies.service.passwordService
+    this._userRepository = dependencies.repository.userRepository
+    
   }
 
-  async login(email: string, password: string): Promise<{ success: boolean; message: string; token?: string; artist?: IUser }> {
+  async login(email: string, password: string): Promise<{ success: boolean; message: string; token?: string; ArefreshToken?: string; artist?: IUser }> {
     const artist = await this._artistRepository.findByEmail(email);
     console.log("thisi is admin broo", artist)
     if (!artist) {
@@ -43,16 +48,55 @@ export default class ArtistUseCase {
     if (!isPasswordValid) {
       return { success: false, message: "Invalid credentials!" };
     }
-    const token = jwt.sign({ userId: artist._id, email: artist.email,role: "artist" }, process.env.JWT_SECRET!, { expiresIn: "7d" });
-
+ const token = jwt.sign(
+       { userId: artist._id, email: artist.email, role: "artist" },
+       process.env.JWT_SECRET!,
+       { expiresIn: "10M" } // Short-lived access token
+     );
+     console.log("ith unda refresh all jwts");
+     const ArefreshToken = jwt.sign(
+       { userId: artist._id },
+       process.env.JWT_REFRESH_SECRET!,
+       { expiresIn: "7d" } // Long-lived refresh token
+     );
     return {
       success: true,
       message: "Login successful!",
       token,
+      ArefreshToken,
       artist
     };
   }
+ async refresh(refreshToken: string): Promise<{ success: boolean; message: string; token?: string; ArefreshToken?: string }> {
+    try {
+      console.log("yeaah ithil varunind");
+      const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET!) as { userId: string };
+      const user = await this._userRepository.findById(decoded.userId);
+      if (!user) return { success: false, message: "User not found" };
+      if (user.isActive === false) return { success: false, message: "Your account is suspended!" };
 
+      const newToken = jwt.sign(
+        { userId: user._id, email: user.email, role: "artist" },
+        process.env.JWT_SECRET!,
+        { expiresIn: "10m" }
+      );
+      const newRefreshToken = jwt.sign(
+        { userId: user._id },
+        process.env.JWT_REFRESH_SECRET!,  
+        { expiresIn: "7d" }
+      );
+
+      return {
+        success: true,
+        message: "Token refreshed successfully",
+        token: newToken,
+        ArefreshToken: newRefreshToken,
+      };
+    } catch (error) {
+      console.error("Refresh Token Error:", error);
+      return { success: false, message: "Invalid or expired refresh token" };
+    }
+  }
 
   async trackUpload(songName: string, artist: string[], genre: string[], album: string, songFile: Express.Multer.File, imageFile: Express.Multer.File): Promise<ITrack | null> {
     const data = { title: songName, artists: artist, genre: genre, album, fileUrl: songFile, img: imageFile }
