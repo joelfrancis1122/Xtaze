@@ -9,6 +9,7 @@ import UserModel from '../adapter/db/models/UserModel';
 import { OAuth2Client } from "google-auth-library";
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 import Stripe from "stripe";
+import IEmailService from '../domain/service/IEmailService';
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2023-08-16" });
 
 dotenv.config();
@@ -19,6 +20,7 @@ interface useCaseDependencies {
   service: {
     PasswordService: IPasswordService,
     OtpService: IOtpService;
+    EmailService:IEmailService;
   }
 }
 
@@ -26,14 +28,16 @@ export default class UserUseCase {
   private _userRepository: IUserRepository //space for storage box 
   private _passwordService: IPasswordService // space for painting brush 
   private _otpService: IOtpService; // space for another tool
+  private _emailService :IEmailService;
   private stripe: Stripe;
 
   constructor(dependencies: useCaseDependencies) { // boss giving the toys here 
     this._userRepository = dependencies.repository.userRepository // got the storage box 
     this._passwordService = dependencies.service.PasswordService // got the paint brush 
     this._otpService = dependencies.service.OtpService;
+    this._emailService = dependencies.service.EmailService;
     this.stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-      apiVersion: "2023-08-16", 
+      apiVersion: "2023-08-16",
     });
   }
 
@@ -74,15 +78,63 @@ export default class UserUseCase {
       console.log("lml");
       return "403"
     }
-
     return this._otpService.sendOTP(email);
   }
+
+
+
   async checkUnique(username: string): Promise<boolean> {
     const user = await this._userRepository.findByUsername(username);
     return user === null;
   }
 
-   
+  async forgotPassword(email: string): Promise<{ success: boolean; message: string }> {
+    const user = await this._userRepository.findByEmail(email);
+    if (!user) {
+      throw new Error("User not found");
+    }
+  
+    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET!, {
+      expiresIn: "1h",
+    });
+  
+    await this._emailService.sendEmail(email, "Password Reset", token);
+  
+    return { success: true, message: "Reset link sent successfully" };  // ✅ Add return statement
+  }
+  
+  async resetPassword(token: string, password: string): Promise<{ success: boolean; message: string }> {
+    // Create an instance of PasswordService
+    
+    try {
+        // Verify JWT token
+        const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { userId: string };
+        if(!decoded){
+          console.log("token is wrong")
+        }
+        // Find user
+        const user = await this._userRepository.findById(decoded.userId);
+        if (!user) {
+            throw new Error("User not found");
+        }
+        
+        // Use PasswordService to hash the new password
+        const hashedPassword = await this._passwordService.hashPassword(password);
+        
+        // Update user's password
+        user.password = hashedPassword;
+        console.log(user,"sudpated yser ")
+        await this._userRepository.updatePassword(user);
+        
+        return { 
+            success: true, 
+            message: "Password reset successfully" 
+        };
+    } catch (error) {
+        throw error; // You might want to handle this more specifically based on your needs
+    }
+}
+
 
   async verifyOTP(otp: string): Promise<{ success: boolean; message: string }> {
     console.log("email ila ennn ariya otp enda", otp)
@@ -205,77 +257,77 @@ export default class UserUseCase {
     }
   }
 
-  
-  async uploadProfile(userId: string,file: Express.Multer.File): Promise<{ success: boolean; message: string ,user?:IUser}> {
+
+  async uploadProfile(userId: string, file: Express.Multer.File): Promise<{ success: boolean; message: string, user?: IUser }> {
     try {
       const cloudinaryResponse = await uploadProfileCloud(file);
-  
+
       const profilePicUrl = cloudinaryResponse.secure_url;
-  
+
       // Update the user profile with the new image URL
       const updatedUser = await this._userRepository.updateProfile(userId, profilePicUrl);
-  
+
       if (!updatedUser) {
         return { success: false, message: "Failed to update profile" };
       }
-  
-      return { success: true, message: "Profile updated successfully" ,user:updatedUser};
+
+      return { success: true, message: "Profile updated successfully", user: updatedUser };
     } catch (error) {
       console.error("Error during profile upload:", error);
       return { success: false, message: "An error occurred while updating the profile" };
     }
 
-}
-  async uploadBanner(userId: string,file: Express.Multer.File,isVideo:boolean): Promise<{ success: boolean; message: string ,user?:IUser,isVideo?:boolean}> {
+  }
+  async uploadBanner(userId: string, file: Express.Multer.File, isVideo: boolean): Promise<{ success: boolean; message: string, user?: IUser, isVideo?: boolean }> {
     try {
       const cloudinaryResponse = await uploadProfileCloud(file);
-  
+
       const BannerPicUrl = cloudinaryResponse.secure_url;
       const updatedUser = await this._userRepository.uploadBanner(userId, BannerPicUrl);
       if (!updatedUser) {
         return { success: false, message: "Failed to update profile" };
       }
-  
-      return { success: true, message: "Banner updated successfully" ,user:updatedUser,isVideo:isVideo};
+
+      return { success: true, message: "Banner updated successfully", user: updatedUser, isVideo: isVideo };
     } catch (error) {
       console.error("Error during Banner upload:", error);
       return { success: false, message: "An error occurred while updating the profile" };
     }
 
-}
-  async updateBio(userId: string,bio: string): Promise<{ success: boolean; message: string ,user?:IUser}> {
+  }
+  async updateBio(userId: string, bio: string): Promise<{ success: boolean; message: string, user?: IUser }> {
     try {
-  
+
       const updated = await this._userRepository.updateBio(userId, bio);
-  
+
       if (!updated) {
         return { success: false, message: "Failed to update profile" };
       }
-  
-      return { success: true, message: "Profile updated successfully" ,user:updated};
+
+      return { success: true, message: "Profile updated successfully", user: updated };
     } catch (error) {
       console.error("Error during profile upload:", error);
       return { success: false, message: "An error occurred while updating the profile" };
     }
 
-}
- async addToLiked(userId: string, trackId: string): Promise<IUser | null> {
-  try {
-    const user = await this._userRepository.addToLiked(userId, trackId);
-
-    if (!user) {
-      return null;
-    }
-
-    return user; // Directly return the user object
-  } catch (error) {
-    console.error("Error during adding liked song:", error);
-    throw new Error("An error occurred while updating liked songs.");
   }
-}
+  async addToLiked(userId: string, trackId: string): Promise<IUser | null> {
+    try {
+      const user = await this._userRepository.addToLiked(userId, trackId);
+
+      if (!user) {
+        return null;
+      }
+
+      return user; // Directly return the user object
+    } catch (error) {
+      console.error("Error during adding liked song:", error);
+      throw new Error("An error occurred while updating liked songs.");
+    }
+  }
 
 
- async getUpdatedArtist(artistId:string): Promise<IUser|null> {
+  async getUpdatedArtist(artistId: string): Promise<IUser | null> {
     return await this._userRepository.getupdatedArtist(artistId);
   }
   async execute(userId: string, priceId: string): Promise<Stripe.Checkout.Session> {
@@ -309,6 +361,6 @@ export default class UserUseCase {
     }
   }
 }
-  
+
 
 

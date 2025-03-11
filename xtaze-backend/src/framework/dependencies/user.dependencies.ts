@@ -1,5 +1,6 @@
 import UserRepository from "../../adapter/repositories/user.repository"
 import UserUseCase from "../../usecases/user.usecase"
+import EmailService from "../service/email.service"
 import OtpService from "../service/otp.service"
 import PasswordService from "../service/password.service"
 
@@ -10,7 +11,8 @@ const repository = {
 
 const service = {
     PasswordService:new PasswordService(), // makes paint brush 
-    OtpService:new OtpService() // makes another tool
+    OtpService:new OtpService(), // makes another tool
+    EmailService:new EmailService()
 }
 
 export const userCase = {

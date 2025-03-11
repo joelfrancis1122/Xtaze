@@ -21,8 +21,9 @@ import { RootState } from "../../store/store";
 import { useNavigate } from "react-router-dom";
 import { audio } from "../../utils/audio";
 import { PlaceholdersAndVanishInput } from "../../utils/placeholders-and-vanish-input";
-import { Search, Power, Play, Pause, Plus, Heart, MoreHorizontal } from "lucide-react";
+import { Search, Power, Play, Pause, Plus, Heart, MoreHorizontal, ArrowBigDownDash, CloudDownload, Download } from "lucide-react";
 import { fetchTracks, fetchLikedSongs, incrementListeners, toggleLike } from "../../services/userService";
+import { toast } from "sonner";
 
 interface UserSignupData {
   _id?: string;
@@ -47,6 +48,7 @@ export default function Home() {
   const [playedSongs, setPlayedSongs] = useState<Set<string>>(new Set());
   const [likedSongs, setLikedSongs] = useState<Set<string>>(new Set());
   const [randomIndex, setRandomIndex] = useState<number | null>(null);
+  const [dropdownTrackId, setDropdownTrackId] = useState<string | null>(null);
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -78,9 +80,10 @@ export default function Home() {
         );
         setTracks(fetchedTracks);
 
-        // Only dispatch if updatedUser differs significantly (optional optimization)
+        //Only dispatch if updatedUser differs significantly (optional optimization)
         if (updatedUser && JSON.stringify(updatedUser) !== JSON.stringify(user)) {
           dispatch(saveSignupData(updatedUser));
+          window.location.reload()
         }
 
         // Fetch liked songs if any
@@ -156,11 +159,14 @@ export default function Home() {
         const newLiked = new Set(prev);
         if (isCurrentlyLiked) {
           newLiked.delete(trackId);
+          toast.success("removed from liked songs")
         } else {
           newLiked.add(trackId);
+          toast.success("added to liked songs")
         }
         return newLiked;
       });
+
     } catch (error) {
       console.error("Error toggling like:", error);
     }
@@ -263,6 +269,47 @@ export default function Home() {
 
   const handleUpgradeClick = () => {
     navigate("/plans");
+  };
+  const handleDownload = async (fileUrl: string, title: string) => {
+    if (!fileUrl || !title) {
+      console.error("Invalid file URL or title");
+      toast.error("Cannot download: Invalid file details");
+      return;
+    }
+
+    const token = localStorage.getItem("token");
+    if (!token) {
+      console.error("No token found");
+      toast.error("Please log in to download");
+      return;
+    }
+
+    try {
+      const response = await fetch(fileUrl, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch file: ${response.statusText}`);
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `${title}.flac`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url); // Clean up memory
+      setDropdownTrackId(null);
+      toast.success(`Downloaded ${title}`);
+    } catch (error) {
+      console.error("Download failed:", error);
+      toast.error("Failed to download the track");
+    }
   };
 
   return (
@@ -386,9 +433,8 @@ export default function Home() {
                         {user?.premium ? (
                           <button
                             onClick={() => handleLike(track._id || track.fileUrl)}
-                            className={`p-1 hover:bg-[#333333] rounded-full ${
-                              likedSongs.has(track._id || track.fileUrl) ? "text-red-500" : "text-white"
-                            }`}
+                            className={`p-1 hover:bg-[#333333] rounded-full ${likedSongs.has(track._id || track.fileUrl) ? "text-red-500" : "text-white"
+                              }`}
                           >
                             <Heart
                               size={16}
@@ -396,9 +442,20 @@ export default function Home() {
                             />
                           </button>
                         ) : null}
-                        <button className="p-1 hover:bg-[#333333] rounded-full">
-                          <MoreHorizontal size={16} />
-                        </button>
+                        <div className="relative">
+                          <div className="relative">
+                            <button
+                              className="p-1 hover:bg-[#333333] rounded-full"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDownload(track.fileUrl, track.title);
+                              }}
+                            >
+                              <Download size={16} />
+                            </button>
+                          </div>
+
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -451,17 +508,22 @@ export default function Home() {
                         </button>
                         <button
                           onClick={() => handleLike(track._id || track.fileUrl)}
-                          className={`p-1 hover:bg-[#333333] rounded-full ${
-                            likedSongs.has(track._id || track.fileUrl) ? "text-red-500" : "text-white"
-                          }`}
+                          className={`p-1 hover:bg-[#333333] rounded-full ${likedSongs.has(track._id || track.fileUrl) ? "text-red-500" : "text-white"
+                            }`}
                         >
                           <Heart
                             size={16}
                             fill={likedSongs.has(track._id || track.fileUrl) ? "currentColor" : "none"}
                           />
                         </button>
-                        <button className="p-1 hover:bg-[#333333] rounded-full">
-                          <MoreHorizontal size={16} />
+                        <button
+                          className="p-1 hover:bg-[#333333] rounded-full"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDownload(track.fileUrl, track.title);
+                          }}
+                        >
+                          <Download size={16} />
                         </button>
                       </div>
                     </div>

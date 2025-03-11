@@ -231,6 +231,26 @@ export const uploadProfileImage = async (userId: string, base64Image: string, to
   return data.user;
 };
 
+export const forgotPassword = async (email: string): Promise<void> => {
+  const data = await apiCall<{ success: boolean; message?: string }>(
+    userApi,
+    "post",
+    "/forgotPassword",
+    { email }
+  );
+  if (!data.success) throw new Error(data.message || "Failed to send reset email");
+};
+export const resetPassword = async (token: string,formData:string): Promise<void> => {
+  const data = await apiCall<{ success: boolean; message?: string }>(
+    userApi,
+    "post",
+    "/resetPassword",
+    { token,formData }
+  );
+  if (!data.success) throw new Error(data.message || "Failed to send reset email");
+};
+
+
 // export default {
 //   checkUsername,
 //   sendOtp,

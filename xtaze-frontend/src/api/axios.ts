@@ -8,7 +8,7 @@ const axiosBaseConfig = {
 // User API instance
 export const userApi = axios.create({
   ...axiosBaseConfig,
-  baseURL: `${axiosBaseConfig.baseURL}/user`, // e.g., http://localhost:3000/user
+  baseURL: `${axiosBaseConfig.baseURL}/user`,
 });
 
 // Admin API instance
@@ -16,7 +16,6 @@ export const adminApi = axios.create({
   ...axiosBaseConfig,
   baseURL: `${axiosBaseConfig.baseURL}/admin`,
 });
-
 // Artist API instance
 export const artistApi = axios.create({
   ...axiosBaseConfig,

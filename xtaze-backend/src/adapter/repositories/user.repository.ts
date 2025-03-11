@@ -14,6 +14,20 @@ export default class UserRepository implements IUserRepository {
       throw error
     }
   }
+  async updatePassword(user: IUser): Promise<IUser> {
+    try {
+      const updatedUser = await UserModel.findByIdAndUpdate(
+        user._id, // Find user by ID
+        { $set: user }, // Update with new data
+        { new: true, runValidators: true } // Return updated document & validate
+      );
+            console.log(updatedUser,"change")
+      return updatedUser as unknown as IUser
+
+    } catch (error) {
+      throw error
+    }
+  }
 
   async findByEmail(email: string): Promise<IUser | null> {
     try {

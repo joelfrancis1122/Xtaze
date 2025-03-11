@@ -9,6 +9,8 @@ const router = express.Router();
 const userController = new UserController(userDependencies)
 
 router.post("/checkUsername", (req: Request, res: Response, next: NextFunction) => userController.checkUsername(req, res, next));
+router.post("/forgotPassword", (req: Request, res: Response, next: NextFunction) => userController.forgotPassword(req, res, next));
+router.post("/resetPassword", (req: Request, res: Response, next: NextFunction) => userController.resetPassword(req, res, next));
 router.post("/register", (req: Request, res: Response, next: NextFunction) => userController.registerUser(req, res, next));
 router.post("/send-otp", (req: Request, res: Response, next: NextFunction) => userController.sendOTP(req, res, next));
 router.post("/verify-otp", (req:Request, res:Response, next:NextFunction) => userController.verifyOTP(req,res,next))

@@ -26,6 +26,7 @@ import { GenreRepository } from "../../adapter/repositories/genre.repository";
 import UserRepository from "../../adapter/repositories/user.repository";
 import { GenreUseCase } from "../../usecases/genre.usecase";
 import UserUseCase from "../../usecases/user.usecase";
+import EmailService from "../service/email.service";
 import OtpService from "../service/otp.service";
 import PasswordService from "../service/password.service";
 
@@ -36,7 +37,8 @@ const repository = {
 
 const service = {
     PasswordService: new PasswordService(),
-    OtpService: new OtpService()
+    OtpService: new OtpService(),
+    EmailService:new EmailService()
 };
 
 const useCase = {

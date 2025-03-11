@@ -6,10 +6,10 @@ import AppError from "../../utils/AppError";
 
 
 interface Dependencies {
-  userUseCase: IuserUseCase; 
+  userUseCase: IuserUseCase;
 }
 
-export default class UserController { 
+export default class UserController {
   private _userUseCase: IuserUseCase;  // space for toy maker 
 
   constructor(dependencies: Dependencies) { // boss gives the toy maker here 
@@ -154,7 +154,7 @@ export default class UserController {
         res.status(200).json({
           success: true,
           message: response.message,
-          token: response.token, 
+          token: response.token,
         });
       } else {
         res.status(401).json(response);
@@ -178,6 +178,37 @@ export default class UserController {
       next(error);
     }
   }
+
+  async forgotPassword(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { email } = req.body;
+      console.log(email,"emil")
+      if (!email) throw new AppError("Email is required", 400);
+  
+      const response = await this._userUseCase.forgotPassword(email);
+      res.status(200).json(response);
+    } catch (error) {
+      next(error);
+    }
+  }
+  
+
+  async resetPassword(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { token,formData } = req.body;
+      const newPassword = formData
+      console.log(token,"tok")
+      console.log(newPassword,"data")
+      if (!token) throw new AppError("token is required", 400);
+      const response = await this._userUseCase.resetPassword(token, newPassword);
+       res.status(200).json(response);
+      // const response = await this._userUseCase.forgotPassword(email);
+      // res.status(200).json(response);
+    } catch (error) {
+      next(error);
+    }
+  }
+  
 
   async uploadProfilepic(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {

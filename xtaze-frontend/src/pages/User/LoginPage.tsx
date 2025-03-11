@@ -6,7 +6,7 @@ import { Label } from "../../components/ui/label";
 import { Input } from "../../components/ui/input";
 import { cn } from "../../../lib/utils";
 import { useNavigate } from "react-router-dom";
-import { IconEye, IconEyeOff, IconBrandGoogle } from "@tabler/icons-react";
+import { IconEye, IconEyeOff } from "@tabler/icons-react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../store/store";
 import { loginUser, googleLogin } from "../../services/userService";
@@ -33,13 +33,9 @@ const Login = () => {
     script.src = "https://accounts.google.com/gsi/client";
     script.async = true;
     script.onload = () => {
-      console.log("GSI script loaded, initializing...");
       window.google.accounts.id.initialize({
         client_id: "132673285232-qlck5fpb2ak6n2ge8boj4g509vm7qbqh.apps.googleusercontent.com",
         callback: handleGoogleLogin,
-        // Optional: Switch to redirect mode if popup fails
-        // ux_mode: "redirect",
-        // login_uri: "http://localhost:3000/user/google-login",
       });
       window.google.accounts.id.renderButton(document.getElementById("googleLoginButton"), {
         theme: "outline",
@@ -47,7 +43,6 @@ const Login = () => {
         text: "signin_with",
         shape: "rectangular",
       });
-      console.log("Google button rendered");
     };
     script.onerror = () => console.error("Failed to load GSI script");
     document.body.appendChild(script);
@@ -72,25 +67,21 @@ const Login = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      console.log("Submitting login with:", formData);
       await loginUser(formData.email, formData.password, dispatch);
       toast.success("User Login success!", { position: "top-right" });
       navigate("/home");
     } catch (error: any) {
-      console.error("Login failed:", error.message);
-      toast.warning(error.message, { position: "top-right" });
+      toast.warning(error.response.data.message, { position: "top-right" });
     }
   };
 
   const handleGoogleLogin = async (response: any) => {
     const idToken = response.credential;
-    console.log("Google login response received:", response);
     try {
       await googleLogin(idToken, dispatch);
       toast.success("Logged in with Google successfully!", { position: "top-right" });
       navigate("/home", { replace: true });
     } catch (error: any) {
-      console.error("Google login failed:", error.message);
       toast.error(error.message, { position: "top-right" });
     }
   };
@@ -121,7 +112,7 @@ const Login = () => {
             />
           </LabelInputContainer>
 
-          <LabelInputContainer className="mb-6">
+          <LabelInputContainer className="mb-2">
             <Label htmlFor="password">Password</Label>
             <PasswordInput
               id="password"
@@ -131,8 +122,18 @@ const Login = () => {
             />
           </LabelInputContainer>
 
+          {/* Forgot Password Link */}
+          <div className="mt-2 text-right">
+            <button
+              onClick={() => navigate("/forgot-password")}
+              className="text-blue-500 hover:underline text-sm"
+            >
+              Forgot Password?
+            </button>
+          </div>
+
           <button
-            className="bg-gradient-to-br relative group/btn from-black dark:from-zinc-900 dark:to-zinc-900 to-neutral-600 block dark:bg-zinc-800 w-full text-white rounded-md h-10 font-medium"
+            className="bg-gradient-to-br relative group/btn from-black dark:from-zinc-900 dark:to-zinc-900 to-neutral-600 block dark:bg-zinc-800 w-full text-white rounded-md h-10 font-medium mt-4"
             type="submit"
           >
             Log In →

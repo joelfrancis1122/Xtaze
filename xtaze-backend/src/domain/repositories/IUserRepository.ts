@@ -11,5 +11,6 @@ export interface IUserRepository {
   getupdatedArtist: (userId: string) => Promise<IUser | null>;
   updateUserSubscription: (userId: string,isPremium:boolean) => Promise<IUser | null>;
   findById(userId: string): Promise<IUser | null>;
+  updatePassword(user: IUser): Promise<IUser | null>;
   addToLiked(userId: string,trackId: string): Promise<IUser | null>;
 }

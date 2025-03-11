@@ -1,23 +1,23 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import axios from "axios";
 import { Label } from "../../components/ui/label";
 import { Input } from "../../components/ui/input";
 import { cn } from "../../../lib/utils";
-import { useNavigate } from "react-router-dom"; 
-import { IconEye, IconEyeOff } from "@tabler/icons-react"; 
+import { useNavigate } from "react-router-dom";
+import { IconEye, IconEyeOff } from "@tabler/icons-react";
 import { useDispatch, useSelector } from "react-redux";
-import { saveAdminData } from "../../redux/adminSlice";
-import { RootState } from "../../store/store";
+import { saveAdminData } from "../../redux/adminSlice"; // Adjust path
+import { RootState } from "../../store/store"; // Adjust path
+import { loginAdmin } from "../../services/adminService"; // Adjust path
 
 const AdminLogin = () => {
-  const navigate = useNavigate(); 
-  const dispatch = useDispatch()
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
   const token = localStorage.getItem("adminToken");
-    const role = useSelector((state: RootState) => state.admin.signupData?.role);
-    const baseUrl = import.meta.env.VITE_BASE_URL;
+  const role = useSelector((state: RootState) => state.admin.signupData?.role);
+
   useEffect(() => {
-    if (token&&role=="admin") {
+    if (token && role === "admin") {
       navigate("/admin/dashboard", { replace: true });
     }
   }, [token, navigate]);
@@ -27,10 +27,9 @@ const AdminLogin = () => {
     password: "",
   });
 
-
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
-      ...formData, 
+      ...formData,
       [e.target.name]: e.target.value,
     });
   };
@@ -38,32 +37,13 @@ const AdminLogin = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await axios.post(
-        `${baseUrl}/admin/login`,
-        formData
-      );
-      
-      if (response.data.success) {
-        console.log('Login successful', response.data.token);
-        dispatch(saveAdminData(response.data.admin))
-        console.log(response.data.admin,"sasd")
-        toast.success("Admin Login success!", { position: "top-right" });
-      } else {
-        toast.error(response.data.message,{ position: "top-right" });
-      }
-
-      localStorage.setItem("adminToken", response.data.token);
-      navigate("/admin/dashboard")
-      console.log(response.data);
+      await loginAdmin(formData.email, formData.password, dispatch);
+      toast.success("Admin Login success!", { position: "top-right" });
+      navigate("/admin/dashboard");
     } catch (error: any) {
-      toast.error(
-        (error.response?.data?.message || error.message),
-        { position: "top-right" }
-      );
+      toast.error(error.message || "Admin login failed", { position: "top-right" });
     }
   };
-
-
 
   return (
     <div className="flex items-center min-h-screen bg-black">
@@ -89,7 +69,6 @@ const AdminLogin = () => {
             />
           </LabelInputContainer>
 
-          {/* Password with Show/Hide Toggle */}
           <LabelInputContainer className="mb-6">
             <Label htmlFor="password">Password</Label>
             <PasswordInput
@@ -104,12 +83,9 @@ const AdminLogin = () => {
             className="bg-gradient-to-br relative group/btn from-black dark:from-zinc-900 dark:to-zinc-900 to-neutral-600 block dark:bg-zinc-800 w-full text-white rounded-md h-10 font-medium"
             type="submit"
           >
-            Log In &rarr;
+            Log In →
             <BottomGradient />
-
           </button>
-
-         
         </form>
       </div>
     </div>
@@ -144,6 +120,8 @@ const PasswordInput = ({ id, name, value, onChange }: any) => {
     </div>
   );
 };
+
+/* ======= Bottom Gradient ======= */
 const BottomGradient = () => (
   <>
     <span className="group-hover/btn:opacity-100 block transition duration-500 opacity-0 absolute h-px w-full -bottom-px inset-x-0 bg-gradient-to-r from-transparent via-pink-500 to-transparent" />

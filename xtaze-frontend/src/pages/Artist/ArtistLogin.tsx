@@ -40,7 +40,7 @@ const ArtistLogin = () => {
       toast.success("Artist Login success!", { position: "top-right" });
       navigate("/artist/dashboard");
     } catch (error: any) {
-      toast.error(error.message || "Login failed", { position: "top-right" });
+      toast.error(error.response.data.message || "Login failed", { position: "top-right" });
     }
   };
 
