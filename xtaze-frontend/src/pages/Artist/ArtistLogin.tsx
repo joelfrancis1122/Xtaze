@@ -7,7 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { IconEye, IconEyeOff } from "@tabler/icons-react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../store/store";
-import artistService from "../../services/artistService"; // Adjust path as needed
+import artistService from "../../services/artistService"; 
 
 const ArtistLogin = () => {
   const navigate = useNavigate();

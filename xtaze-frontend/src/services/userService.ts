@@ -61,16 +61,19 @@ export const refreshToken = async (): Promise<string | null> => {
 // Generic API Call Helper
 const apiCall = async <T>(
   instance: any,
-  method: "get" | "post" | "put" | "delete",
+  method: "get" | "post" | "put" | "delete" | "patch",
   url: string,
   data?: any,
   token?: string
 ): Promise<T> => {
   try {
-    const response = await instance[method](url, data, {
+    const config = {
       headers: token ? { Authorization: `Bearer ${token}` } : undefined,
       withCredentials: true,
-    });
+    };
+    const response = method === "get" || method === "delete"
+      ? await instance[method](url, config)
+      : await instance[method](url, data, config);
     if (!response.data) throw new Error(`Failed to ${method} ${url}`);
     return response.data as T;
   } catch (error: any) {
@@ -250,7 +253,34 @@ export const resetPassword = async (token: string,formData:string): Promise<void
   if (!data.success) throw new Error(data.message || "Failed to send reset email");
 };
 
-
+export const createPlaylists = async (_id: string, newplaylist: Playlist): Promise<void> => {
+  const data = await apiCall<{ success: boolean; message?: string }>(
+    userApi,
+    "post",
+    "/createPlaylist",
+    { _id, newplaylist }
+  );
+  if (!data.success) throw new Error(data.message || "Failed to create playlist");
+};
+export const getMyplaylist = async (userId: string): Promise<Playlist[]> => {
+  console.log(userId,"odi odi o ds")
+  const data = await apiCall<{ success: boolean; message?: string; data: Playlist[] }>(
+    userApi,
+    "get",
+    `/getPlaylist?userId=${userId}` // Move userId to query string
+  );
+  if (!data.success) throw new Error(data.message || "Failed to get all playlists");
+  console.log(data);
+  return data.data; // Return array of playlists
+};
+interface Playlist {
+  id: number;
+  title: string;
+  description: string;
+  imageUrl: string;
+  trackCount: number;
+  createdBy: string;
+}
 // export default {
 //   checkUsername,
 //   sendOtp,

@@ -1,5 +1,7 @@
+import { IPlaylist } from "../../domain/entities/IPlaylist";
 import IUser from "../../domain/entities/IUser";
 import { IUserRepository } from "../../domain/repositories/IUserRepository";
+import PlaylistModel from "../db/models/PlaylistModel";
 import UserModel from "../db/models/UserModel"; // Assuming your User model is in this location
 
 export default class UserRepository implements IUserRepository {
@@ -21,7 +23,7 @@ export default class UserRepository implements IUserRepository {
         { $set: user }, // Update with new data
         { new: true, runValidators: true } // Return updated document & validate
       );
-            console.log(updatedUser,"change")
+      console.log(updatedUser, "change")
       return updatedUser as unknown as IUser
 
     } catch (error) {
@@ -59,7 +61,7 @@ export default class UserRepository implements IUserRepository {
         { new: true, runValidators: true }
       ).lean();
 
-      return updatedUser as IUser | null; 
+      return updatedUser as IUser | null;
     } catch (error) {
       console.log(error);
       return null;
@@ -73,7 +75,7 @@ export default class UserRepository implements IUserRepository {
         { new: true, runValidators: true }
       ).lean();
 
-      return updatedUser as IUser | null; 
+      return updatedUser as IUser | null;
     } catch (error) {
       console.log(error);
       return null;
@@ -87,7 +89,7 @@ export default class UserRepository implements IUserRepository {
         { new: true, runValidators: true }
       ).lean();
 
-      return updatedUser as IUser | null; 
+      return updatedUser as IUser | null;
     } catch (error) {
       console.log(error);
       return null;
@@ -96,76 +98,111 @@ export default class UserRepository implements IUserRepository {
 
 
   async getupdatedArtist(artistId: string): Promise<IUser | null> {
-    const updatedArtist = await UserModel.findOne({ _id: artistId }); 
-    return updatedArtist as unknown as IUser   
-}
+    const updatedArtist = await UserModel.findOne({ _id: artistId });
+    return updatedArtist as unknown as IUser
+  }
 
-async findByUsername(username: string): Promise<IUser | null>{
-  return await UserModel.findOne({ username:{$regex:`^${username}$`,$options:"i"} });
+  async findByUsername(username: string): Promise<IUser | null> {
+    return await UserModel.findOne({ username: { $regex: `^${username}$`, $options: "i" } });
+
+
+  }
+
+  async findById(userId: string): Promise<IUser | null> {
+    try {
+      return await UserModel.findById(userId);
+    } catch (error) {
+      console.error("Error finding user by ID:", error);
+      return null;
+    }
+  }
+  async findByCreator(userId: string): Promise<IPlaylist[]|null> {
+    try {
+      const data = await PlaylistModel.find({ createdBy: userId }).lean();
+      console.log(data,"sa",userId)
+      return data.map((playlist) => ({
+        _id: playlist._id.toString(),
+        title: playlist.title ?? "",
+        description: playlist.description ?? "",
+        imageUrl: playlist.imageUrl ?? "",
+        trackCount: playlist.trackCount ?? 0,
+        createdBy: playlist.createdBy ?? "",
+        tracks: playlist.tracks ?? [],
+      })) as IPlaylist[];
+
+    } catch (error) {
+      console.error("Error finding playlists by creator ID:", error);
+      return [];
+    }
+  }
   
-
-}
-
-async findById(userId: string): Promise<IUser | null> {
-  try {
-    return await UserModel.findById(userId);
-  } catch (error) {
-    console.error("Error finding user by ID:", error);
-    return null;
-  }
-}
-
-async updateUserSubscription(userId: string, isPremium: boolean): Promise<IUser | null> {
-  try {
-    const updatedUser = await UserModel.findByIdAndUpdate(
-      userId,
-      { premium: isPremium },
-      { new: true, runValidators: true }
-    );
-
-    if (!updatedUser) {
-      throw new Error("User not found or update failed");
+  async createPlaylist(newPlaylist: IPlaylist): Promise<IPlaylist | null> {
+    try {
+      const playlist = new PlaylistModel({
+        ...newPlaylist,
+        createdBy: newPlaylist.createdBy ? newPlaylist.createdBy : "",
+        tracks: newPlaylist.tracks || [],
+      });
+  
+      const savedPlaylist = await playlist.save();
+      return savedPlaylist as IPlaylist;
+    } catch (error) {
+      console.error("Error creating playlist:", error);
+      return null;
     }
-
-    return updatedUser.toObject<IUser>(); // Convert Mongoose document to plain object
-  } catch (error) {
-    console.error("Error updating user subscription:", error);
-    throw error; // Propagate error to use case
   }
-}
-async addToLiked(userId: string, trackId: string): Promise<IUser | null> {
-      try {
-    const user = await UserModel.findById(userId);
-    
-    if (!user) {
-      throw new Error("User not found");
-    }
-
-    let updatedUser;
-    if (user.likedSongs?.includes(trackId)) {
-      updatedUser = await UserModel.findByIdAndUpdate(
+  
+  async updateUserSubscription(userId: string, isPremium: boolean): Promise<IUser | null> {
+    try {
+      const updatedUser = await UserModel.findByIdAndUpdate(
         userId,
-        { $pull: { likedSongs: trackId } }, // Remove from likedSongs
-        { new: true }
+        { premium: isPremium },
+        { new: true, runValidators: true }
       );
-    } else {
-      updatedUser = await UserModel.findByIdAndUpdate(
-        userId,
-        { $addToSet: { likedSongs: trackId } }, // Add to likedSongs
-        { new: true }
-      );
-    }
 
-    if (!updatedUser) {
-      throw new Error("User update failed");
-    }
+      if (!updatedUser) {
+        throw new Error("User not found or update failed");
+      }
 
-    return updatedUser.toObject<IUser>(); // Convert Mongoose document to plain object
-  } catch (error) {
-    console.error("Error in toggling liked song:", error);
-    throw error;
+      return updatedUser.toObject<IUser>(); // Convert Mongoose document to plain object
+    } catch (error) {
+      console.error("Error updating user subscription:", error);
+      throw error; // Propagate error to use case
+    }
   }
-}
+  async addToLiked(userId: string, trackId: string): Promise<IUser | null> {
+    try {
+      const user = await UserModel.findById(userId);
+
+      if (!user) {
+        throw new Error("User not found");
+      }
+
+      let updatedUser;
+      if (user.likedSongs?.includes(trackId)) {
+        updatedUser = await UserModel.findByIdAndUpdate(
+          userId,
+          { $pull: { likedSongs: trackId } }, // Remove from likedSongs
+          { new: true }
+        );
+      } else {
+        updatedUser = await UserModel.findByIdAndUpdate(
+          userId,
+          { $addToSet: { likedSongs: trackId } }, // Add to likedSongs
+          { new: true }
+        );
+      }
+
+      if (!updatedUser) {
+        throw new Error("User update failed");
+      }
+
+      return updatedUser.toObject<IUser>(); // Convert Mongoose document to plain object
+    } catch (error) {
+      console.error("Error in toggling liked song:", error);
+      throw error;
+    }
+  }
 
 
 }

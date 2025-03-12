@@ -25,6 +25,7 @@ import { Search, Power, Play, Pause, Plus, Heart, MoreHorizontal, ArrowBigDownDa
 import { fetchTracks, fetchLikedSongs, incrementListeners, toggleLike } from "../../services/userService";
 import { toast } from "sonner";
 
+
 interface UserSignupData {
   _id?: string;
   username: string;

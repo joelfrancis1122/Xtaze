@@ -12,6 +12,7 @@ import UploadMusicPage from "../pages/Provider/UploadTrackPage";
 import { WavyBackgroundDemo } from "../pages/User/rough";
 import ForgotPassword from "../pages/User/forgotPassPage";
 import ResetPassword from "../pages/User/ResetPassPage";
+import PlaylistPageView from "../pages/User/PlaylistViewPage";
 
 export const UserRoutes = () => (
     <>
@@ -22,7 +23,8 @@ export const UserRoutes = () => (
     <Route path="/profile" element={<ProfilePage />} />
     <Route path="/success" element={<SuccessPage />} />
     <Route path="/cancel" element={<CancelPage />} />
-    <Route path="/playlist" element={<PlaylistsPage />} />
+    <Route path="/playlist/:userId" element={<PlaylistsPage />} />
+    <Route path="/playlist/:userId/:id" element={<PlaylistPageView />} />
     <Route path="/likedSongs" element={<LikedSongsPage />} />
     <Route path="/uploadTrack" element={<UploadMusicPage />} />
     <Route path="/rough" element={<WavyBackgroundDemo />} />

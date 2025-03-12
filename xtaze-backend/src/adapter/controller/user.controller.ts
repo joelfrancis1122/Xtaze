@@ -14,6 +14,7 @@ export default class UserController {
 
   constructor(dependencies: Dependencies) { // boss gives the toy maker here 
     this._userUseCase = dependencies.userUseCase; //gets toy maker
+    
   }
 
 
@@ -323,4 +324,30 @@ export default class UserController {
       next(error);
     }
   }
+
+
+  async createPlaylist(req: Request, res: Response, next: NextFunction) {
+    try {
+      const {_id,newplaylist} = req.body
+      const playlist = await this._userUseCase.createPlaylist(_id,newplaylist)
+      res.status(200).json({ success: true ,data:playlist});
+    } catch (error) {
+      console.error("Error in getliked:", error);
+      next(error);
+    }
+  }
+  async getPlaylist(req: Request, res: Response, next: NextFunction) {
+    try {
+      const {userId} = req.query
+
+      console.log(userId,"ith thanne",req.body,req.query)
+
+      const playlist = await this._userUseCase.getAllPlaylist(userId as string)
+      res.status(200).json({ success: true ,data:playlist});
+    } catch (error) {
+      console.error("Error in getliked:", error);
+      next(error);
+    }
+  }
+
 }

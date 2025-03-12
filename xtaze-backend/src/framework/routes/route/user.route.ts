@@ -22,5 +22,7 @@ router.post("/checkOut",authenticateUser, async (req: Request, res: Response, ne
 router.post("/toggle-like",authenticateUser,(req:Request,res:Response,next:NextFunction)=>userController.toggleLike(req,res,next))
 router.post("/getliked",authenticateUser,(req:Request,res:Response,next:NextFunction)=>userController.getliked(req,res,next))
 router.post("/refresh",(req:Request,res:Response,next:NextFunction)=>userController.refreshToken(req,res,next))
+router.post("/createPlaylist",(req:Request,res:Response,next:NextFunction)=>userController.createPlaylist(req,res,next))
+router.get("/getPlaylist",(req:Request,res:Response,next:NextFunction)=>userController.getPlaylist(req,res,next))
 router.post("/updateBanner",authenticateUser, upload.single("coverImage"),(req:Request,res:Response,next:NextFunction)=>userController.uploadBanner(req,res,next))
 export default router;
