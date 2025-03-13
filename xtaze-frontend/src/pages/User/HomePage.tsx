@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import Sidebar from "./userComponents/SideBar";
 import MusicPlayer from "./userComponents/TrackBar";
 import PreviewModal from "./PreviewPage";
@@ -21,7 +21,7 @@ import { RootState } from "../../store/store";
 import { useNavigate } from "react-router-dom";
 import { audio } from "../../utils/audio";
 import { PlaceholdersAndVanishInput } from "../../utils/placeholders-and-vanish-input";
-import { Search, Power, Play, Pause, Plus, Heart, MoreHorizontal, ArrowBigDownDash, CloudDownload, Download } from "lucide-react";
+import { Search, Power, Play, Pause, Plus, Heart, Download } from "lucide-react";
 import { fetchTracks, fetchLikedSongs, incrementListeners, toggleLike } from "../../services/userService";
 import { toast } from "sonner";
 
@@ -56,7 +56,8 @@ export default function Home() {
   const user = useSelector((state: RootState) => state.user.signupData) as UserSignupData | null;
   const { currentTrack, isPlaying, isShuffled, isRepeating, shuffleIndices, currentShuffleIndex } =
     useSelector((state: RootState) => state.audio);
-
+console.log(likedTracks)
+console.log(dropdownTrackId)
   useEffect(() => {
     if (user?.likedSongs) {
       setLikedSongs(new Set(user.likedSongs.map(String) || []));

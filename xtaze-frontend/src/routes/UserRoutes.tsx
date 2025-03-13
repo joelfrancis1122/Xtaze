@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom";
+import { Route } from "react-router-dom";
 import Login from "../pages/User/LoginPage";
 import Signup from "../pages/User/SignUpPage";
 import OTPVerification from "../pages/User/OtpPage";
@@ -10,9 +10,10 @@ import PlaylistsPage from "../pages/User/playlistPage";
 import LikedSongsPage from "../pages/User/LikedSongs";
 import UploadMusicPage from "../pages/Provider/UploadTrackPage";
 import { WavyBackgroundDemo } from "../pages/User/rough";
-import ForgotPassword from "../pages/User/forgotPassPage";
+import ForgotPassword from "../pages/User/ForgotPassPage";
 import ResetPassword from "../pages/User/ResetPassPage";
 import PlaylistPageView from "../pages/User/PlaylistViewPage";
+import YoutubeMusic from "../pages/User/VideosPage";
 
 export const UserRoutes = () => (
     <>
@@ -30,5 +31,6 @@ export const UserRoutes = () => (
     <Route path="/rough" element={<WavyBackgroundDemo />} />
     <Route path="/forgot-password" element={<ForgotPassword />} />
     <Route path="/reset-password" element={<ResetPassword />} />
+    <Route path="/videos" element={<YoutubeMusic />} />
     </>
 );

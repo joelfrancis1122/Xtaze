@@ -52,7 +52,7 @@ export default function Sidebar() {
           <a href="#" className="text-white font-medium hover:text-gray-200 block transition-colors">
             Explore
           </a>
-          <a href="#" className="text-white font-medium hover:text-gray-200 block transition-colors">
+          <a onClick={()=>navigate("/videos")} className="text-white font-medium hover:text-gray-200 block transition-colors">
             Videos
           </a>
         </div>

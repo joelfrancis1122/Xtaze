@@ -1,15 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { Label } from "../../components/ui/label";
 import { Input } from "../../components/ui/input";
 import { toast } from "sonner";
-import { LabelList } from "recharts";
 import { forgotPassword } from "../../services/userService";
 
 const ForgotPassword = () => {
-  const navigate = useNavigate();
   const [email, setEmail] = useState("");
 
   const handleSubmit = async (e:React.FormEvent) => {
