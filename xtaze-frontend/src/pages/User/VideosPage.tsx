@@ -8,7 +8,8 @@ import { Plus } from "lucide-react";
 import { getMyplaylist } from "../../services/userService";
 import { toast } from "sonner";
 
-const API_KEY = "AIzaSyBCaBH_dBN8AHwE0ByIh7abEANAgA3stAs"; // Move to .env
+const API_KEY = import.meta.env.VITE_YOUTUBE_API;
+
 
 interface Video {
   id: string;
