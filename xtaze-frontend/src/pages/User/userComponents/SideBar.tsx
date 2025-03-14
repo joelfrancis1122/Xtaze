@@ -62,7 +62,7 @@ export default function Sidebar() {
             <a onClick={() => navigate('/likedsongs')} className="text-gray-300 hover:text-white block transition-colors">
               Liked Songs
             </a>
-            <a href="#" className="text-gray-300 hover:text-white block transition-colors">
+            <a onClick={()=>navigate('/radio')} className="text-gray-300 hover:text-white block transition-colors">
               Mixes & Radio
             </a>
             <a onClick={() => navigate(`/playlist/${user?._id}`)} className="text-gray-300 hover:text-white block transition-colors">

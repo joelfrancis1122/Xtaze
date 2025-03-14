@@ -241,7 +241,7 @@ export default function VideoPage() {
       {loading && videos.length === 0 ? (
         <div className="text-center py-4">Loading {title.toLowerCase()}...</div>
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-3 md:grid-cols-3 xl::grid-cols-4 gap-6">
           {videos.map((video) => (
             <div
               key={`${video.id}-${Date.now()}`} // Unique key to force re-render
