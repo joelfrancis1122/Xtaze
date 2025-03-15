@@ -1,5 +1,6 @@
 import IUser from "../entities/IUser";
 import {IPlaylist} from "../entities/IPlaylist";
+import { ITrack } from "../entities/ITrack";
 
 export interface IUserRepository {
   add: (user: IUser) => Promise<IUser>;
@@ -15,5 +16,7 @@ export interface IUserRepository {
   updatePassword(user: IUser): Promise<IUser | null>;
   addToLiked(userId: string,trackId: string): Promise<IUser | null>;
   createPlaylist(newplaylist:IPlaylist): Promise<IPlaylist | null>;
+  addToPlaylist(userId:string,playlistId:string,trackId:string): Promise<IPlaylist | null>;
   findByCreator(userId:string): Promise<IPlaylist[] | null>;
+  getPlaylist(id: string): Promise<ITrack[] | null>;
 }

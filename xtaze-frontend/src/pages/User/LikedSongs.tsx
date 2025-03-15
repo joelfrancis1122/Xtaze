@@ -1,5 +1,3 @@
-"use client";
-
 import { useState, useEffect } from "react";
 import Sidebar from "./userComponents/SideBar";
 import { useSelector, useDispatch } from "react-redux";
@@ -9,9 +7,11 @@ import { toast } from "sonner";
 import { PlayCircle, PauseCircle, Heart } from "lucide-react";
 import { audio } from "../../utils/audio";
 import { setCurrentTrack, setIsPlaying } from "../../redux/audioSlice";
-import { saveSignupData } from "../../redux/userSlice"; // Import saveSignupData
+import { saveSignupData } from "../../redux/userSlice";
 import { Track } from "./Types";
 import { fetchLikedSongs, toggleLike } from "../../services/userService";
+import MusicPlayer from "./userComponents/TrackBar";
+import PreviewModal from "./PreviewPage";
 
 interface UserSignupData {
   _id?: string;
@@ -35,6 +35,9 @@ export default function LikedSongsPage() {
   const navigate = useNavigate();
   const [likedSongs, setLikedSongs] = useState<Track[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isShuffled, setIsShuffled] = useState(false);
+  const [isRepeating, setIsRepeating] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     const getLikedSongs = async () => {
@@ -54,6 +57,7 @@ export default function LikedSongsPage() {
       try {
         const tracks = await fetchLikedSongs(user._id, token, user.likedSongs);
         setLikedSongs(tracks);
+        console.log(tracks, "ithan sanam");
       } catch (error) {
         toast.error("Error fetching liked songs", { position: "top-right" });
       } finally {
@@ -87,7 +91,7 @@ export default function LikedSongsPage() {
       dispatch(setCurrentTrack({
         _id: song._id,
         title: song.title,
-        artist: song.artist,
+        artists: song.artists,
         fileUrl: song.fileUrl,
         img: song.img,
         album: song.album,
@@ -98,6 +102,42 @@ export default function LikedSongsPage() {
     }
   };
 
+  const handleSkipBack = () => {
+    const currentIndex = likedSongs.findIndex((t) => t._id === currentTrack?._id);
+    if (currentIndex > 0) {
+      const prevTrack = likedSongs[currentIndex - 1];
+      audio.src = prevTrack.fileUrl;
+      audio.play();
+      dispatch(setCurrentTrack(prevTrack));
+      dispatch(setIsPlaying(true));
+    }
+  };
+
+  const handleSkipForward = () => {
+    const currentIndex = likedSongs.findIndex((t) => t._id === currentTrack?._id);
+    if (currentIndex < likedSongs.length - 1) {
+      const nextTrack = likedSongs[currentIndex + 1];
+      audio.src = nextTrack.fileUrl;
+      audio.play();
+      dispatch(setCurrentTrack(nextTrack));
+      dispatch(setIsPlaying(true));
+    }
+  };
+
+  const toggleShuffle = () => {
+    setIsShuffled((prev) => !prev);
+    // Add shuffle logic here if desired (e.g., shuffle likedSongs array)
+  };
+
+  const toggleRepeat = () => {
+    setIsRepeating((prev) => !prev);
+    audio.loop = !audio.loop;
+  };
+
+  const toggleModal = () => {
+    setIsModalOpen((prevState) => !prevState);
+  };
+
   const handleUnlike = async (trackId: string) => {
     const token = localStorage.getItem("token");
     if (!token || !trackId || !user?._id) {
@@ -106,9 +146,9 @@ export default function LikedSongsPage() {
     }
 
     try {
-      const updatedUser = await toggleLike(user._id, trackId, token); // Toggle like API call
-      dispatch(saveSignupData(updatedUser)); // Update Redux with new user data
-      setLikedSongs((prev) => prev.filter((song) => song._id !== trackId)); // Remove song from list
+      const updatedUser = await toggleLike(user._id, trackId, token);
+      dispatch(saveSignupData(updatedUser));
+      setLikedSongs((prev) => prev.filter((song) => song._id !== trackId));
       toast.success("Song removed from liked songs!");
     } catch (error) {
       console.error("Error unliking song:", error);
@@ -119,7 +159,7 @@ export default function LikedSongsPage() {
   return (
     <div className="min-h-screen bg-black text-white flex">
       <Sidebar />
-      <main className="flex-1 ml-[240px] py-16 px-6">
+      <main className="flex-1 ml-[240px] py-16 px-10 pb-24">
         <div className="max-w-7xl mx-auto space-y-10">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
@@ -136,8 +176,8 @@ export default function LikedSongsPage() {
                 <span>Title</span>
                 <span>Artist</span>
                 <span>Album</span>
-                <span></span> {/* Play button column */}
-                <span></span> {/* Unlike button column */}
+                <span></span>
+                <span></span>
               </div>
               {likedSongs.map((song, index) => (
                 <div
@@ -146,34 +186,35 @@ export default function LikedSongsPage() {
                 >
                   <span className="text-gray-400 text-lg text-center">{index + 1}</span>
                   <div className="flex items-center space-x-4 truncate">
-                    <div className="w-10 h-10 bg-gray-700 rounded-md flex items-center justify-center overflow-hidden flex-shrink-0">
-                      {song.img ? (
-                        <img src={song.img} alt={song.title} className="w-full h-full object-cover" />
-                      ) : (
-                        <span className="text-gray-400">🎵</span>
-                      )}
+                    <div className="relative w-12 h-12 rounded-md overflow-hidden flex-shrink-0">
+                      <img
+                        src={song.img || "/placeholder.svg"}
+                        alt={song.title}
+                        className="w-full h-full object-cover"
+                      />
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handlePlay(song);
+                        }}
+                        className="absolute inset-0 flex items-center justify-center bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity rounded-md"
+                      >
+                        {currentTrack?.fileUrl === song.fileUrl && isPlaying ? (
+                          <PauseCircle size={24} className="text-white" />
+                        ) : (
+                          <PlayCircle size={24} className="text-white" />
+                        )}
+                      </button>
                     </div>
                     <div className="truncate">
                       <h3 className="text-white font-medium text-lg truncate">{song.title}</h3>
                     </div>
                   </div>
                   <span className="text-gray-400 text-lg truncate">
-                    {Array.isArray(song.artist) ? song.artist.join(", ") : song.artist}
+                    {Array.isArray(song.artists) ? song.artists.join(", ") : song.artists}
                   </span>
                   <span className="text-gray-400 text-lg truncate">{song.album}</span>
                   <div className="flex items-center justify-end opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handlePlay(song);
-                      }}
-                    >
-                      {currentTrack?.fileUrl === song.fileUrl && isPlaying ? (
-                        <PauseCircle size={24} className="text-green-500" />
-                      ) : (
-                        <PlayCircle size={24} className="text-red-500" />
-                      )}
-                    </button>
                   </div>
                   <div className="flex items-center justify-end opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                     <button
@@ -195,6 +236,25 @@ export default function LikedSongsPage() {
             </div>
           )}
         </div>
+
+        {currentTrack && (
+          <MusicPlayer
+            currentTrack={currentTrack}
+            isPlaying={isPlaying}
+            handlePlay={handlePlay}
+            handleSkipBack={handleSkipBack}
+            handleSkipForward={handleSkipForward}
+            toggleShuffle={toggleShuffle}
+            toggleRepeat={toggleRepeat}
+            isShuffled={isShuffled}
+            isRepeating={isRepeating}
+            audio={audio}
+            toggleModal={toggleModal}
+          />
+        )}
+        {currentTrack && (
+        <PreviewModal track={currentTrack} isOpen={isModalOpen} toggleModal={toggleModal} />
+      )}
       </main>
     </div>
   );

@@ -11,6 +11,7 @@ const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 import Stripe from "stripe";
 import IEmailService from '../domain/service/IEmailService';
 import { IPlaylist } from '../domain/entities/IPlaylist';
+import { ITrack } from '../domain/entities/ITrack';
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2023-08-16" });
 
 dotenv.config();
@@ -326,6 +327,22 @@ export default class UserUseCase {
       throw new Error("An error occurred while updating liked songs.");
     }
   }
+
+  async addToPlaylist(userId:string,playlistId:string,trackId:string): Promise<IPlaylist | null> {
+    try {
+      const user = await this._userRepository.addToPlaylist(userId, trackId,playlistId);
+      if (!user) {
+        return null;
+      }
+
+      return user; 
+    } catch (error) {
+      console.error("Error during adding liked song:", error);
+      throw new Error("An error occurred while updating liked songs.");
+    }
+  }
+
+
   async createPlaylist(_id: string, newplaylist: IPlaylist): Promise<IPlaylist | null> {
     try {
       const playlist = await this._userRepository.createPlaylist(newplaylist);
@@ -345,6 +362,21 @@ export default class UserUseCase {
       const playlist = await this._userRepository.findByCreator(userId);
 
       console.log(playlist,"this s the playlist")
+      if (!playlist) {
+        return null;
+      }
+
+      return playlist;
+    } catch (error) {
+      console.error("Error during adding playlist:", error);
+      throw new Error("An error occurred while creating playlist.");
+    }
+  }
+  async getPlaylist(id:string): Promise<ITrack[] | null> {
+    try {
+      const playlist = await this._userRepository.getPlaylist(id);
+
+      console.log(playlist,"this s the playlistodi odi ")
       if (!playlist) {
         return null;
       }

@@ -5,7 +5,7 @@ import { Input } from "../../components/ui/input";
 import Sidebar from "./userComponents/SideBar";
 import { toast } from "sonner";
 import { createPlaylists, getMyplaylist } from "../../services/userService";
-
+import image from "../../assets/ab67706f0000000216605bf6c66f6e5a783411b8.jpeg"
 interface Playlist {
   [x: string]: any;
   id: number;
@@ -14,6 +14,7 @@ interface Playlist {
   imageUrl: string;
   trackCount: number;
   createdBy: string;
+  
 }
 
 export default function PlaylistsPage() {
@@ -68,7 +69,8 @@ export default function PlaylistsPage() {
       <Sidebar />
       <div className="flex-1 ml-64 p-6 overflow-y-auto">
         <div className="flex items-center justify-between mb-8">
-          <h1 className="text-3xl font-bold">Your Playlists</h1>
+          <h1 className="text-5xl font-bold">Your Playlists</h1>
+
           <button
             onClick={() => setIsDialogOpen(true)}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
@@ -87,7 +89,7 @@ export default function PlaylistsPage() {
               >
                 <div className="relative w-full h-40 overflow-hidden rounded-md">
                   <img
-                    src={playlist.imageUrl || "/placeholder.svg"}
+                    src={image||playlist.imageUrl }
                     alt={playlist.title}
                     className="w-full h-full object-cover rounded-md"
                   />

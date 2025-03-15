@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { PricingCard } from "./userComponents/pricing-card";
 import Sidebar from "./userComponents/SideBar";
 import { loadStripe } from "@stripe/stripe-js";

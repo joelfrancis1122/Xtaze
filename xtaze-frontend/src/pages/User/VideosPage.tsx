@@ -26,7 +26,7 @@ interface Playlist {
   imageUrl: string;
   trackCount: number;
   createdBy: string;
-  videos?: string[];
+  tracks?: string[];
 }
 
 export default function VideoPage() {
@@ -217,7 +217,7 @@ export default function VideoPage() {
       setPlaylists((prev) =>
         prev.map((playlist) =>
           playlist.id === playlistId
-            ? { ...playlist, trackCount: playlist.trackCount + 1, videos: [...(playlist.videos || []), videoId] }
+            ? { ...playlist, trackCount: playlist.trackCount + 1, tracks: [...(playlist.tracks || []), videoId] }
             : playlist
         )
       );

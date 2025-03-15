@@ -83,7 +83,7 @@ const PreviewModal: React.FC<PreviewModalProps> = ({ track, isOpen, toggleModal 
                 <div className="mt-4 text-center">
                   <h2 className="text-2xl font-bold">{track.title}</h2>
                   <p className="text-zinc-400">
-                    {Array.isArray(track.artist) ? track.artist.join(", ") : track.artist}
+                    {Array.isArray(track.artists) ? track.artists.join(", ") : track.artists}
                   </p>
                 </div>
               </div>
@@ -118,7 +118,7 @@ const PreviewModal: React.FC<PreviewModalProps> = ({ track, isOpen, toggleModal 
                     <div className="flex-1 min-w-0">
                       <p className="truncate">{track.title}</p>
                       <p className="text-sm text-zinc-400 truncate">
-                        {Array.isArray(track.artist) ? track.artist.join(", ") : track.artist}
+                        {Array.isArray(track.artists) ? track.artists.join(", ") : track.artists}
                       </p>
                     </div>
                     <button className="p-2 rounded-md hover:bg-zinc-600">

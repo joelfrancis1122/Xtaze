@@ -10,7 +10,8 @@ const PlaylistSchema = new Schema<IPlaylistDocument>(
     imageUrl: { type: String },
     trackCount: { type: Number, default: 0 },
     createdBy: { type: String },
-    tracks: [{ type: String}],
+    tracks: { type: [String], default: [] },
+
   },
   { timestamps: true }
 );

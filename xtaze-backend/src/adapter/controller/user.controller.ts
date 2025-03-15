@@ -14,7 +14,7 @@ export default class UserController {
 
   constructor(dependencies: Dependencies) { // boss gives the toy maker here 
     this._userUseCase = dependencies.userUseCase; //gets toy maker
-    
+
   }
 
 
@@ -73,6 +73,7 @@ export default class UserController {
       next(error);
     }
   }
+
 
   async loginUser(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
@@ -183,33 +184,33 @@ export default class UserController {
   async forgotPassword(req: Request, res: Response, next: NextFunction) {
     try {
       const { email } = req.body;
-      console.log(email,"emil")
+      console.log(email, "emil")
       if (!email) throw new AppError("Email is required", 400);
-  
+
       const response = await this._userUseCase.forgotPassword(email);
       res.status(200).json(response);
     } catch (error) {
       next(error);
     }
   }
-  
+
 
   async resetPassword(req: Request, res: Response, next: NextFunction) {
     try {
-      const { token,formData } = req.body;
+      const { token, formData } = req.body;
       const newPassword = formData
-      console.log(token,"tok")
-      console.log(newPassword,"data")
+      console.log(token, "tok")
+      console.log(newPassword, "data")
       if (!token) throw new AppError("token is required", 400);
       const response = await this._userUseCase.resetPassword(token, newPassword);
-       res.status(200).json(response);
+      res.status(200).json(response);
       // const response = await this._userUseCase.forgotPassword(email);
       // res.status(200).json(response);
     } catch (error) {
       next(error);
     }
   }
-  
+
 
   async uploadProfilepic(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
@@ -324,13 +325,26 @@ export default class UserController {
       next(error);
     }
   }
+  async getTracksInPlaylist(req: Request, res: Response, next: NextFunction) {
+    try {
+      const id = req.query.id
+      console.log(req.query.id)
+      console.log("Get playlist:");
+      const track = await this._userUseCase.getPlaylist(id as string)
+      console.log(track,"this is track ma")
+      res.json({ success: true ,data:track});
+    } catch (error) {
+      console.error("Error in getliked:", error);
+      next(error);
+    }
+  }
 
 
   async createPlaylist(req: Request, res: Response, next: NextFunction) {
     try {
-      const {_id,newplaylist} = req.body
-      const playlist = await this._userUseCase.createPlaylist(_id,newplaylist)
-      res.status(200).json({ success: true ,data:playlist});
+      const { _id, newplaylist } = req.body
+      const playlist = await this._userUseCase.createPlaylist(_id, newplaylist)
+      res.status(200).json({ success: true, data: playlist });
     } catch (error) {
       console.error("Error in getliked:", error);
       next(error);
@@ -338,22 +352,23 @@ export default class UserController {
   }
   async getPlaylist(req: Request, res: Response, next: NextFunction) {
     try {
-      const {userId} = req.query
+      const { userId } = req.query
 
-      console.log(userId,"ith thanne",req.body,req.query)
+      console.log(userId, "ith thanne", req.body, req.query)
 
       const playlist = await this._userUseCase.getAllPlaylist(userId as string)
-      res.status(200).json({ success: true ,data:playlist});
+      res.status(200).json({ success: true, data: playlist });
     } catch (error) {
       console.error("Error in getliked:", error);
       next(error);
     }
   }
-  
+
   async addToPlaylist(req: Request, res: Response, next: NextFunction) {
     try {
-      console.log(req.body,"ith an mone ",req.query)
-      // const playlist = await this._userUseCase.getAllPlaylist(userId)
+      const { userId, playlistId, trackId } = req.body
+
+      const playlist = await this._userUseCase.addToPlaylist(userId, playlistId, trackId)
       res.status(200).json({ success: true });
     } catch (error) {
       console.error("Error in getliked:", error);

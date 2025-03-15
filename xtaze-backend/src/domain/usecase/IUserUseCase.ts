@@ -1,6 +1,7 @@
 import Stripe from "stripe";
 import IUser from "../entities/IUser";
 import { IPlaylist } from "../entities/IPlaylist";
+import { ITrack } from "../entities/ITrack";
 
 export default interface IuserUseCase{
     registerUser(username: string, country: string, gender: string, year: number, phone: number, email: string, password: string): Promise<IUser> 
@@ -13,6 +14,7 @@ export default interface IuserUseCase{
     resetPassword(token: string,password:string): Promise<{ success: boolean; message: string; token?: string; refreshToken?:string;user?: IUser |null}>;
     createPlaylist(_id: string,newplaylist:IPlaylist): Promise<IPlaylist | null>;
     getAllPlaylist(userId: string): Promise<IPlaylist[] | null>;
+    getPlaylist(id: string): Promise<ITrack[] | null>;
 
     refresh(refreshToken: string): Promise<{ success: boolean; message: string; token?: string; refreshToken?:string;user?: IUser |null}>;
     uploadProfile(userID:string,file:Express.Multer.File): Promise<{ success: boolean; message: string }>
@@ -21,5 +23,6 @@ export default interface IuserUseCase{
     getUpdatedArtist(artistId:string): Promise<IUser|null>
     execute(userId: string, priceId: string): Promise<Stripe.Checkout.Session>;
     addToLiked(userId: string,trackId:string): Promise<IUser|null>
+    addToPlaylist(userId:string,playlistId:string,trackId:string): Promise<IPlaylist|null>
 }
 

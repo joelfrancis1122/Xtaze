@@ -21,6 +21,7 @@ interface Playlist {
   imageUrl: string;
   trackCount: number;
   createdBy: string;
+  // tracks?:string[]
   videos?: string[];
 }
 

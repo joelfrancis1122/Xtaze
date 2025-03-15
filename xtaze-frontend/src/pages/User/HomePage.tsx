@@ -22,7 +22,7 @@ import { useNavigate } from "react-router-dom";
 import { audio } from "../../utils/audio";
 import { PlaceholdersAndVanishInput } from "../../utils/placeholders-and-vanish-input";
 import { Search, Power, Play, Pause, Plus, Heart, Download } from "lucide-react";
-import { fetchTracks, fetchLikedSongs, incrementListeners, toggleLike, getMyplaylist, createPlaylists, addTrackToPlaylist } from "../../services/userService";
+import { fetchTracks, fetchLikedSongs, incrementListeners, toggleLike, getMyplaylist, addTrackToPlaylist } from "../../services/userService";
 import { toast } from "sonner";
 
 interface UserSignupData {
@@ -190,13 +190,13 @@ export default function Home() {
     }
     try {
       await addTrackToPlaylist(user._id, playlistId, trackId, token);
-      const playlist = playlists.find((p) => p.id.toString() === playlistId);
+      const playlist = playlists.find((p) => p._id === playlistId);
       if (!playlist) throw new Error("Playlist not found");
       toast.success(`Added to ${playlist.title}`);
       setDropdownTrackId(null);
       setPlaylists((prev) =>
         prev.map((p) =>
-          p.id.toString() === playlistId ? { ...p, trackCount: p.trackCount + 1 } : p
+          p._id === playlistId ? { ...p, trackCount: p.trackCount + 1 } : p
         )
       );
     } catch (error) {
@@ -385,9 +385,9 @@ export default function Home() {
                         {tracks[randomIndex]?.title || "Featured Track"}
                       </h3>
                       <p className="text-gray-300 shadow-text">
-                        {Array.isArray(tracks[randomIndex]?.artist)
-                          ? tracks[randomIndex]?.artist.join(", ")
-                          : tracks[randomIndex]?.artist || "Various Artists"}
+                        {Array.isArray(tracks[randomIndex]?.artists)
+                          ? tracks[randomIndex]?.artists.join(", ")
+                          : tracks[randomIndex]?.artists || "Various Artists"}
                       </p>
                     </div>
                   </div>
@@ -457,7 +457,7 @@ export default function Home() {
                       </div>
                       <div className="text-white font-semibold truncate">{track.title}</div>
                       <div className="text-gray-400 text-sm truncate">
-                        {Array.isArray(track.artist) ? track.artist.join(", ") : track.artist}
+                        {Array.isArray(track.artists) ? track.artists.join(", ") : track.artists}
                       </div>
                       <div className="relative flex gap-2 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
                         <button
@@ -483,7 +483,7 @@ export default function Home() {
                                     onClick={() => {
                                       console.log("odi",playlist) 
                                       ,
-                                      handleAddToPlaylist(track._id || track.fileUrl, playlist.id.toString()) 
+                                      handleAddToPlaylist(track._id || track.fileUrl, playlist._id as string) 
                                     }
                                     
                                     } 
@@ -567,7 +567,7 @@ export default function Home() {
                       </div>
                       <div className="text-white font-semibold truncate">{track.title}</div>
                       <div className="text-gray-400 text-sm truncate">
-                        {Array.isArray(track.artist) ? track.artist.join(", ") : track.artist}
+                        {Array.isArray(track.artists) ? track.artists.join(", ") : track.artists}
                       </div>
                       <div className="relative flex gap-2 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
                         <button
@@ -585,9 +585,9 @@ export default function Home() {
                               {playlists.length > 0 ? (
                                 playlists.map((playlist) => (
                                   <li
-                                    key={playlist.id}
+                                    key={playlist._id}
                                     className="px-4 py-2 hover:bg-[#333333] cursor-pointer text-white"
-                                    onClick={() => handleAddToPlaylist(track._id || track.fileUrl, playlist.id.toString())}
+                                    onClick={() => handleAddToPlaylist(track._id || track.fileUrl, playlist._id as string)}
                                   >
                                     {playlist.title}
                                   </li>

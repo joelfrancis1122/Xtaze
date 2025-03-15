@@ -168,7 +168,7 @@ export const fetchTracks = async (
     _id: track._id || track.fileUrl,
     title: track.title,
     album: track.album || "Unknown Album",
-    artist: Array.isArray(track.artists)
+    artists: Array.isArray(track.artists)
       ? track.artists
       : track.artists
       ? JSON.parse(track.artists)
@@ -183,7 +183,7 @@ export const fetchTracks = async (
 
 // Fetch liked songs
 export const fetchLikedSongs = async (userId: string, token: string, songIds: string[]): Promise<Track[]> => {
-  const data = await apiCall<{ success: boolean; tracks: any[] }>(
+  const data = await apiCall<{ success: boolean; tracks: Track[]}>(
     userApi,
     "post",
     `/getliked?userId=${userId}`,
@@ -191,16 +191,7 @@ export const fetchLikedSongs = async (userId: string, token: string, songIds: st
     token
   );
   if (!data.success) throw new Error("Failed to fetch liked songs details");
-  return data.tracks.map((song: any) => ({
-    _id: song._id,
-    title: song.title,
-    artist: Array.isArray(song.artists) ? song.artists : [song.artists || "Unknown Artist"],
-    fileUrl: song.fileUrl,
-    img: song.img,
-    album: song.album || "Unknown Album",
-    genre: Array.isArray(song.genre) ? song.genre[0] : song.genre || "Unknown Genre",
-    listeners: song.listeners || 0,
-  }));
+  return data.tracks
 };
 
 // Increment listeners
@@ -273,6 +264,20 @@ export const getMyplaylist = async (userId: string): Promise<Playlist[]> => {
   console.log(data);
   return data.data; // Return array of playlists
 };
+export const fetchPlaylistTracks = async (id: string): Promise<Track[]> => {
+  console.log(id,"odi odi o ds")
+  const data = await apiCall<{ success: boolean; message?: string; data: Track[]}>(
+    userApi,
+    "get",
+    `/getTracksInPlaylist?id=${id}` // Move userId to query string
+  );
+  if (!data.success) throw new Error(data.message || "Failed to get all playlists");
+  console.log(data,"ithan sanam");
+  return data.data; 
+};
+
+
+
 export const addTrackToPlaylist = async (
   userId: string,
   playlistId: string,
@@ -314,6 +319,7 @@ interface Playlist {
   imageUrl: string;
   trackCount: number;
   createdBy: string;
+  tracks?:string[]
 }
 // export default {
 //   checkUsername,
