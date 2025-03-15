@@ -349,5 +349,17 @@ export default class UserController {
       next(error);
     }
   }
+  
+  async addToPlaylist(req: Request, res: Response, next: NextFunction) {
+    try {
+      console.log(req.body,"ith an mone ",req.query)
+      // const playlist = await this._userUseCase.getAllPlaylist(userId)
+      res.status(200).json({ success: true });
+    } catch (error) {
+      console.error("Error in getliked:", error);
+      next(error);
+    }
+  }
+
 
 }

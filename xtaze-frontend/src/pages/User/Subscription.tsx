@@ -6,10 +6,9 @@ import Sidebar from "./userComponents/SideBar";
 import { loadStripe } from "@stripe/stripe-js";
 import { useSelector } from "react-redux";
 import { RootState } from "../../store/store";
-import { useNavigate } from "react-router-dom"; // Import useNavigate
-import axios from "axios";
+import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-
+import { initiateCheckout } from "../../services/userService"; // Adjust path as needed
 
 const stripePromise = loadStripe("pk_test_51QuvsvQV9aXBcHmZPYCW1A2NRrd5mrEffAOVJMFOlrYDOl9fmb028A85ZE9WfxKMdNgTTA5MYoG4ZwCUQzHVydZj00eBUQVOo9");
 
@@ -36,12 +35,11 @@ const plans = [
 
 export default function PricingPage() {
   const user = useSelector((state: RootState) => state.user.signupData);
-  const navigate = useNavigate(); // Hook for redirection
-  const baseUrl = import.meta.env.VITE_BASE_URL;
-  // Check premium status and redirect if true
+  const navigate = useNavigate();
+
   useEffect(() => {
     if (user?.premium === true) {
-      navigate("/home", { replace: true }); 
+      navigate("/home", { replace: true });
     }
   }, [user, navigate]);
 
@@ -53,21 +51,14 @@ export default function PricingPage() {
     }
 
     try {
-      const response = await axios.post(
-        `${baseUrl}/user/checkOut`,
-        {
-          userId: user._id,
-          priceId: "price_1QwLeQQV9aXBcHmZhnzqbz5G", 
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      const token = localStorage.getItem("token");
+      if (!token) throw new Error("No authentication token found");
 
-      const { sessionId } = response.data;
+      const sessionId = await initiateCheckout(
+        user._id,
+        "price_1QwLeQQV9aXBcHmZhnzqbz5G", 
+        token
+      );
 
       const { error } = await stripe.redirectToCheckout({ sessionId });
       if (error) {
@@ -78,9 +69,8 @@ export default function PricingPage() {
     }
   };
 
-  // Only render if premium is false or undefined (not logged in yet)
   if (user?.premium === true) {
-    return null; // Return null while redirecting
+    return null;
   }
 
   return (

@@ -22,9 +22,8 @@ import { useNavigate } from "react-router-dom";
 import { audio } from "../../utils/audio";
 import { PlaceholdersAndVanishInput } from "../../utils/placeholders-and-vanish-input";
 import { Search, Power, Play, Pause, Plus, Heart, Download } from "lucide-react";
-import { fetchTracks, fetchLikedSongs, incrementListeners, toggleLike } from "../../services/userService";
+import { fetchTracks, fetchLikedSongs, incrementListeners, toggleLike, getMyplaylist, createPlaylists, addTrackToPlaylist } from "../../services/userService";
 import { toast } from "sonner";
-
 
 interface UserSignupData {
   _id?: string;
@@ -41,9 +40,20 @@ interface UserSignupData {
   likedSongs?: string[];
 }
 
+interface Playlist {
+  id: number;
+  _id?: string;
+  title: string;
+  description: string;
+  imageUrl: string;
+  trackCount: number;
+  createdBy: string;
+}
+
 export default function Home() {
   const [tracks, setTracks] = useState<Track[]>([]);
   const [likedTracks, setLikedTracks] = useState<Track[]>([]);
+  const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [playedSongs, setPlayedSongs] = useState<Set<string>>(new Set());
@@ -56,8 +66,7 @@ export default function Home() {
   const user = useSelector((state: RootState) => state.user.signupData) as UserSignupData | null;
   const { currentTrack, isPlaying, isShuffled, isRepeating, shuffleIndices, currentShuffleIndex } =
     useSelector((state: RootState) => state.audio);
-console.log(likedTracks)
-console.log(dropdownTrackId)
+
   useEffect(() => {
     if (user?.likedSongs) {
       setLikedSongs(new Set(user.likedSongs.map(String) || []));
@@ -65,7 +74,7 @@ console.log(dropdownTrackId)
   }, [user?.likedSongs]);
 
   useEffect(() => {
-    const getTracksAndLikedSongs = async () => {
+    const getTracksAndLikedSongsAndPlaylists = async () => {
       const token = localStorage.getItem("token");
       if (!token) {
         console.error("No token found or invalid role. Please login.");
@@ -74,7 +83,6 @@ console.log(dropdownTrackId)
       }
 
       try {
-        // Fetch all tracks
         const { tracks: fetchedTracks, user: updatedUser } = await fetchTracks(
           user?._id || "",
           token,
@@ -82,37 +90,38 @@ console.log(dropdownTrackId)
         );
         setTracks(fetchedTracks);
 
-        //Only dispatch if updatedUser differs significantly (optional optimization)
         if (updatedUser && JSON.stringify(updatedUser) !== JSON.stringify(user)) {
           dispatch(saveSignupData(updatedUser));
-          window.location.reload()
         }
 
-        // Fetch liked songs if any
         if (user?.likedSongs && user.likedSongs.length > 0) {
           const liked = await fetchLikedSongs(user._id || "", token, user.likedSongs);
           setLikedTracks(liked);
         } else {
           setLikedTracks([]);
         }
+
+        const fetchedPlaylists = await getMyplaylist(user?._id || "");
+        setPlaylists(fetchedPlaylists);
       } catch (error) {
-        console.error("Error fetching tracks or liked songs:", error);
+        console.error("Error fetching data:", error);
       } finally {
         setLoading(false);
       }
     };
 
-    getTracksAndLikedSongs();
-  }, [dispatch, user?._id, user?.premium]); // Removed user?.likedSongs from deps
-
-  // Separate effect for setting randomIndex
+    getTracksAndLikedSongsAndPlaylists();
+  }, [dispatch, user?._id, user?.premium]);
+  useEffect(() => {
+    console.log("Current playssslists:", playlists);
+  }, [playlists]);
   useEffect(() => {
     if (user?.premium && tracks.length > 0 && randomIndex === null) {
       setRandomIndex(Math.floor(Math.random() * tracks.length));
     } else if (!user?.premium || tracks.length === 0) {
       setRandomIndex(null);
     }
-  }, [user?.premium, tracks.length]); // Only depends on premium and tracks length
+  }, [user?.premium, tracks.length]);
 
   const handleIncrementListeners = async (trackId: string) => {
     const token = localStorage.getItem("token");
@@ -161,19 +170,40 @@ console.log(dropdownTrackId)
         const newLiked = new Set(prev);
         if (isCurrentlyLiked) {
           newLiked.delete(trackId);
-          toast.success("removed from liked songs")
+          toast.success("Removed from liked songs");
         } else {
           newLiked.add(trackId);
-          toast.success("added to liked songs")
+          toast.success("Added to liked songs");
         }
         return newLiked;
       });
-
     } catch (error) {
       console.error("Error toggling like:", error);
     }
   };
 
+  const handleAddToPlaylist = async (trackId: string, playlistId: string) => {
+    const token = localStorage.getItem("token");
+    if (!token || !user?._id) {
+      toast.error("Please log in to add to playlist");
+      return;
+    }
+    try {
+      await addTrackToPlaylist(user._id, playlistId, trackId, token);
+      const playlist = playlists.find((p) => p.id.toString() === playlistId);
+      if (!playlist) throw new Error("Playlist not found");
+      toast.success(`Added to ${playlist.title}`);
+      setDropdownTrackId(null);
+      setPlaylists((prev) =>
+        prev.map((p) =>
+          p.id.toString() === playlistId ? { ...p, trackCount: p.trackCount + 1 } : p
+        )
+      );
+    } catch (error) {
+      console.error("Error adding to playlist:", error);
+      toast.error("Failed to add to playlist");
+    }
+  };
   const toggleModal = () => {
     setIsModalOpen((prevState) => !prevState);
   };
@@ -272,6 +302,7 @@ console.log(dropdownTrackId)
   const handleUpgradeClick = () => {
     navigate("/plans");
   };
+
   const handleDownload = async (fileUrl: string, title: string) => {
     if (!fileUrl || !title) {
       console.error("Invalid file URL or title");
@@ -305,7 +336,7 @@ console.log(dropdownTrackId)
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      window.URL.revokeObjectURL(url); // Clean up memory
+      window.URL.revokeObjectURL(url);
       setDropdownTrackId(null);
       toast.success(`Downloaded ${title}`);
     } catch (error) {
@@ -428,15 +459,54 @@ console.log(dropdownTrackId)
                       <div className="text-gray-400 text-sm truncate">
                         {Array.isArray(track.artist) ? track.artist.join(", ") : track.artist}
                       </div>
-                      <div className="flex gap-2 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button className="p-1 hover:bg-[#333333] rounded-full">
+                      <div className="relative flex gap-2 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                          className="p-1 hover:bg-[#333333] rounded-full"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setDropdownTrackId(dropdownTrackId === track._id ? null : track._id);
+                            console.log("ithan odi",playlists)
+                          }}
+                        >
                           <Plus size={16} />
                         </button>
+                        {dropdownTrackId === track._id && (
+                          <div className="absolute left-0 mt-8 w-48 bg-[#242424] rounded-md shadow-lg z-20">
+                            <ul className="py-1">
+                              {playlists.length > 0 ? (
+
+                                playlists.map((playlist) => (
+                                  
+                                  <li
+                                    key={playlist._id}
+                                    className="px-4 py-2 hover:bg-[#333333] cursor-pointer text-white"
+                                    onClick={() => {
+                                      console.log("odi",playlist) 
+                                      ,
+                                      handleAddToPlaylist(track._id || track.fileUrl, playlist.id.toString()) 
+                                    }
+                                    
+                                    } 
+                                  >
+                                    {playlist.title}
+                                  </li>
+                                ))
+                              ) : (
+                                <li className="px-4 py-2 text-gray-400">No playlists available</li>
+                              )}
+                              <li
+                                className="px-4 py-2 hover:bg-[#333333] cursor-pointer text-white border-t border-gray-700"
+                                onClick={() => navigate(`/playlists/${user?._id}`)}
+                              >
+                                Create New Playlist
+                              </li>
+                            </ul>
+                          </div>
+                        )}
                         {user?.premium ? (
                           <button
                             onClick={() => handleLike(track._id || track.fileUrl)}
-                            className={`p-1 hover:bg-[#333333] rounded-full ${likedSongs.has(track._id || track.fileUrl) ? "text-red-500" : "text-white"
-                              }`}
+                            className={`p-1 hover:bg-[#333333] rounded-full ${likedSongs.has(track._id || track.fileUrl) ? "text-red-500" : "text-white"}`}
                           >
                             <Heart
                               size={16}
@@ -444,20 +514,15 @@ console.log(dropdownTrackId)
                             />
                           </button>
                         ) : null}
-                        <div className="relative">
-                          <div className="relative">
-                            <button
-                              className="p-1 hover:bg-[#333333] rounded-full"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDownload(track.fileUrl, track.title);
-                              }}
-                            >
-                              <Download size={16} />
-                            </button>
-                          </div>
-
-                        </div>
+                        <button
+                          className="p-1 hover:bg-[#333333] rounded-full"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDownload(track.fileUrl, track.title);
+                          }}
+                        >
+                          <Download size={16} />
+                        </button>
                       </div>
                     </div>
                   ))}
@@ -504,14 +569,44 @@ console.log(dropdownTrackId)
                       <div className="text-gray-400 text-sm truncate">
                         {Array.isArray(track.artist) ? track.artist.join(", ") : track.artist}
                       </div>
-                      <div className="flex gap-2 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button className="p-1 hover:bg-[#333333] rounded-full">
+                      <div className="relative flex gap-2 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                          className="p-1 hover:bg-[#333333] rounded-full"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setDropdownTrackId(dropdownTrackId === track._id ? null : track._id);
+                          }}
+                        >
                           <Plus size={16} />
                         </button>
+                        {dropdownTrackId === track._id && (
+                          <div className="absolute left-0 mt-8 w-48 bg-[#242424] rounded-md shadow-lg z-20">
+                            <ul className="py-1">
+                              {playlists.length > 0 ? (
+                                playlists.map((playlist) => (
+                                  <li
+                                    key={playlist.id}
+                                    className="px-4 py-2 hover:bg-[#333333] cursor-pointer text-white"
+                                    onClick={() => handleAddToPlaylist(track._id || track.fileUrl, playlist.id.toString())}
+                                  >
+                                    {playlist.title}
+                                  </li>
+                                ))
+                              ) : (
+                                <li className="px-4 py-2 text-gray-400">No playlists available</li>
+                              )}
+                              <li
+                                className="px-4 py-2 hover:bg-[#333333] cursor-pointer text-white border-t border-gray-700"
+                                onClick={() => navigate(`/playlists/${user?._id}`)}
+                              >
+                                Create New Playlist
+                              </li>
+                            </ul>
+                          </div>
+                        )}
                         <button
                           onClick={() => handleLike(track._id || track.fileUrl)}
-                          className={`p-1 hover:bg-[#333333] rounded-full ${likedSongs.has(track._id || track.fileUrl) ? "text-red-500" : "text-white"
-                            }`}
+                          className={`p-1 hover:bg-[#333333] rounded-full ${likedSongs.has(track._id || track.fileUrl) ? "text-red-500" : "text-white"}`}
                         >
                           <Heart
                             size={16}

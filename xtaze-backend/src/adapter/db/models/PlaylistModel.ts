@@ -1,13 +1,20 @@
-import mongoose from "mongoose";
+import { Schema, Document, model } from "mongoose";
+import { IPlaylist } from "../../../domain/entities/IPlaylist";
 
-const PlaylistSchema = new mongoose.Schema({
-  title: String,
-  description: String,
-  imageUrl: String,
-  trackCount: Number,
-  createdBy: { type: String }, 
-  tracks: [{ type: String }],
-});
+export interface IPlaylistDocument extends IPlaylist, Document {}
 
-const PlaylistModel = mongoose.model("Playlist", PlaylistSchema);
-export default PlaylistModel
+const PlaylistSchema = new Schema<IPlaylistDocument>(
+  {
+    title: { type: String, required: true },
+    description: { type: String },
+    imageUrl: { type: String },
+    trackCount: { type: Number, default: 0 },
+    createdBy: { type: String },
+    tracks: [{ type: String}],
+  },
+  { timestamps: true }
+);
+
+// Export Model
+const PlaylistModel = model<IPlaylistDocument>("Playlist", PlaylistSchema);
+export default PlaylistModel;

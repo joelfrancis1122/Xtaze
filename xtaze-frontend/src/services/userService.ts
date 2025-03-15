@@ -273,6 +273,40 @@ export const getMyplaylist = async (userId: string): Promise<Playlist[]> => {
   console.log(data);
   return data.data; // Return array of playlists
 };
+export const addTrackToPlaylist = async (
+  userId: string,
+  playlistId: string,
+  trackId: string,
+  token: string
+): Promise<void> => {
+  const data = await apiCall<{ success: boolean; message?: string }>(
+    userApi,
+    "post",
+    "/addToPlaylist",
+    { userId, playlistId, trackId },
+    token
+  );
+  if (!data.success) throw new Error(data.message || "Failed to add track to playlist");
+};
+
+export const initiateCheckout = async (
+  userId: string,
+  priceId: string,
+  token: string
+): Promise<string> => {
+  const data = await apiCall<{ sessionId: string }>(
+    userApi,
+    "post",
+    "/checkOut",
+    { userId, priceId },
+    token
+  );
+  console.log("Checkout response:", data);
+  return data.sessionId;
+};
+
+
+
 interface Playlist {
   id: number;
   title: string;
