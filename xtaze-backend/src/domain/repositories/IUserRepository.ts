@@ -19,4 +19,5 @@ export interface IUserRepository {
   addToPlaylist(userId:string,playlistId:string,trackId:string): Promise<IPlaylist | null>;
   findByCreator(userId:string): Promise<IPlaylist[] | null>;
   getPlaylist(id: string): Promise<ITrack[] | null>;
+  deletePlaylist(id: string): Promise<IPlaylist | null>;
 }

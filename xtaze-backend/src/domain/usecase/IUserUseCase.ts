@@ -24,5 +24,6 @@ export default interface IuserUseCase{
     execute(userId: string, priceId: string): Promise<Stripe.Checkout.Session>;
     addToLiked(userId: string,trackId:string): Promise<IUser|null>
     addToPlaylist(userId:string,playlistId:string,trackId:string): Promise<IPlaylist|null>
+    deletePlaylist(id:string): Promise<IPlaylist|null>
 }
 

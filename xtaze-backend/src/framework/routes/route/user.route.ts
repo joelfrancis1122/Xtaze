@@ -25,6 +25,11 @@ router.post("/refresh",(req:Request,res:Response,next:NextFunction)=>userControl
 router.post("/createPlaylist",(req:Request,res:Response,next:NextFunction)=>userController.createPlaylist(req,res,next))
 router.get("/getPlaylist",(req:Request,res:Response,next:NextFunction)=>userController.getPlaylist(req,res,next))
 router.post("/addToPlaylist",(req:Request,res:Response,next:NextFunction)=>userController.addToPlaylist(req,res,next))
+router.post("/deletePlaylist",(req:Request,res:Response,next:NextFunction)=>userController.deletePlaylist(req,res,next))
+
+
 router.get("/getTracksInPlaylist",authenticateUser,(req:Request,res:Response,next:NextFunction)=>userController.getTracksInPlaylist(req,res,next))
 router.post("/updateBanner",authenticateUser, upload.single("coverImage"),(req:Request,res:Response,next:NextFunction)=>userController.uploadBanner(req,res,next))
+
+
 export default router;

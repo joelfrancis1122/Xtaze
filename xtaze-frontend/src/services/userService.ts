@@ -71,7 +71,7 @@ const apiCall = async <T>(
       headers: token ? { Authorization: `Bearer ${token}` } : undefined,
       withCredentials: true,
     };
-    const response = method === "get" || method === "delete"
+    const response = method === "get" 
       ? await instance[method](url, config)
       : await instance[method](url, data, config);
     if (!response.data) throw new Error(`Failed to ${method} ${url}`);
@@ -258,7 +258,7 @@ export const getMyplaylist = async (userId: string): Promise<Playlist[]> => {
   const data = await apiCall<{ success: boolean; message?: string; data: Playlist[] }>(
     userApi,
     "get",
-    `/getPlaylist?userId=${userId}` // Move userId to query string
+    `/getPlaylist?userId=${userId}` 
   );
   if (!data.success) throw new Error(data.message || "Failed to get all playlists");
   console.log(data);
@@ -290,6 +290,42 @@ export const addTrackToPlaylist = async (
     "/addToPlaylist",
     { userId, playlistId, trackId },
     token
+  );
+  if (!data.success) throw new Error(data.message || "Failed to add track to playlist");
+};
+export const deletePlaylist = async (
+  id: string,
+
+): Promise<void> => {
+  const data = await apiCall<{ success: boolean; message?: string }>(
+    userApi,
+    "post",
+    "/deletePlaylist",
+    {id },
+  );
+  if (!data.success) throw new Error(data.message || "Failed to add track to playlist");
+};
+export const updatePlaylistName = async (
+  id: string,playlistName:string
+): Promise<void> => {
+  const data = await apiCall<{ success: boolean; message?: string }>(
+    userApi,
+    "put",
+    "/updateNamePlaylist",
+    {   id,playlistName },
+  );
+  if (!data.success) throw new Error(data.message || "Failed to add track to playlist");
+};
+export const updatePlaylistImage = async (
+ id: string,
+  file:File
+
+): Promise<void> => {
+  const data = await apiCall<{ success: boolean; message?: string }>(
+    userApi,
+    "put",
+    "/updateImagePlaylist",
+    { id,file},
   );
   if (!data.success) throw new Error(data.message || "Failed to add track to playlist");
 };

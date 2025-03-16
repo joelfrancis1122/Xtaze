@@ -158,7 +158,16 @@ export default class UserRepository implements IUserRepository {
       return [];
     }
   }
+  async deletePlaylist(id: string): Promise<IPlaylist | null> {
+    try {
+      console.log("this is id,",id)
+     return await PlaylistModel.findByIdAndDelete(id);
 
+    } catch (error) {
+      console.error("Error deleting playlist:", error);
+      return null;
+    }
+  }
   async createPlaylist(newPlaylist: IPlaylist): Promise<IPlaylist | null> {
     try {
       const playlist = new PlaylistModel({
@@ -191,6 +200,8 @@ export default class UserRepository implements IUserRepository {
       // Add the track to the playlist if it's not already present
       if (!playlist.tracks.includes(trackid)) {
         playlist.tracks.push(trackid);
+      }else{
+        return null
       }
       console.log("333")
 

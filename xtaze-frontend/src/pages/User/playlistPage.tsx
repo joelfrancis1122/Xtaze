@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import {  useNavigate, useParams } from "react-router-dom";
 import { MoreHorizontal, Plus, Search, Play } from "lucide-react";
 import { Input } from "../../components/ui/input";
 import Sidebar from "./userComponents/SideBar";
@@ -35,7 +35,7 @@ export default function PlaylistsPage() {
       description: newPlaylistDescription || "New playlist",
       imageUrl: "/placeholder.svg?height=200&width=200",
       trackCount: 0,
-      createdBy: userId || "unknown", // Fallback if _id is undefined
+      createdBy: userId || "unknown", 
     };
 
     try {
@@ -80,37 +80,37 @@ export default function PlaylistsPage() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {playlists.length > 0 ? (
-            playlists.map((playlist) => (
-              <Link
-                key={playlist.id}
-                to={`/playlist/${userId}/${playlist._id}`}
-                className="group relative flex flex-col bg-gray-900 p-4 rounded-lg shadow-lg hover:bg-gray-800 transition"
-              >
-                <div className="relative w-full h-40 overflow-hidden rounded-md">
-                  <img
-                    src={image||playlist.imageUrl }
-                    alt={playlist.title}
-                    className="w-full h-full object-cover rounded-md"
-                  />
-                  <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition" />
-                  <button className="absolute bottom-2 right-2 bg-blue-600 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition">
-                    <Play className="h-5 w-5" />
-                  </button>
-                </div>
-                <div className="mt-4">
-                  <h3 className="text-lg font-semibold">{playlist.title}</h3>
-                  <p className="text-sm text-gray-400 mt-1">{playlist.description}</p>
-                  <p className="text-xs text-gray-500 mt-2">
-                    {playlist.trackCount} tracks • Created by {playlist.createdBy}
-                  </p>
-                </div>
-              </Link>
-            ))
-          ) : (
-            <p className="text-gray-400">No playlists yet. Create one to get started!</p>
-          )}
-        </div>
+      {playlists.length > 0 ? (
+        playlists.map((playlist) => (
+          <div
+            key={playlist.id}
+            onClick={() => navigate(`/playlist/${userId}/${playlist._id}`)}
+            className="group relative flex flex-col bg-gray-900 p-4 rounded-lg shadow-lg hover:bg-gray-800 transition cursor-pointer"
+          >
+            <div className="relative w-full h-40 overflow-hidden rounded-md">
+              <img
+                src={image || playlist.imageUrl}
+                alt={playlist.title}
+                className="w-full h-full object-cover rounded-md"
+              />
+              <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition" />
+              <button className="absolute bottom-2 right-2 bg-blue-600 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition">
+                <Play className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="mt-4">
+              <h3 className="text-lg font-semibold">{playlist.title}</h3>
+              <p className="text-sm text-gray-400 mt-1">{playlist.description}</p>
+              <p className="text-xs text-gray-500 mt-2">
+                {playlist.trackCount} tracks • Created by {playlist.createdBy}
+              </p>
+            </div>
+          </div>
+        ))
+      ) : (
+        <p className="text-gray-400">No playlists yet. Create one to get started!</p>
+      )}
+    </div>
 
         {isDialogOpen && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">

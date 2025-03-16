@@ -369,6 +369,22 @@ export default class UserController {
       const { userId, playlistId, trackId } = req.body
 
       const playlist = await this._userUseCase.addToPlaylist(userId, playlistId, trackId)
+      if(playlist==null){
+        res.status(404).json({ success: false ,message:"Track Already Exist"});
+
+      }
+      res.status(200).json({ success: true });
+    } catch (error) {
+      console.error("Error in getliked:", error);
+      next(error);
+    }
+  }
+  async deletePlaylist(req: Request, res: Response, next: NextFunction) {
+    try {
+      console.log(req.body,"delete,id")
+      const {id} = req.body
+      const updated = await this._userUseCase.deletePlaylist(id)
+
       res.status(200).json({ success: true });
     } catch (error) {
       console.error("Error in getliked:", error);

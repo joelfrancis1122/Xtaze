@@ -1,14 +1,14 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, ChangeEvent } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Clock, Heart, MoreHorizontal, Play, PauseCircle, PlayCircle, Share2, Shuffle, ChevronLeft } from "lucide-react";
 import Sidebar from "./userComponents/SideBar";
-import { fetchPlaylistTracks } from "../../services/userService";
+import { fetchPlaylistTracks, deletePlaylist, updatePlaylistName, updatePlaylistImage } from "../../services/userService";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../store/store";
 import { setCurrentTrack, setIsPlaying } from "../../redux/audioSlice";
 import { audio } from "../../utils/audio";
 import MusicPlayer from "./userComponents/TrackBar";
-import image from "../../assets/ab67706f0000000216605bf6c66f6e5a783411b8.jpeg"
+import image from "../../assets/ab67706f0000000216605bf6c66f6e5a783411b8.jpeg";
 import PreviewModal from "./PreviewPage";
 
 interface Track {
@@ -23,16 +23,21 @@ interface Track {
 }
 
 export default function PlaylistPageView() {
-  const { id } = useParams();
+  const { userId,id } = useParams();
   const [tracks, setTracks] = useState<Track[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isShuffled, setIsShuffled] = useState(false);
   const [isRepeating, setIsRepeating] = useState(false);
-  const { currentTrack, isPlaying } = useSelector((state: RootState) => state.audio);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [playlistName, setPlaylistName] = useState("Electronic Essentials");
+  const [playlistImage, setPlaylistImage] = useState(image);
+  const { currentTrack, isPlaying } = useSelector((state: RootState) => state.audio);
   const dispatch = useDispatch();
-  const navigate = useNavigate()
+  const navigate = useNavigate();
+
   useEffect(() => {
     const fetchTracksFromPlaylist = async () => {
       try {
@@ -40,7 +45,6 @@ export default function PlaylistPageView() {
         const response = await fetchPlaylistTracks(id as string);
         console.log(response, "jerry");
         setTracks(response);
-        console.log(response, "ithan athinte reposinse");
         setError(null);
       } catch (err) {
         setError("Failed to load tracks");
@@ -92,7 +96,6 @@ export default function PlaylistPageView() {
 
   const toggleShuffle = () => {
     setIsShuffled((prev) => !prev);
-    // Add shuffle logic here if desired (e.g., shuffle tracks array)
   };
 
   const toggleRepeat = () => {
@@ -101,33 +104,101 @@ export default function PlaylistPageView() {
   };
 
   const toggleModal = () => {
-    setIsModalOpen((prevState) => !prevState);
+    setIsModalOpen((prev) => !prev);
     console.log("Toggle modal placeholder");
+  };
+
+  const toggleMenu = () => {
+    setIsMenuOpen((prev) => !prev);
+  };
+
+  const handleDeletePlaylist = async () => {
+    try {
+      console.log("query id ",id,userId)
+      await deletePlaylist(id as string);
+      navigate(-1); // Go back after deletion
+    } catch (err) {
+      console.error("Failed to delete playlist:", err);
+      setError("Failed to delete playlist");
+    }
+  };
+
+  const handleNameEdit = async () => {
+    if (isEditingName) {
+      try {
+        await updatePlaylistName(id as string, playlistName);
+        setIsEditingName(false);
+      } catch (err) {
+        console.error("Failed to update playlist name:", err);
+        setError("Failed to update name");
+      }
+    } else {
+      setIsEditingName(true);
+    }
+  };
+
+  const handleImageUpdate = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      try {
+        const updatedImageUrl = await updatePlaylistImage(id as string, file);
+        // setPlaylistImage(updatedImageUrl);
+      } catch (err) {
+        console.error("Failed to update playlist image:", err);
+        setError("Failed to update image");
+      }
+    }
   };
 
   return (
     <div className="flex min-h-screen bg-black text-white">
       <Sidebar />
-
       <div className="flex-1 ml-64 py-7 px-6 pb-20">
         <button
           onClick={() => navigate(-1)}
-          className="w-10 h-10 rounded-full bg-gray-700 flex items-center relative absolute justify-center hover:bg-gray-600 transition mb-4"
+          className="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center hover:bg-gray-600 transition mb-4"
           title="Go back"
         >
           <ChevronLeft className="h-5 w-5 text-gray-400" />
         </button>
-        {/* Header Section */}
         <div className="max-w-7xl mx-auto space-y-10">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <div className="w-60 h-60 rounded-xl overflow-hidden shadow-lg">
-                <img src={image} alt="Playlist cover" className="w-full h-full object-cover" />
+              <div className="w-60 h-60 rounded-xl overflow-hidden shadow-lg relative ">
+                <img
+                  src={playlistImage}
+                  alt="Playlist cover"
+                  className="w-full h-full object-cover cursor-pointer "
+                  onClick={() => document.getElementById("imageUpload")?.click()}
+                />
+                <input
+                  id="imageUpload"
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleImageUpdate}
+                />
               </div>
               <div>
-
                 <p className="text-sm text-gray-400 uppercase">Playlist</p>
-                <h1 className="text-5xl font-bold">Electronic Essentials</h1>
+                {isEditingName ? (
+                  <input
+                    type="text"
+                    value={playlistName}
+                    onChange={(e) => setPlaylistName(e.target.value)}
+                    onBlur={handleNameEdit}
+                    onKeyPress={(e) => e.key === "Enter" && handleNameEdit()}
+                    className="text-5xl font-bold bg-transparent border-b border-gray-400 text-white outline-none"
+                    autoFocus
+                  />
+                ) : (
+                  <h1
+                    className="text-5xl font-bold cursor-pointer hover:text-gray-400"
+                    onClick={handleNameEdit}
+                  >
+                    {playlistName}
+                  </h1>
+                )}
                 <p className="text-gray-400 text-base mt-2">
                   The best electronic tracks from around the world. Updated weekly.
                 </p>
@@ -136,7 +207,6 @@ export default function PlaylistPageView() {
             <p className="text-gray-400 text-base">{tracks.length} songs</p>
           </div>
 
-          {/* Controls Section */}
           <div className="flex items-center gap-4">
             <button className="w-14 h-14 rounded-full bg-gray-700 flex items-center justify-center hover:bg-gray-600 transition">
               <Play className="h-6 w-6" />
@@ -147,12 +217,26 @@ export default function PlaylistPageView() {
             <button className="ml-auto w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center hover:bg-gray-600 transition">
               <Share2 className="h-5 w-5" />
             </button>
-            <button className="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center hover:bg-gray-600 transition">
-              <MoreHorizontal className="h-5 w-5" />
-            </button>
+            <div className="relative">
+              <button
+                onClick={toggleMenu}
+                className="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center hover:bg-gray-600 transition"
+              >
+                <MoreHorizontal className="h-5 w-5" />
+              </button>
+              {isMenuOpen && (
+                <div className="absolute right-0 mt-2 w-48 bg-gray-800 rounded-md shadow-lg z-10">
+                  <button
+                    onClick={handleDeletePlaylist}
+                    className="block w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-gray-700"
+                  >
+                    Delete Playlist
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
 
-          {/* Tracks Section */}
           {loading ? (
             <p className="text-gray-400 text-center py-4">Loading tracks...</p>
           ) : error ? (
@@ -198,9 +282,7 @@ export default function PlaylistPageView() {
                     {Array.isArray(track.artists) ? track.artists.join(", ") : track.artists}
                   </span>
                   <span className="text-gray-400 text-lg truncate">{track.album}</span>
-                  <div className="flex items-center justify-end space-x-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                    {/* Optional: Add controls here if needed */}
-                  </div>
+                  <div className="flex items-center justify-end space-x-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
                 </div>
               ))}
             </div>
@@ -211,7 +293,6 @@ export default function PlaylistPageView() {
           )}
         </div>
 
-        {/* Music Player Bar */}
         {currentTrack && (
           <MusicPlayer
             currentTrack={currentTrack}
@@ -227,9 +308,9 @@ export default function PlaylistPageView() {
             toggleModal={toggleModal}
           />
         )}
-           {currentTrack && (
-        <PreviewModal track={currentTrack} isOpen={isModalOpen} toggleModal={toggleModal} />
-      )}
+        {currentTrack && (
+          <PreviewModal track={currentTrack} isOpen={isModalOpen} toggleModal={toggleModal} />
+        )}
       </div>
     </div>
   );

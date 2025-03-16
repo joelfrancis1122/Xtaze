@@ -387,6 +387,19 @@ export default class UserUseCase {
       throw new Error("An error occurred while creating playlist.");
     }
   }
+  async deletePlaylist(id:string): Promise<IPlaylist | null> {
+    try {
+      const playlist = await this._userRepository.deletePlaylist(id);
+      if(!playlist){
+        return null
+      }
+      return playlist
+
+    } catch (error) {
+      console.error("Error during deleteing playlist:", error);
+      throw new Error("An error occurred while deleteing.");
+    }
+  }
 
 
   async getUpdatedArtist(artistId: string): Promise<IUser | null> {

@@ -199,9 +199,9 @@ export default function Home() {
           p._id === playlistId ? { ...p, trackCount: p.trackCount + 1 } : p
         )
       );
-    } catch (error) {
+    } catch (error:any) {
       console.error("Error adding to playlist:", error);
-      toast.error("Failed to add to playlist");
+      toast.error(error?.response?.data?.message);
     }
   };
   const toggleModal = () => {
