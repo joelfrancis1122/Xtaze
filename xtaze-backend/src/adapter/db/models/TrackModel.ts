@@ -8,7 +8,7 @@ export interface ITrack extends Document {
   img: string;
   createdAt: Date;
   listeners?: number;
-  artists: string[]; // Array of artist names
+  artists: string[]; 
 }
 
 const TrackSchema = new Schema<ITrack>({

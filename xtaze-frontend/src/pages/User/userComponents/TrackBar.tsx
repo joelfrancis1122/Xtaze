@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Play, Pause, SkipBack, SkipForward, Shuffle, Repeat, Volume2 } from "lucide-react";
-import type { Track } from "../Types";
+import type { Track } from "../types/ITrack";
 import { useSelector, useDispatch } from "react-redux";
 import { audio } from "../../../utils/audio"; // Global audio instance
 import {

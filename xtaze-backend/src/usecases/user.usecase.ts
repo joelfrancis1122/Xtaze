@@ -4,7 +4,7 @@ import IOtpService from '../domain/service/IOtpService';
 import IPasswordService from '../domain/service/IPasswordService';
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
-import { uploadProfileCloud } from '../framework/service/cloudinary.service';
+import { uploadImageToCloud, uploadProfileCloud } from '../framework/service/cloudinary.service';
 import UserModel from '../adapter/db/models/UserModel';
 import { OAuth2Client } from "google-auth-library";
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
@@ -166,7 +166,7 @@ export default class UserUseCase {
     const token = jwt.sign(
       { userId: user._id, email: user.email, role: "user" },
       process.env.JWT_SECRET!,
-      { expiresIn: "10s" } // Short-lived access token
+      { expiresIn: "15m" } // Short-lived access token
     );
     console.log("ith unda refresh all jwt");
     const refreshToken = jwt.sign(
@@ -207,7 +207,7 @@ export default class UserUseCase {
       const token = jwt.sign(
         { userId: user._id.toString(), email: user.email, role: "user" },
         process.env.JWT_SECRET!,
-        { expiresIn: "10s" }
+        { expiresIn: "15m" }
       );
       const refreshToken = jwt.sign(
         { userId: user._id.toString() },
@@ -239,7 +239,7 @@ export default class UserUseCase {
       const newToken = jwt.sign(
         { userId: user._id, email: user.email, role: "user" },
         process.env.JWT_SECRET!,
-        { expiresIn: "10s" }
+        { expiresIn: "15m" }
       );
       const newRefreshToken = jwt.sign(
         { userId: user._id },
@@ -297,6 +297,23 @@ export default class UserUseCase {
     }
 
   }
+  async updateImagePlaylist(id: string, file: Express.Multer.File): Promise<{ success: boolean; message: string,data?:IPlaylist }> {
+    try {
+      const cloudinaryResponse = await uploadImageToCloud(file);
+
+      const coverpage = cloudinaryResponse.secure_url;
+      const updatedData = await this._userRepository.updateImagePlaylist(id, coverpage);
+      if (!updatedData) {
+        return { success: false, message: "Failed to update profile"};
+      }
+
+      return { success: true, message: "Banner updated successfully", data:updatedData};
+    } catch (error) {
+      console.error("Error during Banner upload:", error);
+      return { success: false, message: "An error occurred while updating the profile" };
+    }
+
+  }
   async updateBio(userId: string, bio: string): Promise<{ success: boolean; message: string, user?: IUser }> {
     try {
 
@@ -345,7 +362,7 @@ export default class UserUseCase {
 
   async createPlaylist(_id: string, newplaylist: IPlaylist): Promise<IPlaylist | null> {
     try {
-      const playlist = await this._userRepository.createPlaylist(newplaylist);
+      const playlist = await this._userRepository.createPlaylist(_id,newplaylist);
 
       if (!playlist) {
         return null;
@@ -398,6 +415,19 @@ export default class UserUseCase {
     } catch (error) {
       console.error("Error during deleteing playlist:", error);
       throw new Error("An error occurred while deleteing.");
+    }
+  }
+  async updateNamePlaylist(id:string,playlistName:string): Promise<IPlaylist | null> {
+    try {
+      const playlist = await this._userRepository.updateNamePlaylist(id,playlistName);
+      if(!playlist){
+        return null
+      }
+      return playlist
+
+    } catch (error) {
+      console.error("Error during editing playlist:", error);
+      throw new Error("An error occurred while editing.");
     }
   }
 

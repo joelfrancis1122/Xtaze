@@ -26,6 +26,8 @@ router.post("/createPlaylist",(req:Request,res:Response,next:NextFunction)=>user
 router.get("/getPlaylist",(req:Request,res:Response,next:NextFunction)=>userController.getPlaylist(req,res,next))
 router.post("/addToPlaylist",(req:Request,res:Response,next:NextFunction)=>userController.addToPlaylist(req,res,next))
 router.post("/deletePlaylist",(req:Request,res:Response,next:NextFunction)=>userController.deletePlaylist(req,res,next))
+router.put("/updateNamePlaylist",(req:Request,res:Response,next:NextFunction)=>userController.updateNamePlaylist(req,res,next))
+router.put("/updateImagePlaylist", authenticateUser,upload.single("imageUpload"),(req:Request,res:Response,next:NextFunction)=>userController.updateImagePlaylist(req,res,next))
 
 
 router.get("/getTracksInPlaylist",authenticateUser,(req:Request,res:Response,next:NextFunction)=>userController.getTracksInPlaylist(req,res,next))

@@ -8,7 +8,7 @@ import { PlayCircle, PauseCircle, Heart } from "lucide-react";
 import { audio } from "../../utils/audio";
 import { setCurrentTrack, setIsPlaying } from "../../redux/audioSlice";
 import { saveSignupData } from "../../redux/userSlice";
-import { Track } from "./Types";
+import { Track } from "./types/ITrack";
 import { fetchLikedSongs, toggleLike } from "../../services/userService";
 import MusicPlayer from "./userComponents/TrackBar";
 import PreviewModal from "./PreviewPage";

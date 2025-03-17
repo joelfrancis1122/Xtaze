@@ -242,7 +242,7 @@ export default function ArtistProfile() {
                 )}
                 <label
                   htmlFor="cover-upload"
-                  className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-60 opacity-0 hover:opacity-100 cursor-pointer"
+                  className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-60 opacity-0 hover:opacity-60 cursor-pointer"
                 >
                   <Camera size={28} className="text-white" />
                 </label>
@@ -262,7 +262,7 @@ export default function ArtistProfile() {
                     />
                     <label
                       htmlFor="profile-upload"
-                      className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-60 rounded-full opacity-0 hover:opacity-100 cursor-pointer"
+                      className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-60 rounded-full opacity-0 hover:opacity-60 cursor-pointer"
                     >
                       <Camera size={28} className="text-white" />
                     </label>

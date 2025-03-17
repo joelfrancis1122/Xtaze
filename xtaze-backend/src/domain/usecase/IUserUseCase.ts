@@ -25,5 +25,6 @@ export default interface IuserUseCase{
     addToLiked(userId: string,trackId:string): Promise<IUser|null>
     addToPlaylist(userId:string,playlistId:string,trackId:string): Promise<IPlaylist|null>
     deletePlaylist(id:string): Promise<IPlaylist|null>
+    updateNamePlaylist(id:string,playlistName:string): Promise<IPlaylist|null>
+    updateImagePlaylist(id:string,file:Express.Multer.File): Promise<{ success: boolean; message: string }>
 }
-

@@ -15,9 +15,11 @@ export interface IUserRepository {
   findById(userId: string): Promise<IUser | null>;
   updatePassword(user: IUser): Promise<IUser | null>;
   addToLiked(userId: string,trackId: string): Promise<IUser | null>;
-  createPlaylist(newplaylist:IPlaylist): Promise<IPlaylist | null>;
+  createPlaylist(_id:string,newplaylist:IPlaylist): Promise<IPlaylist | null>;
   addToPlaylist(userId:string,playlistId:string,trackId:string): Promise<IPlaylist | null>;
   findByCreator(userId:string): Promise<IPlaylist[] | null>;
   getPlaylist(id: string): Promise<ITrack[] | null>;
   deletePlaylist(id: string): Promise<IPlaylist | null>;
+  updateNamePlaylist(id: string,playlistName:string): Promise<IPlaylist | null>;
+  updateImagePlaylist(id: string,file:string): Promise<IPlaylist | null>;
 }

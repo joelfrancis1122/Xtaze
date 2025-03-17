@@ -2,7 +2,7 @@ import { useEffect, useState, ChangeEvent } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Clock, Heart, MoreHorizontal, Play, PauseCircle, PlayCircle, Share2, Shuffle, ChevronLeft } from "lucide-react";
 import Sidebar from "./userComponents/SideBar";
-import { fetchPlaylistTracks, deletePlaylist, updatePlaylistName, updatePlaylistImage } from "../../services/userService";
+import { fetchPlaylistTracks, deletePlaylist, updatePlaylistName, updatePlaylistImage, getMyplaylist } from "../../services/userService";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../store/store";
 import { setCurrentTrack, setIsPlaying } from "../../redux/audioSlice";
@@ -10,6 +10,7 @@ import { audio } from "../../utils/audio";
 import MusicPlayer from "./userComponents/TrackBar";
 import image from "../../assets/ab67706f0000000216605bf6c66f6e5a783411b8.jpeg";
 import PreviewModal from "./PreviewPage";
+import { toast } from "sonner";
 
 interface Track {
   _id: string;
@@ -22,8 +23,18 @@ interface Track {
   listeners: number;
 }
 
+interface Playlist {
+  _id: string|number; 
+  title: string;
+  description: string;
+  imageUrl: string|null;
+  createdBy: string;
+  tracks: string[]; 
+
+}
+
 export default function PlaylistPageView() {
-  const { userId,id } = useParams();
+  const { userId, id } = useParams();
   const [tracks, setTracks] = useState<Track[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -32,28 +43,50 @@ export default function PlaylistPageView() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isEditingName, setIsEditingName] = useState(false);
-  const [playlistName, setPlaylistName] = useState("Electronic Essentials");
+  const [playlistName, setPlaylistName] = useState("");
+  const [description, setPlaylistDes] = useState("");
   const [playlistImage, setPlaylistImage] = useState(image);
-  const { currentTrack, isPlaying } = useSelector((state: RootState) => state.audio);
+  const [playlists, setPlaylists] = useState<Playlist[]>([]);
+  const { currentTrack, isPlaying } = useSelector((state: RootState) => state.audio); // Fixed here
   const dispatch = useDispatch();
   const navigate = useNavigate();
-
   useEffect(() => {
-    const fetchTracksFromPlaylist = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
-        const response = await fetchPlaylistTracks(id as string);
-        console.log(response, "jerry");
-        setTracks(response);
+
+        // Fetch tracks
+        console.log(id,"verfyinggggg  ")
+        const tracksResponse = await fetchPlaylistTracks(id as string);
+        console.log(tracksResponse, "jerry");
+        setTracks(tracksResponse);
+
+        // Fetch playlists and filter by id
+        if (userId) {
+          const playlistsResponse = await getMyplaylist(userId);
+          console.log(playlistsResponse, "ithan response ke");
+          setPlaylists(playlistsResponse)
+          const matchedPlaylist = playlistsResponse.find((playlist) => playlist._id.toString() === id?.toString());
+          if (matchedPlaylist) {
+            setPlaylistName(matchedPlaylist.title || "Unnamed Playlist");
+            setPlaylistImage(matchedPlaylist.imageUrl || image); // Optionally set image
+            setPlaylistDes(matchedPlaylist.description)
+          } else {
+            setPlaylistName("Unnamed Playlist");
+          }
+        }
+
         setError(null);
       } catch (err) {
-        setError("Failed to load tracks");
+        console.error(err);
+        setError("Failed to load playlist data");
       } finally {
         setLoading(false);
       }
     };
-    fetchTracksFromPlaylist();
-  }, [id]);
+
+    fetchData();
+  }, [id, userId]);
 
   const handlePlay = (track: Track) => {
     if (currentTrack?.fileUrl === track.fileUrl) {
@@ -114,9 +147,9 @@ export default function PlaylistPageView() {
 
   const handleDeletePlaylist = async () => {
     try {
-      console.log("query id ",id,userId)
+      console.log("query id ", id, userId);
       await deletePlaylist(id as string);
-      navigate(-1); // Go back after deletion
+      navigate(-1);
     } catch (err) {
       console.error("Failed to delete playlist:", err);
       setError("Failed to delete playlist");
@@ -142,7 +175,9 @@ export default function PlaylistPageView() {
     if (file) {
       try {
         const updatedImageUrl = await updatePlaylistImage(id as string, file);
-        // setPlaylistImage(updatedImageUrl);
+        console.log(updatedImageUrl,"ith enth odi")
+        if (updatedImageUrl) setPlaylistImage(updatedImageUrl?.data?.imageUrl);
+        toast.success("playlist cover changed")
       } catch (err) {
         console.error("Failed to update playlist image:", err);
         setError("Failed to update image");
@@ -164,11 +199,11 @@ export default function PlaylistPageView() {
         <div className="max-w-7xl mx-auto space-y-10">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <div className="w-60 h-60 rounded-xl overflow-hidden shadow-lg relative ">
+              <div className="w-60 h-60 rounded-xl overflow-hidden shadow-lg relative">
                 <img
                   src={playlistImage}
                   alt="Playlist cover"
-                  className="w-full h-full object-cover cursor-pointer "
+                  className="w-full h-full object-cover cursor-pointer"
                   onClick={() => document.getElementById("imageUpload")?.click()}
                 />
                 <input
@@ -200,7 +235,8 @@ export default function PlaylistPageView() {
                   </h1>
                 )}
                 <p className="text-gray-400 text-base mt-2">
-                  The best electronic tracks from around the world. Updated weekly.
+
+                  {description}
                 </p>
               </div>
             </div>

@@ -342,9 +342,11 @@ export default class UserController {
 
   async createPlaylist(req: Request, res: Response, next: NextFunction) {
     try {
-      const { _id, newplaylist } = req.body
-      const playlist = await this._userUseCase.createPlaylist(_id, newplaylist)
-      res.status(200).json({ success: true, data: playlist });
+      const { userId, playlist } = req.body
+      console.log("12",userId,playlist,req.body)
+      const newplaylist = await this._userUseCase.createPlaylist(userId, playlist)
+      console.log("1234",newplaylist)
+      res.status(200).json({ success: true, data: newplaylist });
     } catch (error) {
       console.error("Error in getliked:", error);
       next(error);
@@ -367,7 +369,7 @@ export default class UserController {
   async addToPlaylist(req: Request, res: Response, next: NextFunction) {
     try {
       const { userId, playlistId, trackId } = req.body
-
+      console.log("this s what it e")
       const playlist = await this._userUseCase.addToPlaylist(userId, playlistId, trackId)
       if(playlist==null){
         res.status(404).json({ success: false ,message:"Track Already Exist"});
@@ -386,6 +388,37 @@ export default class UserController {
       const updated = await this._userUseCase.deletePlaylist(id)
 
       res.status(200).json({ success: true });
+    } catch (error) {
+      console.error("Error in getliked:", error);
+      next(error);
+    }
+  }
+  async updateNamePlaylist(req: Request, res: Response, next: NextFunction) {
+    try {
+      console.log(req.body,"udpatename")
+      const {id, playlistName} = req.body
+      const updated = await this._userUseCase.updateNamePlaylist(id, playlistName)
+
+      res.status(200).json({ success: true });
+    } catch (error) {
+      console.error("Error in getliked:", error);
+      next(error);
+    }
+  }
+
+  async updateImagePlaylist(req: Request, res: Response, next: NextFunction) {
+    try {
+      const{id} = req.body
+      const file = req.file
+      if (!file) {
+        console.error("No file provided for update.");
+        return; // Exit early if file is undefined
+      }
+      
+      console.log(req.body,req.file,"udpateProfilepage")
+      const updated = await this._userUseCase.updateImagePlaylist(id, file)
+
+      res.status(200).json({ updated,success: true });
     } catch (error) {
       console.error("Error in getliked:", error);
       next(error);

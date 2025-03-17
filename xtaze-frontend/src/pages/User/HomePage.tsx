@@ -5,7 +5,7 @@ import Sidebar from "./userComponents/SideBar";
 import MusicPlayer from "./userComponents/TrackBar";
 import PreviewModal from "./PreviewPage";
 import { WavyBackground } from "../../components/ui/wavy-background";
-import type { Track } from "./Types";
+import type { Track } from "./types/ITrack";
 import { useDispatch, useSelector } from "react-redux";
 import { clearSignupData, saveSignupData } from "../../redux/userSlice";
 import {
@@ -41,12 +41,10 @@ interface UserSignupData {
 }
 
 interface Playlist {
-  id: number;
-  _id?: string;
+  _id?: string|number;
   title: string;
   description: string;
-  imageUrl: string;
-  trackCount: number;
+  imageUrl: string|null;
   createdBy: string;
 }
 
@@ -101,7 +99,7 @@ export default function Home() {
           setLikedTracks([]);
         }
 
-        const fetchedPlaylists = await getMyplaylist(user?._id || "");
+        const fetchedPlaylists = await getMyplaylist((user?._id) as string);
         setPlaylists(fetchedPlaylists);
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -194,11 +192,7 @@ export default function Home() {
       if (!playlist) throw new Error("Playlist not found");
       toast.success(`Added to ${playlist.title}`);
       setDropdownTrackId(null);
-      setPlaylists((prev) =>
-        prev.map((p) =>
-          p._id === playlistId ? { ...p, trackCount: p.trackCount + 1 } : p
-        )
-      );
+   
     } catch (error:any) {
       console.error("Error adding to playlist:", error);
       toast.error(error?.response?.data?.message);

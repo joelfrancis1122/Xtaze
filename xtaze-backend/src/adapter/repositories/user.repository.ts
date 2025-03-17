@@ -126,8 +126,8 @@ export default class UserRepository implements IUserRepository {
       const playlist = await PlaylistModel.findById(id).select("tracks");
 
       if (!playlist || !playlist.tracks || playlist.tracks.length === 0) {
-          console.error("Playlist not found or has no tracks");
-          return [];
+        console.error("Playlist not found or has no tracks");
+        return [];
       }
 
       // Fetch all track details based on the track IDs
@@ -135,10 +135,10 @@ export default class UserRepository implements IUserRepository {
 
       return tracks; // Return an array of track details
     } catch (error) {
-        console.error("Error finding tracks for playlist:", error);
-        return null;
+      console.error("Error finding tracks for playlist:", error);
+      return null;
     }
-}
+  }
   async findByCreator(userId: string): Promise<IPlaylist[] | null> {
     try {
       const data = await PlaylistModel.find({ createdBy: userId }).lean();
@@ -160,29 +160,68 @@ export default class UserRepository implements IUserRepository {
   }
   async deletePlaylist(id: string): Promise<IPlaylist | null> {
     try {
-      console.log("this is id,",id)
-     return await PlaylistModel.findByIdAndDelete(id);
+      console.log("this is id,", id)
+      return await PlaylistModel.findByIdAndDelete(id);
 
     } catch (error) {
       console.error("Error deleting playlist:", error);
       return null;
     }
   }
-  async createPlaylist(newPlaylist: IPlaylist): Promise<IPlaylist | null> {
+  async playlistName(id: string, playlistName: string): Promise<IPlaylist | null> {
     try {
+      console.log("this is id:", id);
+
+      return await PlaylistModel.findByIdAndUpdate(
+        id,
+        { title: playlistName }, // Update the title field
+        { new: true } // Return the updated document
+      );
+
+    } catch (error) {
+      console.error("Error updating playlist name:", error);
+      return null;
+    }
+  }
+  async updateNamePlaylist(id: string, playlistName: string): Promise<IPlaylist | null> {
+    try {
+      const updatedUser = await PlaylistModel.findByIdAndUpdate(
+        id,
+        { title: playlistName },
+        { new: true, runValidators: true }
+      ).lean();
+      console.log("amrutha pass")
+      return updatedUser as IPlaylist | null;
+    } catch (error) {
+      console.log(error);
+      return null;
+    }
+  }
+  async createPlaylist(userId: string, newPlaylist: IPlaylist): Promise<IPlaylist | null> {
+    try {
+      console.log(newPlaylist, "ithe an odi");
+  
       const playlist = new PlaylistModel({
-        ...newPlaylist,
-        createdBy: newPlaylist.createdBy ? newPlaylist.createdBy : "",
+        title: newPlaylist.title,
+        description: newPlaylist.description,
+        imageUrl: newPlaylist.imageUrl,
+        createdBy: userId, // Assign userId instead of newPlaylist.createdBy
         tracks: newPlaylist.tracks || [],
       });
-
+  
       const savedPlaylist = await playlist.save();
-      return savedPlaylist as IPlaylist;
+  
+      // Fetch the fully saved playlist (ensuring all fields, including _id, are included)
+      const completePlaylist = await PlaylistModel.findById(savedPlaylist._id).lean();
+  
+      console.log("Saved playlist:", completePlaylist);
+      return completePlaylist as IPlaylist;
     } catch (error) {
       console.error("Error creating playlist:", error);
       return null;
     }
   }
+  
 
   async addToPlaylist(userId: string, playlistId: string, trackId: string): Promise<IPlaylist | null> {
     try {
@@ -200,7 +239,7 @@ export default class UserRepository implements IUserRepository {
       // Add the track to the playlist if it's not already present
       if (!playlist.tracks.includes(trackid)) {
         playlist.tracks.push(trackid);
-      }else{
+      } else {
         return null
       }
       console.log("333")
@@ -214,6 +253,21 @@ export default class UserRepository implements IUserRepository {
     }
   }
 
+
+  async updateImagePlaylist(id: string, file: string): Promise<IPlaylist | null> {
+    try {
+      const data = await PlaylistModel.findByIdAndUpdate(
+        id,
+        { imageUrl: file },
+        { new: true, runValidators: true }
+      ).lean();
+      console.log()
+      return data as IPlaylist | null;
+    } catch (error) {
+      console.log(error);
+      return null;
+    }
+  }
   async updateUserSubscription(userId: string, isPremium: boolean): Promise<IUser | null> {
     try {
       const updatedUser = await UserModel.findByIdAndUpdate(

@@ -19,15 +19,14 @@ interface Video {
   thumbnail: string;
 }
 
-interface Playlist {
-  id: number | string;
-  title: string;
-  description: string;
-  imageUrl: string;
-  trackCount: number;
-  createdBy: string;
-  tracks?: string[];
-}
+// interface Playlist {
+//   _id: number | string;
+//   title: string;
+//   description: string;
+//   imageUrl: string;
+//   createdBy: string;
+//   tracks?: string[];
+// }
 
 export default function VideoPage() {
   const [trendingVideos, setTrendingVideos] = useState<Video[]>([]);
@@ -38,7 +37,7 @@ export default function VideoPage() {
   const [hipHopVideos, setHipHopVideos] = useState<Video[]>([]);
   const [jazzVideos, setJazzVideos] = useState<Video[]>([]);
   const [highViewsVideos, setHighViewsVideos] = useState<Video[]>([]);
-  const [playlists, setPlaylists] = useState<Playlist[]>([]);
+  // const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [loading, setLoading] = useState(true);
   const [dropdownVideoId, setDropdownVideoId] = useState<string | null>(null);
   const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
@@ -177,7 +176,7 @@ export default function VideoPage() {
         );
 
         const fetchedPlaylists = await getMyplaylist(userId);
-        setPlaylists(fetchedPlaylists);
+        // setPlaylists(fetchedPlaylists);
       } catch (error) {
         console.error("Error fetching data:", error);
         toast.error("Failed to load videos or playlists");
@@ -208,24 +207,7 @@ export default function VideoPage() {
   };
 
   const handleAddToPlaylist = async (videoId: string, playlistId: string) => {
-    if (!token || !userId) {
-      toast.error("Please log in to add to playlist");
-      return;
-    }
-    try {
-      await addVideoToPlaylist(userId, playlistId, videoId, token);
-      setPlaylists((prev) =>
-        prev.map((playlist) =>
-          playlist.id === playlistId
-            ? { ...playlist, trackCount: playlist.trackCount + 1, tracks: [...(playlist.tracks || []), videoId] }
-            : playlist
-        )
-      );
-      toast.success("Video added to playlist!");
-      setDropdownVideoId(null);
-    } catch (error) {
-      toast.error("Failed to add video to playlist");
-    }
+   
   };
 
   const handlePlayVideo = (videoId: string) => {
@@ -283,19 +265,19 @@ export default function VideoPage() {
                     {dropdownVideoId === video.id && (
                       <div className="absolute left-0 mt-2 w-48 bg-[#242424] rounded-md shadow-lg z-20">
                         <ul className="py-1">
-                          {playlists.length > 0 ? (
+                          {/* {playlists.length > 0 ? (
                             playlists.map((playlist) => (
                               <li
-                                key={playlist.id}
+                                key={playlist._id}
                                 className="px-4 py-2 hover:bg-[#333333] cursor-pointer text-white"
-                                onClick={() => handleAddToPlaylist(video.id, playlist.id.toString())}
+                                onClick={() => handleAddToPlaylist(video.id, playlist._id.toString())}
                               >
                                 {playlist.title}
                               </li>
                             ))
                           ) : (
                             <li className="px-4 py-2 text-gray-400">No playlists available</li>
-                          )}
+                          )} */}
                           <li
                             className="px-4 py-2 hover:bg-[#333333] cursor-pointer text-white border-t border-gray-700"
                             onClick={() => navigate(`/playlists/${userId}`)}

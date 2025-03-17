@@ -1,7 +1,9 @@
 import { useDispatch } from "react-redux";
 import { artistApi, deezerApi, providerApi, userApi } from "../api/axios";
-import { Track } from "../pages/User/Types";
+import { Track } from "../pages/User/types/ITrack";
 import { saveSignupData } from "../redux/userSlice";
+import { String } from "lodash";
+import { Playlist } from "../pages/User/types/IPlaylist";
 
 // Utility to get cookies
 const getCookie = (name: string): string | null => {
@@ -244,26 +246,30 @@ export const resetPassword = async (token: string,formData:string): Promise<void
   if (!data.success) throw new Error(data.message || "Failed to send reset email");
 };
 
-export const createPlaylists = async (_id: string, newplaylist: Playlist): Promise<void> => {
-  const data = await apiCall<{ success: boolean; message?: string }>(
+export const createPlaylists = async (userId: string, playlistData: Partial<Playlist>): Promise<Playlist> => {
+  const data = await apiCall<{ success: boolean; data: Playlist; message?: string }>(
     userApi,
     "post",
     "/createPlaylist",
-    { _id, newplaylist }
+    { userId, playlist: playlistData }
   );
   if (!data.success) throw new Error(data.message || "Failed to create playlist");
+  console.log(data,"from user service createplaylist")
+  return data.data;
 };
 export const getMyplaylist = async (userId: string): Promise<Playlist[]> => {
-  console.log(userId,"odi odi o ds")
+  console.log(userId, "odi odi o ds");
   const data = await apiCall<{ success: boolean; message?: string; data: Playlist[] }>(
     userApi,
     "get",
-    `/getPlaylist?userId=${userId}` 
+    `/getPlaylist?userId=${userId}`
   );
   if (!data.success) throw new Error(data.message || "Failed to get all playlists");
   console.log(data);
-  return data.data; // Return array of playlists
+  return data.data;
 };
+
+
 export const fetchPlaylistTracks = async (id: string): Promise<Track[]> => {
   console.log(id,"odi odi o ds")
   const data = await apiCall<{ success: boolean; message?: string; data: Track[]}>(
@@ -316,18 +322,21 @@ export const updatePlaylistName = async (
   );
   if (!data.success) throw new Error(data.message || "Failed to add track to playlist");
 };
-export const updatePlaylistImage = async (
- id: string,
-  file:File
+export const updatePlaylistImage = async (id: string, file: File): Promise<any> => {
+  const formData = new FormData();
+  formData.append("id", id);
+  formData.append("imageUpload", file); // Match the field name expected by Multer
 
-): Promise<void> => {
-  const data = await apiCall<{ success: boolean; message?: string }>(
+  const data = await apiCall<{ success: boolean; updated?: string; message?: string }>(
     userApi,
     "put",
     "/updateImagePlaylist",
-    { id,file},
+    formData,
   );
-  if (!data.success) throw new Error(data.message || "Failed to add track to playlist");
+
+  if (!data.success) throw new Error(data.message || "Failed to update playlist image");
+  console.log(data)
+  return data?.updated || ""; // Return the URL or empty string
 };
 
 export const initiateCheckout = async (
@@ -348,15 +357,7 @@ export const initiateCheckout = async (
 
 
 
-interface Playlist {
-  id: number;
-  title: string;
-  description: string;
-  imageUrl: string;
-  trackCount: number;
-  createdBy: string;
-  tracks?:string[]
-}
+
 // export default {
 //   checkUsername,
 //   sendOtp,

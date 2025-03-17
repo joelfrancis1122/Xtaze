@@ -3,7 +3,7 @@
 import * as React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Minimize2, Maximize2, ListMusic, Info } from "lucide-react";
-import { Track } from "./Types";
+import { Track } from "./types/ITrack";
 
 interface PreviewModalProps {
   track: Track;

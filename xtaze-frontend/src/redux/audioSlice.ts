@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { Track } from "../pages/User/Types";
+import { Track } from "../pages/User/types/ITrack";
 
 interface AudioState {
   currentTrack: Track | null;

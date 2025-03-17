@@ -15,11 +15,10 @@ interface RadioStation {
 }
 
 interface Playlist {
-  id: string | number;
+  _id: string | number;
   title: string;
   description: string;
-  imageUrl: string;
-  trackCount: number;
+  imageUrl: string|null;
   createdBy: string;
   // tracks?:string[]
   videos?: string[];
@@ -139,8 +138,8 @@ export default function RadioPage() {
       await addStationToPlaylist(userId, playlistId, stationId, token);
       setPlaylists((prev) =>
         prev.map((playlist) =>
-          playlist.id === playlistId
-            ? { ...playlist, trackCount: playlist.trackCount + 1, videos: [...(playlist.videos || []), stationId] }
+          playlist._id === playlistId
+            ? { ...playlist, videos: [...(playlist.videos || []), stationId] }
             : playlist
         )
       );
@@ -205,9 +204,9 @@ export default function RadioPage() {
                 {playlists.length > 0 ? (
                   playlists.map((playlist) => (
                     <li
-                      key={playlist.id}
+                      key={playlist._id}
                       className="px-4 py-2 hover:bg-[#333333] cursor-pointer text-white"
-                      onClick={() => handleAddToPlaylist(station.stationuuid, playlist.id.toString())}
+                      onClick={() => handleAddToPlaylist(station.stationuuid, playlist._id.toString())}
                     >
                       {playlist.title}
                     </li>
