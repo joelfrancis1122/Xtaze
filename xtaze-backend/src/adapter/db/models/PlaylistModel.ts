@@ -16,6 +16,5 @@ const PlaylistSchema = new Schema<IPlaylistDocument>(
   { timestamps: true }
 );
 
-// Export Model
 const PlaylistModel = model<IPlaylistDocument>("Playlist", PlaylistSchema);
 export default PlaylistModel;

@@ -75,8 +75,8 @@ export default function Sidebar() {
             <a href="#" className="text-gray-300 hover:text-white block transition-colors">
               Tracks
             </a>
-            <a href="#" className="text-gray-300 hover:text-white block transition-colors">
-              Videos
+            <a onClick={()=>navigate("/equalizer")} className="text-gray-300 hover:text-white block transition-colors">
+             Equalizer
             </a>
             <a href="#" className="text-gray-300 hover:text-white block transition-colors">
               Artists

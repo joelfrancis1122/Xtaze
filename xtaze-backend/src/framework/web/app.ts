@@ -10,6 +10,7 @@ dotenv.config();
 const app = express();
 const corsOptions:CorsOptions = {origin:[process.env.URL!],credentials:true}
 app.use(cors(corsOptions));
+
 app.use(express.json());
 app.use(cookieParser())
 app.use('/', route)

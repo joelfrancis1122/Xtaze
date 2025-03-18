@@ -19,7 +19,7 @@ import {
 } from "../../redux/audioSlice";
 import { RootState } from "../../store/store";
 import { useNavigate } from "react-router-dom";
-import { audio } from "../../utils/audio";
+import { audio, audioContext, source } from "../../utils/audio";
 import { PlaceholdersAndVanishInput } from "../../utils/placeholders-and-vanish-input";
 import { Search, Power, Play, Pause, Plus, Heart, Download } from "lucide-react";
 import { fetchTracks, fetchLikedSongs, incrementListeners, toggleLike, getMyplaylist, addTrackToPlaylist } from "../../services/userService";
@@ -143,6 +143,7 @@ export default function Home() {
         dispatch(setIsPlaying(false));
       } else {
         audio.play();
+        source.connect(audioContext.destination);
         dispatch(setIsPlaying(true));
       }
     } else {
