@@ -12,7 +12,6 @@ import { fetchArtists, toggleBlockArtist, Artist } from "../../services/adminSer
 
 export default function ArtistList() {
   const [artists, setArtists] = useState<Artist[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -20,7 +19,6 @@ export default function ArtistList() {
       const token = localStorage.getItem("adminToken");
       if (!token) {
         setError("No admin token found");
-        setLoading(false);
         return;
       }
 
@@ -31,8 +29,6 @@ export default function ArtistList() {
       } catch (error: any) {
         console.error(error);
         setError(error.message || "Failed to fetch artists");
-      } finally {
-        setLoading(false);
       }
     };
 
@@ -57,7 +53,6 @@ export default function ArtistList() {
     }
   };
 
-  if (loading) return <div>Loading...</div>;
   if (error) return <div>{error}</div>;
 
   return (

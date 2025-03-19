@@ -22,8 +22,9 @@ import { useNavigate } from "react-router-dom";
 import { audio, audioContext, updateEqualizer } from "../../utils/audio";
 import { PlaceholdersAndVanishInput } from "../../utils/placeholders-and-vanish-input";
 import { Search, Power, Play, Pause, Plus, Heart, Download } from "lucide-react";
-import { fetchTracks, fetchLikedSongs, incrementListeners, toggleLike, getMyplaylist, addTrackToPlaylist } from "../../services/userService";
+import { fetchTracks, fetchLikedSongs, incrementListeners, toggleLike, getMyplaylist, addTrackToPlaylist, fetchBanners, } from "../../services/userService";
 import { toast } from "sonner";
+import { IBanner } from "./types/IBanner";
 
 interface UserSignupData {
   _id?: string;
@@ -41,10 +42,10 @@ interface UserSignupData {
 }
 
 interface Playlist {
-  _id?: string|number;
+  _id?: string | number;
   title: string;
   description: string;
-  imageUrl: string|null;
+  imageUrl: string | null;
   createdBy: string;
 }
 
@@ -58,6 +59,8 @@ export default function Home() {
   const [likedSongs, setLikedSongs] = useState<Set<string>>(new Set());
   const [randomIndex, setRandomIndex] = useState<number | null>(null);
   const [dropdownTrackId, setDropdownTrackId] = useState<string | null>(null);
+  const [banners, setBanners] = useState<IBanner[]>([]);
+  const [currentIndex, setCurrentIndex] = useState(0); // Added for carousel
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -65,40 +68,37 @@ export default function Home() {
   const { currentTrack, isPlaying, isShuffled, isRepeating, shuffleIndices, currentShuffleIndex } =
     useSelector((state: RootState) => state.audio);
 
+  // Audio context setup
+  useEffect(() => {
+    if (!audioContext) return;
 
-      useEffect(() => {
-        if (!audioContext) return;
-    
-        const resumeAudioContext = () => {
-          if (audioContext&&audioContext.state === "suspended") {
-            audioContext.resume().then(() => console.log("AudioContext resumed"));
-          }
-        };
-        document.addEventListener("click", resumeAudioContext, { once: true });
-    
-        // Load audio if not already loaded
-        audio.crossOrigin = "anonymous";
-        if (!audio.src) {
-          audio.src = "/music/test.mp3"; // Adjust to your home page audio source
-          audio.loop = true;
-        }
-        audio.play().catch((err) => console.error("Play error:", err));
-    
-        // Apply saved equalizer values from localStorage
-        const savedEqualizerValues = localStorage.getItem("equalizerValues");
-        if (savedEqualizerValues) {
-          updateEqualizer(JSON.parse(savedEqualizerValues));
-        }
-    
-        // Apply saved volume and mute settings
-        const savedVolume = localStorage.getItem("volume");
-        const savedIsMuted = localStorage.getItem("isMuted");
-        if (savedVolume&&savedIsMuted) audio.volume = JSON.parse(savedIsMuted) ? 0 : Number(savedVolume) / 100;
-    
-        return () => {
-          document.removeEventListener("click", resumeAudioContext);
-        };
-      }, []);
+    const resumeAudioContext = () => {
+      if (audioContext && audioContext.state === "suspended") {
+        audioContext.resume().then(() => console.log("AudioContext resumed"));
+      }
+    };
+    document.addEventListener("click", resumeAudioContext, { once: true });
+
+    audio.crossOrigin = "anonymous";
+    if (!audio.src) {
+      audio.src = "/music/test.mp3";
+      audio.loop = true;
+    }
+    audio.play().catch((err) => console.error("Play error:", err));
+
+    const savedEqualizerValues = localStorage.getItem("equalizerValues");
+    if (savedEqualizerValues) {
+      updateEqualizer(JSON.parse(savedEqualizerValues));
+    }
+
+    const savedVolume = localStorage.getItem("volume");
+    const savedIsMuted = localStorage.getItem("isMuted");
+    if (savedVolume && savedIsMuted) audio.volume = JSON.parse(savedIsMuted) ? 0 : Number(savedVolume) / 100;
+
+    return () => {
+      document.removeEventListener("click", resumeAudioContext);
+    };
+  }, []);
 
   useEffect(() => {
     if (user?.likedSongs) {
@@ -145,9 +145,8 @@ export default function Home() {
 
     getTracksAndLikedSongsAndPlaylists();
   }, [dispatch, user?._id, user?.premium]);
-  useEffect(() => {
-    console.log("Current playssslists:", playlists);
-  }, [playlists]);
+
+  // Random index for featured track
   useEffect(() => {
     if (user?.premium && tracks.length > 0 && randomIndex === null) {
       setRandomIndex(Math.floor(Math.random() * tracks.length));
@@ -155,6 +154,34 @@ export default function Home() {
       setRandomIndex(null);
     }
   }, [user?.premium, tracks.length]);
+
+  // Load banners
+  useEffect(() => {
+    const loadBanners = async () => {
+      try {
+        const allBanners = await fetchBanners();
+        console.log("allBanners", allBanners)
+        setBanners(allBanners)
+      } catch (error) {
+        console.error("Error fetching banners:", error);
+      }
+    };
+    loadBanners();
+  }, []);
+
+  // Auto-slide banners
+  useEffect(() => {
+    if (banners.length <= 1) return;
+    const interval = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % banners.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [banners.length]);
+
+  // Navigate to banner action
+  const handleBannerClick = (action: string) => {
+    navigate(action);
+  };
 
   const handleIncrementListeners = async (trackId: string) => {
     const token = localStorage.getItem("token");
@@ -227,12 +254,12 @@ export default function Home() {
       if (!playlist) throw new Error("Playlist not found");
       toast.success(`Added to ${playlist.title}`);
       setDropdownTrackId(null);
-   
-    } catch (error:any) {
+    } catch (error: any) {
       console.error("Error adding to playlist:", error);
-      toast.error(error?.response?.data?.message);
+      toast.error(error?.response?.data?.message || "Failed to add to playlist");
     }
   };
+
   const toggleModal = () => {
     setIsModalOpen((prevState) => !prevState);
   };
@@ -325,9 +352,6 @@ export default function Home() {
     console.log("submitted");
   };
 
-  const newArrivals = tracks.slice(0, 5);
-  const otherSongs = tracks.slice(5);
-
   const handleUpgradeClick = () => {
     navigate("/plans");
   };
@@ -374,6 +398,9 @@ export default function Home() {
     }
   };
 
+  const newArrivals = tracks.slice(0, 5);
+  const otherSongs = tracks.slice(5);
+
   return (
     <div className="flex h-screen flex-col bg-black text-white">
       <div className="flex flex-1">
@@ -390,6 +417,160 @@ export default function Home() {
           </header>
 
           <section className="px-6 py-4 pb-25">
+            {/* Carousel Banner */}
+            <div className="mb-8">
+              <h2 className="text-3xl font-bold mb-4">Enjoy Hi-Res Songs</h2>
+              <div className="relative w-full h-[300px] rounded-lg overflow-hidden shadow-lg">
+                <div className="w-full h-full overflow-hidden"> 
+                  <div
+                    className="flex transition-transform duration-500 ease-in-out w-full" 
+                    style={{ transform: `translateX(-${currentIndex * 100}%)` }}
+                  >
+                    {banners.map((banner) => (
+                      <div
+                        key={banner._id}
+                        className="min-w-full w-full flex-shrink-0 relative cursor-pointer" // Added w-full to ensure each item matches container width
+                      >
+                        <img
+                          src={banner.imageUrl}
+                          alt={banner.title}
+                          className="w-full h-full object-cover opacity-80"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent shadow-inner z-10 pointer-events-none" />
+                        <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
+                          <button className="p-4 bg-black/50 rounded-full hover:bg-black/70 transition-colors pointer-events-auto">
+                            <Play size={32} className="text-white" />
+                          </button>
+                        </div>
+                        <div className="absolute bottom-40 left-4 z-20">
+                          <h3 className="text-2xl font-bold text-white shadow-text">{banner.title}</h3>
+                          <p className="text-gray-300 shadow-text">{banner.description}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                {banners.length > 1 && (
+                  <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-2 z-20">
+                    {banners.map((_, index) => (
+                      <button
+                        key={index}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setCurrentIndex(index);
+                        }}
+                        className={`w-2 h-2 rounded-full ${index === currentIndex ? "bg-white" : "bg-gray-500"
+                          }`}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* New Arrivals Section */}
+            <div className="mb-8">
+              <h2 className="text-2xl font-bold mb-4">New Arrivals</h2>
+              {loading ? (
+                <div className="text-center py-4">Loading tracks...</div>
+              ) : (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                  {newArrivals.map((track, index) => (
+                    <div
+                      key={index}
+                      className="group bg-[#1d1d1d] rounded-lg p-4 hover:bg-[#242424] transition-colors flex flex-col"
+                    >
+                      <div className="w-full h-[200px] flex flex-col mb-3">
+                        <div className="relative w-full h-[90%]">
+                          <img
+                            src={track.img || "/placeholder.svg"}
+                            alt="Track Cover Top"
+                            className="w-full h-full object-cover rounded-t-md"
+                          />
+                          <button
+                            onClick={() => handlePlay(track)}
+                            className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity z-10 rounded-t-md"
+                          >
+                            {currentTrack?.fileUrl === track.fileUrl && isPlaying ? (
+                              <Pause size={24} className="text-white" />
+                            ) : (
+                              <Play size={24} className="text-white" />
+                            )}
+                          </button>
+                        </div>
+                        <img
+                          src={track.img || "/placeholder.svg"}
+                          alt="Track Cover Bottom"
+                          className="w-full h-[10%] object-cover rounded-b-md blur-lg"
+                        />
+                      </div>
+                      <div className="text-white font-semibold truncate">{track.title}</div>
+                      <div className="text-gray-400 text-sm truncate">
+                        {Array.isArray(track.artists) ? track.artists.join(", ") : track.artists}
+                      </div>
+                      <div className="relative flex gap-2 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                          className="p-1 hover:bg-[#333333] rounded-full"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setDropdownTrackId(dropdownTrackId === track._id ? null : track._id);
+                          }}
+                        >
+                          <Plus size={16} />
+                        </button>
+                        {dropdownTrackId === track._id && (
+                          <div className="absolute left-0 mt-8 w-48 bg-[#242424] rounded-md shadow-lg z-20">
+                            <ul className="py-1">
+                              {playlists.length > 0 ? (
+                                playlists.map((playlist) => (
+                                  <li
+                                    key={playlist._id}
+                                    className="px-4 py-2 hover:bg-[#333333] cursor-pointer text-white"
+                                    onClick={() => handleAddToPlaylist(track._id || track.fileUrl, playlist._id as string)}
+                                  >
+                                    {playlist.title}
+                                  </li>
+                                ))
+                              ) : (
+                                <li className="px-4 py-2 text-gray-400">No playlists available</li>
+                              )}
+                              <li
+                                className="px-4 py-2 hover:bg-[#333333] cursor-pointer text-white border-t border-gray-700"
+                                onClick={() => navigate(`/playlists/${user?._id}`)}
+                              >
+                                Create New Playlist
+                              </li>
+                            </ul>
+                          </div>
+                        )}
+                        {user?.premium ? (
+                          <button
+                            onClick={() => handleLike(track._id || track.fileUrl)}
+                            className={`p-1 hover:bg-[#333333] rounded-full ${likedSongs.has(track._id || track.fileUrl) ? "text-red-500" : "text-white"}`}
+                          >
+                            <Heart
+                              size={16}
+                              fill={likedSongs.has(track._id || track.fileUrl) ? "currentColor" : "none"}
+                            />
+                          </button>
+                        ) : null}
+                        <button
+                          className="p-1 hover:bg-[#333333] rounded-full"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDownload(track.fileUrl, track.title);
+                          }}
+                        >
+                          <Download size={16} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Featured Today / Enhance Experience */}
             <div className="mb-8">
               {user?.premium && randomIndex !== null ? (
                 <>
@@ -449,116 +630,7 @@ export default function Home() {
               )}
             </div>
 
-            <div className="mb-8">
-              <h2 className="text-2xl font-bold mb-4">New Arrivals</h2>
-              {loading ? (
-                <div className="text-center py-4">Loading tracks...</div>
-              ) : (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                  {newArrivals.map((track, index) => (
-                    <div
-                      key={index}
-                      className="group bg-[#1d1d1d] rounded-lg p-4 hover:bg-[#242424] transition-colors flex flex-col"
-                    >
-                      <div className="w-full h-[200px] flex flex-col mb-3">
-                        <div className="relative w-full h-[90%]">
-                          <img
-                            src={track.img || "/placeholder.svg"}
-                            alt="Track Cover Top"
-                            className="w-full h-full object-cover rounded-t-md"
-                          />
-                          <button
-                            onClick={() => handlePlay(track)}
-                            className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity z-10 rounded-t-md"
-                          >
-                            {currentTrack?.fileUrl === track.fileUrl && isPlaying ? (
-                              <Pause size={24} className="text-white" />
-                            ) : (
-                              <Play size={24} className="text-white" />
-                            )}
-                          </button>
-                        </div>
-                        <img
-                          src={track.img || "/placeholder.svg"}
-                          alt="Track Cover Bottom"
-                          className="w-full h-[10%] object-cover rounded-b-md blur-lg"
-                        />
-                      </div>
-                      <div className="text-white font-semibold truncate">{track.title}</div>
-                      <div className="text-gray-400 text-sm truncate">
-                        {Array.isArray(track.artists) ? track.artists.join(", ") : track.artists}
-                      </div>
-                      <div className="relative flex gap-2 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button
-                          className="p-1 hover:bg-[#333333] rounded-full"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setDropdownTrackId(dropdownTrackId === track._id ? null : track._id);
-                            console.log("ithan odi",playlists)
-                          }}
-                        >
-                          <Plus size={16} />
-                        </button>
-                        {dropdownTrackId === track._id && (
-                          <div className="absolute left-0 mt-8 w-48 bg-[#242424] rounded-md shadow-lg z-20">
-                            <ul className="py-1">
-                              {playlists.length > 0 ? (
-
-                                playlists.map((playlist) => (
-                                  
-                                  <li
-                                    key={playlist._id}
-                                    className="px-4 py-2 hover:bg-[#333333] cursor-pointer text-white"
-                                    onClick={() => {
-                                      console.log("odi",playlist) 
-                                      ,
-                                      handleAddToPlaylist(track._id || track.fileUrl, playlist._id as string) 
-                                    }
-                                    
-                                    } 
-                                  >
-                                    {playlist.title}
-                                  </li>
-                                ))
-                              ) : (
-                                <li className="px-4 py-2 text-gray-400">No playlists available</li>
-                              )}
-                              <li
-                                className="px-4 py-2 hover:bg-[#333333] cursor-pointer text-white border-t border-gray-700"
-                                onClick={() => navigate(`/playlists/${user?._id}`)}
-                              >
-                                Create New Playlist
-                              </li>
-                            </ul>
-                          </div>
-                        )}
-                        {user?.premium ? (
-                          <button
-                            onClick={() => handleLike(track._id || track.fileUrl)}
-                            className={`p-1 hover:bg-[#333333] rounded-full ${likedSongs.has(track._id || track.fileUrl) ? "text-red-500" : "text-white"}`}
-                          >
-                            <Heart
-                              size={16}
-                              fill={likedSongs.has(track._id || track.fileUrl) ? "currentColor" : "none"}
-                            />
-                          </button>
-                        ) : null}
-                        <button
-                          className="p-1 hover:bg-[#333333] rounded-full"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDownload(track.fileUrl, track.title);
-                          }}
-                        >
-                          <Download size={16} />
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
+            {/* Explore More Section */}
             <div>
               <h2 className="text-2xl font-bold mb-4">Explore More</h2>
               {loading ? (

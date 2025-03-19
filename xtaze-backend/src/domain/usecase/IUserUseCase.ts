@@ -2,6 +2,7 @@ import Stripe from "stripe";
 import IUser from "../entities/IUser";
 import { IPlaylist } from "../entities/IPlaylist";
 import { ITrack } from "../entities/ITrack";
+import { IBanner } from "../entities/IBanner";
 
 export default interface IuserUseCase{
     registerUser(username: string, country: string, gender: string, year: number, phone: number, email: string, password: string): Promise<IUser> 
@@ -27,4 +28,6 @@ export default interface IuserUseCase{
     deletePlaylist(id:string): Promise<IPlaylist|null>
     updateNamePlaylist(id:string,playlistName:string): Promise<IPlaylist|null>
     updateImagePlaylist(id:string,file:Express.Multer.File): Promise<{ success: boolean; message: string }>
+    getAllBanners():Promise<IBanner[]|null> 
+    
 }

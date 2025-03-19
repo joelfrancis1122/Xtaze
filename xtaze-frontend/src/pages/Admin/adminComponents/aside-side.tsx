@@ -30,7 +30,7 @@ export default function Sidebar() {
   const menuItems = [
     { icon: LayoutDashboard, label: "Dashboard", path: "/admin/dashboard" },
     { icon: Mic2, label: "Users", path: "/admin/artists" },
-    { icon: Music, label: "Genre", path: "/admin/genre" }, // ✅ Genre route
+    { icon: Music, label: "Genre", path: "/admin/genre" }, 
     { icon: Video, label: "Videos", path: "/admin/videos" },
     { icon: Image, label: "Banner", path: "/admin/banner" },
     { icon: PieChart, label: "Analytics", path: "/admin/analytics" },

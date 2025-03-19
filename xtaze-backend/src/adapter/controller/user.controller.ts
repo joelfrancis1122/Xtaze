@@ -425,5 +425,17 @@ export default class UserController {
     }
   }
 
+    async allBanners(req: Request, res: Response, next: NextFunction): Promise<void> {
+      try {
+  
+  
+          const allBanners = await this._userUseCase.getAllBanners()
+        console.log(allBanners,"odi odi odsssi")
+          res.status(201).json({ message: "Banner added successfully", data: allBanners });
+    
+      } catch (error) {
+        next(error);
+      }
+    }
 
 }

@@ -53,23 +53,28 @@ export default function LikedSongsPage() {
         setLoading(false);
         return;
       }
-
+  
       try {
         const tracks = await fetchLikedSongs(user._id, token, user.likedSongs);
-        setLikedSongs(tracks);
-        console.log(tracks, "ithan sanam");
+        // Sort tracks based on user.likedSongs order (reverse to show recent first)
+        const sortedTracks = user.likedSongs
+          .slice()
+          .reverse() // Reverse to put most recent first
+          .map((trackId) => tracks.find((track) => track._id === trackId))
+          .filter((track): track is Track => !!track); // Filter out undefined
+        setLikedSongs(sortedTracks);
+        console.log(sortedTracks, "ithan sanam");
       } catch (error) {
         toast.error("Error fetching liked songs", { position: "top-right" });
       } finally {
         setLoading(false);
       }
     };
-
+  
     if (user?._id) {
       getLikedSongs();
     }
   }, [user?._id, user?.likedSongs, navigate]);
-
   useEffect(() => {
     if (!user?._id) {
       navigate("/", { replace: true });

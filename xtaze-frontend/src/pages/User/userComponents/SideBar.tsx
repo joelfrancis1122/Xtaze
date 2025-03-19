@@ -72,8 +72,8 @@ export default function Sidebar() {
             <a className="text-gray-300 hover:text-white block transition-colors">
               Albums
             </a>
-            <a href="#" className="text-gray-300 hover:text-white block transition-colors">
-              Tracks
+            <a onClick={()=>navigate("/recentSongs")} className="text-gray-300 hover:text-white block transition-colors">
+              Recent Songs
             </a>
             <a onClick={()=>navigate("/equalizer")} className="text-gray-300 hover:text-white block transition-colors">
              Equalizer

@@ -1,6 +1,7 @@
 import IUser from "../entities/IUser";
 import {IPlaylist} from "../entities/IPlaylist";
 import { ITrack } from "../entities/ITrack";
+import { IBanner } from "../entities/IBanner";
 
 export interface IUserRepository {
   add: (user: IUser) => Promise<IUser>;
@@ -22,4 +23,6 @@ export interface IUserRepository {
   deletePlaylist(id: string): Promise<IPlaylist | null>;
   updateNamePlaylist(id: string,playlistName:string): Promise<IPlaylist | null>;
   updateImagePlaylist(id: string,file:string): Promise<IPlaylist | null>;
+    findAll():Promise<IBanner[]|null>
+  
 }

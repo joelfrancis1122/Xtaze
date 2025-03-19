@@ -4,6 +4,7 @@ import { Track } from "../pages/User/types/ITrack";
 import { saveSignupData } from "../redux/userSlice";
 import { String } from "lodash";
 import { Playlist } from "../pages/User/types/IPlaylist";
+import { IBanner } from "../pages/User/types/IBanner";
 
 // Utility to get cookies
 const getCookie = (name: string): string | null => {
@@ -275,11 +276,22 @@ export const fetchPlaylistTracks = async (id: string): Promise<Track[]> => {
   const data = await apiCall<{ success: boolean; message?: string; data: Track[]}>(
     userApi,
     "get",
-    `/getTracksInPlaylist?id=${id}` // Move userId to query string
+    `/getTracksInPlaylist?id=${id}` 
   );
   if (!data.success) throw new Error(data.message || "Failed to get all playlists");
   console.log(data,"ithan sanam");
   return data.data; 
+};
+
+export const fetchBanners = async (): Promise<IBanner[]> => {
+  const data = await apiCall<{ success: boolean; message?: string; data: IBanner[]}>(
+    userApi,
+    "get",
+    `/banners` 
+  );
+  console.log(data,"ithan sanam");
+  return data.data; 
+  if (!data.success) throw new Error(data.message || "Failed to get all playlists");
 };
 
 
@@ -325,7 +337,7 @@ export const updatePlaylistName = async (
 export const updatePlaylistImage = async (id: string, file: File): Promise<any> => {
   const formData = new FormData();
   formData.append("id", id);
-  formData.append("imageUpload", file); // Match the field name expected by Multer
+  formData.append("imageUpload", file); 
 
   const data = await apiCall<{ success: boolean; updated?: string; message?: string }>(
     userApi,
@@ -336,7 +348,7 @@ export const updatePlaylistImage = async (id: string, file: File): Promise<any> 
 
   if (!data.success) throw new Error(data.message || "Failed to update playlist image");
   console.log(data)
-  return data?.updated || ""; // Return the URL or empty string
+  return data?.updated || ""; 
 };
 
 export const initiateCheckout = async (

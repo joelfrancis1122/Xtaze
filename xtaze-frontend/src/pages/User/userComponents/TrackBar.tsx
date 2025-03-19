@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Play, Pause, SkipBack, SkipForward, Shuffle, Repeat, Volume2 } from "lucide-react";
 import type { Track } from "../types/ITrack";
 import { useSelector, useDispatch } from "react-redux";
-import { audio } from "../../../utils/audio"; // Global audio instance
+import { audio } from "../../../utils/audio";
 import {
   setIsPlaying,
   setCurrentTime,
@@ -34,6 +34,21 @@ const formatTime = (time: number): string => {
   return `${minutes}:${seconds.toString().padStart(2, "0")}`;
 };
 
+// Helper to update recent songs in localStorage
+const updateRecentSongs = (track: Track) => {
+  const trackId = track._id || track.fileUrl;
+  const recentSongs = JSON.parse(localStorage.getItem("recentSongs") || "[]");
+  const newEntry = { id: trackId, playedAt: new Date().toISOString() };
+  // Remove duplicates and add new entry at the start, then cap at 20
+  const updatedSongs = [
+    newEntry,
+    ...recentSongs.filter((s: any) => s.id !== trackId) // Remove any existing entry for this track
+  ].slice(0, 20); // Keep only the most recent 20
+  localStorage.setItem("recentSongs", JSON.stringify(updatedSongs));
+};
+
+// In useEffect (unchanged from your version, just confirming placement):
+
 export default function MusicPlayer({
   currentTrack,
   isPlaying,
@@ -55,24 +70,27 @@ export default function MusicPlayer({
   const [localDuration, setLocalDuration] = useState(reduxDuration);
   const [localVolume, setLocalVolume] = useState(reduxVolume);
 
-  // Restore audio state on mount and sync isPlaying after refresh
+  // Restore audio state and log recent song when playing starts
   useEffect(() => {
     if (currentTrack) {
       if (!audio.src) {
-        audio.src = currentTrack.fileUrl; // Restore src
-        audio.currentTime = reduxCurrentTime; // Restore time
-        audio.volume = reduxVolume; // Restore volume
+        audio.src = currentTrack.fileUrl;
+        audio.currentTime = reduxCurrentTime;
+        audio.volume = reduxVolume;
       }
-      // Check actual audio state and sync Redux if needed
+      if (isPlaying && audio.paused) {
+        audio.play(); // Ensure playback starts
+        updateRecentSongs(currentTrack); // Log song as recently heard
+      }
       if (audio.paused && isPlaying) {
-        dispatch(setIsPlaying(false)); // Audio isn’t playing, so set isPlaying to false
+        dispatch(setIsPlaying(false));
       } else if (!audio.paused && !isPlaying) {
-        dispatch(setIsPlaying(true)); // Audio is playing, so set isPlaying to true
+        dispatch(setIsPlaying(true));
       }
     }
   }, [currentTrack, isPlaying, reduxCurrentTime, reduxVolume, audio, dispatch]);
 
-  // Sync audio events with local state and Redux
+  // Sync audio events
   useEffect(() => {
     const handleTimeUpdate = () => {
       setLocalCurrentTime(audio.currentTime);
@@ -82,7 +100,10 @@ export default function MusicPlayer({
       setLocalDuration(audio.duration);
       dispatch(setDuration(audio.duration));
     };
-    const handlePlayEvent = () => dispatch(setIsPlaying(true));
+    const handlePlayEvent = () => {
+      dispatch(setIsPlaying(true));
+      if (currentTrack) updateRecentSongs(currentTrack); // Log on play event
+    };
     const handlePauseEvent = () => dispatch(setIsPlaying(false));
 
     audio.addEventListener("timeupdate", handleTimeUpdate);
@@ -96,7 +117,7 @@ export default function MusicPlayer({
       audio.removeEventListener("play", handlePlayEvent);
       audio.removeEventListener("pause", handlePauseEvent);
     };
-  }, [audio, dispatch]);
+  }, [audio, dispatch, currentTrack]);
 
   const handleVolumeChange = (value: number) => {
     setLocalVolume(value);
@@ -123,7 +144,6 @@ export default function MusicPlayer({
             alt="Track Cover Top"
             className="w-fit h-fit object-cover rounded-t-md rounded-b-md shadow-md"
           />
-        
           <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-md flex items-center justify-center">
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -143,7 +163,7 @@ export default function MusicPlayer({
         <div className="ml-3 overflow-hidden">
           <p className="text-sm font-semibold text-white truncate">{currentTrack.title}</p>
           <p className="text-xs text-gray-400 truncate">
-            {Array.isArray(currentTrack.artist) ? currentTrack.artist.join(", ") : currentTrack.artist}
+            {Array.isArray(currentTrack.artists) ? currentTrack.artists.join(", ") : currentTrack.artists}
           </p>
         </div>
       </div>

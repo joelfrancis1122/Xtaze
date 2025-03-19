@@ -1,6 +1,8 @@
+import { IBanner } from "../../domain/entities/IBanner";
 import { IPlaylist } from "../../domain/entities/IPlaylist";
 import IUser from "../../domain/entities/IUser";
 import { IUserRepository } from "../../domain/repositories/IUserRepository";
+import BannerModel from "../db/models/BannerModel";
 import PlaylistModel from "../db/models/PlaylistModel";
 import { ITrack, Track } from "../db/models/TrackModel";
 import UserModel from "../db/models/UserModel"; // Assuming your User model is in this location
@@ -321,6 +323,11 @@ export default class UserRepository implements IUserRepository {
       throw error;
     }
   }
+  async findAll(): Promise<IBanner[]|null> {
+    console.log("odi");
+   const data = await BannerModel.find({isActive:true})
 
+    return data
+}
 
 }

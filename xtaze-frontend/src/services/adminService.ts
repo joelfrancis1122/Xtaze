@@ -1,6 +1,7 @@
 import { useDispatch } from "react-redux";
 import { saveAdminData } from "../redux/adminSlice";
 import { adminApi, artistApi, deezerApi, providerApi, userApi } from "../api/axios";
+import { IBanner } from "../pages/User/types/IBanner";
 
 // Generic API Call Helper
 const apiCall = async <T>(
@@ -41,6 +42,9 @@ export interface Genre {
   name: string;
   isBlocked: boolean;
 }
+
+// Define Banner interface (aligned with backend schema)
+
 
 // Login with email and password for admin
 export const loginAdmin = async (
@@ -138,4 +142,50 @@ export const updateGenre = async (id: string, name: string, token: string): Prom
     token
   );
   return data.data;
+};
+
+// Banner CRUD Operations
+
+// Fetch all banners
+export const fetchBanners = async (token: string): Promise<IBanner[]> => {
+  const data = await apiCall<{ data: IBanner[] }>(adminApi, "get", "/banners/all", undefined, token);
+  return data.data;
+};
+
+export const createBanner = async (
+  banner: { title: string; description: string; file?: File; action: string; isActive: boolean; createdBy: string },
+  token: string
+): Promise<IBanner> => {
+  const formData = new FormData();
+  formData.append("title", banner.title);
+  formData.append("description", banner.description);
+  if (banner.file) formData.append("image", banner.file);
+  formData.append("action", banner.action);
+  formData.append("isActive", String(banner.isActive));
+  formData.append("createdBy", banner.createdBy);
+console.log(formData,"visvajith")
+  const data = await apiCall<{ data: IBanner }>(adminApi, "post", "/banners", formData, token);
+  return data.data;
+};
+
+export const updateBanner = async (
+  id: string,
+  banner: { title: string; description: string; file?: File; action: string; isActive: boolean },
+  token: string
+): Promise<IBanner> => {
+  const formData = new FormData();
+  formData.append("title", banner.title);
+  formData.append("description", banner.description);
+  if (banner.file) formData.append("image", banner.file);
+  formData.append("action", banner.action);
+  formData.append("isActive", String(banner.isActive));
+
+  console.log(formData,"odi avaindah comming ",banner.title,banner.description,banner.isActive)
+  const data = await apiCall<{ data: IBanner }>(adminApi, "put", `/banners/${id}`, formData, token);
+  return data.data;
+};
+
+export const deleteBanner = async (id: string, token: string): Promise<void> => {
+  await apiCall<{ success: boolean }>(adminApi, "delete", `/banners/${id}`, undefined, token);
+
 };

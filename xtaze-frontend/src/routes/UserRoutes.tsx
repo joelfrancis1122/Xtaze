@@ -16,6 +16,7 @@ import PlaylistPageView from "../pages/User/PlaylistViewPage";
 import YoutubeMusic from "../pages/User/VideosPage";
 import RadioPage from "../pages/User/RadioPage";
 import EqualizerPage from "../pages/User/EqualizerPage";
+import RecentSongsPage from "../pages/User/RecentSongs";
 
 export const UserRoutes = () => (
     <>
@@ -36,5 +37,6 @@ export const UserRoutes = () => (
     <Route path="/videos" element={<YoutubeMusic />} />
     <Route path="/radio" element={<RadioPage />} />
     <Route path="/equalizer" element={<EqualizerPage />} />
+    <Route path="/recentSongs" element={<RecentSongsPage />} />
     </>
 );

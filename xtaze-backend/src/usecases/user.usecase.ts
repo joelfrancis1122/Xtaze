@@ -12,6 +12,7 @@ import Stripe from "stripe";
 import IEmailService from '../domain/service/IEmailService';
 import { IPlaylist } from '../domain/entities/IPlaylist';
 import { ITrack } from '../domain/entities/ITrack';
+import { IBanner } from '../domain/entities/IBanner';
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2023-08-16" });
 
 dotenv.config();
@@ -465,6 +466,12 @@ export default class UserUseCase {
       throw error; // Propagate error to controller
     }
   }
+
+    async getAllBanners(): Promise<IBanner[] | null> {
+      const banners = await this._userRepository.findAll()
+      return banners;
+  
+    }
 }
 
 
