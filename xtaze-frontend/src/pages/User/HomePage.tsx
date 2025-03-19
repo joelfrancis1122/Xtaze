@@ -19,7 +19,7 @@ import {
 } from "../../redux/audioSlice";
 import { RootState } from "../../store/store";
 import { useNavigate } from "react-router-dom";
-import { audio, audioContext, source } from "../../utils/audio";
+import { audio, audioContext, updateEqualizer } from "../../utils/audio";
 import { PlaceholdersAndVanishInput } from "../../utils/placeholders-and-vanish-input";
 import { Search, Power, Play, Pause, Plus, Heart, Download } from "lucide-react";
 import { fetchTracks, fetchLikedSongs, incrementListeners, toggleLike, getMyplaylist, addTrackToPlaylist } from "../../services/userService";
@@ -64,6 +64,41 @@ export default function Home() {
   const user = useSelector((state: RootState) => state.user.signupData) as UserSignupData | null;
   const { currentTrack, isPlaying, isShuffled, isRepeating, shuffleIndices, currentShuffleIndex } =
     useSelector((state: RootState) => state.audio);
+
+
+      useEffect(() => {
+        if (!audioContext) return;
+    
+        const resumeAudioContext = () => {
+          if (audioContext&&audioContext.state === "suspended") {
+            audioContext.resume().then(() => console.log("AudioContext resumed"));
+          }
+        };
+        document.addEventListener("click", resumeAudioContext, { once: true });
+    
+        // Load audio if not already loaded
+        audio.crossOrigin = "anonymous";
+        if (!audio.src) {
+          audio.src = "/music/test.mp3"; // Adjust to your home page audio source
+          audio.loop = true;
+        }
+        audio.play().catch((err) => console.error("Play error:", err));
+    
+        // Apply saved equalizer values from localStorage
+        const savedEqualizerValues = localStorage.getItem("equalizerValues");
+        if (savedEqualizerValues) {
+          updateEqualizer(JSON.parse(savedEqualizerValues));
+        }
+    
+        // Apply saved volume and mute settings
+        const savedVolume = localStorage.getItem("volume");
+        const savedIsMuted = localStorage.getItem("isMuted");
+        if (savedVolume&&savedIsMuted) audio.volume = JSON.parse(savedIsMuted) ? 0 : Number(savedVolume) / 100;
+    
+        return () => {
+          document.removeEventListener("click", resumeAudioContext);
+        };
+      }, []);
 
   useEffect(() => {
     if (user?.likedSongs) {
@@ -143,7 +178,6 @@ export default function Home() {
         dispatch(setIsPlaying(false));
       } else {
         audio.play();
-        source.connect(audioContext.destination);
         dispatch(setIsPlaying(true));
       }
     } else {
