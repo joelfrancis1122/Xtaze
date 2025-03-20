@@ -227,11 +227,9 @@ export default function Home() {
             <div className="bg-[#1d1d1d] p-6 rounded-lg shadow-md">
               <div className="flex items-center justify-between mb-4">
                 <p className="text-white">Change Password</p>
-                <button className="bg-blue-500 px-5 py-2 text-white rounded-lg hover:bg-blue-600 transition">
-                  Update
-                </button>
+                
               </div>
-              <div className="flex items-center justify-between">
+              <div onClick={()=>navigate("/equalizer")} className="flex items-center justify-between">
                 <p className="text-white">Equalizer</p>
                 <button className="bg-indigo-500 px-5 py-2 text-white rounded-lg hover:bg-red-600 transition">
                   Tune

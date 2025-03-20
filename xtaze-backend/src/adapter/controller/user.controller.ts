@@ -352,6 +352,7 @@ export default class UserController {
       next(error);
     }
   }
+  
   async getPlaylist(req: Request, res: Response, next: NextFunction) {
     try {
       const { userId } = req.query

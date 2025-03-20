@@ -294,15 +294,15 @@ export default function EqualizerPage() {
                 [&::-webkit-slider-thumb]:appearance-none 
                 [&::-webkit-slider-thumb]:w-5 
                 [&::-webkit-slider-thumb]:h-5 
-                [&::-webkit-slider-thumb]:bg-red-800 
+                [&::-webkit-slider-thumb]:bg-red-900 
                 [&::-webkit-slider-thumb]:rounded-full 
-                [&::-webkit-slider-thumb]:opacity-50
+                [&::-webkit-slider-thumb]:opacity-100
                 [&::-webkit-slider-thumb]:-mt-[6px] 
                 [&::-moz-range-thumb]:w-5 
                 [&::-moz-range-thumb]:h-5 
                 [&::-moz-range-thumb]:bg-white 
                 [&::-moz-range-thumb]:rounded-full 
-                [&::-moz-range-thumb]:opacity-10 
+                [&::-moz-range-thumb]:opacity-100 
                 [&::-moz-range-thumb]:-mt-[6px]"
                               />
               <span className="text-sm text-gray-400 w-8 text-right">{isMuted ? "0" : volume}%</span>

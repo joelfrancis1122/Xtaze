@@ -3,10 +3,9 @@
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom" // ✅ React Router navigation
 import { Button } from "../../../components/ui/button"
-import { LayoutDashboard, Mic2, Music, Settings, Video, Image, PieChart, Headphones, Menu, LogOut } from "lucide-react" // Add LogOut icon
+import { LayoutDashboard, Mic2, Music, Settings, Video, Image, PieChart, Headphones, Menu, LogOut,BadgePercent } from "lucide-react" // Add LogOut icon
 import { useDispatch } from "react-redux"
 import { clearAdminData } from "../../../redux/adminSlice"
-
 export default function Sidebar() {
   useEffect(() => {
     const styles = `
@@ -34,6 +33,7 @@ export default function Sidebar() {
     { icon: Video, label: "Videos", path: "/admin/videos" },
     { icon: Image, label: "Banner", path: "/admin/banner" },
     { icon: PieChart, label: "Analytics", path: "/admin/analytics" },
+    { icon: BadgePercent, label: "Coupons", path: "/admin/coupons" },
     { icon: Settings, label: "Settings", path: "/admin/settings" },
   ]
 

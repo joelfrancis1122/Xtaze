@@ -21,8 +21,8 @@ import { RootState } from "../../store/store";
 import { useNavigate } from "react-router-dom";
 import { audio, audioContext, updateEqualizer } from "../../utils/audio";
 import { PlaceholdersAndVanishInput } from "../../utils/placeholders-and-vanish-input";
-import { Search, Power, Play, Pause, Plus, Heart, Download } from "lucide-react";
-import { fetchTracks, fetchLikedSongs, incrementListeners, toggleLike, getMyplaylist, addTrackToPlaylist, fetchBanners, } from "../../services/userService";
+import { Search, Power, Play, Pause, Plus, Heart, Download, ListMusic } from "lucide-react";
+import { fetchTracks, fetchLikedSongs, incrementListeners, toggleLike, getMyplaylist, addTrackToPlaylist, fetchBanners } from "../../services/userService";
 import { toast } from "sonner";
 import { IBanner } from "./types/IBanner";
 
@@ -49,6 +49,14 @@ interface Playlist {
   createdBy: string;
 }
 
+interface QueueTrack {
+  id: string;
+  title: string;
+  artists: string | string[];
+  fileUrl: string;
+  img?: string;
+}
+
 export default function Home() {
   const [tracks, setTracks] = useState<Track[]>([]);
   const [likedTracks, setLikedTracks] = useState<Track[]>([]);
@@ -60,7 +68,8 @@ export default function Home() {
   const [randomIndex, setRandomIndex] = useState<number | null>(null);
   const [dropdownTrackId, setDropdownTrackId] = useState<string | null>(null);
   const [banners, setBanners] = useState<IBanner[]>([]);
-  const [currentIndex, setCurrentIndex] = useState(0); // Added for carousel
+  const [currentIndex, setCurrentIndex] = useState(0);
+
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -160,8 +169,7 @@ export default function Home() {
     const loadBanners = async () => {
       try {
         const allBanners = await fetchBanners();
-        console.log("allBanners", allBanners)
-        setBanners(allBanners)
+        setBanners(allBanners);
       } catch (error) {
         console.error("Error fetching banners:", error);
       }
@@ -178,7 +186,6 @@ export default function Home() {
     return () => clearInterval(interval);
   }, [banners.length]);
 
-  // Navigate to banner action
   const handleBannerClick = (action: string) => {
     navigate(action);
   };
@@ -260,6 +267,22 @@ export default function Home() {
     }
   };
 
+  const handleAddToQueue = (track: Track) => {
+    const queueEntry: QueueTrack = {
+      id: track._id || track.fileUrl,
+      title: track.title,
+      artists: track.artists,
+      fileUrl: track.fileUrl,
+      img: track.img,
+    };
+    const storedQueue = JSON.parse(localStorage.getItem("playQueue") || "[]");
+    const updatedQueue = [...storedQueue, queueEntry].filter(
+      (q, index, self) => index === self.findIndex((t) => t.id === q.id) // ith remove duplicates anu
+    );
+    localStorage.setItem("playQueue", JSON.stringify(updatedQueue));
+    toast.success(`Added ${track.title} to queue`);
+  };
+
   const toggleModal = () => {
     setIsModalOpen((prevState) => !prevState);
   };
@@ -275,6 +298,44 @@ export default function Home() {
 
   const handleSkipForward = () => {
     if (!currentTrack || tracks.length === 0) return;
+  
+    const storedQueue = JSON.parse(localStorage.getItem("playQueue") || "[]");
+    if (storedQueue.length > 0) {
+      let updatedQueue = storedQueue;
+      const currentQueueIndex = storedQueue.findIndex((q: QueueTrack) => q.fileUrl === currentTrack.fileUrl);
+      
+      // If current track is in the queue, remove it
+      if (currentQueueIndex !== -1) {
+        updatedQueue = storedQueue.filter((_: QueueTrack, i: number) => i !== currentQueueIndex);
+      }
+  
+      // Play the first song in the remaining queue (if any)
+      const nextTrack = updatedQueue[0];
+      if (nextTrack) {
+        updatedQueue.shift(); // Remove the song we’re about to play from the queue
+        localStorage.setItem("playQueue", JSON.stringify(updatedQueue));
+        audio.src = nextTrack.fileUrl;
+        audio.play();
+        dispatch(setCurrentTrack(nextTrack));
+        dispatch(setIsPlaying(true));
+        return;
+      } else {
+        // If queue becomes empty after removal, clear it
+        localStorage.setItem("playQueue", JSON.stringify([]));
+      }
+    }
+  
+    // Fallback to shuffle or linear progression if queue is empty
+    if (isShuffled) {
+      const nextShuffleIndex = (currentShuffleIndex + 1) % shuffleIndices.length;
+      dispatch(setCurrentShuffleIndex(nextShuffleIndex));
+      handlePlay(tracks[shuffleIndices[nextShuffleIndex]]);
+    } else {
+      const currentIndex = tracks.findIndex((track) => track.fileUrl === currentTrack.fileUrl);
+      const nextIndex = (currentIndex + 1) % tracks.length;
+      handlePlay(tracks[nextIndex]);
+    }
+
     if (isShuffled) {
       const nextShuffleIndex = (currentShuffleIndex + 1) % shuffleIndices.length;
       dispatch(setCurrentShuffleIndex(nextShuffleIndex));
@@ -322,14 +383,8 @@ export default function Home() {
       if (isRepeating) {
         audio.currentTime = 0;
         audio.play();
-      } else if (isShuffled) {
-        const nextShuffleIndex = (currentShuffleIndex + 1) % shuffleIndices.length;
-        dispatch(setCurrentShuffleIndex(nextShuffleIndex));
-        handlePlay(tracks[shuffleIndices[nextShuffleIndex]]);
       } else {
-        const currentIndex = tracks.findIndex((track) => track.fileUrl === currentTrack?.fileUrl);
-        const nextIndex = (currentIndex + 1) % tracks.length;
-        handlePlay(tracks[nextIndex]);
+        handleSkipForward(); // Use skip forward to handle queue
       }
     };
     audio.addEventListener("ended", handleEnded);
@@ -421,15 +476,15 @@ export default function Home() {
             <div className="mb-8">
               <h2 className="text-3xl font-bold mb-4">Enjoy Hi-Res Songs</h2>
               <div className="relative w-full h-[300px] rounded-lg overflow-hidden shadow-lg">
-                <div className="w-full h-full overflow-hidden"> 
+                <div className="w-full h-full overflow-hidden">
                   <div
-                    className="flex transition-transform duration-500 ease-in-out w-full" 
+                    className="flex transition-transform duration-500 ease-in-out w-full"
                     style={{ transform: `translateX(-${currentIndex * 100}%)` }}
                   >
                     {banners.map((banner) => (
                       <div
                         key={banner._id}
-                        className="min-w-full w-full flex-shrink-0 relative cursor-pointer" // Added w-full to ensure each item matches container width
+                        className="min-w-full w-full flex-shrink-0 relative cursor-pointer"
                       >
                         <img
                           src={banner.imageUrl}
@@ -459,8 +514,7 @@ export default function Home() {
                           e.stopPropagation();
                           setCurrentIndex(index);
                         }}
-                        className={`w-2 h-2 rounded-full ${index === currentIndex ? "bg-white" : "bg-gray-500"
-                          }`}
+                        className={`w-2 h-2 rounded-full ${index === currentIndex ? "bg-white" : "bg-gray-500"}`}
                       />
                     ))}
                   </div>
@@ -562,6 +616,15 @@ export default function Home() {
                           }}
                         >
                           <Download size={16} />
+                        </button>
+                        <button
+                          className="p-1 hover:bg-[#333333] rounded-full"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleAddToQueue(track);
+                          }}
+                        >
+                          <ListMusic size={16} />
                         </button>
                       </div>
                     </div>
@@ -722,6 +785,15 @@ export default function Home() {
                           }}
                         >
                           <Download size={16} />
+                        </button>
+                        <button
+                          className="p-1 hover:bg-[#333333] rounded-full"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleAddToQueue(track);
+                          }}
+                        >
+                          <ListMusic size={16} />
                         </button>
                       </div>
                     </div>

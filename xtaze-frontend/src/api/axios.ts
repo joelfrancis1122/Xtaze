@@ -30,7 +30,3 @@ export const deezerApi = axios.create({
   baseURL: `${axiosBaseConfig.baseURL}/api`,
 });
 
-// Debug base URLs
-console.log("User API Base URL:", userApi.defaults.baseURL);
-console.log("Admin API Base URL:", adminApi.defaults.baseURL);
-console.log("Artist API Base URL:", artistApi.defaults.baseURL);

@@ -39,15 +39,12 @@ const updateRecentSongs = (track: Track) => {
   const trackId = track._id || track.fileUrl;
   const recentSongs = JSON.parse(localStorage.getItem("recentSongs") || "[]");
   const newEntry = { id: trackId, playedAt: new Date().toISOString() };
-  // Remove duplicates and add new entry at the start, then cap at 20
   const updatedSongs = [
     newEntry,
-    ...recentSongs.filter((s: any) => s.id !== trackId) // Remove any existing entry for this track
-  ].slice(0, 20); // Keep only the most recent 20
+    ...recentSongs.filter((s: any) => s.id !== trackId),
+  ].slice(0, 20);
   localStorage.setItem("recentSongs", JSON.stringify(updatedSongs));
 };
-
-// In useEffect (unchanged from your version, just confirming placement):
 
 export default function MusicPlayer({
   currentTrack,
@@ -79,8 +76,8 @@ export default function MusicPlayer({
         audio.volume = reduxVolume;
       }
       if (isPlaying && audio.paused) {
-        audio.play(); // Ensure playback starts
-        updateRecentSongs(currentTrack); // Log song as recently heard
+        audio.play();
+        updateRecentSongs(currentTrack);
       }
       if (audio.paused && isPlaying) {
         dispatch(setIsPlaying(false));
@@ -102,7 +99,7 @@ export default function MusicPlayer({
     };
     const handlePlayEvent = () => {
       dispatch(setIsPlaying(true));
-      if (currentTrack) updateRecentSongs(currentTrack); // Log on play event
+      if (currentTrack) updateRecentSongs(currentTrack);
     };
     const handlePauseEvent = () => dispatch(setIsPlaying(false));
 

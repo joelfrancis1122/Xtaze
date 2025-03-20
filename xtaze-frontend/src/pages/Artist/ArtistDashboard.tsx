@@ -8,7 +8,7 @@ import { MonthlyListenersChart } from "./artistComponents/monthly-listeners-char
 import { TopSongsTable } from "./artistComponents/top-songs-table";
 import ArtistSidebar from "./artistComponents/artist-aside";
 
-const ArtistUploadTracks = () => {
+const ArtistDashboard = () => {
 
 
   useEffect(() => {
@@ -94,4 +94,4 @@ const ArtistUploadTracks = () => {
   );
 };
 
-export default ArtistUploadTracks;
+export default ArtistDashboard;

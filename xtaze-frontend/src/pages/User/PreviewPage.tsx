@@ -7,12 +7,28 @@ import { Track } from "./types/ITrack";
 
 interface PreviewModalProps {
   track: Track;
-  isOpen: boolean; // Receive isOpen from parent
-  toggleModal: () => void; // Receive toggleModal from parent
+  isOpen: boolean;
+  toggleModal: () => void;
+}
+
+interface QueueTrack {
+  id: string;
+  title: string;
+  artists: string | string[];
+  fileUrl: string;
+  img?: string;
 }
 
 const PreviewModal: React.FC<PreviewModalProps> = ({ track, isOpen, toggleModal }) => {
   const [isFullscreen, setIsFullscreen] = React.useState(false);
+  const [showCredits, setShowCredits] = React.useState(false);
+  const [playQueue, setPlayQueue] = React.useState<QueueTrack[]>([]);
+
+  // Sync queue with localStorage
+  React.useEffect(() => {
+    const storedQueue = JSON.parse(localStorage.getItem("playQueue") || "[]");
+    setPlayQueue(storedQueue);
+  }, [isOpen]); // Re-sync when modal opens
 
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
@@ -22,6 +38,16 @@ const PreviewModal: React.FC<PreviewModalProps> = ({ track, isOpen, toggleModal 
       document.exitFullscreen();
       setIsFullscreen(false);
     }
+  };
+
+  const handleCreditsClick = () => {
+    setShowCredits((prev) => !prev);
+  };
+
+  const removeFromQueue = (trackId: string) => {
+    const updatedQueue = playQueue.filter((q) => q.id !== trackId);
+    setPlayQueue(updatedQueue);
+    localStorage.setItem("playQueue", JSON.stringify(updatedQueue));
   };
 
   return (
@@ -51,7 +77,7 @@ const PreviewModal: React.FC<PreviewModalProps> = ({ track, isOpen, toggleModal 
                 </button>
                 <button
                   className="p-2 rounded-md bg-red-600 hover:bg-red-500"
-                  onClick={toggleModal} // Use toggleModal from parent
+                  onClick={toggleModal}
                 >
                   <X className="h-4 w-4 text-white" />
                 </button>
@@ -60,10 +86,9 @@ const PreviewModal: React.FC<PreviewModalProps> = ({ track, isOpen, toggleModal 
 
             {/* Content */}
             <div className="flex flex-1 p-6 gap-6 overflow-y-auto">
-              {/* Left side - Artwork with Blurry Effect on All Sides */}
+              {/* Left side - Artwork */}
               <div className="flex-1 flex flex-col items-center justify-center">
                 <div className="relative w-[400px] h-[400px] flex items-center justify-center">
-                  {/* Blurred Background */}
                   <div
                     className="absolute inset-0 bg-zinc-900 shadow-lg filter blur-2xl"
                     style={{
@@ -73,7 +98,6 @@ const PreviewModal: React.FC<PreviewModalProps> = ({ track, isOpen, toggleModal 
                       backgroundRepeat: "no-repeat",
                     }}
                   />
-                  {/* Clear Image */}
                   <img
                     src={track.img || "/default-track.jpg"}
                     alt="Track artwork"
@@ -88,44 +112,85 @@ const PreviewModal: React.FC<PreviewModalProps> = ({ track, isOpen, toggleModal 
                 </div>
               </div>
 
-              {/* Right side - Buttons & Queue */}
+              {/* Right side - Buttons & Queue/Credits */}
               <div className="flex-1 rounded-lg p-21 transform translate-x-[-140px] translate-y-[5px]">
-                {/* Buttons (All grouped together) */}
                 <div className="flex items-center gap-10 mb-4">
                   <button className="flex items-center gap-2 bg-zinc-800 p-4 w-40 rounded-md hover:bg-zinc-700">
                     <ListMusic className="h-5 w-5 text-white" />
                     Play Queue
                   </button>
-                  <button className="flex items-center gap-2 bg-zinc-800 p-4 w-40 rounded-md hover:bg-zinc-700">
+                  {/* <button className="flex items-center gap-2 bg-zinc-800 p-4 w-40 rounded-md hover:bg-zinc-700">
                     Suggested Tracks
-                  </button>
-                  <button className="flex items-center gap-2 bg-zinc-800 p-4 w-40 rounded-md hover:bg-zinc-700">
+                  </button> */}
+                  <button
+                    className="flex items-center gap-2 bg-zinc-800 p-4 w-40 rounded-md hover:bg-zinc-700"
+                    onClick={handleCreditsClick}
+                  >
                     <Info className="h-5 w-5 text-white" />
                     Credits
                   </button>
                 </div>
 
-                {/* Play Queue List */}
-                <div className="space-y-1 mt-auto">
-                  <div className="flex items-center gap-3 p-2 hover:bg-zinc-700 rounded-lg cursor-pointer">
-                    <div className="w-20 h-20 bg-zinc-800 rounded">
-                      <img
-                        src={track.img || "/default-track.jpg"}
-                        alt="Track artwork"
-                        className="w-full h-full rounded object-cover shadow-md"
-                      />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="truncate">{track.title}</p>
-                      <p className="text-sm text-zinc-400 truncate">
+                {/* Conditional Rendering */}
+                {showCredits ? (
+                  <div className="space-y-4">
+                    <h3 className="text-xl font-semibold">Credits</h3>
+                    <div className="space-y-2">
+                      <p>
+                        <span className="text-zinc-400">Song Name: </span>
+                        {track.title}
+                      </p>
+                      <p>
+                        <span className="text-zinc-400">Artists: </span>
                         {Array.isArray(track.artists) ? track.artists.join(", ") : track.artists}
                       </p>
+                      <p>
+                        <span className="text-zinc-400">Genre: </span>
+                        {track.genre || "Unknown Genre"}
+                      </p>
+                      <p>
+                        <span className="text-zinc-400">Year of Publish: </span>
+                        2023
+                      </p>
                     </div>
-                    <button className="p-2 rounded-md hover:bg-zinc-600">
-                      <X className="h-4 w-4 text-white" />
-                    </button>
                   </div>
-                </div>
+                ) : (
+                  <div className="space-y-1 mt-auto">
+                    <h3 className="text-xl font-semibold mb-2">Play Queue</h3>
+                    {playQueue.length > 0 ? (
+                      playQueue.map((queueTrack) => (
+                        <div
+                          key={queueTrack.id}
+                          className="flex items-center gap-3 p-2 hover:bg-zinc-700 rounded-lg cursor-pointer"
+                        >
+                          <div className="w-20 h-20 bg-zinc-800 rounded">
+                            <img
+                              src={queueTrack.img || "/default-track.jpg"}
+                              alt={queueTrack.title}
+                              className="w-full h-full rounded object-cover shadow-md"
+                            />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="truncate">{queueTrack.title}</p>
+                            <p className="text-sm text-zinc-400 truncate">
+                              {Array.isArray(queueTrack.artists)
+                                ? queueTrack.artists.join(", ")
+                                : queueTrack.artists}
+                            </p>
+                          </div>
+                          <button
+                            className="p-2 rounded-md hover:bg-zinc-600"
+                            onClick={() => removeFromQueue(queueTrack.id)}
+                          >
+                            <X className="h-4 w-4 text-white" />
+                          </button>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-zinc-400">No songs in queue. Add some tracks!</p>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           </div>

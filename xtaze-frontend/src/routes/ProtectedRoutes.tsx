@@ -4,9 +4,8 @@ import AdminProtectedRoute from "../pages/Admin/AdminPrivateRoute";
 import ArtistProtectRoute from "../pages/Artist/ArtistPrivateRoute";
 import Home from "../pages/User/HomePage";
 import AdminDashboard from "../pages/Admin/DashboardPage";
-import ArtistDashboard from "../pages/Artist/ArtistDashboard";
 import ArtistUploadTracks from "../pages/Artist/ArtistUploadTracks";
-
+import ArtistDashboard from "../pages/Artist/ArtistDashboard";
 export const ProtectedRoutes = () => (
   <>
     <Route element={<UserPrivateRoute />}>
