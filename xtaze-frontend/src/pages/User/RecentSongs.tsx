@@ -12,21 +12,9 @@ import { Track } from "./types/ITrack";
 import { fetchTracks } from "../../services/userService";
 import MusicPlayer from "./userComponents/TrackBar";
 import { audio } from "../../utils/audio";
+import { UserSignupData } from "./types/IUser";
+import { useAudioPlayback } from "./userComponents/audioPlayback";
 
-interface UserSignupData {
-  _id?: string;
-  username: string;
-  country: string;
-  gender: string;
-  year: string;
-  phone: string;
-  email: string;
-  role?: string;
-  isActive?: boolean;
-  premium?: boolean;
-  profilePic?: string;
-  likedSongs?: string[];
-}
 
 interface RecentSongItem {
   id: string;
@@ -35,11 +23,23 @@ interface RecentSongItem {
 
 export default function RecentSongsPage() {
   const [recentSongs, setRecentSongs] = useState<Track[]>([]);
+  const [tracks, setTracks] = useState<Track[]>([]);
   const [loading, setLoading] = useState(true);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { currentTrack, isPlaying, isShuffled, isRepeating, shuffleIndices, currentShuffleIndex } = useSelector((state: RootState) => state.audio);
   const user = useSelector((state: RootState) => state.user.signupData) as UserSignupData | null;
+
+
+    const {
+      handlePlay: baseHandlePlay,
+      handleSkipBack,
+      handleSkipForward,
+      handleToggleShuffle,
+      handleToggleRepeat,
+    } = useAudioPlayback(tracks);
+  
+
 
   useEffect(() => {
     const getRecentSongs = async () => {
@@ -121,84 +121,12 @@ export default function RecentSongsPage() {
     }
   }, [user, navigate]);
 
-  const handlePlay = (song: Track) => {
-    if (currentTrack?.fileUrl === song.fileUrl) {
-      if (isPlaying) {
-        audio.pause();
-        dispatch(setIsPlaying(false));
-      } else {
-        audio.play();
-        dispatch(setIsPlaying(true));
-      }
-    } else {
-      audio.src = song.fileUrl;
-      audio.play();
-      dispatch(setCurrentTrack(song));
-      dispatch(setIsPlaying(true));
-    }
-  };
 
-  const handleSkipBack = () => {
-    if (!currentTrack || recentSongs.length === 0) return;
 
-    let prevIndex: number;
-    const currentIndex = recentSongs.findIndex((t) => t.fileUrl === currentTrack.fileUrl);
+ 
 
-    if (isShuffled && shuffleIndices.length > 0) {
-      const newShuffleIndex = currentShuffleIndex > 0 ? currentShuffleIndex - 1 : shuffleIndices.length - 1;
-      prevIndex = shuffleIndices[newShuffleIndex];
-      dispatch(setCurrentShuffleIndex(newShuffleIndex));
-    } else {
-      prevIndex = currentIndex > 0 ? currentIndex - 1 : recentSongs.length - 1;
-    }
+ 
 
-    const prevTrack = recentSongs[prevIndex];
-    audio.src = prevTrack.fileUrl;
-    audio.play();
-    dispatch(setCurrentTrack(prevTrack));
-    dispatch(setIsPlaying(true));
-  };
-
-  const handleSkipForward = () => {
-    if (!currentTrack || recentSongs.length === 0) return;
-
-    let nextIndex: number;
-    const currentIndex = recentSongs.findIndex((t) => t.fileUrl === currentTrack.fileUrl);
-
-    if (isShuffled && shuffleIndices.length > 0) {
-      const newShuffleIndex = currentShuffleIndex < shuffleIndices.length - 1 ? currentShuffleIndex + 1 : 0;
-      nextIndex = shuffleIndices[newShuffleIndex];
-      dispatch(setCurrentShuffleIndex(newShuffleIndex));
-    } else if (isRepeating && currentIndex === recentSongs.length - 1) {
-      nextIndex = 0;
-    } else {
-      nextIndex = currentIndex < recentSongs.length - 1 ? currentIndex + 1 : 0;
-    }
-
-    const nextTrack = recentSongs[nextIndex];
-    audio.src = nextTrack.fileUrl;
-    audio.play();
-    dispatch(setCurrentTrack(nextTrack));
-    dispatch(setIsPlaying(true));
-  };
-
-  const handleToggleShuffle = () => {
-    dispatch(toggleShuffle());
-    if (!isShuffled && recentSongs.length > 0) {
-      const indices = Array.from({ length: recentSongs.length }, (_, i) => i);
-      for (let i = indices.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [indices[i], indices[j]] = [indices[j], indices[i]];
-      }
-      dispatch(setShuffleIndices(indices));
-      dispatch(setCurrentShuffleIndex(0));
-    }
-  };
-
-  const handleToggleRepeat = () => {
-    dispatch(toggleRepeat());
-    audio.loop = isRepeating;
-  };
 
   // Format timestamp to a readable date
   const formatPlayedDate = (timestamp: string) => {
@@ -247,7 +175,7 @@ export default function RecentSongsPage() {
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          handlePlay(song);
+                          baseHandlePlay(song);
                         }}
                         className="absolute inset-0 flex items-center justify-center bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity rounded-md"
                       >
@@ -286,7 +214,7 @@ export default function RecentSongsPage() {
           <MusicPlayer
             currentTrack={currentTrack}
             isPlaying={isPlaying}
-            handlePlay={handlePlay}
+            handlePlay={baseHandlePlay}
             handleSkipBack={handleSkipBack}
             handleSkipForward={handleSkipForward}
             toggleShuffle={handleToggleShuffle}

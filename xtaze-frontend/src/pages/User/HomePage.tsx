@@ -1,5 +1,3 @@
-"use client";
-
 import { useEffect, useState } from "react";
 import Sidebar from "./userComponents/SideBar";
 import MusicPlayer from "./userComponents/TrackBar";
@@ -8,15 +6,7 @@ import { WavyBackground } from "../../components/ui/wavy-background";
 import type { Track } from "./types/ITrack";
 import { useDispatch, useSelector } from "react-redux";
 import { clearSignupData, saveSignupData } from "../../redux/userSlice";
-import {
-  setCurrentTrack,
-  setIsPlaying,
-  toggleShuffle,
-  setShuffleIndices,
-  setCurrentShuffleIndex,
-  toggleRepeat,
-  clearAudioState,
-} from "../../redux/audioSlice";
+import { clearAudioState } from "../../redux/audioSlice";
 import { RootState } from "../../store/store";
 import { useNavigate } from "react-router-dom";
 import { audio, audioContext, updateEqualizer } from "../../utils/audio";
@@ -25,37 +15,10 @@ import { Search, Power, Play, Pause, Plus, Heart, Download, ListMusic } from "lu
 import { fetchTracks, fetchLikedSongs, incrementListeners, toggleLike, getMyplaylist, addTrackToPlaylist, fetchBanners } from "../../services/userService";
 import { toast } from "sonner";
 import { IBanner } from "./types/IBanner";
-
-interface UserSignupData {
-  _id?: string;
-  username: string;
-  country: string;
-  gender: string;
-  year: string;
-  phone: string;
-  email: string;
-  role?: string;
-  isActive?: boolean;
-  premium?: boolean;
-  profilePic?: string;
-  likedSongs?: string[];
-}
-
-interface Playlist {
-  _id?: string | number;
-  title: string;
-  description: string;
-  imageUrl: string | null;
-  createdBy: string;
-}
-
-interface QueueTrack {
-  id: string;
-  title: string;
-  artists: string | string[];
-  fileUrl: string;
-  img?: string;
-}
+import { useAudioPlayback } from "./userComponents/audioPlayback";
+import { UserSignupData } from "./types/IUser";
+import { QueueTrack } from "./types/IQueue";
+import { Playlist } from "./types/IPlaylist";
 
 export default function Home() {
   const [tracks, setTracks] = useState<Track[]>([]);
@@ -74,8 +37,16 @@ export default function Home() {
   const navigate = useNavigate();
 
   const user = useSelector((state: RootState) => state.user.signupData) as UserSignupData | null;
-  const { currentTrack, isPlaying, isShuffled, isRepeating, shuffleIndices, currentShuffleIndex } =
-    useSelector((state: RootState) => state.audio);
+  const { currentTrack, isPlaying, isShuffled, isRepeating } = useSelector((state: RootState) => state.audio);
+
+  // Use the audio playback hook
+  const {
+    handlePlay: baseHandlePlay,
+    handleSkipBack,
+    handleSkipForward,
+    handleToggleShuffle,
+    handleToggleRepeat,
+  } = useAudioPlayback(tracks);
 
   // Audio context setup
   useEffect(() => {
@@ -205,24 +176,12 @@ export default function Home() {
     }
   };
 
+  // Wrap handlePlay to include Home-specific logic
   const handlePlay = (track: Track) => {
-    if (currentTrack?.fileUrl === track.fileUrl) {
-      if (isPlaying) {
-        audio.pause();
-        dispatch(setIsPlaying(false));
-      } else {
-        audio.play();
-        dispatch(setIsPlaying(true));
-      }
-    } else {
-      audio.src = track.fileUrl;
-      audio.play();
-      dispatch(setCurrentTrack(track));
-      dispatch(setIsPlaying(true));
-      if (!playedSongs.has(track._id || track.fileUrl)) {
-        handleIncrementListeners(track._id || track.fileUrl);
-        setPlayedSongs((prev) => new Set(prev).add(track._id || track.fileUrl));
-      }
+    baseHandlePlay(track);
+    if (currentTrack?.fileUrl !== track.fileUrl && !playedSongs.has(track._id || track.fileUrl)) {
+      handleIncrementListeners(track._id || track.fileUrl);
+      setPlayedSongs((prev) => new Set(prev).add(track._id || track.fileUrl));
     }
   };
 
@@ -277,7 +236,7 @@ export default function Home() {
     };
     const storedQueue = JSON.parse(localStorage.getItem("playQueue") || "[]");
     const updatedQueue = [...storedQueue, queueEntry].filter(
-      (q, index, self) => index === self.findIndex((t) => t.id === q.id) // ith remove duplicates anu
+      (q, index, self) => index === self.findIndex((t) => t.id === q.id)
     );
     localStorage.setItem("playQueue", JSON.stringify(updatedQueue));
     toast.success(`Added ${track.title} to queue`);
@@ -286,110 +245,6 @@ export default function Home() {
   const toggleModal = () => {
     setIsModalOpen((prevState) => !prevState);
   };
-
-  const generateShuffleIndices = () => {
-    const indices = Array.from({ length: tracks.length }, (_, i) => i);
-    for (let i = indices.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [indices[i], indices[j]] = [indices[j], indices[i]];
-    }
-    return indices;
-  };
-
-  const handleSkipForward = () => {
-    if (!currentTrack || tracks.length === 0) return;
-  
-    const storedQueue = JSON.parse(localStorage.getItem("playQueue") || "[]");
-    if (storedQueue.length > 0) {
-      let updatedQueue = storedQueue;
-      const currentQueueIndex = storedQueue.findIndex((q: QueueTrack) => q.fileUrl === currentTrack.fileUrl);
-      
-      // If current track is in the queue, remove it
-      if (currentQueueIndex !== -1) {
-        updatedQueue = storedQueue.filter((_: QueueTrack, i: number) => i !== currentQueueIndex);
-      }
-  
-      // Play the first song in the remaining queue (if any)
-      const nextTrack = updatedQueue[0];
-      if (nextTrack) {
-        updatedQueue.shift(); // Remove the song we’re about to play from the queue
-        localStorage.setItem("playQueue", JSON.stringify(updatedQueue));
-        audio.src = nextTrack.fileUrl;
-        audio.play();
-        dispatch(setCurrentTrack(nextTrack));
-        dispatch(setIsPlaying(true));
-        return;
-      } else {
-        // If queue becomes empty after removal, clear it
-        localStorage.setItem("playQueue", JSON.stringify([]));
-      }
-    }
-  
-    // Fallback to shuffle or linear progression if queue is empty
-    if (isShuffled) {
-      const nextShuffleIndex = (currentShuffleIndex + 1) % shuffleIndices.length;
-      dispatch(setCurrentShuffleIndex(nextShuffleIndex));
-      handlePlay(tracks[shuffleIndices[nextShuffleIndex]]);
-    } else {
-      const currentIndex = tracks.findIndex((track) => track.fileUrl === currentTrack.fileUrl);
-      const nextIndex = (currentIndex + 1) % tracks.length;
-      handlePlay(tracks[nextIndex]);
-    }
-
-    if (isShuffled) {
-      const nextShuffleIndex = (currentShuffleIndex + 1) % shuffleIndices.length;
-      dispatch(setCurrentShuffleIndex(nextShuffleIndex));
-      handlePlay(tracks[shuffleIndices[nextShuffleIndex]]);
-    } else {
-      const currentIndex = tracks.findIndex((track) => track.fileUrl === currentTrack.fileUrl);
-      const nextIndex = (currentIndex + 1) % tracks.length;
-      handlePlay(tracks[nextIndex]);
-    }
-  };
-
-  const handleSkipBack = () => {
-    if (!currentTrack || tracks.length === 0) return;
-    if (isShuffled) {
-      const prevShuffleIndex =
-        currentShuffleIndex === 0 ? shuffleIndices.length - 1 : currentShuffleIndex - 1;
-      dispatch(setCurrentShuffleIndex(prevShuffleIndex));
-      handlePlay(tracks[shuffleIndices[prevShuffleIndex]]);
-    } else {
-      const currentIndex = tracks.findIndex((track) => track.fileUrl === currentTrack.fileUrl);
-      const prevIndex = currentIndex === 0 ? tracks.length - 1 : currentIndex - 1;
-      handlePlay(tracks[prevIndex]);
-    }
-  };
-
-  const handleToggleShuffle = () => {
-    dispatch(toggleShuffle());
-    if (!isShuffled) {
-      const newShuffleIndices = generateShuffleIndices();
-      dispatch(setShuffleIndices(newShuffleIndices));
-      if (currentTrack) {
-        const currentIndex = tracks.findIndex((track) => track.fileUrl === currentTrack.fileUrl);
-        dispatch(setCurrentShuffleIndex(newShuffleIndices.indexOf(currentIndex)));
-      }
-    }
-  };
-
-  const handleToggleRepeat = () => {
-    dispatch(toggleRepeat());
-    audio.loop = !isRepeating;
-  };
-
-  useEffect(() => {
-    const handleEnded = () => {
-      if (isRepeating) {
-        audio.currentTime = 0;
-        audio.play();
-      } else {
-        handleSkipForward(); // Use skip forward to handle queue
-      }
-    };
-    audio.addEventListener("ended", handleEnded);
-    return () => audio.removeEventListener("ended", handleEnded);
-  }, [audio, isRepeating, isShuffled, currentShuffleIndex, tracks, currentTrack, dispatch]);
 
   const handleClick = () => {
     audio.pause();

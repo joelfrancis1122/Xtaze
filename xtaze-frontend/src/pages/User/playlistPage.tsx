@@ -7,15 +7,38 @@ import { toast } from "sonner";
 import { createPlaylists, getMyplaylist } from "../../services/userService";
 import image from "../../assets/ab67706f0000000216605bf6c66f6e5a783411b8.jpeg";
 import { Playlist } from "./types/IPlaylist";
+import { useSelector } from "react-redux";
+import { RootState } from "../../store/store";
+import MusicPlayer from "./userComponents/TrackBar";
+import { useAudioPlayback } from "./userComponents/audioPlayback";
+import { Track } from "./types/ITrack";
+import { audio } from "../../utils/audio";
+import PreviewModal from "./PreviewPage";
 
 export default function PlaylistsPage() {
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
+    const [tracks, setTracks] = useState<Track[]>([]);
+  
   const [newPlaylistName, setNewPlaylistName] = useState("");
   const [newPlaylistDescription, setNewPlaylistDescription] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [dropdownOpenId, setDropdownOpenId] = useState<number | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const { currentTrack, isPlaying, isShuffled, isRepeating } = useSelector((state: RootState) => state.audio);
+  const {
+    handlePlay: baseHandlePlay,
+    handleSkipBack,
+    handleSkipForward,
+    handleToggleShuffle,
+    handleToggleRepeat,
+  } = useAudioPlayback(tracks);
+
   const navigate = useNavigate();
   const { userId } = useParams();
+  const toggleModal = () => {
+    setIsModalOpen((prevState) => !prevState);
+  };
 
   const handleCreatePlaylist = async () => {
     if (!newPlaylistName.trim()) return;
@@ -145,6 +168,24 @@ export default function PlaylistsPage() {
           </div>
         )}
       </div>
+      {currentTrack && (
+              <MusicPlayer
+                currentTrack={currentTrack}
+                isPlaying={isPlaying}
+                handlePlay={baseHandlePlay}
+                handleSkipBack={handleSkipBack}
+                handleSkipForward={handleSkipForward}
+                toggleShuffle={handleToggleShuffle}
+                toggleRepeat={handleToggleRepeat}
+                isShuffled={isShuffled}
+                isRepeating={isRepeating}
+                audio={audio}
+                toggleModal={toggleModal}
+              />
+            )}
+               {currentTrack && (
+        <PreviewModal track={currentTrack} isOpen={isModalOpen} toggleModal={toggleModal} />
+      )}
     </div>
   );
 }
