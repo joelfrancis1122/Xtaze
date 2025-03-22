@@ -15,7 +15,7 @@ export default interface IuserUseCase{
     resetPassword(token: string,password:string): Promise<{ success: boolean; message: string; token?: string; refreshToken?:string;user?: IUser |null}>;
     createPlaylist(_id: string,newplaylist:IPlaylist): Promise<IPlaylist | null>;
     getAllPlaylist(userId: string): Promise<IPlaylist[] | null>;
-    getPlaylist(id: string): Promise<ITrack[] | null>;
+    getPlaylist(id:string,pageNum:number,limitNum:number,skip:number):Promise<{ tracks: ITrack[]; total: number } | null> 
 
     refresh(refreshToken: string): Promise<{ success: boolean; message: string; token?: string; refreshToken?:string;user?: IUser |null}>;
     uploadProfile(userID:string,file:Express.Multer.File): Promise<{ success: boolean; message: string }>

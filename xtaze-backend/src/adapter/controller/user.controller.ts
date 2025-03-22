@@ -327,10 +327,14 @@ export default class UserController {
   }
   async getTracksInPlaylist(req: Request, res: Response, next: NextFunction) {
     try {
-      const id = req.query.id
-      console.log(req.query.id)
+      const { id, page = "1", limit  } = req.query;
+    const pageNum = parseInt(page as string, 10);
+    const limitNum = parseInt(limit as string, 10);
+    const skip = (pageNum - 1) * limitNum;
+
+    console.log(id, "Fetching tracks with pagination:", { pageNum, limitNum ,skip});
       console.log("Get playlist:");
-      const track = await this._userUseCase.getPlaylist(id as string)
+      const track = await this._userUseCase.getPlaylist(id as string,pageNum,limitNum,skip)
       console.log(track,"this is track ma")
       res.json({ success: true ,data:track});
     } catch (error) {

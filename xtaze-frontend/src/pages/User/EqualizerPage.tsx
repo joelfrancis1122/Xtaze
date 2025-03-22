@@ -69,27 +69,29 @@ export default function EqualizerPage() {
 
   useEffect(() => {
     if (!audioContext) return;
-
+  
     const resumeAudioContext = () => {
       if (audioContext && audioContext.state === "suspended") {
         audioContext.resume().then(() => console.log("AudioContext resumed"));
       }
     };
     document.addEventListener("click", resumeAudioContext, { once: true });
-
+  
     audio.crossOrigin = "anonymous";
-    if (!audio.src) {
-      audio.src = "/music/test.mp3";
+    if (!audio.src && currentTrack) {
+      audio.src = currentTrack.fileUrl; // Use currentTrack if available
+    } else if (!audio.src) {
+      audio.src = "/music/test.mp3"; // Fallback
       audio.loop = true;
     }
-    audio.play().catch((err) => console.error("Play error:", err));
-
+    // Remove audio.play() from here
+  
     updateEqualizer(equalizerValues);
-
+  
     return () => {
       document.removeEventListener("click", resumeAudioContext);
     };
-  }, [equalizerValues]);
+  }, [equalizerValues, currentTrack]); // Add currentTrack to dependencies
 
   useEffect(() => {
     audio.volume = isMuted ? 0 : volume / 100;

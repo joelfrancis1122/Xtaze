@@ -390,9 +390,9 @@ export default class UserUseCase {
       throw new Error("An error occurred while creating playlist.");
     }
   }
-  async getPlaylist(id:string): Promise<ITrack[] | null> {
+  async getPlaylist(id:string,pageNum:number,limitNum:number,skip:number): Promise<{ tracks: ITrack[]; total: number } | null> {
     try {
-      const playlist = await this._userRepository.getPlaylist(id);
+      const playlist = await this._userRepository.getPlaylist(id,pageNum,limitNum,skip);
 
       console.log(playlist,"this s the playlistodi odi ")
       if (!playlist) {

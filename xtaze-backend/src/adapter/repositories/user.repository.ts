@@ -120,7 +120,7 @@ export default class UserRepository implements IUserRepository {
     }
   }
 
-  async getPlaylist(id: string): Promise<ITrack[] | null> {
+  async getPlaylist(id: string, pageNum: number, limitNum: number, skip: number): Promise<{ tracks: ITrack[]; total: number } | null> {
     try {
       console.log(id, "this is the playlist id");
 
@@ -129,18 +129,22 @@ export default class UserRepository implements IUserRepository {
 
       if (!playlist || !playlist.tracks || playlist.tracks.length === 0) {
         console.error("Playlist not found or has no tracks");
-        return [];
+        return { tracks: [], total: 0 };
       }
 
       // Fetch all track details based on the track IDs
-      const tracks = await Track.find({ _id: { $in: playlist.tracks } });
-
-      return tracks; // Return an array of track details
+      const tracks = await Track.find({ _id: { $in: playlist.tracks } })
+        .skip(skip)
+        .limit(limitNum);
+      const total = playlist.tracks.length;
+      console.log({ tracks, total }, "Response data");
+      return { tracks, total }; // Return an array of track details
     } catch (error) {
       console.error("Error finding tracks for playlist:", error);
       return null;
     }
   }
+
   async findByCreator(userId: string): Promise<IPlaylist[] | null> {
     try {
       const data = await PlaylistModel.find({ createdBy: userId }).lean();
@@ -202,7 +206,7 @@ export default class UserRepository implements IUserRepository {
   async createPlaylist(userId: string, newPlaylist: IPlaylist): Promise<IPlaylist | null> {
     try {
       console.log(newPlaylist, "ithe an odi");
-  
+
       const playlist = new PlaylistModel({
         title: newPlaylist.title,
         description: newPlaylist.description,
@@ -210,12 +214,12 @@ export default class UserRepository implements IUserRepository {
         createdBy: userId, // Assign userId instead of newPlaylist.createdBy
         tracks: newPlaylist.tracks || [],
       });
-  
+
       const savedPlaylist = await playlist.save();
-  
+
       // Fetch the fully saved playlist (ensuring all fields, including _id, are included)
       const completePlaylist = await PlaylistModel.findById(savedPlaylist._id).lean();
-  
+
       console.log("Saved playlist:", completePlaylist);
       return completePlaylist as IPlaylist;
     } catch (error) {
@@ -223,7 +227,7 @@ export default class UserRepository implements IUserRepository {
       return null;
     }
   }
-  
+
 
   async addToPlaylist(userId: string, playlistId: string, trackId: string): Promise<IPlaylist | null> {
     try {
@@ -323,11 +327,11 @@ export default class UserRepository implements IUserRepository {
       throw error;
     }
   }
-  async findAll(): Promise<IBanner[]|null> {
+  async findAll(): Promise<IBanner[] | null> {
     console.log("odi");
-   const data = await BannerModel.find({isActive:true})
+    const data = await BannerModel.find({ isActive: true })
 
     return data
-}
+  }
 
 }

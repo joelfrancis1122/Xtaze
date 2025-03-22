@@ -271,16 +271,16 @@ export const getMyplaylist = async (userId: string): Promise<Playlist[]> => {
 };
 
 
-export const fetchPlaylistTracks = async (id: string): Promise<Track[]> => {
-  console.log(id,"odi odi o ds")
-  const data = await apiCall<{ success: boolean; message?: string; data: Track[]}>(
+export const fetchPlaylistTracks = async (id: string, page: number = 1, limit: number = 20): Promise<{ tracks: Track[]; total: number }> => {
+  console.log(id, "Fetching tracks with pagination", { page, limit });
+  const data = await apiCall<{ success: boolean; message?: string; data: { tracks: Track[]; total: number } }>(
     userApi,
     "get",
-    `/getTracksInPlaylist?id=${id}` 
+    `/getTracksInPlaylist?id=${id}&page=${page}&limit=${limit}`
   );
-  if (!data.success) throw new Error(data.message || "Failed to get all playlists");
-  console.log(data,"ithan sanam");
-  return data.data; 
+  if (!data.success) throw new Error(data.message || "Failed to fetch playlist tracks");
+  console.log(data, "Playlist tracks response");
+  return data.data;
 };
 
 export const fetchBanners = async (): Promise<IBanner[]> => {

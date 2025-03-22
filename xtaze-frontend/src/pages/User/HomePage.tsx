@@ -51,30 +51,29 @@ export default function Home() {
   // Audio context setup
   useEffect(() => {
     if (!audioContext) return;
-
+  
     const resumeAudioContext = () => {
       if (audioContext && audioContext.state === "suspended") {
         audioContext.resume().then(() => console.log("AudioContext resumed"));
       }
     };
     document.addEventListener("click", resumeAudioContext, { once: true });
-
+  
     audio.crossOrigin = "anonymous";
     if (!audio.src) {
       audio.src = "/music/test.mp3";
       audio.loop = true;
     }
-    audio.play().catch((err) => console.error("Play error:", err));
-
+  
     const savedEqualizerValues = localStorage.getItem("equalizerValues");
     if (savedEqualizerValues) {
       updateEqualizer(JSON.parse(savedEqualizerValues));
     }
-
+  
     const savedVolume = localStorage.getItem("volume");
     const savedIsMuted = localStorage.getItem("isMuted");
     if (savedVolume && savedIsMuted) audio.volume = JSON.parse(savedIsMuted) ? 0 : Number(savedVolume) / 100;
-
+  
     return () => {
       document.removeEventListener("click", resumeAudioContext);
     };

@@ -19,7 +19,7 @@ export interface IUserRepository {
   createPlaylist(_id:string,newplaylist:IPlaylist): Promise<IPlaylist | null>;
   addToPlaylist(userId:string,playlistId:string,trackId:string): Promise<IPlaylist | null>;
   findByCreator(userId:string): Promise<IPlaylist[] | null>;
-  getPlaylist(id: string): Promise<ITrack[] | null>;
+  getPlaylist(id:string,pageNum:number,limitNum:number,skip:number):Promise<{ tracks: ITrack[]; total: number } | null> ;
   deletePlaylist(id: string): Promise<IPlaylist | null>;
   updateNamePlaylist(id: string,playlistName:string): Promise<IPlaylist | null>;
   updateImagePlaylist(id: string,file:string): Promise<IPlaylist | null>;

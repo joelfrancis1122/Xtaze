@@ -161,7 +161,7 @@ export default function RecentSongsPage() {
               </div>
               {recentSongs.map((song, index) => (
                 <div
-                  key={song._id || song.fileUrl}
+                  key={index}
                   className="grid grid-cols-[48px_2fr_1fr_1fr_1fr_48px] gap-4 px-6 py-4 hover:bg-[#212121] transition-all duration-200 cursor-pointer items-center group"
                 >
                   <span className="text-gray-400 text-lg text-center">{index + 1}</span>
