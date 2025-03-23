@@ -436,6 +436,7 @@ export default class UserUseCase {
   async getUpdatedArtist(artistId: string): Promise<IUser | null> {
     return await this._userRepository.getupdatedArtist(artistId);
   }
+
   async execute(userId: string, priceId: string): Promise<Stripe.Checkout.Session> {
     try {
       // Check if user exists
@@ -443,7 +444,9 @@ export default class UserUseCase {
       if (!user) {
         throw new Error("User not found");
       }
-
+      const price = await this.stripe.prices.retrieve(priceId);
+      const product = await this.stripe.products.retrieve(price.product as string);
+      const planName = product.name;
       // Create checkout session with Stripe
       const session = await this.stripe.checkout.sessions.create({
         payment_method_types: ["card", "link"], // Add "link" for one-click
@@ -455,7 +458,7 @@ export default class UserUseCase {
       });
 
       // Update user subscription status (premium: true)
-      const updatedUser = await this._userRepository.updateUserSubscription(userId, true);
+      const updatedUser = await this._userRepository.updateUserSubscription(userId, planName);
       if (!updatedUser) {
         throw new Error("Failed to update user subscription status");
       }

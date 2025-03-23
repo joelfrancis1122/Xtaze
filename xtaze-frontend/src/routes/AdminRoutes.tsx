@@ -4,6 +4,7 @@ import GenreManagement from "../pages/Admin/GenrePage";
 import ArtistList from "../pages/Admin/ArtistPage";
 import AdminBannerManagement from "../pages/Admin/BannerPage";
 import AdminCouponPage from "../pages/Admin/CouponPage";
+import AdminSubscriptionPage from "../pages/Admin/Subscription";
 
 export const AdminRoutes = () => (
     <>
@@ -12,6 +13,7 @@ export const AdminRoutes = () => (
     <Route path="/admin/artists" element={<ArtistList />} />
     <Route path="/admin/banner" element={<AdminBannerManagement />} />
     <Route path="/admin/coupons" element={<AdminCouponPage />} />
+    <Route path="/admin/subscriptions" element={<AdminSubscriptionPage />} />
 
     </>
 );

@@ -9,12 +9,13 @@ const userSchema = new mongoose.Schema(
     phone: { type: Number, required: true },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
-    premium: { type: Boolean, default: false },
+    premium: { type: String, default: "Free" },
     role: {
       type: String,
       enum: ["user", "artist", "provider", "admin"],
       required: true,
       default: "user",
+      
     },
     isActive: { type: Boolean, default: true },
     profilePic: { type: String, default: null },

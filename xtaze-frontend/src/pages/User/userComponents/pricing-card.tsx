@@ -34,7 +34,7 @@ export function PricingCard({ name, price, period, features, featured, onGetPrem
           ))}
         </ul>
       </div>
-      {name === "Premium" && (
+      {name!=="Free" && (
         <button
           onClick={onGetPremium}
           className="mt-6 w-full bg-red-500 text-white py-2 rounded-md hover:bg-red-600 transition-colors"

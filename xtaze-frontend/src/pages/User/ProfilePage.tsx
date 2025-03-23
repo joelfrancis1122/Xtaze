@@ -10,21 +10,9 @@ import Cropper, { Area } from "react-easy-crop";
 import { Camera, Power, Search } from "lucide-react";
 import Sidebar from "./userComponents/SideBar";
 import { uploadProfileImage } from "../../services/userService";
+import { UserSignupData } from "./types/IUser";
 
-interface UserSignupData {
-  _id?: string;
-  username: string;
-  country: string;
-  gender: string;
-  year: string;
-  phone: string;
-  email: string;
-  role?: string;
-  isActive?: boolean;
-  premium?: boolean;
-  profilePic?: string;
-  likedSongs?: string[];
-}
+
 
 export default function Home() {
   const user = useSelector((state: RootState) => state.user.signupData) as UserSignupData | null;
@@ -201,9 +189,9 @@ export default function Home() {
 
             <h3 className="text-2xl font-bold text-white mb-6">Your Subscription Plan</h3>
             <div className="bg-[#1d1d1d] p-6 rounded-xl shadow-lg flex flex-col items-center border border-gray-800 transition-all hover:shadow-xl">
-              {user?.premium ? (
+              {user?.premium!=="Free" ? (
                 <div className="text-center space-y-2">
-                  <p className="text-xl font-semibold text-white">Premium Plan</p>
+                  <p className="text-xl font-semibold text-white">{user?.premium}</p>
                   <p className="text-sm text-gray-300">Enjoy full access to all features!</p>
                   <span className="inline-block bg-green-500 text-white text-xs font-medium px-2.5 py-1 rounded-full">
                     Active

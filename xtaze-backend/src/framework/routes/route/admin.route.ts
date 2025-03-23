@@ -29,5 +29,9 @@ router.put("/banners/:id",upload.single("image"),(req:Request,res:Response,next:
 
 router.patch("/toggleBlock/:id",(req:Request,res:Response,next:NextFunction)=>adminController.toggleblockArtist(req,res,next))
 
+router.post("/stripe/createProduct",(req:Request,res:Response,next:NextFunction)=>adminController.createProduct(req,res,next))
+router.get("/stripe/plans",(req:Request,res:Response,next:NextFunction)=>adminController.getPlans(req,res,next))
+router.post("/stripe/products/delete",(req:Request,res:Response,next:NextFunction)=>adminController.archiveSubscriptionPlan(req,res,next))
+router.put("/stripe/products/",(req:Request,res:Response,next:NextFunction)=>adminController.updateSubscriptionPlan(req,res,next))
 export default router;
 

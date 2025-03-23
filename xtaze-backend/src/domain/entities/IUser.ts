@@ -9,7 +9,7 @@ export default interface IUser {
   phone: number;
   email: string;
   password: string;
-  premium?: boolean;
+  premium?: string;
   role?: "user" | "artist" | "provider" | "admin";
   isActive?: boolean; 
   profilePic?:string;

@@ -98,7 +98,7 @@ export default function Home() {
         const { tracks: fetchedTracks, user: updatedUser } = await fetchTracks(
           user?._id || "",
           token,
-          user?.premium || false
+          user?.premium || "Free"
         );
         setTracks(fetchedTracks);
 
@@ -127,9 +127,9 @@ export default function Home() {
 
   // Random index for featured track
   useEffect(() => {
-    if (user?.premium && tracks.length > 0 && randomIndex === null) {
+    if (user?.premium!=="Free" && tracks.length > 0 && randomIndex === null) {
       setRandomIndex(Math.floor(Math.random() * tracks.length));
-    } else if (!user?.premium || tracks.length === 0) {
+    } else if (user?.premium=="Free" || tracks.length === 0) {
       setRandomIndex(null);
     }
   }, [user?.premium, tracks.length]);
@@ -383,113 +383,120 @@ export default function Home() {
                 <div className="text-center py-4">Loading tracks...</div>
               ) : (
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                  {newArrivals.map((track, index) => (
-                    <div
-                      key={index}
-                      className="group bg-[#1d1d1d] rounded-lg p-4 hover:bg-[#242424] transition-colors flex flex-col"
+  {newArrivals.map((track, index) => (
+    <div
+      key={index}
+      className="group bg-[#1d1d1d] rounded-lg p-4 hover:bg-[#242424] transition-colors flex flex-col"
+    >
+      <div className="w-full h-[200px] flex flex-col mb-3">
+        <div className="relative w-full h-[90%]">
+          <img
+            src={track.img || "/placeholder.svg"}
+            alt="Track Cover Top"
+            className="w-full h-full object-cover rounded-t-md"
+          />
+          <button
+            onClick={() => handlePlay(track)}
+            className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity z-10 rounded-t-md"
+          >
+            {currentTrack?.fileUrl === track.fileUrl && isPlaying ? (
+              <Pause size={24} className="text-white" />
+            ) : (
+              <Play size={24} className="text-white" />
+            )}
+          </button>
+        </div>
+        <img
+          src={track.img || "/placeholder.svg"}
+          alt="Track Cover Bottom"
+          className="w-full h-[10%] object-cover rounded-b-md blur-lg"
+        />
+      </div>
+      <div className="text-white font-semibold truncate">{track.title}</div>
+      <div className="text-gray-400 text-sm truncate">
+        {Array.isArray(track.artists) ? track.artists.join(", ") : track.artists}
+      </div>
+      
+      {/* Conditionally Render Buttons if User is Premium */}
+      {user?.premium !== "Free" && (
+        <div className="relative flex gap-2 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+          <button
+            className="p-1 hover:bg-[#333333] rounded-full"
+            onClick={(e) => {
+              e.stopPropagation();
+              setDropdownTrackId(dropdownTrackId === track._id ? null : track._id);
+            }}
+          >
+            <Plus size={16} />
+          </button>
+          
+          {dropdownTrackId === track._id && (
+            <div className="absolute left-0 mt-8 w-48 bg-[#242424] rounded-md shadow-lg z-20">
+              <ul className="py-1">
+                {playlists.length > 0 ? (
+                  playlists.map((playlist) => (
+                    <li
+                      key={playlist._id}
+                      className="px-4 py-2 hover:bg-[#333333] cursor-pointer text-white"
+                      onClick={() => handleAddToPlaylist(track._id || track.fileUrl, playlist._id as string)}
                     >
-                      <div className="w-full h-[200px] flex flex-col mb-3">
-                        <div className="relative w-full h-[90%]">
-                          <img
-                            src={track.img || "/placeholder.svg"}
-                            alt="Track Cover Top"
-                            className="w-full h-full object-cover rounded-t-md"
-                          />
-                          <button
-                            onClick={() => handlePlay(track)}
-                            className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity z-10 rounded-t-md"
-                          >
-                            {currentTrack?.fileUrl === track.fileUrl && isPlaying ? (
-                              <Pause size={24} className="text-white" />
-                            ) : (
-                              <Play size={24} className="text-white" />
-                            )}
-                          </button>
-                        </div>
-                        <img
-                          src={track.img || "/placeholder.svg"}
-                          alt="Track Cover Bottom"
-                          className="w-full h-[10%] object-cover rounded-b-md blur-lg"
-                        />
-                      </div>
-                      <div className="text-white font-semibold truncate">{track.title}</div>
-                      <div className="text-gray-400 text-sm truncate">
-                        {Array.isArray(track.artists) ? track.artists.join(", ") : track.artists}
-                      </div>
-                      <div className="relative flex gap-2 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button
-                          className="p-1 hover:bg-[#333333] rounded-full"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setDropdownTrackId(dropdownTrackId === track._id ? null : track._id);
-                          }}
-                        >
-                          <Plus size={16} />
-                        </button>
-                        {dropdownTrackId === track._id && (
-                          <div className="absolute left-0 mt-8 w-48 bg-[#242424] rounded-md shadow-lg z-20">
-                            <ul className="py-1">
-                              {playlists.length > 0 ? (
-                                playlists.map((playlist) => (
-                                  <li
-                                    key={playlist._id}
-                                    className="px-4 py-2 hover:bg-[#333333] cursor-pointer text-white"
-                                    onClick={() => handleAddToPlaylist(track._id || track.fileUrl, playlist._id as string)}
-                                  >
-                                    {playlist.title}
-                                  </li>
-                                ))
-                              ) : (
-                                <li className="px-4 py-2 text-gray-400">No playlists available</li>
-                              )}
-                              <li
-                                className="px-4 py-2 hover:bg-[#333333] cursor-pointer text-white border-t border-gray-700"
-                                onClick={() => navigate(`/playlists/${user?._id}`)}
-                              >
-                                Create New Playlist
-                              </li>
-                            </ul>
-                          </div>
-                        )}
-                        {user?.premium ? (
-                          <button
-                            onClick={() => handleLike(track._id || track.fileUrl)}
-                            className={`p-1 hover:bg-[#333333] rounded-full ${likedSongs.has(track._id || track.fileUrl) ? "text-red-500" : "text-white"}`}
-                          >
-                            <Heart
-                              size={16}
-                              fill={likedSongs.has(track._id || track.fileUrl) ? "currentColor" : "none"}
-                            />
-                          </button>
-                        ) : null}
-                        <button
-                          className="p-1 hover:bg-[#333333] rounded-full"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDownload(track.fileUrl, track.title);
-                          }}
-                        >
-                          <Download size={16} />
-                        </button>
-                        <button
-                          className="p-1 hover:bg-[#333333] rounded-full"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleAddToQueue(track);
-                          }}
-                        >
-                          <ListMusic size={16} />
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                      {playlist.title}
+                    </li>
+                  ))
+                ) : (
+                  <li className="px-4 py-2 text-gray-400">No playlists available</li>
+                )}
+                <li
+                  className="px-4 py-2 hover:bg-[#333333] cursor-pointer text-white border-t border-gray-700"
+                  onClick={() => navigate(`/playlists/${user?._id}`)}
+                >
+                  Create New Playlist
+                </li>
+              </ul>
+            </div>
+          )}
+
+          <button
+            onClick={() => handleLike(track._id || track.fileUrl)}
+            className={`p-1 hover:bg-[#333333] rounded-full ${likedSongs.has(track._id || track.fileUrl) ? "text-red-500" : "text-white"}`}
+          >
+            <Heart
+              size={16}
+              fill={likedSongs.has(track._id || track.fileUrl) ? "currentColor" : "none"}
+            />
+          </button>
+          
+          <button
+            className="p-1 hover:bg-[#333333] rounded-full"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleDownload(track.fileUrl, track.title);
+            }}
+          >
+            <Download size={16} />
+          </button>
+          
+          <button
+            className="p-1 hover:bg-[#333333] rounded-full"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleAddToQueue(track);
+            }}
+          >
+            <ListMusic size={16} />
+          </button>
+        </div>
+      )}
+    </div>
+  ))}
+</div>
+
               )}
             </div>
 
             {/* Featured Today / Enhance Experience */}
             <div className="mb-8">
-              {user?.premium && randomIndex !== null ? (
+              {user?.premium!=="Free" && randomIndex !== null ? (
                 <>
                   <h2 className="text-3xl font-bold mb-4 font-sans">Featured Today</h2>
                   <div
@@ -554,105 +561,115 @@ export default function Home() {
                 <div className="text-center py-4">Loading tracks...</div>
               ) : (
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                  {otherSongs.map((track, index) => (
-                    <div
-                      key={index}
-                      className="group bg-[#1d1d1d] rounded-lg p-4 hover:bg-[#242424] transition-colors flex flex-col"
+  {otherSongs.map((track, index) => (
+    <div
+      key={index}
+      className="group bg-[#1d1d1d] rounded-lg p-4 hover:bg-[#242424] transition-colors flex flex-col"
+    >
+      <div className="w-full h-[200px] flex flex-col mb-3">
+        <div className="relative w-full h-[90%]">
+          <img
+            src={track.img || "/placeholder.svg"}
+            alt="Track Cover Top"
+            className="w-full h-full object-cover rounded-t-md"
+          />
+          <button
+            onClick={() => handlePlay(track)}
+            className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity z-10 rounded-t-md"
+          >
+            {currentTrack?.fileUrl === track.fileUrl && isPlaying ? (
+              <Pause size={24} className="text-white" />
+            ) : (
+              <Play size={24} className="text-white" />
+            )}
+          </button>
+        </div>
+        <img
+          src={track.img || "/placeholder.svg"}
+          alt="Track Cover Bottom"
+          className="w-full h-[10%] object-cover rounded-b-md blur-lg"
+        />
+      </div>
+      <div className="text-white font-semibold truncate">{track.title}</div>
+      <div className="text-gray-400 text-sm truncate">
+        {Array.isArray(track.artists) ? track.artists.join(", ") : track.artists}
+      </div>
+
+      {user?.premium !== "Free" && (
+        <div className="relative flex gap-2 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+          <button
+            className="p-1 hover:bg-[#333333] rounded-full"
+            onClick={(e) => {
+              e.stopPropagation();
+              setDropdownTrackId(dropdownTrackId === track._id ? null : track._id);
+            }}
+          >
+            <Plus size={16} />
+          </button>
+
+          {dropdownTrackId === track._id && (
+            <div className="absolute left-0 mt-8 w-48 bg-[#242424] rounded-md shadow-lg z-20">
+              <ul className="py-1">
+                {playlists.length > 0 ? (
+                  playlists.map((playlist) => (
+                    <li
+                      key={playlist._id}
+                      className="px-4 py-2 hover:bg-[#333333] cursor-pointer text-white"
+                      onClick={() => handleAddToPlaylist(track._id || track.fileUrl, playlist._id as string)}
                     >
-                      <div className="w-full h-[200px] flex flex-col mb-3">
-                        <div className="relative w-full h-[90%]">
-                          <img
-                            src={track.img || "/placeholder.svg"}
-                            alt="Track Cover Top"
-                            className="w-full h-full object-cover rounded-t-md"
-                          />
-                          <button
-                            onClick={() => handlePlay(track)}
-                            className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity z-10 rounded-t-md"
-                          >
-                            {currentTrack?.fileUrl === track.fileUrl && isPlaying ? (
-                              <Pause size={24} className="text-white" />
-                            ) : (
-                              <Play size={24} className="text-white" />
-                            )}
-                          </button>
-                        </div>
-                        <img
-                          src={track.img || "/placeholder.svg"}
-                          alt="Track Cover Bottom"
-                          className="w-full h-[10%] object-cover rounded-b-md blur-lg"
-                        />
-                      </div>
-                      <div className="text-white font-semibold truncate">{track.title}</div>
-                      <div className="text-gray-400 text-sm truncate">
-                        {Array.isArray(track.artists) ? track.artists.join(", ") : track.artists}
-                      </div>
-                      <div className="relative flex gap-2 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button
-                          className="p-1 hover:bg-[#333333] rounded-full"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setDropdownTrackId(dropdownTrackId === track._id ? null : track._id);
-                          }}
-                        >
-                          <Plus size={16} />
-                        </button>
-                        {dropdownTrackId === track._id && (
-                          <div className="absolute left-0 mt-8 w-48 bg-[#242424] rounded-md shadow-lg z-20">
-                            <ul className="py-1">
-                              {playlists.length > 0 ? (
-                                playlists.map((playlist) => (
-                                  <li
-                                    key={playlist._id}
-                                    className="px-4 py-2 hover:bg-[#333333] cursor-pointer text-white"
-                                    onClick={() => handleAddToPlaylist(track._id || track.fileUrl, playlist._id as string)}
-                                  >
-                                    {playlist.title}
-                                  </li>
-                                ))
-                              ) : (
-                                <li className="px-4 py-2 text-gray-400">No playlists available</li>
-                              )}
-                              <li
-                                className="px-4 py-2 hover:bg-[#333333] cursor-pointer text-white border-t border-gray-700"
-                                onClick={() => navigate(`/playlists/${user?._id}`)}
-                              >
-                                Create New Playlist
-                              </li>
-                            </ul>
-                          </div>
-                        )}
-                        <button
-                          onClick={() => handleLike(track._id || track.fileUrl)}
-                          className={`p-1 hover:bg-[#333333] rounded-full ${likedSongs.has(track._id || track.fileUrl) ? "text-red-500" : "text-white"}`}
-                        >
-                          <Heart
-                            size={16}
-                            fill={likedSongs.has(track._id || track.fileUrl) ? "currentColor" : "none"}
-                          />
-                        </button>
-                        <button
-                          className="p-1 hover:bg-[#333333] rounded-full"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDownload(track.fileUrl, track.title);
-                          }}
-                        >
-                          <Download size={16} />
-                        </button>
-                        <button
-                          className="p-1 hover:bg-[#333333] rounded-full"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleAddToQueue(track);
-                          }}
-                        >
-                          <ListMusic size={16} />
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                      {playlist.title}
+                    </li>
+                  ))
+                ) : (
+                  <li className="px-4 py-2 text-gray-400">No playlists available</li>
+                )}
+                <li
+                  className="px-4 py-2 hover:bg-[#333333] cursor-pointer text-white border-t border-gray-700"
+                  onClick={() => navigate(`/playlists/${user?._id}`)}
+                >
+                  Create New Playlist
+                </li>
+              </ul>
+            </div>
+          )}
+
+          <button
+            onClick={() => handleLike(track._id || track.fileUrl)}
+            className={`p-1 hover:bg-[#333333] rounded-full ${
+              likedSongs.has(track._id || track.fileUrl) ? "text-red-500" : "text-white"
+            }`}
+          >
+            <Heart
+              size={16}
+              fill={likedSongs.has(track._id || track.fileUrl) ? "currentColor" : "none"}
+            />
+          </button>
+
+          <button
+            className="p-1 hover:bg-[#333333] rounded-full"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleDownload(track.fileUrl, track.title);
+            }}
+          >
+            <Download size={16} />
+          </button>
+
+          <button
+            className="p-1 hover:bg-[#333333] rounded-full"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleAddToQueue(track);
+            }}
+          >
+            <ListMusic size={16} />
+          </button>
+        </div>
+      )}
+    </div>
+  ))}
+</div>
+
               )}
             </div>
           </section>

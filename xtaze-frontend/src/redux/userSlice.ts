@@ -13,7 +13,7 @@ interface UserState {
     email: string;
     role?: string;
     isActive?: boolean;
-    premium?: boolean;
+    premium?: string;
     profilePic?:String;
     likedSongs?:String[];
     

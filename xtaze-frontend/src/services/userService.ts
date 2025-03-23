@@ -161,13 +161,13 @@ export const googleLogin = async (
 export const fetchTracks = async (
   userId: string,
   token: string,
-  isPremium: boolean
+  isPremium: string
 ): Promise<{ tracks: Track[]; user?: any }> => {
-  const instance = isPremium ? providerApi : deezerApi;
-  const url = isPremium ? `/getAllTracks?userId=${userId}` : `/songs/deezer?userId=${userId}`;
+  const instance = isPremium!=="Free" ? providerApi : deezerApi;
+  const url = isPremium!=="Free" ? `/getAllTracks?userId=${userId}` : `/songs/deezer?userId=${userId}`;
   console.log("Fetching tracks with:", { url, token, isPremium });
   const data = await apiCall<{ tracks?: any[]; songs?: any[]; user?: any }>(instance, "get", url, undefined, token);
-  const tracks = (isPremium ? data.tracks : data.songs)?.map((track: any) => ({
+  const tracks = (isPremium!=="Free" ? data.tracks : data.songs)?.map((track: any) => ({
     _id: track._id || track.fileUrl,
     title: track.title,
     album: track.album || "Unknown Album",

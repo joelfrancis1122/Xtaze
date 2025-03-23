@@ -274,25 +274,24 @@ export default class UserRepository implements IUserRepository {
       return null;
     }
   }
-  async updateUserSubscription(userId: string, isPremium: boolean): Promise<IUser | null> {
+  async updateUserSubscription(userId: string, planName: string): Promise<IUser | null> {
     try {
       const updatedUser = await UserModel.findByIdAndUpdate(
         userId,
-        { premium: isPremium },
+        { premium: planName },
         { new: true, runValidators: true }
       );
-
+  
       if (!updatedUser) {
         throw new Error("User not found or update failed");
       }
-
-      return updatedUser.toObject<IUser>(); // Convert Mongoose document to plain object
+  
+      return updatedUser.toObject<IUser>();
     } catch (error) {
       console.error("Error updating user subscription:", error);
-      throw error; // Propagate error to use case
+      throw error;
     }
   }
-
 
   async addToLiked(userId: string, trackId: string): Promise<IUser | null> {
     try {

@@ -28,9 +28,9 @@ export default function Sidebar() {
             />
             <div className="absolute inset-0.5 bg-red-500 opacity-50 rounded-full blur-md"></div>
             {/* Premium badge */}
-            {signupData?.premium && (
+            {signupData?.premium!=="Free" && (
               <span className="absolute -bottom-1 -right-1 bg-black-800 text-yellow-400 text-xs font-bold rounded-full w-4 h-4 flex items-center justify-center z-20">
-               <Crown/> 
+                <Crown />
               </span>
             )}
           </div>
@@ -52,36 +52,38 @@ export default function Sidebar() {
           <a href="#" className="text-white font-medium hover:text-gray-200 block transition-colors">
             Explore
           </a>
-          <a onClick={()=>navigate("/videos")} className="text-white font-medium hover:text-gray-200 block transition-colors">
+          <a onClick={() => navigate("/videos")} className="text-white font-medium hover:text-gray-200 block transition-colors">
             Videos
           </a>
         </div>
         <div className="pt-4">
           <h3 className="text-xs uppercase text-gray-400 mb-4 tracking-wider">My Collection</h3>
-          <div className="space-y-3">
-            <a onClick={() => navigate('/likedsongs')} className="text-gray-300 hover:text-white block transition-colors">
-              Liked Songs
-            </a>
-            <a onClick={()=>navigate('/radio')} className="text-gray-300 hover:text-white block transition-colors">
-              Mixes & Radio
-            </a>
-            <a onClick={() => navigate(`/playlist/${user?._id}`)} className="text-gray-300 hover:text-white block transition-colors">
-              Playlists
-            </a>
+          {user && typeof user.premium === "string" && user.premium !== "Free" && (
+            <div className="space-y-3">
+              <a onClick={() => navigate('/likedsongs')} className="text-gray-300 hover:text-white block transition-colors">
+                Liked Songs
+              </a>
+              <a onClick={() => navigate('/radio')} className="text-gray-300 hover:text-white block transition-colors">
+                Mixes & Radio
+              </a>
+              <a onClick={() => navigate(`/playlist/${user?._id}`)} className="text-gray-300 hover:text-white block transition-colors">
+                Playlists
+              </a>
 
-            <a className="text-gray-300 hover:text-white block transition-colors">
-              Albums
-            </a>
-            <a onClick={()=>navigate("/recentSongs")} className="text-gray-300 hover:text-white block transition-colors">
-              Recent Songs
-            </a>
-            <a onClick={()=>navigate("/equalizer")} className="text-gray-300 hover:text-white block transition-colors">
-             Equalizer
-            </a>
-            <a href="#" className="text-gray-300 hover:text-white block transition-colors">
-              Artists
-            </a>
-          </div>
+              <a className="text-gray-300 hover:text-white block transition-colors">
+                Albums
+              </a>
+              <a onClick={() => navigate("/recentSongs")} className="text-gray-300 hover:text-white block transition-colors">
+                Recent Songs
+              </a>
+              <a onClick={() => navigate("/equalizer")} className="text-gray-300 hover:text-white block transition-colors">
+                Equalizer
+              </a>
+              <a href="#" className="text-gray-300 hover:text-white block transition-colors">
+                Artists
+              </a>
+            </div>
+          )}
         </div>
       </nav>
     </aside>

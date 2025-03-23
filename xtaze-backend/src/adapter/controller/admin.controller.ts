@@ -128,5 +128,59 @@ export default class AdminController {
       next(error);
     }
   }
+  async createProduct(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { name, description, price, interval } = req.body;
+  
+        console.log(req.body,"admin stripe ")
+      if (!name || !price || !interval) {
+        throw new AppError("Name, price, and interval are required", 400);
+      }
+  
+      const plan = await this._adminUseCase.createPlan(name, description, price, interval);
+      res.status(201).json({ success: true, data: plan });
+    } catch (error) {
+      next(error);
+    }
 
+  }
+  async getPlans(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const plans = await this._adminUseCase.getPlans();
+      res.status(200).json({ success: true, data: plans });
+    } catch (error) {
+      next(error);
+    }
+
+  }
+  async archiveSubscriptionPlan(req: Request, res: Response, next: NextFunction) {
+    try {
+      const  productId  = req.query.productId;
+  
+      if (!productId) {
+        throw new AppError("Product ID is required", 400);
+      }
+  
+      const archivedProduct = await this._adminUseCase.archivePlan(productId as string);
+      console.log("set ayo")
+      res.status(200).json({ success: true, data: archivedProduct });
+    } catch (error) {
+      next(error);
+    }
+  }
+  async updateSubscriptionPlan(req: Request, res: Response, next: NextFunction) {
+    try {
+      const  productId  = req.query.productId;
+      const { name, description, price, interval } = req.body;
+      console.log(req.body,req.params)
+      if (!productId || !name || !price || !interval) {
+        throw new AppError("Product ID, name, price, and interval are required", 400);
+      }
+  
+      const updatedPlan = await this._adminUseCase.updatePlan(productId as string, name, description, price, interval);
+      res.status(200).json({ success: true, data: updatedPlan });
+    } catch (error) {
+      next(error);
+    }
+  }
 }

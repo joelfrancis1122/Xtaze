@@ -8,7 +8,7 @@ export interface UserSignupData {
     email: string;
     role?: string;
     isActive?: boolean;
-    premium?: boolean;
+    premium?: string;
     profilePic?: string;
     likedSongs?: string[];
   }

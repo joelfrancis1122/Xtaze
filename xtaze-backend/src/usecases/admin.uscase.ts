@@ -6,6 +6,10 @@ import dotenv from "dotenv";
 import IUser from "../domain/entities/IUser";
 import { uploadImageToCloud, uploadProfileCloud } from "../framework/service/cloudinary.service";
 import { IBanner } from "../domain/entities/IBanner";
+import Stripe from "stripe";
+import AppError from "../utils/AppError";
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2023-08-16" });
+
 dotenv.config();
 
 interface useCaseDependencies {
@@ -20,10 +24,14 @@ interface useCaseDependencies {
 export default class AdminUseCase {
   private _adminRepository: IAdminRepository
   private _passwordService: IPasswordService
+  private stripe: Stripe;
 
   constructor(dependencies: useCaseDependencies) {
     this._adminRepository = dependencies.repository.adminRepository
     this._passwordService = dependencies.service.passwordService
+    this.stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+          apiVersion: "2023-08-16",
+        });
   }
 
   async login(email: string, password: string): Promise<{ success: boolean; message: string; token?: string; admin?: IUser }> {
@@ -85,5 +93,113 @@ export default class AdminUseCase {
 
   }
 
-
+  async createPlan(
+    name: string,
+    description: string,
+    price: number, // In dollars, e.g., 10.00
+    interval: "month" | "year"
+  ): Promise<{ product: Stripe.Product; price: Stripe.Price }> {
+    try {
+      // Create the product in Stripe
+      const product = await this.stripe.products.create({
+        name,
+        description,
+      });
+  
+      // Create the price for the product
+      const priceObj = await this.stripe.prices.create({
+        product: product.id,
+        unit_amount: Math.round(price * 100), // Convert to cents, e.g., 10.00 → 1000
+        currency: "usd",
+        recurring: { interval },
+      });
+  
+      return { product, price: priceObj };
+    } catch (error: any) {
+      console.error("Error in UserUseCase.createPlan:", error);
+      throw new AppError("Failed to create subscription plan", 500);
+    }
+  }
+  async getPlans(): Promise<{ product: Stripe.Product; price: Stripe.Price }[]> {
+    try {
+      const products = await this.stripe.products.list({ limit: 100, active: true });
+      const prices = await this.stripe.prices.list({ limit: 100 });
+      console.log(products, "ssssssssssssss");
+      console.log(prices, "ooo");
+      const plans = products.data
+        .map((product) => {
+          const price = prices.data.find((p) => p.product === product.id && p.active);
+          return { product, price };
+        })
+        .filter((plan): plan is { product: Stripe.Product; price: Stripe.Price } => !!plan.price);
+  
+      return plans;
+    } catch (error: any) {
+      console.error("Error in UserUseCase.getPlans:", error);
+      throw new AppError("Failed to fetch subscription plans", 500);
+    }
+  }
+  async archivePlan(productId: string): Promise<Stripe.Product> {
+    try {
+      const product = await this.stripe.products.update(productId, {
+        active: false,
+      });
+  
+      return product;
+    } catch (error: any) {
+      console.error("Error in UserUseCase.archivePlan:", error);
+      if (error.type === "StripeInvalidRequestError" && error.code === "resource_missing") {
+        throw new AppError("Product not found", 404);
+      }
+      throw new AppError("Failed to archive subscription plan", 500);
+    }
+  }
+  async updatePlan(
+    productId: string,
+    name: string,
+    description: string,
+    price: number, // In dollars
+    interval: "month" | "year"
+  ): Promise<{ product: Stripe.Product; price: Stripe.Price }> {
+    try {
+      // Update the product
+      const product = await this.stripe.products.update(productId, {
+        name,
+        description,
+      });
+  
+      // Get existing prices for this product
+      const existingPrices = await this.stripe.prices.list({ product: productId });
+      const activePrice = existingPrices.data.find((p) => p.active);
+  
+      // If price or interval changed, create new price and deactivate old one
+      const newUnitAmount = Math.round(price * 100);
+      if (
+        !activePrice ||
+        activePrice.unit_amount !== newUnitAmount ||
+        activePrice.recurring?.interval !== interval
+      ) {
+        // Deactivate old price if it exists
+        if (activePrice) {
+          await this.stripe.prices.update(activePrice.id, { active: false });
+        }
+        // Create new price
+        const newPrice = await this.stripe.prices.create({
+          product: productId,
+          unit_amount: newUnitAmount,
+          currency: "usd",
+          recurring: { interval },
+        });
+        return { product, price: newPrice };
+      }
+  
+      return { product, price: activePrice! };
+    } catch (error: any) {
+      console.error("Error in UserUseCase.updatePlan:", error);
+      if (error.type === "StripeInvalidRequestError" && error.code === "resource_missing") {
+        throw new AppError("Product not found", 404);
+      }
+      throw new AppError("Failed to update subscription plan", 500);
+    }
+  }
 }
