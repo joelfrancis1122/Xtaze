@@ -74,7 +74,7 @@ const apiCall = async <T>(
       headers: token ? { Authorization: `Bearer ${token}` } : undefined,
       withCredentials: true,
     };
-    const response = method === "get" 
+    const response = method === "get"
       ? await instance[method](url, config)
       : await instance[method](url, data, config);
     if (!response.data) throw new Error(`Failed to ${method} ${url}`);
@@ -163,19 +163,19 @@ export const fetchTracks = async (
   token: string,
   isPremium: string
 ): Promise<{ tracks: Track[]; user?: any }> => {
-  const instance = isPremium!=="Free" ? providerApi : deezerApi;
-  const url = isPremium!=="Free" ? `/getAllTracks?userId=${userId}` : `/songs/deezer?userId=${userId}`;
+  const instance = isPremium !== "Free" ? providerApi : deezerApi;
+  const url = isPremium !== "Free" ? `/getAllTracks?userId=${userId}` : `/songs/deezer?userId=${userId}`;
   console.log("Fetching tracks with:", { url, token, isPremium });
   const data = await apiCall<{ tracks?: any[]; songs?: any[]; user?: any }>(instance, "get", url, undefined, token);
-  const tracks = (isPremium!=="Free" ? data.tracks : data.songs)?.map((track: any) => ({
+  const tracks = (isPremium !== "Free" ? data.tracks : data.songs)?.map((track: any) => ({
     _id: track._id || track.fileUrl,
     title: track.title,
     album: track.album || "Unknown Album",
     artists: Array.isArray(track.artists)
       ? track.artists
       : track.artists
-      ? JSON.parse(track.artists)
-      : [track.artist || "Unknown Artist"],
+        ? JSON.parse(track.artists)
+        : [track.artist || "Unknown Artist"],
     genre: Array.isArray(track.genre) ? track.genre[0] : track.genre || "Unknown Genre",
     fileUrl: track.fileUrl,
     img: track.img,
@@ -186,7 +186,7 @@ export const fetchTracks = async (
 
 // Fetch liked songs
 export const fetchLikedSongs = async (userId: string, token: string, songIds: string[]): Promise<Track[]> => {
-  const data = await apiCall<{ success: boolean; tracks: Track[]}>(
+  const data = await apiCall<{ success: boolean; tracks: Track[] }>(
     userApi,
     "post",
     `/getliked?userId=${userId}`,
@@ -237,12 +237,12 @@ export const forgotPassword = async (email: string): Promise<void> => {
   );
   if (!data.success) throw new Error(data.message || "Failed to send reset email");
 };
-export const resetPassword = async (token: string,formData:string): Promise<void> => {
+export const resetPassword = async (token: string, formData: string): Promise<void> => {
   const data = await apiCall<{ success: boolean; message?: string }>(
     userApi,
     "post",
     "/resetPassword",
-    { token,formData }
+    { token, formData }
   );
   if (!data.success) throw new Error(data.message || "Failed to send reset email");
 };
@@ -255,7 +255,7 @@ export const createPlaylists = async (userId: string, playlistData: Partial<Play
     { userId, playlist: playlistData }
   );
   if (!data.success) throw new Error(data.message || "Failed to create playlist");
-  console.log(data,"from user service createplaylist")
+  console.log(data, "from user service createplaylist")
   return data.data;
 };
 export const getMyplaylist = async (userId: string): Promise<Playlist[]> => {
@@ -284,13 +284,13 @@ export const fetchPlaylistTracks = async (id: string, page: number = 1, limit: n
 };
 
 export const fetchBanners = async (): Promise<IBanner[]> => {
-  const data = await apiCall<{ success: boolean; message?: string; data: IBanner[]}>(
+  const data = await apiCall<{ success: boolean; message?: string; data: IBanner[] }>(
     userApi,
     "get",
-    `/banners` 
+    `/banners`
   );
-  console.log(data,"ithan sanam");
-  return data.data; 
+  console.log(data, "ithan sanam");
+  return data.data;
   if (!data.success) throw new Error(data.message || "Failed to get all playlists");
 };
 
@@ -319,25 +319,25 @@ export const deletePlaylist = async (
     userApi,
     "post",
     "/deletePlaylist",
-    {id },
+    { id },
   );
   if (!data.success) throw new Error(data.message || "Failed to add track to playlist");
 };
 export const updatePlaylistName = async (
-  id: string,playlistName:string
+  id: string, playlistName: string
 ): Promise<void> => {
   const data = await apiCall<{ success: boolean; message?: string }>(
     userApi,
     "put",
     "/updateNamePlaylist",
-    {   id,playlistName },
+    { id, playlistName },
   );
   if (!data.success) throw new Error(data.message || "Failed to add track to playlist");
 };
 export const updatePlaylistImage = async (id: string, file: File): Promise<any> => {
   const formData = new FormData();
   formData.append("id", id);
-  formData.append("imageUpload", file); 
+  formData.append("imageUpload", file);
 
   const data = await apiCall<{ success: boolean; updated?: string; message?: string }>(
     userApi,
@@ -348,20 +348,20 @@ export const updatePlaylistImage = async (id: string, file: File): Promise<any> 
 
   if (!data.success) throw new Error(data.message || "Failed to update playlist image");
   console.log(data)
-  return data?.updated || ""; 
+  return data?.updated || "";
 };
 
 export const initiateCheckout = async (
   userId: string,
   priceId: string,
-  token: string
+  code: string
 ): Promise<string> => {
+  console.log(code, "krishhh")
   const data = await apiCall<{ sessionId: string }>(
     userApi,
     "post",
     "/checkOut",
-    { userId, priceId },
-    token
+    { userId, priceId ,code}
   );
   console.log("Checkout response:", data);
   return data.sessionId;

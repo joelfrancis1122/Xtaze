@@ -33,5 +33,14 @@ router.post("/stripe/createProduct",(req:Request,res:Response,next:NextFunction)
 router.get("/stripe/plans",(req:Request,res:Response,next:NextFunction)=>adminController.getPlans(req,res,next))
 router.post("/stripe/products/delete",(req:Request,res:Response,next:NextFunction)=>adminController.archiveSubscriptionPlan(req,res,next))
 router.put("/stripe/products/",(req:Request,res:Response,next:NextFunction)=>adminController.updateSubscriptionPlan(req,res,next))
+
+
+router.get("/coupons",(req:Request,res:Response,next:NextFunction)=>adminController.getCoupons(req,res,next))
+router.post("/coupons",(req:Request,res:Response,next:NextFunction)=>adminController.createCoupon(req,res,next))
+router.put("/coupons",(req:Request,res:Response,next:NextFunction)=>adminController.updateCoupon(req,res,next))
+router.delete("/coupons",(req:Request,res:Response,next:NextFunction)=>adminController.deleteCoupon(req,res,next))
+router.post("/coupons/verify",(req:Request,res:Response,next:NextFunction)=>adminController.verifyCoupon(req,res,next))
+
+
 export default router;
 

@@ -22,7 +22,7 @@ export default interface IuserUseCase{
     uploadBanner(userID:string,file:Express.Multer.File,isVideo:boolean): Promise<{ success: boolean; message: string }>
     updateBio(userID:string,bio:string): Promise<{ success: boolean; message: string }>
     getUpdatedArtist(artistId:string): Promise<IUser|null>
-    execute(userId: string, priceId: string): Promise<Stripe.Checkout.Session>;
+    execute(userId: string, priceId: string,couponCode:string): Promise<Stripe.Checkout.Session>;
     addToLiked(userId: string,trackId:string): Promise<IUser|null>
     addToPlaylist(userId:string,playlistId:string,trackId:string): Promise<IPlaylist|null>
     deletePlaylist(id:string): Promise<IPlaylist|null>

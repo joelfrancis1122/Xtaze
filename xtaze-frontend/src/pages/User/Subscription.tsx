@@ -22,6 +22,16 @@ interface PricingPlan {
   featured?: boolean;
 }
 
+interface Coupon {
+  _id: string;
+  code: string;
+  discountAmount: number; // Percentage
+  expires: string;
+  maxUses: number;
+  uses: number;
+  status: "active" | "expired";
+}
+
 export default function PricingPage() {
   const user = useSelector((state: RootState) => state.user.signupData);
   const navigate = useNavigate();
@@ -34,6 +44,9 @@ export default function PricingPage() {
     },
   ]);
   const [loading, setLoading] = useState(true);
+  const [couponCode, setCouponCode] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
+  const [couponError, setCouponError] = useState<string | null>(null);
 
   useEffect(() => {
     if (user?.premium !== "Free") {
@@ -61,7 +74,6 @@ export default function PricingPage() {
           },
           ...stripePlans,
         ]);
-        console.log(stripePlans,"ithan plans")
       } catch (error) {
         console.error("Error fetching plans:", error);
         toast.error("Failed to load premium plans", { position: "top-right" });
@@ -72,6 +84,39 @@ export default function PricingPage() {
     fetchPlans();
   }, [user, navigate]);
 
+  const validateCoupon = async () => {
+    if (!couponCode.trim()) {
+      setCouponError("Please enter a coupon code");
+      setAppliedCoupon(null);
+      return;
+    }
+    try {
+      const response = await axios.post(
+        "http://localhost:3000/admin/coupons/verify",
+        { code: couponCode },
+        { headers: { Authorization: `Bearer ${localStorage.getItem("token") || ""}` } }
+      );
+      const coupon: Coupon = response.data.data;
+      if (coupon.status === "active" && coupon.uses < coupon.maxUses && new Date(coupon.expires) >= new Date()) {
+        setAppliedCoupon(coupon);
+        setCouponError(null);
+        toast.success("Coupon applied successfully!", { position: "top-right" });
+      } else {
+        throw new Error("Coupon is expired");
+      }
+    } catch (error: any) {
+      setAppliedCoupon(null);
+      setCouponError(error.response?.data?.message || "Invalid coupon code");
+      toast.error(error.response?.data?.message || "Invalid coupon code", { position: "top-right" });
+    }
+  };
+
+  const getDiscountedPrice = (price: number) => {
+    if (!appliedCoupon) return price;
+    const discount = (appliedCoupon.discountAmount / 100) * price;
+    return Math.max(0, price - discount); // Ensure price doesn’t go below 0
+  };
+
   const handleGetPremium = async (priceId: string) => {
     const stripe = await stripePromise;
     if (!stripe || !user?._id) {
@@ -81,17 +126,19 @@ export default function PricingPage() {
     try {
       const token = localStorage.getItem("token");
       if (!token) throw new Error("No authentication token found");
-      const sessionId = await initiateCheckout(user._id, priceId, token);
+      if (!appliedCoupon?.code) throw new Error("No code found");
+      const sessionId = await initiateCheckout(user._id, priceId, appliedCoupon?.code);
       const { error } = await stripe.redirectToCheckout({ sessionId });
       if (error) {
         toast.error(error.message, { position: "top-right" });
       }
     } catch (error: any) {
-      toast.error("Error initiating checkout: " + error.message, { position: "top-right" });
+      console.log(error,"krish")
+      toast.error(error.response.data.message, { position: "top-right" });
     }
   };
 
-  if (user?.premium !=="Free") {
+  if (user?.premium !== "Free") {
     return null;
   }
 
@@ -107,6 +154,35 @@ export default function PricingPage() {
             </p>
           </div>
 
+          {/* Coupon Input */}
+          <div className="max-w-md mx-auto space-y-2">
+            <label htmlFor="coupon" className="block text-sm font-medium text-gray-300">
+              Have a coupon code?
+            </label>
+            <div className="flex gap-2">
+              <input
+                id="coupon"
+                type="text"
+                value={couponCode}
+                onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                placeholder="Enter coupon code"
+                className="flex-1 bg-gray-800 text-white border border-gray-700 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
+              />
+              <button
+                onClick={validateCoupon}
+                className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md"
+              >
+                Apply
+              </button>
+            </div>
+            {couponError && <p className="text-red-500 text-sm">{couponError}</p>}
+            {appliedCoupon && (
+              <p className="text-green-500 text-sm">
+                {appliedCoupon.discountAmount}% off applied!
+              </p>
+            )}
+          </div>
+
           {loading ? (
             <p className="text-gray-400 text-center">Loading plans...</p>
           ) : (
@@ -115,6 +191,8 @@ export default function PricingPage() {
                 <PricingCard
                   key={plan.name}
                   {...plan}
+                  price={parseFloat(getDiscountedPrice(plan.price).toFixed(2))}
+
                   onGetPremium={plan.priceId ? () => handleGetPremium(plan.priceId as string) : undefined}
                 />
               ))}

@@ -8,6 +8,7 @@ import { uploadImageToCloud, uploadProfileCloud } from "../framework/service/clo
 import { IBanner } from "../domain/entities/IBanner";
 import Stripe from "stripe";
 import AppError from "../utils/AppError";
+import { ICoupon } from "../domain/entities/ICoupon";
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2023-08-16" });
 
 dotenv.config();
@@ -92,6 +93,63 @@ export default class AdminUseCase {
     return banners;
 
   }
+  async getCoupons(): Promise<ICoupon[] | null> {
+    const coupons = await this._adminRepository.getCoupons()
+    return coupons;
+  }
+  async deleteCoupon(couponId:string): Promise<ICoupon| null> {
+    const coupons = await this._adminRepository.deleteCoupon(couponId)
+    return coupons;
+  }
+
+
+
+  async updateCoupon(couponId: string, couponData: ICoupon): Promise<ICoupon|null> {
+    if (!couponId) {
+      throw new Error("Coupon ID is required");
+    }
+
+    // Validation for provided fields
+    if (couponData.code && !couponData.code.trim()) {
+      throw new Error("Coupon code cannot be empty");
+    }
+    if (couponData.discountAmount !== undefined) {
+      if (couponData.discountAmount < 0) {
+        throw new Error("Discount amount must be 0 or more");
+      }
+      if (couponData.discountAmount > 100) {
+        throw new Error("Discount cannot exceed 100%");
+      }
+    }
+    if (couponData.expires) {
+      const expiresDate = new Date(couponData.expires);
+      if (expiresDate < new Date()) {
+        throw new Error("Expiration date must be future");
+      }
+      couponData.expires = expiresDate.toISOString(); // Normalize to string
+    }
+    if (couponData.maxUses !== undefined && couponData.maxUses < 0) {
+      throw new Error("Max uses must be 0 or more");
+    }
+
+    // Add status: "active" to the update data
+    const updatedCouponData:ICoupon = {
+      ...couponData,
+      status: "active", // Always set to active
+    };
+
+    try {
+      const updatedCoupon = await this._adminRepository.updateCoupon(couponId, updatedCouponData);
+      if (!updatedCoupon) {
+        throw new Error("Coupon not found");
+      }
+      return updatedCoupon;
+    } catch (error: any) {
+      throw new Error(error.message || "Failed to update coupon");
+    }
+  }
+
+
 
   async createPlan(
     name: string,
@@ -202,4 +260,69 @@ export default class AdminUseCase {
       throw new AppError("Failed to update subscription plan", 500);
     }
   }
+  async createCoupon(
+    code: string,
+    discountAmount: number,
+    expires: Date,
+    maxUses: number,
+    uses: number
+  ): Promise<ICoupon | null> {
+    // Validation
+    if (!code  || discountAmount === undefined || !expires || maxUses === undefined) {
+      throw new Error("All fields (code, discountType, discountAmount, expires, maxUses) are required");
+    }
+
+    
+
+    if (typeof discountAmount !== "number" || discountAmount < 0) {
+      throw new Error("discountAmount must be a non-negative number");
+    }
+
+    if (typeof maxUses !== "number" || maxUses < 0) {
+      throw new Error("maxUses must be a non-negative number");
+    }
+
+   
+
+    if (expires && new Date(expires) < new Date()) {
+      throw new Error("Expiration date must be future");
+    }
+
+    if (typeof uses !== "number" || uses < 0) {
+      throw new Error("uses must be a non-negative number");
+    }
+    const couponData = {
+      code,
+      discountAmount,
+      expires: expires.toISOString(), 
+      status:"active",
+      maxUses,
+      uses,
+    };
+
+    try {
+      const savedCoupon = await this._adminRepository.createCoupon(couponData);
+      return savedCoupon;
+    } catch (error: any) {
+      throw error;
+    }
+  }
+
+
+
+
+  async verifyCoupon(code: string): Promise<ICoupon> {
+    if (!code) throw new Error("Coupon code is required");
+    const coupon = await this._adminRepository.findCouponByCode(code);
+    if (!coupon) throw new Error("Invalid coupon");
+   if(!coupon.uses){
+    coupon.uses=0
+   }
+    if (coupon.status !== "active" || coupon.uses >= coupon.maxUses || new Date(coupon.expires) < new Date()) {
+      throw new Error("Coupon is expired");
+    }
+    return coupon;
+  }
+
+
 }

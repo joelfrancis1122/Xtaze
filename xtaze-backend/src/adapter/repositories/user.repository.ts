@@ -1,8 +1,10 @@
 import { IBanner } from "../../domain/entities/IBanner";
+import { ICoupon } from "../../domain/entities/ICoupon";
 import { IPlaylist } from "../../domain/entities/IPlaylist";
 import IUser from "../../domain/entities/IUser";
 import { IUserRepository } from "../../domain/repositories/IUserRepository";
 import BannerModel from "../db/models/BannerModel";
+import { CouponModel } from "../db/models/CouponModel";
 import PlaylistModel from "../db/models/PlaylistModel";
 import { ITrack, Track } from "../db/models/TrackModel";
 import UserModel from "../db/models/UserModel"; // Assuming your User model is in this location
@@ -281,11 +283,11 @@ export default class UserRepository implements IUserRepository {
         { premium: planName },
         { new: true, runValidators: true }
       );
-  
+
       if (!updatedUser) {
         throw new Error("User not found or update failed");
       }
-  
+
       return updatedUser.toObject<IUser>();
     } catch (error) {
       console.error("Error updating user subscription:", error);
@@ -333,4 +335,39 @@ export default class UserRepository implements IUserRepository {
     return data
   }
 
+  async findCouponByCode(code: string): Promise<ICoupon | null> {
+    const coupon = await CouponModel.findOne({ code });
+    return coupon ? coupon.toObject() as ICoupon : null;
+  }
+
+  async updateCouponByCode(
+    code: string,
+    updateData: ICoupon
+  ): Promise<ICoupon | null> {
+    try {
+      const updatedCoupon = await CouponModel.findOneAndUpdate(
+        { code }, 
+        { $set: updateData },
+        { new: true, runValidators: true }
+      );
+      if (!updatedCoupon) {
+        throw new Error(`Coupon with code ${code} not found`);
+      }
+      return updatedCoupon.toObject() as ICoupon;
+    } catch (error: any) {
+      throw new Error(error.message || "Failed to update coupon");
+    }
+  }
+  async checkCouponisUsed(code: string, userId: string): Promise<boolean> {
+    try {
+      const coupon = await CouponModel.findOne({ code });
+      if (!coupon) {
+        throw new Error(`Coupon with code ${code} not found`);
+      }
+      const usedUsers = coupon.users ?? [];
+      return usedUsers.includes(userId);
+    } catch (error: any) {
+      throw new Error(error.message || "Failed to check coupon usage");
+    }
+  }
 }

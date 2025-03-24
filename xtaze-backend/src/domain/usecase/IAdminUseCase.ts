@@ -2,6 +2,7 @@ import Stripe from "stripe";
 import { IBanner } from "../entities/IBanner";
 import { IPlan } from "../entities/IPlan";
 import IUser from "../entities/IUser";
+import { ICoupon } from "../entities/ICoupon";
 
 export default interface IAdminUseCase {
     login(email: string, password: string): Promise<{ success: boolean; message: string; token?: string; user?: IUser }>;
@@ -14,5 +15,11 @@ export default interface IAdminUseCase {
     getPlans(): Promise<{ product: Stripe.Product; price: Stripe.Price }[]>
     archivePlan(productId: string): Promise<Stripe.Product>
     updatePlan(productId: string,name: string,description: string,price: number,interval: "month" | "year"): Promise<{ product: Stripe.Product; price: Stripe.Price }>
+    createCoupon(code:string,discountAmount:number,expires:Date,maxUses:number,uses:number): Promise<ICoupon|null>
+    getCoupons():Promise<ICoupon[]|null>
+    deleteCoupon(couponId:string):Promise<ICoupon|null>
+    updateCoupon(couponId:string, updateData:ICoupon):Promise<ICoupon|null>
+    verifyCoupon(code:string):Promise<ICoupon|null>
+
 }
 

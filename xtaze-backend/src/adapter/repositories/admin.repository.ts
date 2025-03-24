@@ -1,63 +1,116 @@
 import { IBanner } from "../../domain/entities/IBanner";
+import { ICoupon } from "../../domain/entities/ICoupon";
 import IUser from "../../domain/entities/IUser";
 import { IAdminRepository } from "../../domain/repositories/IAdminRepository";
 import { uploadImageToCloud, uploadProfileCloud } from "../../framework/service/cloudinary.service";
 import BannerModel from "../db/models/BannerModel";
+import { CouponModel } from "../db/models/CouponModel";
 import UserModel from "../db/models/UserModel";
 
 export default class AdminRepository implements IAdminRepository {
 
-async findByEmail(email: string): Promise<IUser | null> {
+  async findByEmail(email: string): Promise<IUser | null> {
     try {
-        console.log(email,"ith enth oi")
+      console.log(email, "ith enth oi")
       const admin = await UserModel.findOne({ email });
-      console.log(admin,"ith entha ")
+      console.log(admin, "ith entha ")
       return admin as unknown as IUser
     } catch (error) {
       throw error
     }
   }
-  
-  async getArtistById(id: string): Promise<IUser|null> {
+
+  async getArtistById(id: string): Promise<IUser | null> {
     return await UserModel.findById(id);
   }
-  
-  async updateArtistStatus(id: string, status: boolean): Promise<IUser|null> {
-      console.log(status,"ss");
-      
 
-    return  await UserModel.findByIdAndUpdate(id, { isActive:status}, { new: true });
-  
-  }
-  async createBanner(title:string,description:string,action:string,isActive:boolean,createdBy:string,file: Express.Multer.File): Promise<IBanner|null> {
-      console.log(title,description,action,isActive,createdBy,file,"ss");
-      const getBannerURl = await uploadProfileCloud(file);
-      const url = getBannerURl.secure_url.toString()
-    console.log(getBannerURl,"saaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",url)
-    const banner = new BannerModel({title,description,imageUrl:url,action,createdBy,isActive})
+  async updateArtistStatus(id: string, status: boolean): Promise<IUser | null> {
+    console.log(status, "ss");
 
-      return await banner.save()
-  }
-  async findAll(): Promise<IBanner[]|null> {
-      console.log("odi");
-     const data = await BannerModel.find()
 
-      return data
-  }
-  
-  async findBanner(id:string): Promise<IBanner|null> {
-      console.log("odi",id);
-     const data = await BannerModel.findByIdAndDelete(id)
+    return await UserModel.findByIdAndUpdate(id, { isActive: status }, { new: true });
 
-      return data
   }
-  
-  
-  async findBannerforUpdate(id: string,title: string,description: string,action: string,isActive: boolean,file: Express.Multer.File): Promise<IBanner | null> {
+  async createBanner(title: string, description: string, action: string, isActive: boolean, createdBy: string, file: Express.Multer.File): Promise<IBanner | null> {
+    console.log(title, description, action, isActive, createdBy, file, "ss");
+    const getBannerURl = await uploadProfileCloud(file);
+    const url = getBannerURl.secure_url.toString()
+    console.log(getBannerURl, "saaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", url)
+    const banner = new BannerModel({ title, description, imageUrl: url, action, createdBy, isActive })
+
+    return await banner.save()
+  }
+  async findAll(): Promise<IBanner[] | null> {
+    console.log("odi");
+    const data = await BannerModel.find()
+
+    return data
+  }
+
+  async findBanner(id: string): Promise<IBanner | null> {
+    console.log("odi", id);
+    const data = await BannerModel.findByIdAndDelete(id)
+
+    return data
+  }
+
+
+  async createCoupon(couponData: ICoupon): Promise<ICoupon | null> {
+    try {
+      const newCoupon = new CouponModel(couponData);
+      const savedCoupon = await newCoupon.save();
+      console.log(savedCoupon, "odi odi odi odi")
+      return savedCoupon;
+    } catch (error: any) {
+      if (error.code === 11000) {
+        throw new Error(`Coupon code '${couponData.code}' already exists`);
+      }
+      throw new Error("Failed to save coupon: " + error.message);
+    }
+  }
+
+  async getCoupons(): Promise<ICoupon[] | null> {
+    try {
+      const coupons = await CouponModel.find();
+      return coupons
+    } catch (error: any) {
+      throw new Error("Failed to save coupon: " + error.message);
+    }
+  }
+
+  async deleteCoupon(couponId: string): Promise<ICoupon | null> {
+    try {
+      const coupons = await CouponModel.findByIdAndDelete(couponId);
+      return coupons
+    } catch (error: any) {
+      throw new Error("Failed to save coupon: " + error.message);
+    }
+  }
+
+  async updateCoupon(
+    couponId: string,
+    updateData: ICoupon
+  ): Promise<ICoupon | null> {
+    try {
+      const updatedCoupon = await CouponModel.findByIdAndUpdate(
+        couponId,
+        { $set: updateData },
+        { new: true, runValidators: true }
+      );
+      if (!updatedCoupon) {
+        throw new Error(`Coupon with ID ${couponId} not found`);
+      }
+      return updatedCoupon.toObject() as ICoupon;
+    } catch (error: any) {
+      throw new Error(error.message || "Failed to update coupon");
+    }
+  }
+
+  async findBannerforUpdate(id: string, title: string, description: string, action: string, isActive: boolean, file: Express.Multer.File): Promise<IBanner | null> {
     try {
       console.log("Updating banner with ID:", id);
-  
-        let data = await uploadProfileCloud(file); 
+
+      let data = await uploadProfileCloud(file);
       let url = data.secure_url
       const updatedBanner = await BannerModel.findByIdAndUpdate(
         id,
@@ -66,22 +119,27 @@ async findByEmail(email: string): Promise<IUser | null> {
           description,
           action,
           isActive,
-          imageUrl:url,
+          imageUrl: url,
         },
-        { new: true } 
+        { new: true }
       );
-      console.log(updatedBanner,"ethy ambuuu")
+      console.log(updatedBanner, "ethy ambuuu")
       if (!updatedBanner) {
         throw new Error("Banner not found or failed to update");
       }
-  
+
       return updatedBanner;
     } catch (error) {
       console.error("Error updating banner:", error);
       throw new Error("Failed to update banner");
     }
   }
-  
+
+
+  async findCouponByCode(code: string): Promise<ICoupon | null> {
+    const coupon = await CouponModel.findOne({ code });
+    return coupon ? coupon.toObject() as ICoupon : null;
+  }
 }
 
 

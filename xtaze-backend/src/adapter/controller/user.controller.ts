@@ -270,13 +270,14 @@ export default class UserController {
 
   async checkOut(req: Request, res: Response, next: NextFunction) {
     try {
-      const { userId, priceId } = req.body;
+      const { userId, priceId, code } = req.body;
 
       if (!userId || !priceId) {
         throw new AppError("User ID and Price ID are required", 400);
       }
+      console.log(code,"akhildas",req.body)
 
-      const session = await this._userUseCase.execute(userId, priceId);
+      const session = await this._userUseCase.execute(userId, priceId, code);
       res.status(200).json({ success: true, sessionId: session?.id });
     } catch (error) {
       next(error);

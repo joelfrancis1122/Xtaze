@@ -1,4 +1,5 @@
 import { IBanner } from "../entities/IBanner";
+import { ICoupon } from "../entities/ICoupon";
 import IUser from "../entities/IUser";
 
 export interface IAdminRepository {
@@ -9,4 +10,11 @@ export interface IAdminRepository {
   findAll():Promise<IBanner[]|null>
   findBanner(id:string):Promise<IBanner|null>
   findBannerforUpdate(id:string,title:string,description:string,action:string,isActive:boolean,file:Express.Multer.File):Promise<IBanner|null>
+  createCoupon(couponData:ICoupon):Promise<ICoupon|null>
+  getCoupons():Promise<ICoupon[]|null>
+  deleteCoupon(couponId:string):Promise<ICoupon|null>
+  updateCoupon(couponId:string, updateData:ICoupon):Promise<ICoupon|null>
+  findCouponByCode(code:string):Promise<ICoupon|null>
+
+  
 }
