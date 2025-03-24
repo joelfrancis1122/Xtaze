@@ -443,5 +443,37 @@ export default class UserController {
         next(error);
       }
     }
+    async handleWebhook(req: Request, res: Response, next: NextFunction): Promise<void> {
+      try {
+        const signature = req.headers["stripe-signature"] as string;
+        if (!signature) {
+          throw new Error("Missing Stripe signature");
+        }
+
+  
+          console.log("odi worked boyy",signature)
+        // Pass raw body and signature to use case
+        await this._userUseCase.confirmPayment(req.body, signature);
+  
+        res.status(200).json({ received: true });
+      } catch (error: any) {
+        console.error("Webhook error:", error);
+        res.status(400).send(`Webhook Error: ${error.message}`);
+        next(error); // Pass to error middleware
+      }
+    }
+
+    async checkCouponStatus(): Promise<void> {
+      try {
+        console.log("UserController: Starting coupon status check...");
+        await this._userUseCase.checkAndUpdateCouponStatus();
+        console.log("UserController: Coupon status check completed");
+      } catch (error: any) {
+        console.error("UserController: Error during coupon status check:", error);
+        throw error;
+      }
+    }
+
+    
 
 }

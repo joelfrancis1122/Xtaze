@@ -29,5 +29,6 @@ export default interface IuserUseCase{
     updateNamePlaylist(id:string,playlistName:string): Promise<IPlaylist|null>
     updateImagePlaylist(id:string,file:Express.Multer.File): Promise<{ success: boolean; message: string }>
     getAllBanners():Promise<IBanner[]|null> 
-    
+    confirmPayment(rawBody: Buffer,signature:string):Promise<void> 
+    checkAndUpdateCouponStatus():Promise<void> 
 }

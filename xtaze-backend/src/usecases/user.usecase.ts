@@ -456,15 +456,18 @@ export default class UserUseCase {
         mode: "subscription",
         success_url: "http://localhost:5000/success",
         cancel_url: "http://localhost:5000/cancel",
-        metadata: { userId },
+        metadata: { 
+          userId,
+          couponCode: couponCode || "", // Store couponCode in metadata
+          planName, // Store planName for webhook
+        },
       };
 
       // Handle coupon if provided
       if (couponCode) {
         const coupon = await this._userRepository.findCouponByCode(couponCode);
-        if (!coupon) throw new Error("inccorect coupon code");
+        if (!coupon) throw new Error("Incorrect coupon code");
 
-        // Ensure uses and users are defined
         const currentUses = coupon.uses ?? 0;
         const usedUsers = coupon.users ?? [];
 
@@ -476,43 +479,22 @@ export default class UserUseCase {
           throw new Error("Coupon is expired");
         }
 
-        // Check if user has used this coupon
         const isCouponUsed = await this._userRepository.checkCouponisUsed(couponCode, userId);
         if (isCouponUsed) {
           throw new Error("You've already used this coupon. Try a different one");
         }
 
-        // Create a Stripe coupon
         const stripeCoupon = await this.stripe.coupons.create({
           percent_off: coupon.discountAmount,
           duration: "once",
           name: `Coupon_${couponCode}`,
         });
 
-        // Apply discount to session
         sessionConfig.discounts = [{ coupon: stripeCoupon.id }];
       }
 
       // Create checkout session
       const session = await this.stripe.checkout.sessions.create(sessionConfig);
-
-      // Update coupon with uses and users (after successful session creation)
-      if (couponCode) {
-        const coupon = await this._userRepository.findCouponByCode(couponCode); // Re-fetch to ensure latest state
-        const currentUses = coupon?.uses ?? 0;
-        const usedUsers = coupon?.users ?? [];
-        await this._userRepository.updateCouponByCode(couponCode, {
-          uses: currentUses + 1,
-          users: [...usedUsers, userId], // Add userId to users array
-        });
-      }
-
-      // Update user subscription status (consider moving to webhook)
-      const updatedUser = await this._userRepository.updateUserSubscription(userId, planName);
-      if (!updatedUser) {
-        throw new Error("Failed to update user subscription status");
-      }
-
       return session;
     } catch (error: any) {
       console.error("Error in UserUseCase.execute:", error);
@@ -522,6 +504,69 @@ export default class UserUseCase {
 
 
 
+  async confirmPayment(rawBody: Buffer, signature: string): Promise<void> {
+    try {
+      const webhookSecret = "whsec_4ad8e5aae34c14239cedcd37e4104a9d3c24c1548447b684ff5c49a595a0f61f"; // Your CLI secret
+      const event = this.stripe.webhooks.constructEvent(rawBody, signature, webhookSecret);
+
+      if (event.type === "checkout.session.completed") {
+        const session = event.data.object as Stripe.Checkout.Session;
+        const userId = session.metadata?.userId;
+        const couponCode = session.metadata?.couponCode;
+        const planName = session.metadata?.planName;
+
+        if (!userId || !planName) {
+          throw new Error("Missing metadata in session");
+        }
+
+        // Update user subscription
+        const updatedUser = await this._userRepository.updateUserSubscription(userId, planName);
+        if (!updatedUser) {
+          throw new Error("Failed to update user subscription status");
+        }
+
+        // Update coupon if used
+        if (couponCode) {
+          const coupon = await this._userRepository.findCouponByCode(couponCode);
+          if (coupon) {
+            const currentUses = coupon.uses ?? 0;
+            const usedUsers = coupon.users ?? [];
+            await this._userRepository.updateCouponByCode(couponCode, {
+              uses: currentUses + 1,
+              users: [...usedUsers, userId],
+            });
+          }
+        }
+
+        console.log(`Payment confirmed for user ${userId} with plan ${planName}`);
+      }
+    } catch (error: any) {
+      console.error("Error in UserUseCase.confirmPayment:", error);
+      throw error;
+    }
+  }
+
+
+  async checkAndUpdateCouponStatus(): Promise<void> {
+    try {
+      const coupons = await this._userRepository.getCoupons();
+      const currentDate = new Date();
+  if(coupons)
+      for (const coupon of coupons) {
+        const expirationDate = new Date(coupon.expires);
+        if (expirationDate < currentDate && coupon.status === "active") {
+          await this._userRepository.updateCouponByCode(coupon.code, {
+            status: "expired",
+          });
+          console.log(`Coupon ${coupon.code} expired and status updated to expired`);
+        }
+      }
+      console.log("Coupon status check completed");
+    } catch (error: any) {
+      console.error("Error in checkAndUpdateCouponStatus:", error);
+      throw error;
+    }
+  }
 
     async getAllBanners(): Promise<IBanner[] | null> {
       const banners = await this._userRepository.findAll()

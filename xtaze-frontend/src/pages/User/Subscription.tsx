@@ -126,7 +126,6 @@ export default function PricingPage() {
     try {
       const token = localStorage.getItem("token");
       if (!token) throw new Error("No authentication token found");
-      if (!appliedCoupon?.code) throw new Error("No code found");
       const sessionId = await initiateCheckout(user._id, priceId, appliedCoupon?.code);
       const { error } = await stripe.redirectToCheckout({ sessionId });
       if (error) {

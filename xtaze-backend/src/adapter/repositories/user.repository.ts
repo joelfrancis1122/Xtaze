@@ -54,6 +54,15 @@ export default class UserRepository implements IUserRepository {
     }
   }
 
+   async getCoupons(): Promise<ICoupon[] | null> {
+      try {
+        const coupons = await CouponModel.find();
+        return coupons
+      } catch (error: any) {
+        throw new Error("Failed to save coupon: " + error.message);
+      }
+    }
+  
   async getUserUpdated(userId: string): Promise<IUser | null> {
     return await UserModel.findById({ _id: userId });
   }
@@ -278,6 +287,7 @@ export default class UserRepository implements IUserRepository {
   }
   async updateUserSubscription(userId: string, planName: string): Promise<IUser | null> {
     try {
+      console.log("workedodi")
       const updatedUser = await UserModel.findByIdAndUpdate(
         userId,
         { premium: planName },
@@ -345,6 +355,7 @@ export default class UserRepository implements IUserRepository {
     updateData: ICoupon
   ): Promise<ICoupon | null> {
     try {
+
       const updatedCoupon = await CouponModel.findOneAndUpdate(
         { code }, 
         { $set: updateData },
