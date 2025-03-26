@@ -474,6 +474,16 @@ export default class UserController {
       }
     }
 
-    
+    async getSubscriptionHistory(req: Request, res: Response, next: NextFunction): Promise<void> {
+      try {
+        const history = await this._userUseCase.getSubscriptionHistoryFromStripe();
+        res.status(200).json({ data: history });
+      } catch (error: any) {
+        console.error("Error in getSubscriptionHistory controller:", error);
+        next(error); // Pass to error middleware
+      }
+    }
+
+
 
 }

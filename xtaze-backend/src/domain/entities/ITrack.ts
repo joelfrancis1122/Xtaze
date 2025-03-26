@@ -8,4 +8,5 @@ export interface ITrack {
   createdAt?: Date;
   listeners?: number;
   artists: string[];
+  playHistory?: { month: string; plays: number }[];
 }

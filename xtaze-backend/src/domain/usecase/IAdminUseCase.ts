@@ -3,6 +3,8 @@ import { IBanner } from "../entities/IBanner";
 import { IPlan } from "../entities/IPlan";
 import IUser from "../entities/IUser";
 import { ICoupon } from "../entities/ICoupon";
+import { ITrack } from "../entities/ITrack";
+import { MusicMonetization } from "../entities/IMonetization";
 
 export default interface IAdminUseCase {
     login(email: string, password: string): Promise<{ success: boolean; message: string; token?: string; user?: IUser }>;
@@ -20,6 +22,7 @@ export default interface IAdminUseCase {
     deleteCoupon(couponId:string):Promise<ICoupon|null>
     updateCoupon(couponId:string, updateData:ICoupon):Promise<ICoupon|null>
     verifyCoupon(code:string):Promise<ICoupon|null>
+    getMusicMonetization():Promise<MusicMonetization[]|null>
 
 }
 

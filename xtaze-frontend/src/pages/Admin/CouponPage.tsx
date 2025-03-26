@@ -5,6 +5,7 @@ import { Plus, Search, Edit, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import Sidebar from "./adminComponents/aside-side";
 import axios from "axios";
+import { Button } from "../../components/ui/button";
 
 interface Coupon {
   _id: string; // Change to _id if backend uses this
@@ -22,7 +23,6 @@ export default function AdminCouponPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newCoupon, setNewCoupon] = useState({
     code: "",
-    discountType: "percentage" as const,
     discountAmount: 0,
     expires: "",
     maxUses: 0,
@@ -98,7 +98,7 @@ export default function AdminCouponPage() {
       console.log("Created coupon:", response.data); // Debug
       const createdCoupon = response.data.result;
       setCoupons([...coupons, { ...createdCoupon, _id: createdCoupon._id }]); // Ensure _id
-      setNewCoupon({ code: "", discountType: "percentage", discountAmount: 0, expires: "", maxUses: 0 });
+      setNewCoupon({ code: "", discountAmount: 0, expires: "", maxUses: 0 });
       setIsCreateFormOpen(false);
       setErrors({});
       toast.success("Coupon created successfully!");
@@ -111,7 +111,6 @@ export default function AdminCouponPage() {
     setEditingCoupon(coupon);
     setNewCoupon({
       code: coupon.code,
-      discountType: "percentage",
       discountAmount: coupon.discountAmount,
       expires: coupon.expires,
       maxUses: coupon.maxUses,
@@ -135,7 +134,7 @@ export default function AdminCouponPage() {
       const updatedCoupon = response.data.data;
       setCoupons(coupons.map((c) => (c._id === editingCoupon._id ? updatedCoupon : c)));
       setEditingCoupon(null);
-      setNewCoupon({ code: "", discountType: "percentage", discountAmount: 0, expires: "", maxUses: 0 });
+      setNewCoupon({ code: "", discountAmount: 0, expires: "", maxUses: 0 });
       setIsModalOpen(false);
       setErrors({});
       toast.success("Coupon updated successfully!");
@@ -189,10 +188,7 @@ export default function AdminCouponPage() {
                   />
                   {errors.code && <p className="text-red-500 text-sm mt-1">{errors.code}</p>}
                 </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">Discount Type</label>
-                  <p className="w-full bg-gray-700 text-white border border-gray-600 rounded-md px-3 py-2">Percentage</p>
-                </div>
+             
                 <div>
                   <input
                     type="number"
@@ -229,13 +225,13 @@ export default function AdminCouponPage() {
                   {errors.maxUses && <p className="text-red-500 text-sm mt-1">{errors.maxUses}</p>}
                 </div>
                 <div className="flex gap-2">
-                  <button
+                  <Button
                     onClick={handleCreateCoupon}
                     disabled={Object.keys(errors).length > 0}
                     className={`bg-red-500 text-white px-4 py-2 rounded-md flex-1 ${errors.code || errors.discountAmount || errors.expires || errors.maxUses ? "opacity-50 cursor-not-allowed" : "hover:bg-red-600"}`}
                   >
                     Create
-                  </button>
+                  </Button>
                   <button
                     onClick={() => {
                       setIsCreateFormOpen(false);
@@ -361,7 +357,7 @@ export default function AdminCouponPage() {
                     onClick={() => {
                       setIsModalOpen(false);
                       setEditingCoupon(null);
-                      setNewCoupon({ code: "", discountType: "percentage", discountAmount: 0, expires: "", maxUses: 0 });
+                      setNewCoupon({ code: "", discountAmount: 0, expires: "", maxUses: 0 });
                       setErrors({});
                     }}
                     className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-md flex-1"

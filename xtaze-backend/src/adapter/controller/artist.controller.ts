@@ -143,4 +143,15 @@ export default class ArtistController {
       next(error); // Pass error to middleware
     }
   }
+  async statsOfArtist(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+
+      const songImprovements = await this._artistnUseCase.statsOfArtist();
+      res.status(200).json({ data: songImprovements });
+    } catch (error: any) {
+      console.error("Error in getSongImprovements controller:", error);
+      res.status(500).json({ message: error.message || "Internal server error" });
+      next(error);
+    }
+  }
 }

@@ -9,7 +9,8 @@ export default interface IArtistUseCase {
     listArtists(): Promise<IUser[]>
     listArtistReleases(userId: string): Promise<ITrack[]>
     increment(trackId: string): Promise<ITrack | null>
-    // toggleBlockUnblockArtist(id:string):Promise<IUser|null> 
+    statsOfArtist(): Promise<void>
+ 
 
 }
 

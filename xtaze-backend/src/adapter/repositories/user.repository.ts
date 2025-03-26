@@ -7,7 +7,7 @@ import BannerModel from "../db/models/BannerModel";
 import { CouponModel } from "../db/models/CouponModel";
 import PlaylistModel from "../db/models/PlaylistModel";
 import { ITrack, Track } from "../db/models/TrackModel";
-import UserModel from "../db/models/UserModel"; // Assuming your User model is in this location
+import UserModel from "../db/models/UserModel"; 
 
 export default class UserRepository implements IUserRepository {
 

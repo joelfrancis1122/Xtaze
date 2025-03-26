@@ -278,5 +278,15 @@ export default class AdminController {
       next(error);
     }
   }
+  async getMusicMonetization(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const monetizationData = await this._adminUseCase.getMusicMonetization();
+      
+      res.status(200).json({ data: monetizationData });
+    } catch (error: any) {
+      console.error("Error in getMusicMonetization controller:", error);
+      next(error);
+    }
+  }
 }
 

@@ -30,7 +30,6 @@ router.put("/updateNamePlaylist",(req:Request,res:Response,next:NextFunction)=>u
 router.put("/updateImagePlaylist", authenticateUser,upload.single("imageUpload"),(req:Request,res:Response,next:NextFunction)=>userController.updateImagePlaylist(req,res,next))
 router.get("/banners",(req:Request,res:Response,next:NextFunction)=>userController.allBanners(req,res,next))
 
-
 router.get("/getTracksInPlaylist",authenticateUser,(req:Request,res:Response,next:NextFunction)=>userController.getTracksInPlaylist(req,res,next))
 router.post("/updateBanner",authenticateUser, upload.single("coverImage"),(req:Request,res:Response,next:NextFunction)=>userController.uploadBanner(req,res,next))
 

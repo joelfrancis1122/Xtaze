@@ -9,6 +9,8 @@ import { IBanner } from "../domain/entities/IBanner";
 import Stripe from "stripe";
 import AppError from "../utils/AppError";
 import { ICoupon } from "../domain/entities/ICoupon";
+import { ITrack } from "../domain/entities/ITrack";
+import { MusicMonetization } from "../domain/entities/IMonetization";
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2023-08-16" });
 
 dotenv.config();
@@ -323,6 +325,15 @@ export default class AdminUseCase {
     }
     return coupon;
   }
+
+  
+  async getMusicMonetization():Promise<MusicMonetization[]|null>{
+
+    const tracks = await this._adminRepository.getMusicMonetization()
+  console.log(tracks,"this is what i got ")
+    return tracks
+
+}
 
 
 }

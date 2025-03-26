@@ -1,10 +1,12 @@
 import { IBanner } from "../../domain/entities/IBanner";
 import { ICoupon } from "../../domain/entities/ICoupon";
+import { MusicMonetization } from "../../domain/entities/IMonetization";
 import IUser from "../../domain/entities/IUser";
 import { IAdminRepository } from "../../domain/repositories/IAdminRepository";
 import { uploadImageToCloud, uploadProfileCloud } from "../../framework/service/cloudinary.service";
 import BannerModel from "../db/models/BannerModel";
 import { CouponModel } from "../db/models/CouponModel";
+import { ITrack, Track } from "../db/models/TrackModel";
 import UserModel from "../db/models/UserModel";
 
 export default class AdminRepository implements IAdminRepository {
@@ -102,6 +104,9 @@ export default class AdminRepository implements IAdminRepository {
       }
       return updatedCoupon.toObject() as ICoupon;
     } catch (error: any) {
+      if (error.code === 11000) {
+        throw new Error(`Coupon code already exists`);
+      }
       throw new Error(error.message || "Failed to update coupon");
     }
   }
@@ -140,6 +145,32 @@ export default class AdminRepository implements IAdminRepository {
     const coupon = await CouponModel.findOne({ code });
     return coupon ? coupon.toObject() as ICoupon : null;
   }
+
+  async getMusicMonetization(): Promise<MusicMonetization[]> {
+    try {
+      const tracks = await Track.find();
+  
+      const revenuePerPlay = 0.30;
+      const monetizationData: MusicMonetization[] = tracks
+        .map((track) => {
+          const typedTrack = track as { _id: string; title: string; artists: string[]; listeners?: number; createdAt: Date };
+  
+          return {
+            trackId: typedTrack._id.toString(), 
+            trackName: typedTrack.title,
+            artistName: typedTrack.artists[0] || "Unknown Artist",
+            totalPlays: typedTrack.listeners || 0,
+            revenue: (typedTrack.listeners || 0) * revenuePerPlay,
+            lastUpdated: typedTrack.createdAt.toISOString(),
+          };
+        })
+        .sort((a, b) => b.totalPlays - a.totalPlays);
+  
+      return monetizationData;
+    } catch (error: any) {
+      console.error("Error in getMusicMonetization:", error);
+      throw new Error(error.message || "Failed to fetch music monetization data");
+    }
+  }
+  
 }
-
-

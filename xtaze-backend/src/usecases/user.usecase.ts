@@ -13,6 +13,7 @@ import IEmailService from '../domain/service/IEmailService';
 import { IPlaylist } from '../domain/entities/IPlaylist';
 import { ITrack } from '../domain/entities/ITrack';
 import { IBanner } from '../domain/entities/IBanner';
+import { SubscriptionHistory } from '../domain/entities/ISubscriptionHistory';
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2023-08-16" });
 
 dotenv.config();
@@ -573,7 +574,54 @@ export default class UserUseCase {
       return banners;
   
     }
-}
 
-
-
+    
+    
+    async getSubscriptionHistoryFromStripe(): Promise<SubscriptionHistory[]> {
+      try {
+        // Fetch recent checkout sessions from Stripe
+        const sessions = await this.stripe.checkout.sessions.list({
+          limit: 50, // Max 100, adjust as needed
+          expand: ["data.customer"], // Expand customer for email
+        });
+        
+        // Filter only completed sessions
+        const completedSessions = sessions.data.filter(
+          (session) => session.status === "complete"
+        );
+        
+        const history: SubscriptionHistory[] = await Promise.all(
+          completedSessions.map(async (session) => {
+            const userId = session.metadata?.userId || "unknown";
+            const planName = session.metadata?.planName || "Unknown Plan";
+            const price = (session.amount_total || 0) / 100; // Convert cents to dollars
+            const purchaseDate = new Date(session.created * 1000).toISOString(); // Convert Unix timestamp
+            
+            // Fetch email from customer if available, or fallback to repository
+            let email = (session.customer as Stripe.Customer)?.email || "N/A";
+            if (!email || email === "N/A") {
+              const user = await this._userRepository.findById(userId);
+              email = user?.email || "N/A";
+            }
+            
+            return {
+              userId,
+              email,
+              planName,
+              price,
+              purchaseDate,
+            };
+          })
+        );
+        
+        // Sort by purchase date descending (most recent first)
+        return history.sort((a, b) => new Date(b.purchaseDate).getTime() - new Date(a.purchaseDate).getTime());
+      } catch (error: any) {
+        console.error("Error in getSubscriptionHistoryFromStripe:", error);
+        throw error;
+      }
+    }
+  
+    
+  }  
+  

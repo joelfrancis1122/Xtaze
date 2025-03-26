@@ -38,13 +38,13 @@ const ArtistSidebar = () => {
           <Home className="h-4 w-4" />
           Releases
         </Button>
-        <Button variant="ghost" className="w-full justify-start gap-2" onClick={() => navigate("/artist/playlists")}>
+        {/* <Button variant="ghost" className="w-full justify-start gap-2" onClick={() => navigate("/artist/playlists")}>
           <Music className="h-4 w-4" />
           Playlists
-        </Button>
-        <Button variant="ghost" className="w-full justify-start gap-2" onClick={() => navigate("/artist/support")}>
+        </Button> */}
+        <Button variant="ghost" className="w-full justify-start gap-2" onClick={() => navigate("/artist/monetization")}>
           <LifeBuoy className="h-4 w-4" />
-          Support
+          Monetization
         </Button>
         <Button variant="ghost" className="w-full justify-start gap-2" onClick={() => navigate("/artist/settings")}>
           <Settings className="h-4 w-4" />

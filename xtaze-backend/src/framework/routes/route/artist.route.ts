@@ -20,6 +20,7 @@ router.post("/upload",authenticateArtist,upload.fields([{ name: "file", maxCount
 router.get("/listActiveGenres",authenticateArtist,(req:Request,res:Response,next:NextFunction)=>genreController.listActiveGenres(req,res,next))
 router.get("/getAllTracksArtist",authenticateArtist,(req:Request,res:Response,next:NextFunction)=>artistController.getAllTracksArtist(req,res,next))
 router.post("/incrementListeners",authenticateUser,(req:Request,res:Response,next:NextFunction)=>artistController.incrementListeners(req,res,next))
+router.post("/statsOfArtist",authenticateUser,(req:Request,res:Response,next:NextFunction)=>artistController.statsOfArtist(req,res,next))
 
 
 

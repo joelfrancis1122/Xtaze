@@ -132,6 +132,12 @@ export default class ArtistUseCase {
     
 
   } 
+  async statsOfArtist(): Promise<void> {
+    
+    return await this._artistRepository.statsOfArtist();
+    
+
+  } 
 
   // async toggleBlockUnblockArtist(id: string): Promise<IUser | null> {
   //   console.log("Artist coming to the toggle");

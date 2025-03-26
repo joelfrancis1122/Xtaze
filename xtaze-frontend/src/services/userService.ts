@@ -367,19 +367,3 @@ export const initiateCheckout = async (
   return data.sessionId;
 };
 
-
-
-
-// export default {
-//   checkUsername,
-//   sendOtp,
-//   verifyOtp,
-//   registerUser,
-//   loginUser,
-//   googleLogin,
-//   fetchTracks,
-//   fetchLikedSongs,
-//   incrementListeners,
-//   toggleLike,
-//   uploadProfileImage,
-// };

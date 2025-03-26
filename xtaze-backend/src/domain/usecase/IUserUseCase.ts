@@ -3,6 +3,7 @@ import IUser from "../entities/IUser";
 import { IPlaylist } from "../entities/IPlaylist";
 import { ITrack } from "../entities/ITrack";
 import { IBanner } from "../entities/IBanner";
+import { SubscriptionHistory } from "../entities/ISubscriptionHistory";
 
 export default interface IuserUseCase{
     registerUser(username: string, country: string, gender: string, year: number, phone: number, email: string, password: string): Promise<IUser> 
@@ -31,4 +32,5 @@ export default interface IuserUseCase{
     getAllBanners():Promise<IBanner[]|null> 
     confirmPayment(rawBody: Buffer,signature:string):Promise<void> 
     checkAndUpdateCouponStatus():Promise<void> 
+    getSubscriptionHistoryFromStripe():Promise<SubscriptionHistory[]>
 }

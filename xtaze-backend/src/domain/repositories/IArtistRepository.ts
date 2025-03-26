@@ -7,5 +7,6 @@ export interface IArtistRepository {
   getAllArtists(): Promise<IUser[]>;
   getAllTracksByArtist(userId:string):Promise<ITrack[]>
   increment(trackId:string):Promise<ITrack|null>
+  statsOfArtist():Promise<void>
 
 }

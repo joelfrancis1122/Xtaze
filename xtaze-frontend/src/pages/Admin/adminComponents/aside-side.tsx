@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom" // ✅ React Router navigation
 import { Button } from "../../../components/ui/button"
-import { LayoutDashboard, Mic2, Music, Settings, Video, Image, PieChart, Headphones, Menu, LogOut,BadgePercent, Gem } from "lucide-react" // Add LogOut icon
+import { LayoutDashboard, Mic2, Music, Settings, Video, Image, PieChart, Headphones, Menu, LogOut,BadgePercent, Gem, BadgeDollarSign } from "lucide-react" // Add LogOut icon
 import { useDispatch } from "react-redux"
 import { clearAdminData } from "../../../redux/adminSlice"
 export default function Sidebar() {
@@ -24,13 +24,13 @@ export default function Sidebar() {
   }, [])
 
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(false)
-  const navigate = useNavigate() // ✅ React Router navigation
+  const navigate = useNavigate() 
   const dispatch = useDispatch()
   const menuItems = [
     { icon: LayoutDashboard, label: "Dashboard", path: "/admin/dashboard" },
     { icon: Mic2, label: "Users", path: "/admin/artists" },
     { icon: Music, label: "Genre", path: "/admin/genre" }, 
-    { icon: Video, label: "Videos", path: "/admin/videos" },
+    { icon: BadgeDollarSign , label: "Monetization", path: "/admin/monetization" },
     { icon: Image, label: "Banner", path: "/admin/banner" },
     { icon: PieChart, label: "Analytics", path: "/admin/analytics" },
     { icon: BadgePercent, label: "Coupons", path: "/admin/coupons" },

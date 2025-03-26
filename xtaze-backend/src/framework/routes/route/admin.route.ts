@@ -7,12 +7,15 @@ import { authenticateAdmin} from "../../middlewares/authMiddleware";
 import ArtistController from "../../../adapter/controller/artist.controller";
 import artistDependencies from "../../dependencies/artist.dependencies";
 import upload from "../../middlewares/uploadMiddleware";
+import userDependencies from "../../dependencies/user.dependencies";
+import UserController from "../../../adapter/controller/user.controller";
 
 const router = express.Router();
 
 const genreController=new GenreController(genreDependencies)
 const adminController = new AdminController(adminDependencies)
 const artistController = new ArtistController(artistDependencies)
+const userController = new UserController(userDependencies)
 
 
 router.get("/genreList",authenticateAdmin,(req:Request,res:Response,next:NextFunction)=>genreController.listGenre(req,res,next))
@@ -40,7 +43,9 @@ router.post("/coupons",(req:Request,res:Response,next:NextFunction)=>adminContro
 router.put("/coupons",(req:Request,res:Response,next:NextFunction)=>adminController.updateCoupon(req,res,next))
 router.delete("/coupons",(req:Request,res:Response,next:NextFunction)=>adminController.deleteCoupon(req,res,next))
 router.post("/coupons/verify",(req:Request,res:Response,next:NextFunction)=>adminController.verifyCoupon(req,res,next))
+router.get("/stripe/subscription-history", (req: Request, res: Response, next: NextFunction) => userController.getSubscriptionHistory(req, res, next));
 
+router.get("/music/monetization", (req: Request, res: Response, next: NextFunction) => adminController.getMusicMonetization(req, res, next));
 
 export default router;
 

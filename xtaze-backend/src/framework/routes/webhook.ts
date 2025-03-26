@@ -6,5 +6,5 @@ const router = express.Router();
 
 const userController = new UserController(userDependencies)
 router.post("/stripe", express.raw({ type: "application/json" }), (req:Request,res:Response,next:NextFunction)=>userController.handleWebhook(req,res,next));
-
+router.get("/stripe/subscription-history", (req: Request, res: Response, next: NextFunction) => userController.getSubscriptionHistory(req, res, next));
 export default router;

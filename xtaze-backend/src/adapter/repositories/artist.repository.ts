@@ -42,39 +42,58 @@ export default class ArtistRepository implements IArtistRepository {
       throw new Error("Failed to fetch tracks");
     }
   }
-  async increment(trackId: string): Promise<ITrack | null> { 
+  async increment(trackId: string): Promise<ITrack | null> {
     try {
-        console.log("Fetching track with ID:", trackId);
-
-        const updatedTrack = await Track.findByIdAndUpdate(
-            trackId,
-            { $inc: { listeners: 1 } }, 
-            { new: true } 
-        );
-
-        if (!updatedTrack) {
-            throw new Error("Track not found");
-        }
-
-        console.log(updatedTrack,"ith an ambu");
-        return updatedTrack; 
-    } catch (error) {
-        console.error("Error updating track listeners:", error);
-        throw new Error("Failed to update track listeners");
+      console.log("Fetching track with ID:", trackId);
+  
+      const currentMonth = new Date().toISOString().slice(0, 7); // e.g., "2025-03"
+  
+      // 1️⃣ **Find the track**
+      const track = await Track.findById(trackId);
+      if (!track) throw new Error("Track not found");
+  
+      // 2️⃣ **Ensure `listeners` has a default value**
+      if (track.listeners === undefined) {
+        track.listeners = 0;
+      }
+  
+      // 3️⃣ **Ensure `playHistory` is initialized**
+      if (!track.playHistory) {
+        track.playHistory = []; // Initialize if undefined
+      }
+  
+      // 4️⃣ **Check if the current month already exists**
+      const monthIndex = track.playHistory.findIndex((h) => h.month === currentMonth);
+  
+      if (monthIndex === -1) {
+        // If the current month is missing, add a new entry
+        track.playHistory.push({ month: currentMonth, plays: 1 });
+      } else {
+        // If month exists, increment the play count
+        track.playHistory[monthIndex].plays += 1;
+      }
+  
+      // 5️⃣ **Increment the total listener count**
+      track.listeners += 1;
+  
+      // 6️⃣ **Save the updated track**
+      await track.save();
+  
+      console.log("Updated track:", track);
+      return track;
+    } catch (error: any) {
+      console.error("Error updating track listeners:", error);
+      throw new Error("Failed to update track listeners");
     }
-}
+  }
+  
 
 
 
-  // async getArtistById(id: string): Promise<IUser|null> {
-  //   return await UserModel.findById(id);
-  // }
-
-  // async updateArtistStatus(id: string, status: boolean): Promise<IUser|null> {
-  //     console.log(status,"ss");
+  async statsOfArtist(): Promise<void> {
+      console.log(status,"ss");
 
 
-  //   return  await UserModel.findByIdAndUpdate(id, { isActive:status}, { new: true });
 
-  // }
+  }
 }

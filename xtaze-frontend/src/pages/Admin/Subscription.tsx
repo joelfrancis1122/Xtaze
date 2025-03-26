@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import Sidebar from "./adminComponents/aside-side";
 import { toast } from "sonner";
+import ReactPaginate from "react-paginate"; // Import react-paginate
 
 interface StripeProduct {
   id: string;
@@ -26,11 +27,22 @@ interface SubscriptionPlan {
   price: StripePrice;
 }
 
+interface SubscriptionHistory {
+  userId: string;
+  email: string;
+  planName: string;
+  price: number;
+  purchaseDate: string;
+}
+
 export default function AdminSubscriptionPage() {
   const navigate = useNavigate();
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
+  const [history, setHistory] = useState<SubscriptionHistory[]>([]);
   const [loading, setLoading] = useState(true);
+  const [historyLoading, setHistoryLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [historyError, setHistoryError] = useState<string | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [newPlan, setNewPlan] = useState({
     name: "",
@@ -38,7 +50,11 @@ export default function AdminSubscriptionPage() {
     price: "",
     interval: "month" as "month" | "year",
   });
-  const [editPlan, setEditPlan] = useState<SubscriptionPlan | null>(null); // Track plan being edited
+  const [editPlan, setEditPlan] = useState<SubscriptionPlan | null>(null);
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(0);
+  const itemsPerPage = 10; // Adjust as needed
 
   useEffect(() => {
     const fetchPlans = async () => {
@@ -54,7 +70,23 @@ export default function AdminSubscriptionPage() {
         setLoading(false);
       }
     };
+
+    const fetchSubscriptionHistory = async () => {
+      try {
+        setHistoryLoading(true);
+        const response = await axios.get("http://localhost:3000/admin/stripe/subscription-history");
+        setHistory(response.data.data);
+        setHistoryError(null);
+      } catch (err) {
+        console.error(err);
+        setHistoryError("Failed to load subscription history");
+      } finally {
+        setHistoryLoading(false);
+      }
+    };
+
     fetchPlans();
+    fetchSubscriptionHistory();
   }, []);
 
   const handleCreatePlan = async () => {
@@ -117,6 +149,15 @@ export default function AdminSubscriptionPage() {
     }
   };
 
+  // Pagination logic
+  const pageCount = Math.ceil(history.length / itemsPerPage);
+  const offset = currentPage * itemsPerPage;
+  const currentHistory = history.slice(offset, offset + itemsPerPage);
+
+  const handlePageChange = ({ selected }: { selected: number }) => {
+    setCurrentPage(selected);
+  };
+
   return (
     <div className="flex min-h-screen bg-black text-white">
       <Sidebar />
@@ -126,6 +167,7 @@ export default function AdminSubscriptionPage() {
         </button>
 
         <div className="max-w-7xl mx-auto space-y-10">
+          {/* Plans Section */}
           <div className="flex items-center justify-between">
             <h1 className="text-3xl font-bold">Subscription Plans</h1>
             <button onClick={() => setIsFormOpen(!isFormOpen)} className="flex items-center gap-2 bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-md transition">
@@ -227,6 +269,57 @@ export default function AdminSubscriptionPage() {
               <p className="text-gray-400 text-lg">No subscription plans yet.</p>
             </div>
           )}
+
+          {/* Subscription History Section with Pagination */}
+          <div className="mt-10">
+            <h2 className="text-2xl font-bold mb-4">Recent Subscription Purchases</h2>
+            {historyLoading ? (
+              <p className="text-gray-400 text-center py-4">Loading history...</p>
+            ) : historyError ? (
+              <p className="text-red-400 text-center py-4">{historyError}</p>
+            ) : history.length > 0 ? (
+              <>
+                <div className="bg-[#151515] rounded-xl shadow-lg border border-gray-900 overflow-hidden">
+                  <div className="grid grid-cols-[2fr_2fr_1fr_1fr] gap-4 px-6 py-4 text-gray-400 text-lg font-semibold border-b border-gray-700">
+                    <span>User Email</span>
+                    <span>Plan Name</span>
+                    <span>Price</span>
+                    <span>Purchase Date</span>
+                  </div>
+                  {currentHistory.map((entry) => (
+                    <div key={entry.userId + entry.purchaseDate} className="grid grid-cols-[2fr_2fr_1fr_1fr] gap-4 px-6 py-4 hover:bg-[#212121] transition-all duration-200 items-center">
+                      <span className="text-white truncate">{entry.email}</span>
+                      <span className="text-gray-400">{entry.planName}</span>
+                      <span className="text-gray-400">${entry.price.toFixed(2)}</span>
+                      <span className="text-gray-400">{new Date(entry.purchaseDate).toLocaleDateString()}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-4 flex justify-center">
+                  <ReactPaginate
+                    previousLabel={"Previous"}
+                    nextLabel={"Next"}
+                    breakLabel={"..."}
+                    pageCount={pageCount}
+                    marginPagesDisplayed={2}
+                    pageRangeDisplayed={5}
+                    onPageChange={handlePageChange}
+                    containerClassName={"flex gap-2"}
+                    pageClassName={"bg-gray-700 text-white px-3 py-1 rounded-md hover:bg-gray-600"}
+                    activeClassName={"bg-gray-600"}
+                    previousClassName={"bg-gray-700 text-white px-3 py-1 rounded-md hover:bg-gray-600"}
+                    nextClassName={"bg-gray-700 text-white px-3 py-1 rounded-md hover:bg-gray-600"}
+                    breakClassName={"text-gray-400 px-3 py-1"}
+                    disabledClassName={"opacity-50 cursor-not-allowed"}
+                  />
+                </div>
+              </>
+            ) : (
+              <div className="bg-[#1d1d1d] p-8 rounded-xl shadow-md border border-gray-800 text-center">
+                <p className="text-gray-400 text-lg">No recent subscription purchases.</p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

@@ -1,5 +1,7 @@
 import { IBanner } from "../entities/IBanner";
 import { ICoupon } from "../entities/ICoupon";
+import { MusicMonetization } from "../entities/IMonetization";
+import { ITrack } from "../entities/ITrack";
 import IUser from "../entities/IUser";
 
 export interface IAdminRepository {
@@ -16,5 +18,6 @@ export interface IAdminRepository {
   updateCoupon(couponId:string, updateData:ICoupon):Promise<ICoupon|null>
   findCouponByCode(code:string):Promise<ICoupon|null>
 
+    getMusicMonetization():Promise<MusicMonetization[]|null>
   
 }
