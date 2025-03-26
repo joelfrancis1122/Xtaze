@@ -1,80 +1,151 @@
 import { useState, useEffect } from "react";
-import { ChevronDown, ChevronLeft } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import ReactPaginate from "react-paginate";
-import { Button } from "../../components/ui/button"; // Adjust path
 import { Card } from "../../components/ui/card"; // Adjust path
 import ArtistSidebar from "./artistComponents/artist-aside"; // Adjust path
+import { RootState } from "../../store/store";
+import { useSelector } from "react-redux";
+import { Elements, CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
+import { loadStripe } from "@stripe/stripe-js";
+import { toast } from "sonner";
 
-interface SongImprovement {
+// Load Stripe outside the component
+const stripePromise = loadStripe("pk_test_51QuvsvQV9aXBcHmZPYCW1A2NRrd5mrEffAOVJMFOlrYDOl9fmb028A85ZE9WfxKMdNgTTA5MYoG4ZwCUQzHVydZj00eBUQVOo9");
+
+interface SongEarnings {
   trackId: string;
   trackName: string;
   totalPlays: number;
   monthlyPlays: number;
-  improvement: number;
-  projectedEarnings: number;
+  totalEarnings: number;
+  monthlyEarnings: number;
 }
 
-export default function ArtistSongImprovementsPage() {
+const CardInput = ({ artistId, onCardSaved }: { artistId: string; onCardSaved: () => void }) => {
+  const stripe = useStripe();
+  const elements = useElements();
+  const [cardLoading, setCardLoading] = useState(false);
+
+  const handleSaveCard = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!stripe || !elements || !artistId) return;
+
+    setCardLoading(true);
+    try {
+      const cardElement = elements.getElement(CardElement);
+      if (!cardElement) throw new Error("Card element not found");
+
+      const { paymentMethod, error } = await stripe.createPaymentMethod({
+        type: "card",
+        card: cardElement,
+        billing_details: { name: artistId }, // Use artistId or fetch username if needed
+      });
+
+      if (error) throw new Error(error.message);
+
+      await axios.post(
+        "http://localhost:3000/artist/saveCard",
+        { artistId, paymentMethodId: paymentMethod?.id },
+        { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
+      );
+
+      onCardSaved(); // Update parent state
+      toast.success("Card saved successfully!");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to save card");
+    } finally {
+      setCardLoading(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSaveCard} className="space-y-4">
+      <CardElement options={{ style: { base: { color: "#fff" } } }} />
+      <button
+        type="submit"
+        disabled={cardLoading || !stripe}
+        className="bg-green-700 text-white px-4 py-2 rounded hover:bg-green-600"
+      >
+        {cardLoading ? "Saving..." : "Save Card"}
+      </button>
+    </form>
+  );
+};
+
+export default function ArtistMonetizePage() {
   const navigate = useNavigate();
-  const [songs, setSongs] = useState<SongImprovement[]>([]);
+  const [songs, setSongs] = useState<SongEarnings[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [currentPage, setCurrentPage] = useState(0);
-  const itemsPerPage = 10;
+  const [hasCard, setHasCard] = useState(false);
+  const revenuePerPlay = 0.50;
+  const user = useSelector((state: RootState) => state.artist.signupData);
 
   useEffect(() => {
-    const fetchSongImprovements = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
-        const response = await axios.get("http://localhost:3000/artist/statsOfArtist", {
+  
+        // Fetch song earnings
+        const songResponse = await axios.get(`http://localhost:3000/artist/statsOfArtist?userId=${user?._id}`, {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         });
-        setSongs(response.data.data);
+        const songData = songResponse.data.data.map((song: any) => ({
+          trackId: song.trackId,
+          trackName: song.trackName,
+          totalPlays: song.totalPlays,
+          monthlyPlays: song.monthlyPlays,
+          totalEarnings: song.totalPlays * revenuePerPlay,
+          monthlyEarnings: song.monthlyPlays * revenuePerPlay,
+        }));
+        setSongs(songData);
+  
+        // Check if card details exist
+        const cardResponse = await axios.get(`http://localhost:3000/artist/checkcard?userId=${user?._id}`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        });
+        console.log(cardResponse, "gopi");
+        setHasCard(cardResponse.data.data.stripePaymentMethodId);
+  
         setError(null);
       } catch (err) {
         console.error(err);
-        setError("Failed to load song improvements");
+        setError("Failed to load song earnings");
       } finally {
         setLoading(false);
       }
     };
-
-    fetchSongImprovements();
-
-    // Apply dashboard background styles
-    const styles = `
-      body, * {
-        background-color: var(--background) !important; /* Dark background */
-      }
-    `;
+  
+    fetchData();
+  
+    // Apply dark theme
     const styleSheet = document.createElement("style");
     styleSheet.type = "text/css";
-    styleSheet.innerText = styles;
+    styleSheet.innerText = `
+      body, * {
+        background-color: var(--background) !important;
+      }
+    `;
     document.head.appendChild(styleSheet);
-
+  
     return () => {
-      document.head.removeChild(styleSheet); // Cleanup on unmount
+      if (styleSheet.parentNode) {
+        document.head.removeChild(styleSheet);
+      }
     };
-  }, []);
+  }, [user?._id]);
+  
 
-  const pageCount = Math.ceil(songs.length / itemsPerPage);
-  const offset = currentPage * itemsPerPage;
-  const currentSongs = songs.slice(offset, offset + itemsPerPage);
-
-  const handlePageChange = ({ selected }: { selected: number }) => {
-    setCurrentPage(selected);
+  const handleCardSaved = () => {
+    setHasCard(true);
   };
 
   return (
     <div className="min-h-screen bg-black text-white">
       <div className="grid lg:grid-cols-[280px_1fr]">
-        {/* Sidebar Component */}
         <ArtistSidebar />
-
         <main className="flex-1 pl-0.4 pr-6 pt-5 pb-6">
-          {/* Header */}
           <div className="mb-6 flex items-center justify-between">
             <div className="space-y-1">
               <button
@@ -84,33 +155,42 @@ export default function ArtistSongImprovementsPage() {
               >
                 <ChevronLeft className="h-5 w-5 text-gray-400" />
               </button>
-              <h1 className="text-2xl font-bold">Song Improvements</h1>
-              <div className="text-sm text-muted-foreground">This month’s performance overview</div>
+              <h1 className="text-2xl font-bold">Monetize</h1>
+              <div className="text-sm text-muted-foreground">Your song earnings overview</div>
             </div>
-            <Button variant="outline" className="gap-2">
-              This Month
-              <ChevronDown className="h-4 w-4" />
-            </Button>
           </div>
 
-          {/* Summary Card */}
+          {/* Earnings Summary */}
           <Card className="p-6">
-            <h2 className="text-lg font-semibold mb-4">This Month’s Overview</h2>
+            <h2 className="text-lg font-semibold mb-4">Earnings Summary</h2>
             <div className="grid gap-4 md:grid-cols-2">
               <div>
-                <p className="text-gray-400">Total Monthly Plays</p>
+                <p className="text-gray-400">Total Earnings</p>
                 <p className="text-2xl font-bold">
-                  {songs.reduce((sum, song) => sum + song.monthlyPlays, 0).toLocaleString()}
+                  ${songs.reduce((sum, song) => sum + song.totalEarnings, 0).toFixed(2)}
                 </p>
               </div>
               <div>
-                <p className="text-gray-400">Projected Earnings</p>
+                <p className="text-gray-400">This Month’s Earnings</p>
                 <p className="text-2xl font-bold">
-                  ${songs.reduce((sum, song) => sum + song.projectedEarnings, 0).toFixed(2)}
+                  ${songs.reduce((sum, song) => sum + song.monthlyEarnings, 0).toFixed(2)}
                 </p>
               </div>
             </div>
+            <p className="text-gray-400 mt-4">
+              Payout Status: {hasCard ? "Eligible" : "Add card details to enable payouts"}
+            </p>
           </Card>
+
+          {/* Card Input */}
+          {!hasCard && (
+            <Card className="mt-6 p-6">
+              <h2 className="text-lg font-semibold mb-4">Add Card Details</h2>
+              <Elements stripe={stripePromise}>
+                <CardInput artistId={user?._id || ""} onCardSaved={handleCardSaved} />
+              </Elements>
+            </Card>
+          )}
 
           {/* Songs Table */}
           {loading ? (
@@ -125,41 +205,21 @@ export default function ArtistSongImprovementsPage() {
                   <span>Track Name</span>
                   <span>Total Plays</span>
                   <span>Monthly Plays</span>
-                  <span>Improvement</span>
-                  <span>Projected Earnings</span>
+                  <span>Total Earnings</span>
+                  <span>Monthly Earnings</span>
                 </div>
-                {currentSongs.map((song) => (
+                {songs.map((song) => (
                   <div
                     key={song.trackId}
                     className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr] gap-4 px-6 py-4 hover:bg-[#212121] transition-all duration-200 items-center"
                   >
                     <span className="text-white truncate">{song.trackName}</span>
-                    <span className="text-gray-400">{song.totalPlays.toLocaleString()}</span>
-                    <span className="text-gray-400">{song.monthlyPlays.toLocaleString()}</span>
-                    <span className={song.improvement >= 0 ? "text-green-400" : "text-red-400"}>
-                      {song.improvement >= 0 ? "+" : ""}{song.improvement.toFixed(1)}%
-                    </span>
-                    <span className="text-gray-400">${song.projectedEarnings.toFixed(2)}</span>
+                    <span className="text-gray-400">{song.totalPlays}</span>
+                    <span className="text-gray-400">{song.monthlyPlays}</span>
+                    <span className="text-gray-400">${song.totalEarnings.toFixed(2)}</span>
+                    <span className="text-gray-400">${song.monthlyEarnings.toFixed(2)}</span>
                   </div>
                 ))}
-              </div>
-              <div className="mt-4 flex justify-center">
-                <ReactPaginate
-                  previousLabel={"Previous"}
-                  nextLabel={"Next"}
-                  breakLabel={"..."}
-                  pageCount={pageCount}
-                  marginPagesDisplayed={2}
-                  pageRangeDisplayed={5}
-                  onPageChange={handlePageChange}
-                  containerClassName={"flex gap-2"}
-                  pageClassName={"bg-gray-700 text-white px-3 py-1 rounded-md hover:bg-gray-600"}
-                  activeClassName={"bg-gray-600"}
-                  previousClassName={"bg-gray-700 text-white px-3 py-1 rounded-md hover:bg-gray-600"}
-                  nextClassName={"bg-gray-700 text-white px-3 py-1 rounded-md hover:bg-gray-600"}
-                  breakClassName={"text-gray-400 px-3 py-1"}
-                  disabledClassName={"opacity-50 cursor-not-allowed"}
-                />
               </div>
             </Card>
           ) : (

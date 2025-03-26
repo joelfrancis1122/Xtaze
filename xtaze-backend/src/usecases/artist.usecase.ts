@@ -7,6 +7,7 @@ import { IArtistRepository } from "../domain/repositories/IArtistRepository";
 import { ITrack } from "../domain/entities/ITrack";
 import { uploadImageToCloud, uploadSongToCloud } from "../framework/service/cloudinary.service";
 import { IUserRepository } from "../domain/repositories/IUserRepository";
+import { ArtistMonetization, MusicMonetization } from "../domain/entities/IMonetization";
 dotenv.config();
 
 interface useCaseDependencies {
@@ -132,9 +133,21 @@ export default class ArtistUseCase {
     
 
   } 
-  async statsOfArtist(): Promise<void> {
+  async statsOfArtist(userId:string): Promise<ArtistMonetization[]> {
     
-    return await this._artistRepository.statsOfArtist();
+    return await this._artistRepository.statsOfArtist(userId);
+    
+
+  } 
+  async saveCard(artistId:string,paymentMethodId:string):Promise<IUser|null> {
+    
+    return await this._artistRepository.saveCard(artistId,paymentMethodId);
+    
+
+  } 
+  async checkcard(artistId:string):Promise<IUser|null>{
+    
+    return await this._artistRepository.checkcard(artistId);
     
 
   } 

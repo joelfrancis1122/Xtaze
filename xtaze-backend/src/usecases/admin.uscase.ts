@@ -11,6 +11,8 @@ import AppError from "../utils/AppError";
 import { ICoupon } from "../domain/entities/ICoupon";
 import { ITrack } from "../domain/entities/ITrack";
 import { MusicMonetization } from "../domain/entities/IMonetization";
+import UserModel from "../adapter/db/models/UserModel";
+import { Track } from "../adapter/db/models/TrackModel";
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2023-08-16" });
 
 dotenv.config();
@@ -33,8 +35,8 @@ export default class AdminUseCase {
     this._adminRepository = dependencies.repository.adminRepository
     this._passwordService = dependencies.service.passwordService
     this.stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-          apiVersion: "2023-08-16",
-        });
+      apiVersion: "2023-08-16",
+    });
   }
 
   async login(email: string, password: string): Promise<{ success: boolean; message: string; token?: string; admin?: IUser }> {
@@ -85,13 +87,13 @@ export default class AdminUseCase {
     return banners;
 
   }
-  async deleteBanner(id:string): Promise<IBanner | null> {
+  async deleteBanner(id: string): Promise<IBanner | null> {
     const banners = await this._adminRepository.findBanner(id)
     return banners;
 
   }
-  async updateBanner(id:string,title:string,description:string,action:string,isActive:boolean,file:Express.Multer.File): Promise<IBanner | null> {
-    const banners = await this._adminRepository.findBannerforUpdate(id,title,description,action,isActive,file)
+  async updateBanner(id: string, title: string, description: string, action: string, isActive: boolean, file: Express.Multer.File): Promise<IBanner | null> {
+    const banners = await this._adminRepository.findBannerforUpdate(id, title, description, action, isActive, file)
     return banners;
 
   }
@@ -99,14 +101,14 @@ export default class AdminUseCase {
     const coupons = await this._adminRepository.getCoupons()
     return coupons;
   }
-  async deleteCoupon(couponId:string): Promise<ICoupon| null> {
+  async deleteCoupon(couponId: string): Promise<ICoupon | null> {
     const coupons = await this._adminRepository.deleteCoupon(couponId)
     return coupons;
   }
 
 
 
-  async updateCoupon(couponId: string, couponData: ICoupon): Promise<ICoupon|null> {
+  async updateCoupon(couponId: string, couponData: ICoupon): Promise<ICoupon | null> {
     if (!couponId) {
       throw new Error("Coupon ID is required");
     }
@@ -135,7 +137,7 @@ export default class AdminUseCase {
     }
 
     // Add status: "active" to the update data
-    const updatedCouponData:ICoupon = {
+    const updatedCouponData: ICoupon = {
       ...couponData,
       status: "active", // Always set to active
     };
@@ -165,7 +167,7 @@ export default class AdminUseCase {
         name,
         description,
       });
-  
+
       // Create the price for the product
       const priceObj = await this.stripe.prices.create({
         product: product.id,
@@ -173,7 +175,7 @@ export default class AdminUseCase {
         currency: "usd",
         recurring: { interval },
       });
-  
+
       return { product, price: priceObj };
     } catch (error: any) {
       console.error("Error in UserUseCase.createPlan:", error);
@@ -192,7 +194,7 @@ export default class AdminUseCase {
           return { product, price };
         })
         .filter((plan): plan is { product: Stripe.Product; price: Stripe.Price } => !!plan.price);
-  
+
       return plans;
     } catch (error: any) {
       console.error("Error in UserUseCase.getPlans:", error);
@@ -204,7 +206,7 @@ export default class AdminUseCase {
       const product = await this.stripe.products.update(productId, {
         active: false,
       });
-  
+
       return product;
     } catch (error: any) {
       console.error("Error in UserUseCase.archivePlan:", error);
@@ -227,11 +229,11 @@ export default class AdminUseCase {
         name,
         description,
       });
-  
+
       // Get existing prices for this product
       const existingPrices = await this.stripe.prices.list({ product: productId });
       const activePrice = existingPrices.data.find((p) => p.active);
-  
+
       // If price or interval changed, create new price and deactivate old one
       const newUnitAmount = Math.round(price * 100);
       if (
@@ -252,7 +254,7 @@ export default class AdminUseCase {
         });
         return { product, price: newPrice };
       }
-  
+
       return { product, price: activePrice! };
     } catch (error: any) {
       console.error("Error in UserUseCase.updatePlan:", error);
@@ -270,11 +272,11 @@ export default class AdminUseCase {
     uses: number
   ): Promise<ICoupon | null> {
     // Validation
-    if (!code  || discountAmount === undefined || !expires || maxUses === undefined) {
+    if (!code || discountAmount === undefined || !expires || maxUses === undefined) {
       throw new Error("All fields (code, discountType, discountAmount, expires, maxUses) are required");
     }
 
-    
+
 
     if (typeof discountAmount !== "number" || discountAmount < 0) {
       throw new Error("discountAmount must be a non-negative number");
@@ -284,7 +286,7 @@ export default class AdminUseCase {
       throw new Error("maxUses must be a non-negative number");
     }
 
-   
+
 
     if (expires && new Date(expires) < new Date()) {
       throw new Error("Expiration date must be future");
@@ -296,8 +298,8 @@ export default class AdminUseCase {
     const couponData = {
       code,
       discountAmount,
-      expires: expires.toISOString(), 
-      status:"active",
+      expires: expires.toISOString(),
+      status: "active",
       maxUses,
       uses,
     };
@@ -317,23 +319,80 @@ export default class AdminUseCase {
     if (!code) throw new Error("Coupon code is required");
     const coupon = await this._adminRepository.findCouponByCode(code);
     if (!coupon) throw new Error("Invalid coupon");
-   if(!coupon.uses){
-    coupon.uses=0
-   }
+    if (!coupon.uses) {
+      coupon.uses = 0
+    }
     if (coupon.status !== "active" || coupon.uses >= coupon.maxUses || new Date(coupon.expires) < new Date()) {
       throw new Error("Coupon is expired");
     }
     return coupon;
   }
 
-  
-  async getMusicMonetization():Promise<MusicMonetization[]|null>{
+
+  async getMusicMonetization(): Promise<MusicMonetization[] | null> {
 
     const tracks = await this._adminRepository.getMusicMonetization()
-  console.log(tracks,"this is what i got ")
+    console.log(tracks, "this is what i got ")
     return tracks
 
+  }
+
+  async artistPayout(artistName: string): Promise<{ success: boolean; sessionUrl: string }> {
+    try {
+      // Step 1: Find artist
+      const artist = await UserModel.findOne({ username: artistName, role: "artist" });
+      if (!artist) throw new Error("Artist not found");
+
+      // Optional: Check payment method (not used directly here)
+      const paymentMethodId = artist.stripePaymentMethodId;
+      if (!paymentMethodId) throw new Error("Artist has no payment method linked");
+
+      // Step 2: Calculate monthly revenue
+      const tracks = await Track.find({ artists: artistName });
+      if (!tracks.length) throw new Error("No tracks found for artist");
+
+      const revenuePerPlay = 0.50;
+      const currentMonth = new Date().toISOString().slice(0, 7);
+      const monthlyRevenue = tracks.reduce((sum, track) => {
+        const monthlyPlays = track.playHistory?.find((h) => h.month === currentMonth)?.plays || 0;
+        return sum + monthlyPlays * revenuePerPlay;
+      }, 0);
+
+      if (monthlyRevenue <= 0) throw new Error("No revenue to payout for this month");
+
+      const amount = Math.round(monthlyRevenue * 100); // Convert to cents
+
+      // Step 3: Create Checkout Session
+      const session = await stripe.checkout.sessions.create({
+        payment_method_types: ["card"],
+        line_items: [
+          {
+            price_data: {
+              currency: "usd",
+              product_data: {
+                name: `Payout for ${artistName}`,
+                description: `Earnings for ${currentMonth}`,
+              },
+              unit_amount: amount, // Amount in cents
+            },
+            quantity: 1,
+          },
+        ],
+        mode: "payment",
+        success_url: "http://localhost:3000/admin/payout-success?artistName=" + encodeURIComponent(artistName),
+        cancel_url: "http://localhost:3000/admin/payout-cancel",
+        metadata: { artistName, amount: amount.toString() }, // Track artist details
+      });
+
+      console.log(`Checkout Session created for ${artistName}, URL: ${session.url}`);
+      return { success: true, sessionUrl: session.url! }; // Return URL for redirect
+    } catch (error: any) {
+      console.error("Error in artistPayout:", error);
+      throw new Error(error.message || "Failed to create payout session");
+    }
+  }
 }
+  
+  
 
 
-}

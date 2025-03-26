@@ -1,5 +1,6 @@
+import IGenreDependencies from "../adapter/repositories/IDependencies/IGenreDependencies";
 import { IGenre } from "../domain/entities/IGenre";
-import IGenreDependencies from "../domain/IDependencies/IGenreDependencies";
+// import IGenreDependencies from "../domain/IDependencies/IGenreDependencies";
 import { IGenreRepository } from "../domain/repositories/IGenreRepository";
 
 

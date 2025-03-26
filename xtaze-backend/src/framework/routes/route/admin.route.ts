@@ -46,6 +46,7 @@ router.post("/coupons/verify",(req:Request,res:Response,next:NextFunction)=>admi
 router.get("/stripe/subscription-history", (req: Request, res: Response, next: NextFunction) => userController.getSubscriptionHistory(req, res, next));
 
 router.get("/music/monetization", (req: Request, res: Response, next: NextFunction) => adminController.getMusicMonetization(req, res, next));
+router.post("/artistPayout", (req: Request, res: Response, next: NextFunction) => adminController.artistPayout(req, res, next));
 
 export default router;
 

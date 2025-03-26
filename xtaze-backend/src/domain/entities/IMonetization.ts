@@ -1,8 +1,16 @@
 export interface MusicMonetization {
-    trackId: string;
+  trackName: string;
+  artistName: string;
+  totalPlays: number;
+  monthlyPlays: number; // Added for current month
+  totalRevenue: number; // Lifetime revenue
+  monthlyRevenue: number; // Current month revenue
+  lastUpdated: string;
+    
+  }
+export interface ArtistMonetization {
     trackName: string;
-    artistName: string;
     totalPlays: number;
-    revenue: number;
+    monthlyPlays: number;
     lastUpdated: string;
   }

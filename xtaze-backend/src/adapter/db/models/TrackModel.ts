@@ -25,6 +25,7 @@ const TrackSchema = new Schema<ITrack>({
     {
       month: { type: String, required: true }, 
       plays: { type: Number, default: 0 },
+      paymentStatus:{type:Boolean,default:false}
     },
   ],
 });

@@ -22,7 +22,7 @@ const userSchema = new mongoose.Schema(
     bio: { type: String, default: null },
     banner:{type:String,default:null},
     likedSongs:{type:[String],default:null},
-    
+    stripePaymentMethodId:{type:String}
   },
   
   { timestamps: true }

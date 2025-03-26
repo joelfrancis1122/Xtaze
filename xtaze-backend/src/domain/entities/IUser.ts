@@ -16,4 +16,6 @@ export default interface IUser {
   bio?:string;
   banner?:string;
   likedSongs?:string[];
+  stripePaymentMethodId?:string| null
 }
+

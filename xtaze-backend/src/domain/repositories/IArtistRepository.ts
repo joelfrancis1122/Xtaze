@@ -1,3 +1,4 @@
+import { ArtistMonetization, MusicMonetization } from "../entities/IMonetization";
 import { ITrack } from "../entities/ITrack";
 import IUser from "../entities/IUser";
 
@@ -7,6 +8,7 @@ export interface IArtistRepository {
   getAllArtists(): Promise<IUser[]>;
   getAllTracksByArtist(userId:string):Promise<ITrack[]>
   increment(trackId:string):Promise<ITrack|null>
-  statsOfArtist():Promise<void>
-
+  statsOfArtist(userId:string):Promise<ArtistMonetization[]>
+  saveCard(artistId:string,paymentMethodId:string):Promise<IUser|null>;
+  checkcard(artistId:string):Promise<IUser|null>;
 }

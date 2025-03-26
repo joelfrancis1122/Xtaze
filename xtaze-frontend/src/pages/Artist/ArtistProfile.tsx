@@ -23,7 +23,7 @@ interface Track {
 }
 
 export default function ArtistProfile() {
-  const user = useSelector((state: RootState) => state.artist.signupData);
+    const user = useSelector((state: RootState) => state.artist.signupData);
   const dispatch = useDispatch();
   const navigate = useNavigate();
 

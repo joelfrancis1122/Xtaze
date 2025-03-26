@@ -1,4 +1,4 @@
-import { IGenreRepository } from "../repositories/IGenreRepository";
+import { IGenreRepository } from "../../../domain/repositories/IGenreRepository";
 
 
 export default interface IGenreDependencies{

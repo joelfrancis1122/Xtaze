@@ -15,7 +15,7 @@ export default class ArtistController {
   }
 
 
-  
+
   async login(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { email, password } = req.body;
@@ -38,12 +38,12 @@ export default class ArtistController {
   }
 
 
-    async refreshToken(req: Request, res: Response, next: NextFunction): Promise<void> {
+  async refreshToken(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       console.log("refresh token triggereed ")
       const { ArefreshToken } = req.body;
-    
-      console.log(req.body,"ithan enik kitityees")
+
+      console.log(req.body, "ithan enik kitityees")
       if (!ArefreshToken) throw new AppError("Refresh token is required", 400);
 
       const response = await this._artistnUseCase.refresh(ArefreshToken);
@@ -60,7 +60,7 @@ export default class ArtistController {
         res.status(200).json({
           success: true,
           message: response.message,
-          token: response.token, 
+          token: response.token,
         });
       } else {
         res.status(401).json(response);
@@ -145,9 +145,38 @@ export default class ArtistController {
   }
   async statsOfArtist(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-
-      const songImprovements = await this._artistnUseCase.statsOfArtist();
-      res.status(200).json({ data: songImprovements });
+      const { userId } = req.query
+      console.log(req.query, "sasas")
+      const data = await this._artistnUseCase.statsOfArtist(userId as string);
+      console.log(data, "dassss")
+      res.status(200).json({ data: data });
+    } catch (error: any) {
+      console.error("Error in getSongImprovements controller:", error);
+      res.status(500).json({ message: error.message || "Internal server error" });
+      next(error);
+    }
+  }
+  async saveCard(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { artistId, paymentMethodId } = req.body
+      console.log(req.query, req.body, "ssssss")
+      const data = await this._artistnUseCase.saveCard(artistId,paymentMethodId);
+      console.log(data,"kilivayil")
+      res.status(200).json({ success:true});
+    } catch (error: any) {
+      console.error("Error in getSongImprovements controller:", error);
+      res.status(500).json({ message: error.message || "Internal server error" });
+      next(error);
+    }
+  }
+  
+  async checkcard(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { userId } = req.query
+      // console.log(req.query,"sasas")
+      const data = await this._artistnUseCase.checkcard(userId as string);
+      console.log(data,"dassssssss")
+      res.status(200).json({ data: data });
     } catch (error: any) {
       console.error("Error in getSongImprovements controller:", error);
       res.status(500).json({ message: error.message || "Internal server error" });

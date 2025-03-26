@@ -191,7 +191,7 @@ export default class AdminController {
 
       const result = await this._adminUseCase.getCoupons()
       console.log(result, "ododododo")
-      res.status(201).json({success: true,data: result});
+      res.status(201).json({ success: true, data: result });
     } catch (error) {
       next(error)
     }
@@ -225,11 +225,11 @@ export default class AdminController {
       next(error);
     }
   }
-  
+
   async deleteCoupon(req: Request, res: Response, next: NextFunction) {
     try {
       const couponId = req.query.id;
-      console.log(req.query,"what al")
+      console.log(req.query, "what al")
 
       const deletedCoupon = await this._adminUseCase.deleteCoupon(couponId as string)
       if (!deletedCoupon) {
@@ -245,7 +245,7 @@ export default class AdminController {
   }
   async updateCoupon(req: Request, res: Response, next: NextFunction) {
     try {
-      const couponId = req.query.id; 
+      const couponId = req.query.id;
       const { code, discountAmount, expires, maxUses } = req.body;
 
       console.log("Params:", req.params); // Debug
@@ -281,8 +281,20 @@ export default class AdminController {
   async getMusicMonetization(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const monetizationData = await this._adminUseCase.getMusicMonetization();
-      
+
       res.status(200).json({ data: monetizationData });
+    } catch (error: any) {
+      console.error("Error in getMusicMonetization controller:", error);
+      next(error);
+    }
+  }
+
+  async artistPayout(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { artistName } = req.body
+      const data = await this._adminUseCase.artistPayout(artistName);
+      console.log(data,"sasaasassa")
+      res.status(200).json({ data: data });
     } catch (error: any) {
       console.error("Error in getMusicMonetization controller:", error);
       next(error);

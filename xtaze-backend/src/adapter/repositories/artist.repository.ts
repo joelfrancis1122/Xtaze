@@ -1,3 +1,4 @@
+import { ArtistMonetization, MusicMonetization } from "../../domain/entities/IMonetization";
 import { ITrack } from "../../domain/entities/ITrack";
 import IUser from "../../domain/entities/IUser";
 import { IArtistRepository } from "../../domain/repositories/IArtistRepository";
@@ -45,40 +46,31 @@ export default class ArtistRepository implements IArtistRepository {
   async increment(trackId: string): Promise<ITrack | null> {
     try {
       console.log("Fetching track with ID:", trackId);
-  
+
       const currentMonth = new Date().toISOString().slice(0, 7); // e.g., "2025-03"
-  
-      // 1️⃣ **Find the track**
+
       const track = await Track.findById(trackId);
       if (!track) throw new Error("Track not found");
-  
-      // 2️⃣ **Ensure `listeners` has a default value**
+
       if (track.listeners === undefined) {
         track.listeners = 0;
       }
-  
-      // 3️⃣ **Ensure `playHistory` is initialized**
       if (!track.playHistory) {
-        track.playHistory = []; // Initialize if undefined
+        track.playHistory = [];
       }
-  
-      // 4️⃣ **Check if the current month already exists**
+
       const monthIndex = track.playHistory.findIndex((h) => h.month === currentMonth);
-  
+
       if (monthIndex === -1) {
-        // If the current month is missing, add a new entry
         track.playHistory.push({ month: currentMonth, plays: 1 });
       } else {
-        // If month exists, increment the play count
         track.playHistory[monthIndex].plays += 1;
       }
-  
-      // 5️⃣ **Increment the total listener count**
+
       track.listeners += 1;
-  
-      // 6️⃣ **Save the updated track**
+
       await track.save();
-  
+
       console.log("Updated track:", track);
       return track;
     } catch (error: any) {
@@ -86,14 +78,71 @@ export default class ArtistRepository implements IArtistRepository {
       throw new Error("Failed to update track listeners");
     }
   }
+  async saveCard(artistId: string, paymentMethodId: string): Promise<IUser | null> {
+    try {
+      const updatedArtist = await UserModel.findByIdAndUpdate(
+        artistId,
+        { stripePaymentMethodId: paymentMethodId },
+        { new: true } // Ensures the updated document is returned
+      );
+  
+      return updatedArtist ? { ...updatedArtist.toObject(), _id: updatedArtist._id.toString() } : null;
+    } catch (error) {
+      console.error(error);
+      return null;
+    }
+  }
+  async checkcard(artistId: string): Promise<IUser | null> {
+    try {
+      // Find the artist by ID
+      const artist = await UserModel.findById(artistId);
+
+      if (!artist || !artist.stripePaymentMethodId) {
+        return null;
+      }
+
+      // Return the artist document, converting _id to string
+      return { ...artist.toObject(), _id: artist._id.toString() };
+    } catch (error) {
+      console.error("Error in checkcard:", error);
+      return null; // Return null on error to keep it simple
+    }
+  }
   
 
+  async statsOfArtist(userId: string): Promise<ArtistMonetization[]> {
+    try {
+      const artist = await UserModel.findById(userId);
+      if (!artist) {
+        throw new Error("Artist not found");
+      }
+      console.log(artist, "as");
 
+      const tracks = await Track.find({ artists: { $regex: new RegExp(`^${artist.username}$`, "i") } });
 
-  async statsOfArtist(): Promise<void> {
-      console.log(status,"ss");
+      const currentMonth = new Date().toISOString().slice(0, 7); // e.g., "2025-03"
 
+      const monetizationData: ArtistMonetization[] = tracks
+        .map((track) => {
+          const typedTrack = track as ITrack;
+          const monthlyPlays = typedTrack.playHistory?.find((h) => h.month === currentMonth)?.plays || 0;
 
+          return {
+            trackName: typedTrack.title,
+            totalPlays: typedTrack.listeners || 0,
+            monthlyPlays,
+            lastUpdated: typedTrack?.createdAt?.toISOString() || "",
 
+          };
+        })
+        .sort((a, b) => b.totalPlays - a.totalPlays);
+
+      return monetizationData;
+    } catch (error: any) {
+      console.error("Error in statsOfArtist:", error);
+      throw new Error(error.message || "Failed to fetch artist stats");
+    }
   }
+
+
 }

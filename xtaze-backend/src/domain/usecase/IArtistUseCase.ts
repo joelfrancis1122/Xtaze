@@ -1,3 +1,4 @@
+import { ArtistMonetization, MusicMonetization } from "../entities/IMonetization";
 import { ITrack } from "../entities/ITrack";
 import IUser from "../entities/IUser";
 
@@ -9,7 +10,9 @@ export default interface IArtistUseCase {
     listArtists(): Promise<IUser[]>
     listArtistReleases(userId: string): Promise<ITrack[]>
     increment(trackId: string): Promise<ITrack | null>
-    statsOfArtist(): Promise<void>
+    statsOfArtist(userId:string): Promise<ArtistMonetization[]>
+   saveCard(artistId:string,paymentMethodId:string):Promise<IUser|null>;
+   checkcard(artistId:string):Promise<IUser|null>;
  
 
 }

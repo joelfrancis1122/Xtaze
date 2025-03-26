@@ -1,3 +1,4 @@
+import { User } from "lucide-react";
 import { IBanner } from "../../domain/entities/IBanner";
 import { ICoupon } from "../../domain/entities/ICoupon";
 import { MusicMonetization } from "../../domain/entities/IMonetization";
@@ -25,6 +26,14 @@ export default class AdminRepository implements IAdminRepository {
   async getArtistById(id: string): Promise<IUser | null> {
     return await UserModel.findById(id);
   }
+async StripefindByname(artistName: string): Promise<string | null> {
+  const artist = await UserModel.findOne({ username: artistName });
+  
+  if (!artist) return null; // Ensure artist exists before accessing properties
+
+  return artist.stripePaymentMethodId || null; // Return stripePaymentId or null if undefined
+}
+
 
   async updateArtistStatus(id: string, status: boolean): Promise<IUser | null> {
     console.log(status, "ss");
@@ -146,31 +155,53 @@ export default class AdminRepository implements IAdminRepository {
     return coupon ? coupon.toObject() as ICoupon : null;
   }
 
-  async getMusicMonetization(): Promise<MusicMonetization[]> {
-    try {
-      const tracks = await Track.find();
-  
-      const revenuePerPlay = 0.30;
-      const monetizationData: MusicMonetization[] = tracks
-        .map((track) => {
-          const typedTrack = track as { _id: string; title: string; artists: string[]; listeners?: number; createdAt: Date };
-  
-          return {
-            trackId: typedTrack._id.toString(), 
-            trackName: typedTrack.title,
-            artistName: typedTrack.artists[0] || "Unknown Artist",
-            totalPlays: typedTrack.listeners || 0,
-            revenue: (typedTrack.listeners || 0) * revenuePerPlay,
-            lastUpdated: typedTrack.createdAt.toISOString(),
-          };
-        })
-        .sort((a, b) => b.totalPlays - a.totalPlays);
-  
-      return monetizationData;
-    } catch (error: any) {
-      console.error("Error in getMusicMonetization:", error);
-      throw new Error(error.message || "Failed to fetch music monetization data");
-    }
+
+
+
+
+  async getMusicMonetization(): Promise < MusicMonetization[] > {
+  try {
+    // Fetch all artists
+    const artists = await UserModel.find({ role: "artist" });
+    const artistNames = artists.map((artist: any) => artist.username);
+
+    // Fetch tracks for these artists
+    const tracks = await Track.find({ artists: { $in: artistNames } });
+
+    const revenuePerPlay = 0.50;
+    const currentMonth = new Date().toISOString().slice(0, 7); // e.g., "2025-03"
+
+    const monetizationData: MusicMonetization[] = tracks
+      .map((track) => {
+        const typedTrack = track as {
+          _id: string;
+          title: string;
+          artists: string[];
+          listeners?: number;
+          playHistory?: { month: string; plays: number }[];
+          createdAt?: Date;
+        };
+
+        const monthlyPlays = typedTrack.playHistory?.find((h) => h.month === currentMonth)?.plays || 0;
+
+        return {
+          trackId: typedTrack._id.toString(),
+          trackName: typedTrack.title,
+          artistName: typedTrack.artists[0] || "Unknown Artist",
+          totalPlays: typedTrack.listeners || 0,
+          monthlyPlays, // Current month's plays
+          totalRevenue: (typedTrack.listeners || 0) * revenuePerPlay,
+          monthlyRevenue: monthlyPlays * revenuePerPlay, // Current month's revenue
+          lastUpdated: typedTrack.createdAt ? typedTrack.createdAt.toISOString() : "",
+        };
+      })
+      .sort((a, b) => b.totalPlays - a.totalPlays);
+
+    return monetizationData;
+  } catch(error: any) {
+    console.error("Error in getMusicMonetization:", error);
+    throw new Error(error.message || "Failed to fetch music monetization data");
   }
+}
   
 }

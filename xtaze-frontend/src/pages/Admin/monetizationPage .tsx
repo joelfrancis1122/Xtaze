@@ -1,9 +1,8 @@
 import { useState, useEffect } from "react";
-import { ChevronLeft, DollarSign } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { ChevronLeft, DollarSign, ChevronDown, ChevronUp } from "lucide-react";
+import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import Sidebar from "./adminComponents/aside-side";
-import ReactPaginate from "react-paginate";
 import { toast } from "sonner";
 
 interface MusicMonetization {
@@ -11,18 +10,30 @@ interface MusicMonetization {
   trackName: string;
   artistName: string;
   totalPlays: number;
-  revenue: number;
+  monthlyPlays: number;
+  totalRevenue: number;
+  monthlyRevenue: number;
   lastUpdated: string;
+  paid: boolean;
+}
+
+interface ArtistData {
+  artistName: string;
+  totalPlays: number;
+  monthlyPlays: number;
+  totalRevenue: number;
+  monthlyRevenue: number;
+  songs: MusicMonetization[];
   paid: boolean;
 }
 
 export default function AdminMusicMonetizationPage() {
   const navigate = useNavigate();
-  const [monetizationData, setMonetizationData] = useState<MusicMonetization[]>([]);
+  const location = useLocation();
+  const [artists, setArtists] = useState<ArtistData[]>([]);
+  const [expandedArtist, setExpandedArtist] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [currentPage, setCurrentPage] = useState(0);
-  const itemsPerPage = 10;
 
   useEffect(() => {
     const fetchMonetizationData = async () => {
@@ -31,7 +42,29 @@ export default function AdminMusicMonetizationPage() {
         const response = await axios.get("http://localhost:3000/admin/music/monetization", {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         });
-        setMonetizationData(response.data.data);
+        console.log(response.data.data, "this is response");
+
+        const groupedData = response.data.data.reduce((acc: { [key: string]: ArtistData }, song: MusicMonetization) => {
+          if (!acc[song.artistName]) {
+            acc[song.artistName] = {
+              artistName: song.artistName,
+              totalPlays: 0,
+              monthlyPlays: 0,
+              totalRevenue: 0,
+              monthlyRevenue: 0,
+              songs: [],
+              paid: false,
+            };
+          }
+          acc[song.artistName].totalPlays += song.totalPlays;
+          acc[song.artistName].monthlyPlays += song.monthlyPlays;
+          acc[song.artistName].totalRevenue += song.totalRevenue;
+          acc[song.artistName].monthlyRevenue += song.monthlyRevenue;
+          acc[song.artistName].songs.push({ ...song, paid: false });
+          return acc;
+        }, {});
+
+        setArtists(Object.values(groupedData));
         setError(null);
       } catch (err) {
         console.error(err);
@@ -42,35 +75,49 @@ export default function AdminMusicMonetizationPage() {
     };
 
     fetchMonetizationData();
-  }, []);
 
-  const handlePayArtist = async (trackId: string) => {
+    // Handle success redirect
+    const params = new URLSearchParams(location.search);
+    const artistName = params.get("artistName");
+    if (artistName && location.pathname === "/admin/payout-success") {
+      setArtists((prev) =>
+        prev.map((artist) =>
+          artist.artistName === artistName
+            ? {
+                ...artist,
+                paid: true,
+                songs: artist.songs.map((song) => ({ ...song, paid: true })),
+              }
+            : artist
+        )
+      );
+      const monthlyRevenue = artists.find((a) => a.artistName === artistName)?.monthlyRevenue;
+      toast.success(`$${monthlyRevenue?.toFixed(2)} paid for ${artistName} via Stripe Checkout`);
+      navigate("/admin/music/monetization", { replace: true }); // Clean up URL
+    }
+  }, [location, navigate]);
+
+  const handlePayArtist = async (artistName: string) => {
     try {
       const response = await axios.post(
-        "http://localhost:3000/admin/music/payout",
-        { trackId },
+        "http://localhost:3000/admin/artistPayout",
+        { artistName },
         { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
       );
-      if (response.data.success) {
-        setMonetizationData((prev) =>
-          prev.map((item) =>
-            item.trackId === trackId ? { ...item, paid: true } : item
-          )
-        );
-        toast.success(`Transferred to wallet for ${monetizationData.find((d) => d.trackId === trackId)?.trackName}`);
+      if (response.data) {
+        // Redirect to Stripe Checkout
+        console.log(response.data.data.sessionUrl,"odi odi odi")
+        window.location.href = response.data.data.sessionUrl;
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      toast.error("Failed to transfer to wallet");
+      const errorMessage = err.response?.data?.message || "Failed to initiate payout";
+      toast.error(`Payout failed for ${artistName}: ${errorMessage}`);
     }
   };
 
-  const pageCount = Math.ceil(monetizationData.length / itemsPerPage);
-  const offset = currentPage * itemsPerPage;
-  const currentData = monetizationData.slice(offset, offset + itemsPerPage);
-
-  const handlePageChange = ({ selected }: { selected: number }) => {
-    setCurrentPage(selected);
+  const toggleArtist = (artistName: string) => {
+    setExpandedArtist(expandedArtist === artistName ? null : artistName);
   };
 
   return (
@@ -92,15 +139,23 @@ export default function AdminMusicMonetizationPage() {
             <h2 className="text-xl font-semibold mb-4">Summary</h2>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <p className="text-gray-400">Total Plays</p>
+                <p className="text-gray-400">Total Plays (All Time)</p>
                 <p className="text-2xl font-bold">
-                  {monetizationData.reduce((sum, item) => sum + item.totalPlays, 0).toLocaleString()}
+                  {artists.reduce((sum, artist) => sum + artist.totalPlays, 0).toLocaleString()}
+                </p>
+                <p className="text-gray-400 mt-2">This Month</p>
+                <p className="text-xl font-bold">
+                  {artists.reduce((sum, artist) => sum + artist.monthlyPlays, 0).toLocaleString()}
                 </p>
               </div>
               <div>
-                <p className="text-gray-400">Total Revenue</p>
+                <p className="text-gray-400">Total Revenue (All Time)</p>
                 <p className="text-2xl font-bold">
-                  ${monetizationData.reduce((sum, item) => sum + item.revenue, 0).toFixed(2)}
+                  ${artists.reduce((sum, artist) => sum + artist.totalRevenue, 0).toFixed(2)}
+                </p>
+                <p className="text-gray-400 mt-2">This Month</p>
+                <p className="text-xl font-bold">
+                  ${artists.reduce((sum, artist) => sum + artist.monthlyRevenue, 0).toFixed(2)}
                 </p>
               </div>
             </div>
@@ -110,65 +165,74 @@ export default function AdminMusicMonetizationPage() {
             <p className="text-gray-400 text-center py-4">Loading monetization data...</p>
           ) : error ? (
             <p className="text-red-400 text-center py-4">{error}</p>
-          ) : monetizationData.length > 0 ? (
-            <>
-              <div className="bg-[#151515] rounded-xl shadow-lg border border-gray-900 overflow-hidden">
-                <div className="grid grid-cols-[2fr_2fr_1fr_1fr_1fr_1fr] gap-4 px-6 py-4 text-gray-400 text-lg font-semibold border-b border-gray-700">
-                  <span>Track Name</span>
-                  <span>Artist Name</span>
-                  <span>Total Plays</span>
-                  <span>Revenue</span>
-                  <span>Last Updated</span>
-                  <span className="text-right">Actions</span>
-                </div>
-                {currentData.map((entry) => (
+          ) : artists.length > 0 ? (
+            <div className="bg-[#151515] rounded-xl shadow-lg border border-gray-900 overflow-hidden">
+              <div className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr] gap-4 px-6 py-4 text-gray-400 text-lg font-semibold border-b border-gray-700">
+                <span>Artist Name</span>
+                <span>Total Plays</span>
+                <span>Monthly Plays</span>
+                <span>Monthly Revenue</span>
+                <span className="text-right">Actions</span>
+              </div>
+              {artists.map((artist) => (
+                <div key={artist.artistName}>
                   <div
-                    key={entry.trackId}
-                    className="grid grid-cols-[2fr_2fr_1fr_1fr_1fr_1fr] gap-4 px-6 py-4 hover:bg-[#212121] transition-all duration-200 items-center"
+                    className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr] gap-4 px-6 py-4 hover:bg-[#212121] transition-all duration-200 items-center cursor-pointer"
+                    onClick={() => toggleArtist(artist.artistName)}
                   >
-                    <span className="text-white truncate">{entry.trackName}</span>
-                    <span className="text-gray-400">{entry.artistName}</span>
-                    <span className="text-gray-400">{entry.totalPlays.toLocaleString()}</span>
-                    <span className="text-gray-400">${entry.revenue.toFixed(2)}</span>
-                    <span className="text-gray-400">
-                      {new Date(entry.lastUpdated).toLocaleDateString()}
-                    </span>
-                    <div className="flex justify-end">
+                    <span className="text-white truncate">{artist.artistName}</span>
+                    <span className="text-gray-400">{artist.totalPlays.toLocaleString()}</span>
+                    <span className="text-gray-400">{artist.monthlyPlays.toLocaleString()}</span>
+                    <span className="text-gray-400">${artist.monthlyRevenue.toFixed(2)}</span>
+                    <div className="flex justify-end items-center">
                       <button
-                        onClick={() => handlePayArtist(entry.trackId)}
-                        disabled={entry.paid}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handlePayArtist(artist.artistName);
+                        }}
+                        disabled={artist.paid}
                         className={`flex items-center gap-1 px-3 py-1 rounded-md transition ${
-                          entry.paid
+                          artist.paid
                             ? "bg-gray-600 text-gray-400 cursor-not-allowed"
                             : "bg-green-700 hover:bg-green-600 text-white"
                         }`}
                       >
                         <DollarSign className="h-4 w-4" />
-                        {entry.paid ? "Paid" : "Transfer"}
+                        {artist.paid ? "Paid" : "Pay Now"}
                       </button>
+                      {expandedArtist === artist.artistName ? (
+                        <ChevronUp className="h-5 w-5 text-gray-400 ml-2" />
+                      ) : (
+                        <ChevronDown className="h-5 w-5 text-gray-400 ml-2" />
+                      )}
                     </div>
                   </div>
-                ))}
-              </div>
-              <div className="mt-4 flex justify-center">
-                <ReactPaginate
-                  previousLabel={"Previous"}
-                  nextLabel={"Next"}
-                  breakLabel={"..."}
-                  pageCount={pageCount}
-                  marginPagesDisplayed={2}
-                  pageRangeDisplayed={5}
-                  onPageChange={handlePageChange}
-                  containerClassName={"flex gap-2"}
-                  pageClassName={"bg-gray-700 text-white px-3 py-1 rounded-md hover:bg-gray-600"}
-                  activeClassName={"bg-gray-600"}
-                  previousClassName={"bg-gray-700 text-white px-3 py-1 rounded-md hover:bg-gray-600"}
-                  nextClassName={"bg-gray-700 text-white px-3 py-1 rounded-md hover:bg-gray-600"}
-                  breakClassName={"text-gray-400 px-3 py-1"}
-                  disabledClassName={"opacity-50 cursor-not-allowed"}
-                />
-              </div>
-            </>
+                  {expandedArtist === artist.artistName && (
+                    <div className="bg-[#1a1a1a] px-6 py-1 border-t border-gray-700">
+                      <div className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr] gap-4 text-gray-400 text-sm font-semibold border-b border-gray-700 pb-2">
+                        <span>Track Name</span>
+                        <span>Total Plays</span>
+                        <span>Monthly Plays</span>
+                        <span>Total Revenue</span>
+                        <span>Monthly Revenue</span>
+                      </div>
+                      {artist.songs.map((song) => (
+                        <div
+                          key={song.trackId}
+                          className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr] gap-4 py-2 items-center hover:bg-[#252525] transition-all duration-200"
+                        >
+                          <span className="text-white truncate">{song.trackName}</span>
+                          <span className="text-gray-400">{song.totalPlays.toLocaleString()}</span>
+                          <span className="text-gray-400">{song.monthlyPlays.toLocaleString()}</span>
+                          <span className="text-gray-400">${song.totalRevenue.toFixed(2)}</span>
+                          <span className="text-gray-400">${song.monthlyRevenue.toFixed(2)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
           ) : (
             <div className="bg-[#1d1d1d] p-8 rounded-xl shadow-md border border-gray-800 text-center">
               <p className="text-gray-400 text-lg">No monetization data available.</p>

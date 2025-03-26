@@ -23,6 +23,6 @@ export default interface IAdminUseCase {
     updateCoupon(couponId:string, updateData:ICoupon):Promise<ICoupon|null>
     verifyCoupon(code:string):Promise<ICoupon|null>
     getMusicMonetization():Promise<MusicMonetization[]|null>
-
+    artistPayout(artistName:string):  Promise<{ success: boolean; payoutId?: string }> 
 }
 
