@@ -159,49 +159,53 @@ async StripefindByname(artistName: string): Promise<string | null> {
 
 
 
-  async getMusicMonetization(): Promise < MusicMonetization[] > {
-  try {
-    // Fetch all artists
-    const artists = await UserModel.find({ role: "artist" });
-    const artistNames = artists.map((artist: any) => artist.username);
-
-    // Fetch tracks for these artists
-    const tracks = await Track.find({ artists: { $in: artistNames } });
-
-    const revenuePerPlay = 0.50;
-    const currentMonth = new Date().toISOString().slice(0, 7); // e.g., "2025-03"
-
-    const monetizationData: MusicMonetization[] = tracks
-      .map((track) => {
-        const typedTrack = track as {
-          _id: string;
-          title: string;
-          artists: string[];
-          listeners?: number;
-          playHistory?: { month: string; plays: number }[];
-          createdAt?: Date;
-        };
-
-        const monthlyPlays = typedTrack.playHistory?.find((h) => h.month === currentMonth)?.plays || 0;
-
-        return {
-          trackId: typedTrack._id.toString(),
-          trackName: typedTrack.title,
-          artistName: typedTrack.artists[0] || "Unknown Artist",
-          totalPlays: typedTrack.listeners || 0,
-          monthlyPlays, // Current month's plays
-          totalRevenue: (typedTrack.listeners || 0) * revenuePerPlay,
-          monthlyRevenue: monthlyPlays * revenuePerPlay, // Current month's revenue
-          lastUpdated: typedTrack.createdAt ? typedTrack.createdAt.toISOString() : "",
-        };
-      })
-      .sort((a, b) => b.totalPlays - a.totalPlays);
-
-    return monetizationData;
-  } catch(error: any) {
-    console.error("Error in getMusicMonetization:", error);
-    throw new Error(error.message || "Failed to fetch music monetization data");
+  async getMusicMonetization(): Promise<MusicMonetization[]> {
+    try {
+      // Fetch all artists
+      const artists = await UserModel.find({ role: "artist" });
+      const artistNames = artists.map((artist) => artist.username);
+      
+      // Fetch tracks for these artists
+      const tracks = await Track.find({ artists: { $in: artistNames } });
+  
+      const revenuePerPlay = 0.50;
+      const currentMonth = new Date().toISOString().slice(0, 7); // e.g., "2025-03"
+  
+      const monetizationData: MusicMonetization[] = await Promise.all(
+        tracks.map(async (track) => {
+          const typedTrack = track as {
+            _id: string;
+            title: string;
+            artists: string[];
+            listeners?: number;
+            playHistory?: { month: string; plays: number }[];
+            createdAt?: Date;
+          };
+  
+          // Fetch the artist's details for this track
+          const artist = await UserModel.findOne({ username: typedTrack.artists[0] });
+  
+          const monthlyPlays = typedTrack.playHistory?.find((h) => h.month === currentMonth)?.plays || 0;
+          
+          return {
+            trackId: typedTrack._id.toString(),
+            trackName: typedTrack.title,
+            artistName: typedTrack.artists[0] || "Unknown Artist",
+            totalPlays: typedTrack.listeners || 0,
+            monthlyPlays,
+            paymentStatus: artist?.paymentStatus ?? false, // Ensure boolean value
+            totalRevenue: (typedTrack.listeners || 0) * revenuePerPlay,
+            monthlyRevenue: monthlyPlays * revenuePerPlay, // Current month's revenue
+            lastUpdated: typedTrack.createdAt ? typedTrack.createdAt.toISOString() : "",
+          };
+        })
+      );
+  
+      return monetizationData.sort((a, b) => b.totalPlays - a.totalPlays);
+    } catch (error: any) {
+      console.error("Error in getMusicMonetization:", error);
+      throw new Error(error.message || "Failed to fetch music monetization data");
+    }
   }
-}
   
 }

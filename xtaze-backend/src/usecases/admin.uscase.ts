@@ -339,15 +339,13 @@ export default class AdminUseCase {
 
   async artistPayout(artistName: string): Promise<{ success: boolean; sessionUrl: string }> {
     try {
-      // Step 1: Find artist
       const artist = await UserModel.findOne({ username: artistName, role: "artist" });
+     
       if (!artist) throw new Error("Artist not found");
 
-      // Optional: Check payment method (not used directly here)
       const paymentMethodId = artist.stripePaymentMethodId;
       if (!paymentMethodId) throw new Error("Artist has no payment method linked");
 
-      // Step 2: Calculate monthly revenue
       const tracks = await Track.find({ artists: artistName });
       if (!tracks.length) throw new Error("No tracks found for artist");
 
@@ -360,9 +358,10 @@ export default class AdminUseCase {
 
       if (monthlyRevenue <= 0) throw new Error("No revenue to payout for this month");
 
-      const amount = Math.round(monthlyRevenue * 100); // Convert to cents
+      const amount = Math.round(monthlyRevenue * 100); 
+      artist.paymentStatus = true;
+      await artist.save()
 
-      // Step 3: Create Checkout Session
       const session = await stripe.checkout.sessions.create({
         payment_method_types: ["card"],
         line_items: [
@@ -379,8 +378,8 @@ export default class AdminUseCase {
           },
         ],
         mode: "payment",
-        success_url: "http://localhost:3000/admin/payout-success?artistName=" + encodeURIComponent(artistName),
-        cancel_url: "http://localhost:3000/admin/payout-cancel",
+        success_url: "http://localhost:5000/admin/payoutSuccess?artistName=" + encodeURIComponent(artistName),
+        cancel_url: "http://localhost:5000/admin/payoutCancel",
         metadata: { artistName, amount: amount.toString() }, // Track artist details
       });
 

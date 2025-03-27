@@ -2,7 +2,7 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { cn } from "../utils/utils"
+import { cn } from "../utils/utils";
 
 export function PlaceholdersAndVanishInput({
   placeholders,
@@ -23,10 +23,10 @@ export function PlaceholdersAndVanishInput({
   };
   const handleVisibilityChange = () => {
     if (document.visibilityState !== "visible" && intervalRef.current) {
-      clearInterval(intervalRef.current); // Clear the interval when the tab is not visible
+      clearInterval(intervalRef.current);
       intervalRef.current = null;
     } else if (document.visibilityState === "visible") {
-      startAnimation(); // Restart the interval when the tab becomes visible
+      startAnimation();
     }
   };
 
@@ -156,11 +156,12 @@ export function PlaceholdersAndVanishInput({
   };
 
   const vanishAndSubmit = () => {
+    const inputValue = inputRef.current?.value || "";
+    if (!inputValue) return; // Early return if input is empty
+
     setAnimating(true);
     draw();
-
-    const value = inputRef.current?.value || "";
-    if (value && inputRef.current) {
+    if (inputRef.current) {
       const maxX = newDataRef.current.reduce(
         (prev, current) => (current.x > prev ? current.x : prev),
         0
@@ -174,6 +175,7 @@ export function PlaceholdersAndVanishInput({
     vanishAndSubmit();
     onSubmit && onSubmit(e);
   };
+
   return (
     <form
       className={cn(
@@ -184,7 +186,7 @@ export function PlaceholdersAndVanishInput({
     >
       <canvas
         className={cn(
-          "absolute pointer-events-none  text-base transform scale-50 top-[20%] left-2 sm:left-8 origin-top-left filter invert dark:invert-0 pr-20",
+          "absolute pointer-events-none text-base transform scale-50 top-[20%] left-2 sm:left-8 origin-top-left filter invert dark:invert-0 pr-20",
           !animating ? "opacity-0" : "opacity-100"
         )}
         ref={canvasRef}
@@ -205,7 +207,6 @@ export function PlaceholdersAndVanishInput({
           animating && "text-transparent dark:text-transparent"
         )}
       />
-
       <button
         disabled={!value}
         type="submit"
@@ -226,44 +227,23 @@ export function PlaceholdersAndVanishInput({
           <path stroke="none" d="M0 0h24v24H0z" fill="none" />
           <motion.path
             d="M5 12l14 0"
-            initial={{
-              strokeDasharray: "50%",
-              strokeDashoffset: "50%",
-            }}
-            animate={{
-              strokeDashoffset: value ? 0 : "50%",
-            }}
-            transition={{
-              duration: 0.3,
-              ease: "linear",
-            }}
+            initial={{ strokeDasharray: "50%", strokeDashoffset: "50%" }}
+            animate={{ strokeDashoffset: value ? 0 : "50%" }}
+            transition={{ duration: 0.3, ease: "linear" }}
           />
           <path d="M13 18l6 -6" />
           <path d="M13 6l6 6" />
         </motion.svg>
       </button>
-
       <div className="absolute inset-0 flex items-center rounded-full pointer-events-none">
         <AnimatePresence mode="wait">
           {!value && (
             <motion.p
-              initial={{
-                y: 5,
-                opacity: 0,
-              }}
+              initial={{ y: 5, opacity: 0 }}
               key={`current-placeholder-${currentPlaceholder}`}
-              animate={{
-                y: 0,
-                opacity: 1,
-              }}
-              exit={{
-                y: -15,
-                opacity: 0,
-              }}
-              transition={{
-                duration: 0.3,
-                ease: "linear",
-              }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: -15, opacity: 0 }}
+              transition={{ duration: 0.3, ease: "linear" }}
               className="dark:text-zinc-500 text-sm sm:text-base font-normal text-neutral-500 pl-4 sm:pl-12 text-left w-[calc(100%-2rem)] truncate"
             >
               {placeholders[currentPlaceholder]}

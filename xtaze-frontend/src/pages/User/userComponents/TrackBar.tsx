@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Play, Pause, SkipBack, SkipForward, Shuffle, Repeat, Volume2 } from "lucide-react";
+import { Play, Pause, SkipBack, SkipForward, Shuffle, Repeat, Volume2, Clock } from "lucide-react";
 import type { Track } from "../types/ITrack";
 import { useSelector, useDispatch } from "react-redux";
 import { audio } from "../../../utils/audio";
@@ -34,7 +34,6 @@ const formatTime = (time: number): string => {
   return `${minutes}:${seconds.toString().padStart(2, "0")}`;
 };
 
-// Helper to update recent songs in localStorage
 const updateRecentSongs = (track: Track) => {
   const trackId = track._id || track.fileUrl;
   const recentSongs = JSON.parse(localStorage.getItem("recentSongs") || "[]");
@@ -66,8 +65,33 @@ export default function MusicPlayer({
   const [localCurrentTime, setLocalCurrentTime] = useState(reduxCurrentTime);
   const [localDuration, setLocalDuration] = useState(reduxDuration);
   const [localVolume, setLocalVolume] = useState(reduxVolume);
+  const [sleepTimer, setSleepTimer] = useState<number | null>(null);
+  const [timerId, setTimerId] = useState<NodeJS.Timeout | null>(null);
+  const [isSleepDropdownOpen, setIsSleepDropdownOpen] = useState(false);
 
-  // Restore audio state and log recent song when playing starts
+  const sleepOptions = [1, 5, 10, 15, 20, 30, 45, 60];
+
+  const handleSleepTimer = (minutes: number | null) => {
+    if (timerId) {
+      clearTimeout(timerId);
+      setTimerId(null);
+    }
+    if (minutes === null) {
+      setSleepTimer(null);
+    } else {
+      setSleepTimer(minutes);
+      const milliseconds = minutes * 60 * 1000;
+      const id = setTimeout(() => {
+        audio.pause();
+        dispatch(setIsPlaying(false));
+        setSleepTimer(null);
+        setTimerId(null);
+      }, milliseconds);
+      setTimerId(id);
+    }
+    setIsSleepDropdownOpen(false);
+  };
+
   useEffect(() => {
     if (currentTrack) {
       if (!audio.src) {
@@ -87,7 +111,6 @@ export default function MusicPlayer({
     }
   }, [currentTrack, isPlaying, reduxCurrentTime, reduxVolume, audio, dispatch]);
 
-  // Sync audio events
   useEffect(() => {
     const handleTimeUpdate = () => {
       setLocalCurrentTime(audio.currentTime);
@@ -122,11 +145,14 @@ export default function MusicPlayer({
     dispatch(setVolume(value));
   };
 
+  const toggleSleepDropdown = () => {
+    setIsSleepDropdownOpen((prev) => !prev);
+  };
+
   if (!currentTrack) return null;
 
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-[#121212] py-3 px-6 flex items-center justify-between z-50 border-t border-gray-800 shadow-lg">
-      {/* Blurry Top Edge */}
       <div
         className="absolute top-0 left-0 right-0 h-1 bg-[#121212] filter blur-3xl"
         style={{
@@ -134,28 +160,19 @@ export default function MusicPlayer({
         }}
       />
       {/* Track Info */}
-      <div className="flex items-center w-[300px] relative group z-10">
-        <div className="relative w-13 h-13 flex flex-col" onClick={toggleModal}>
+      <div className="flex items-center w-[300px] relative z-10">
+        <div
+          className="relative w-12 h-12 flex-shrink-0 cursor-pointer"
+          onClick={(e) => {
+            e.stopPropagation();
+            toggleModal(); // Open PreviewModal instead of track card
+          }}
+        >
           <img
             src={currentTrack.img || "/default-track.jpg"}
-            alt="Track Cover Top"
-            className="w-fit h-fit object-cover rounded-t-md rounded-b-md shadow-md"
+            alt="Track Cover"
+            className="w-full h-full object-cover rounded-md shadow-md"
           />
-          <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-md flex items-center justify-center">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <polyline points="5 12 12 5 19 12" />
-            </svg>
-          </div>
         </div>
         <div className="ml-3 overflow-hidden">
           <p className="text-sm font-semibold text-white truncate">{currentTrack.title}</p>
@@ -217,18 +234,52 @@ export default function MusicPlayer({
           <span className="text-xs text-gray-400 w-[30px]">{formatTime(localDuration)}</span>
         </div>
       </div>
-      {/* Volume Control */}
-      <div className="flex items-center gap-2 w-[300px] justify-end z-10">
-        <Volume2 size={18} className="text-gray-300" />
-        <input
-          type="range"
-          min="0"
-          max="1"
-          step="0.1"
-          value={localVolume}
-          className="w-24 h-1 bg-gray-700 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:shadow-md"
-          onChange={(e) => handleVolumeChange(Number.parseFloat(e.target.value))}
-        />
+      {/* Volume Control and Sleep Timer */}
+      <div className="flex items-center gap-4 w-[300px] justify-end z-10">
+        <div className="relative">
+          <button
+            className="flex items-center gap-1 p-1 rounded-full hover:bg-[#242424] text-gray-300 transition-colors"
+            onClick={toggleSleepDropdown}
+          >
+            <Clock size={18} />
+            <span className="text-xs">
+              {sleepTimer ? ` ${sleepTimer}m` : ""}
+            </span>
+          </button>
+          {isSleepDropdownOpen && (
+            <div className="absolute right-0 bottom-10 bg-[#1d1d1d] rounded-md shadow-lg border border-gray-800 w-30">
+              <ul className="py-1">
+                <li
+                  className="px-4 py-2 text-sm text-gray-300 hover:bg-[#242424] cursor-pointer"
+                  onClick={() => handleSleepTimer(null)}
+                >
+                  Off
+                </li>
+                {sleepOptions.map((minutes) => (
+                  <li
+                    key={minutes}
+                    className="px-4 py-2 text-sm text-gray-300 hover:bg-[#242424] cursor-pointer"
+                    onClick={() => handleSleepTimer(minutes)}
+                  >
+                    {minutes} min
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+        <div className="flex items-center gap-2">
+          <Volume2 size={18} className="text-gray-300" />
+          <input
+            type="range"
+            min="0"
+            max="1"
+            step="0.1"
+            value={localVolume}
+            className="w-24 h-1 bg-gray-700 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:shadow-md"
+            onChange={(e) => handleVolumeChange(Number.parseFloat(e.target.value))}
+          />
+        </div>
       </div>
     </div>
   );

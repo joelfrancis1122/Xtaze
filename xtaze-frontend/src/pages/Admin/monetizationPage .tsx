@@ -14,7 +14,7 @@ interface MusicMonetization {
   totalRevenue: number;
   monthlyRevenue: number;
   lastUpdated: string;
-  paid: boolean;
+  paymentStatus: boolean; // Updated from "paid" to match ArtistData
 }
 
 interface ArtistData {
@@ -24,7 +24,7 @@ interface ArtistData {
   totalRevenue: number;
   monthlyRevenue: number;
   songs: MusicMonetization[];
-  paid: boolean;
+  paymentStatus: boolean;
 }
 
 export default function AdminMusicMonetizationPage() {
@@ -53,14 +53,14 @@ export default function AdminMusicMonetizationPage() {
               totalRevenue: 0,
               monthlyRevenue: 0,
               songs: [],
-              paid: false,
+              paymentStatus: song.paymentStatus || false, // Use backend-provided status
             };
           }
           acc[song.artistName].totalPlays += song.totalPlays;
           acc[song.artistName].monthlyPlays += song.monthlyPlays;
           acc[song.artistName].totalRevenue += song.totalRevenue;
           acc[song.artistName].monthlyRevenue += song.monthlyRevenue;
-          acc[song.artistName].songs.push({ ...song, paid: false });
+          acc[song.artistName].songs.push({ ...song, paymentStatus: song.paymentStatus || false });
           return acc;
         }, {});
 
@@ -79,23 +79,23 @@ export default function AdminMusicMonetizationPage() {
     // Handle success redirect
     const params = new URLSearchParams(location.search);
     const artistName = params.get("artistName");
-    if (artistName && location.pathname === "/admin/payout-success") {
+    if (artistName && location.pathname === "/admin/payoutSuccess") {
       setArtists((prev) =>
         prev.map((artist) =>
           artist.artistName === artistName
             ? {
                 ...artist,
-                paid: true,
-                songs: artist.songs.map((song) => ({ ...song, paid: true })),
+                paymentStatus: true, // Update paymentStatus instead of paid
+                songs: artist.songs.map((song) => ({ ...song, paymentStatus: true })),
               }
             : artist
         )
       );
       const monthlyRevenue = artists.find((a) => a.artistName === artistName)?.monthlyRevenue;
       toast.success(`$${monthlyRevenue?.toFixed(2)} paid for ${artistName} via Stripe Checkout`);
-      navigate("/admin/music/monetization", { replace: true }); // Clean up URL
+      // Redirect is handled in AdminPayoutSuccessPage, so no need here
     }
-  }, [location, navigate]);
+  }, [location]);
 
   const handlePayArtist = async (artistName: string) => {
     try {
@@ -104,9 +104,8 @@ export default function AdminMusicMonetizationPage() {
         { artistName },
         { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
       );
-      if (response.data) {
-        // Redirect to Stripe Checkout
-        console.log(response.data.data.sessionUrl,"odi odi odi")
+      if (response.data && response.data.data.sessionUrl) {
+        console.log(response.data.data.sessionUrl, "odi odi odi");
         window.location.href = response.data.data.sessionUrl;
       }
     } catch (err: any) {
@@ -190,15 +189,15 @@ export default function AdminMusicMonetizationPage() {
                           e.stopPropagation();
                           handlePayArtist(artist.artistName);
                         }}
-                        disabled={artist.paid}
+                        disabled={artist.paymentStatus === true}
                         className={`flex items-center gap-1 px-3 py-1 rounded-md transition ${
-                          artist.paid
+                          artist.paymentStatus
                             ? "bg-gray-600 text-gray-400 cursor-not-allowed"
                             : "bg-green-700 hover:bg-green-600 text-white"
                         }`}
                       >
                         <DollarSign className="h-4 w-4" />
-                        {artist.paid ? "Paid" : "Pay Now"}
+                        {artist.paymentStatus ? "Paid" : "Transfer"}
                       </button>
                       {expandedArtist === artist.artistName ? (
                         <ChevronUp className="h-5 w-5 text-gray-400 ml-2" />
