@@ -29,5 +29,6 @@ export interface IUserRepository {
   updateCouponByCode(code: string, updateData: Partial<ICoupon>): Promise<ICoupon | null>;
   checkCouponisUsed(code: string, userId: string): Promise<boolean>;
   getCoupons(): Promise<ICoupon[] | null>
+  getAllTracks(): Promise<ITrack[] | null>
 
 }

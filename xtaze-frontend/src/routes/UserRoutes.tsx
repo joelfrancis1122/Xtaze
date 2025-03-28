@@ -38,5 +38,6 @@ export const UserRoutes = () => (
     <Route path="/radio" element={<RadioPage />} />
     <Route path="/equalizer" element={<EqualizerPage />} />
     <Route path="/recentSongs" element={<RecentSongsPage />} />
+    <Route path="/explore" element={<ExplorePage/>} />
     </>
 );

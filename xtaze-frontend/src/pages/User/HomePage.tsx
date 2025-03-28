@@ -32,8 +32,8 @@ export default function Home() {
   const [dropdownTrackId, setDropdownTrackId] = useState<string | null>(null);
   const [banners, setBanners] = useState<IBanner[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [searchQuery, setSearchQuery] = useState<string>(""); 
-  const [searchQuerysaved, setSearchQuerysaved] = useState<string>(""); 
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [searchQuerysaved, setSearchQuerysaved] = useState<string>("");
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -255,8 +255,8 @@ export default function Home() {
   };
   const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setSearchQuerysaved(searchQuery)
-    console.log("Search submitted odi:", searchQuery);
+    setSearchQuerysaved(searchQuery);
+    console.log("Search submitted:", searchQuery);
   };
 
   const handleUpgradeClick = () => {
@@ -303,6 +303,11 @@ export default function Home() {
       console.error("Download failed:", error);
       toast.error("Failed to download the track");
     }
+  };
+
+  // Handle play from PreviewModal
+  const handlePlayFromModal = (track: Track) => {
+    handlePlay(track);
   };
 
   // Filter tracks based on search query
@@ -697,7 +702,12 @@ export default function Home() {
         />
       )}
       {currentTrack && (
-        <PreviewModal track={currentTrack} isOpen={isModalOpen} toggleModal={toggleModal} />
+        <PreviewModal
+          track={currentTrack}
+          isOpen={isModalOpen}
+          toggleModal={toggleModal}
+          onPlayTrack={handlePlayFromModal} // Pass the handler
+        />
       )}
     </div>
   );

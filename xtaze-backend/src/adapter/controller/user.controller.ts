@@ -484,6 +484,17 @@ export default class UserController {
       }
     }
 
+    
+    async fetchAllTrack(req: Request, res: Response, next: NextFunction): Promise<void> {
+      try {
+        const tracks = await this._userUseCase.getAllTracks();
+        res.status(200).json({ data: tracks });
+      } catch (error: any) {
+        console.error("Error in getSubscriptionHistory controller:", error);
+        next(error); // Pass to error middleware
+      }
+    }
+
 
 
 }

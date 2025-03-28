@@ -1,8 +1,8 @@
 import { Request, Response, NextFunction } from "express";
 import { UploadTrackUseCase } from "../../usecases/track.usecase";
 import { TrackRepository } from "../repositories/track.repository";
-import UserRepository from "../repositories/user.repository";
 import AppError from "../../utils/AppError";
+import UserRepository from "../repositories/user.repository";
 
 
 

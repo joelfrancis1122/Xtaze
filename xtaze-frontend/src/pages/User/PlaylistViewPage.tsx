@@ -6,15 +6,14 @@ import { fetchPlaylistTracks, deletePlaylist, updatePlaylistName, updatePlaylist
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../store/store";
 import { setCurrentTrack, setIsPlaying } from "../../redux/audioSlice";
-import { audio } from "../../utils/audio";
+import { audio, audioContext, updateEqualizer } from "../../utils/audio";
 import MusicPlayer from "./userComponents/TrackBar";
 import image from "../../assets/ab67706f0000000216605bf6c66f6e5a783411b8.jpeg";
 import PreviewModal from "./PreviewPage";
 import { toast } from "sonner";
 import { Playlist } from "./types/IPlaylist";
 import { Track } from "./types/ITrack";
-
-
+import { useAudioPlayback } from "./userComponents/audioPlayback";
 
 export default function PlaylistPageView() {
   const { userId, id } = useParams();
@@ -23,8 +22,6 @@ export default function PlaylistPageView() {
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isShuffled, setIsShuffled] = useState(false);
-  const [isRepeating, setIsRepeating] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isEditingName, setIsEditingName] = useState(false);
@@ -35,10 +32,56 @@ export default function PlaylistPageView() {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const limit = 10;
+  const { currentTrack, isPlaying, isShuffled, isRepeating } = useSelector((state: RootState) => state.audio);
 
-  const { currentTrack, isPlaying } = useSelector((state: RootState) => state.audio);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+
+  const {
+    handlePlay: baseHandlePlay,
+    handleSkipBack,
+    handleToggleShuffle,
+    handleToggleRepeat,
+    handleSkipForward,
+  } = useAudioPlayback(tracks);
+
+  // Share handler
+  const handleShare = () => {
+    const playlistUrl = `${window.location.origin}/playlist/${userId}/${id}`;
+    const shareMessage = `Check out my playlist: ${playlistUrl}`;
+    const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareMessage)}`;
+    window.open(whatsappUrl, "_blank");
+  };
+
+  useEffect(() => {
+    if (!audioContext) return;
+
+    const resumeAudioContext = () => {
+      if (audioContext && audioContext.state === "suspended") {
+        audioContext.resume().then(() => console.log("AudioContext resumed"));
+      }
+    };
+    document.addEventListener("click", resumeAudioContext, { once: true });
+
+    audio.crossOrigin = "anonymous";
+    if (!audio.src) {
+      audio.src = "/music/test.mp3";
+      audio.loop = true;
+    }
+
+    const savedEqualizerValues = localStorage.getItem("equalizerValues");
+    if (savedEqualizerValues) {
+      updateEqualizer(JSON.parse(savedEqualizerValues));
+    }
+
+    const savedVolume = localStorage.getItem("volume");
+    const savedIsMuted = localStorage.getItem("isMuted");
+    if (savedVolume && savedIsMuted) audio.volume = JSON.parse(savedIsMuted) ? 0 : Number(savedVolume) / 100;
+
+    return () => {
+      document.removeEventListener("click", resumeAudioContext);
+    };
+  }, []);
 
   useEffect(() => {
     const fetchInitialData = async () => {
@@ -103,51 +146,13 @@ export default function PlaylistPageView() {
   }, [page, hasMore, loadingMore, id, tracks.length]);
 
   const handlePlay = (track: Track) => {
-    if (currentTrack?.fileUrl === track.fileUrl) {
-      if (isPlaying) {
-        audio.pause();
-        dispatch(setIsPlaying(false));
-      } else {
-        audio.play();
-        dispatch(setIsPlaying(true));
-      }
-    } else {
-      audio.src = track.fileUrl;
-      audio.play();
-      dispatch(setCurrentTrack(track));
-      dispatch(setIsPlaying(true));
-    }
+    baseHandlePlay(track); // Use useAudioPlayback's handlePlay
+    dispatch(setCurrentTrack(track));
+    dispatch(setIsPlaying(true));
   };
 
-  const handleSkipBack = () => {
-    const currentIndex = tracks.findIndex((t) => t._id === currentTrack?._id);
-    if (currentIndex > 0) {
-      const prevTrack = tracks[currentIndex - 1];
-      audio.src = prevTrack.fileUrl;
-      audio.play();
-      dispatch(setCurrentTrack(prevTrack));
-      dispatch(setIsPlaying(true));
-    }
-  };
-
-  const handleSkipForward = () => {
-    const currentIndex = tracks.findIndex((t) => t._id === currentTrack?._id);
-    if (currentIndex < tracks.length - 1) {
-      const nextTrack = tracks[currentIndex + 1];
-      audio.src = nextTrack.fileUrl;
-      audio.play();
-      dispatch(setCurrentTrack(nextTrack));
-      dispatch(setIsPlaying(true));
-    }
-  };
-
-  const toggleShuffle = () => {
-    setIsShuffled((prev) => !prev);
-  };
-
-  const toggleRepeat = () => {
-    setIsRepeating((prev) => !prev);
-    audio.loop = !audio.loop;
+  const handlePlayFromModal = (track: Track) => {
+    handlePlay(track);
   };
 
   const toggleModal = () => {
@@ -252,13 +257,10 @@ export default function PlaylistPageView() {
           </div>
 
           <div className="flex items-center gap-4">
-            <button className="w-14 h-14 rounded-full bg-gray-700 flex items-center justify-center hover:bg-gray-600 transition">
-              <Play className="h-6 w-6" />
-            </button>
-            <button className="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center hover:bg-gray-600 transition">
-              <Shuffle className="h-5 w-5" />
-            </button>
-            <button className="ml-auto w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center hover:bg-gray-600 transition">
+            <button
+              onClick={handleShare}
+              className="ml-auto w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center hover:bg-gray-600 transition"
+            >
               <Share2 className="h-5 w-5" />
             </button>
             <div className="relative">
@@ -292,7 +294,7 @@ export default function PlaylistPageView() {
                 <span>Title</span>
                 <span>Artist</span>
                 <span>Album</span>
-                <span className="text-right"><Clock className="h-4 w-4" /></span>
+                {/* <span className="text-right"><Clock className="h-4 w-4" /></span> */}
               </div>
               {tracks.map((track, index) => (
                 <div
@@ -347,8 +349,8 @@ export default function PlaylistPageView() {
             handlePlay={handlePlay}
             handleSkipBack={handleSkipBack}
             handleSkipForward={handleSkipForward}
-            toggleShuffle={toggleShuffle}
-            toggleRepeat={toggleRepeat}
+            toggleShuffle={handleToggleShuffle}
+            toggleRepeat={handleToggleRepeat}
             isShuffled={isShuffled}
             isRepeating={isRepeating}
             audio={audio}
@@ -356,7 +358,12 @@ export default function PlaylistPageView() {
           />
         )}
         {currentTrack && (
-          <PreviewModal track={currentTrack} isOpen={isModalOpen} toggleModal={toggleModal} />
+          <PreviewModal
+            track={currentTrack}
+            isOpen={isModalOpen}
+            toggleModal={toggleModal}
+            onPlayTrack={handlePlayFromModal}
+          />
         )}
       </div>
     </div>

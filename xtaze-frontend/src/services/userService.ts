@@ -157,6 +157,7 @@ export const googleLogin = async (
   }
 };
 
+
 // Fetch all tracks (premium or free)
 export const fetchTracks = async (
   userId: string,
@@ -185,6 +186,17 @@ export const fetchTracks = async (
 };
 
 // Fetch liked songs
+export const fetchAllTrack = async ( ): Promise<Track[]> => {
+  const data = await apiCall<{ success: boolean; data: Track[] }>(
+    userApi,
+    "get",
+    `/fetchAllTrack`,
+  );
+  console.log(data,"liliiiii")
+  return data.data
+};
+
+
 export const fetchLikedSongs = async (userId: string, token: string, songIds: string[]): Promise<Track[]> => {
   const data = await apiCall<{ success: boolean; tracks: Track[] }>(
     userApi,

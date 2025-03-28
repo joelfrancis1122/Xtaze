@@ -49,7 +49,7 @@ export default function Sidebar() {
           >
             Home
           </a>
-          <a href="#" className="text-white font-medium hover:text-gray-200 block transition-colors">
+          <a onClick={()=>navigate("/explore")} className="text-white font-medium hover:text-gray-200 block transition-colors">
             Explore
           </a>
           <a onClick={() => navigate("/videos")} className="text-white font-medium hover:text-gray-200 block transition-colors">
@@ -79,9 +79,9 @@ export default function Sidebar() {
               <a onClick={() => navigate("/equalizer")} className="text-gray-300 hover:text-white block transition-colors">
                 Equalizer
               </a>
-              <a href="#" className="text-gray-300 hover:text-white block transition-colors">
+              {/* <a href="#" className="text-gray-300 hover:text-white block transition-colors">
                 Artists
-              </a>
+              </a> */}
             </div>
           )}
         </div>

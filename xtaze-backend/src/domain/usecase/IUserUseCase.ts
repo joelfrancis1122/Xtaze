@@ -1,3 +1,4 @@
+
 import Stripe from "stripe";
 import IUser from "../entities/IUser";
 import { IPlaylist } from "../entities/IPlaylist";
@@ -33,4 +34,5 @@ export default interface IuserUseCase{
     confirmPayment(rawBody: Buffer,signature:string):Promise<void> 
     checkAndUpdateCouponStatus():Promise<void> 
     getSubscriptionHistoryFromStripe():Promise<SubscriptionHistory[]>
+    getAllTracks():Promise<ITrack[]|null> 
 }

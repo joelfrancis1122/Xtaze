@@ -2,13 +2,15 @@
 
 import * as React from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Minimize2, Maximize2, ListMusic, Info } from "lucide-react";
+import { X, Minimize2, Maximize2, ListMusic, Info, Music, Play } from "lucide-react";
 import { Track } from "./types/ITrack";
+import { fetchAllTrack } from "../../services/userService";
 
 interface PreviewModalProps {
   track: Track;
   isOpen: boolean;
   toggleModal: () => void;
+  onPlayTrack: (track: Track) => void; // Added callback for playing tracks
 }
 
 interface QueueTrack {
@@ -19,16 +21,62 @@ interface QueueTrack {
   img?: string;
 }
 
-const PreviewModal: React.FC<PreviewModalProps> = ({ track, isOpen, toggleModal }) => {
+const PreviewModal: React.FC<PreviewModalProps> = ({ track, isOpen, toggleModal, onPlayTrack }) => {
   const [isFullscreen, setIsFullscreen] = React.useState(false);
-  const [showCredits, setShowCredits] = React.useState(false);
+  const [viewMode, setViewMode] = React.useState<"queue" | "suggested" | "credits">("queue");
   const [playQueue, setPlayQueue] = React.useState<QueueTrack[]>([]);
+  const [allTracks, setAllTracks] = React.useState<Track[]>([]);
+  const [suggestedTracks, setSuggestedTracks] = React.useState<Track[]>([]);
+  const [loadingTracks, setLoadingTracks] = React.useState(false);
 
   // Sync queue with localStorage
   React.useEffect(() => {
     const storedQueue = JSON.parse(localStorage.getItem("playQueue") || "[]");
     setPlayQueue(storedQueue);
-  }, [isOpen]); // Re-sync when modal opens
+  }, [isOpen]);
+
+  // Fetch all tracks when modal opens
+  React.useEffect(() => {
+    if (isOpen) {
+      const loadAllTracks = async () => {
+        setLoadingTracks(true);
+        try {
+          const tracks = await fetchAllTrack();
+          console.log(tracks, "Fetched all tracks");
+          setAllTracks(tracks);
+        } catch (error) {
+          console.error("Failed to fetch all tracks:", error);
+          setAllTracks([]);
+        } finally {
+          setLoadingTracks(false);
+        }
+      };
+      loadAllTracks();
+    }
+  }, [isOpen]);
+
+  // Filter suggested tracks when switching to "suggested" mode
+  React.useEffect(() => {
+    if (viewMode === "suggested" && allTracks.length > 0) {
+      const currentGenres = Array.isArray(track.genre) ? track.genre : track.genre ? [track.genre] : [];
+      if (currentGenres.length > 0) {
+        const filteredTracks = allTracks
+          .filter((t) => {
+            const trackGenres = Array.isArray(t.genre) ? t.genre : t.genre ? [t.genre] : [];
+            return (
+              t._id !== track._id && // Exclude current track
+              trackGenres.some((genre) => currentGenres.includes(genre)) // Match any genre
+            );
+          })
+          .slice(0, 5); // Limit to 5 suggestions
+        setSuggestedTracks(filteredTracks);
+      } else {
+        setSuggestedTracks([]);
+      }
+    } else if (viewMode === "suggested" && allTracks.length === 0) {
+      setSuggestedTracks([]);
+    }
+  }, [viewMode, allTracks, track.genre, track._id]);
 
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
@@ -40,14 +88,14 @@ const PreviewModal: React.FC<PreviewModalProps> = ({ track, isOpen, toggleModal 
     }
   };
 
-  const handleCreditsClick = () => {
-    setShowCredits((prev) => !prev);
-  };
-
   const removeFromQueue = (trackId: string) => {
     const updatedQueue = playQueue.filter((q) => q.id !== trackId);
     setPlayQueue(updatedQueue);
     localStorage.setItem("playQueue", JSON.stringify(updatedQueue));
+  };
+
+  const handlePlayTrack = (selectedTrack: Track) => {
+    onPlayTrack(selectedTrack); // Trigger playback in parent
   };
 
   return (
@@ -105,26 +153,35 @@ const PreviewModal: React.FC<PreviewModalProps> = ({ track, isOpen, toggleModal 
                   />
                 </div>
                 <div className="mt-4 text-center">
-                  <h2 className="text-2xl font-bold">{track.title}</h2>
+                  <h3 className="text-2xl font-bold">{track.title}</h3>
                   <p className="text-zinc-400">
                     {Array.isArray(track.artists) ? track.artists.join(", ") : track.artists}
                   </p>
                 </div>
               </div>
 
-              {/* Right side - Buttons & Queue/Credits */}
+              {/* Right side - Buttons & Queue/Suggested/Credits */}
               <div className="flex-1 rounded-lg p-21 transform translate-x-[-140px] translate-y-[5px]">
                 <div className="flex items-center gap-10 mb-4">
-                  <button className="flex items-center gap-2 bg-zinc-800 p-4 w-40 rounded-md hover:bg-zinc-700">
+                  <button
+                    className={`flex items-center gap-2 bg-zinc-800 p-4 w-40 rounded-md hover:bg-zinc-700 ${viewMode === "queue" ? "bg-zinc-700" : ""
+                      }`}
+                    onClick={() => setViewMode("queue")}
+                  >
                     <ListMusic className="h-5 w-5 text-white" />
                     Play Queue
                   </button>
-                  {/* <button className="flex items-center gap-2 bg-zinc-800 p-4 w-40 rounded-md hover:bg-zinc-700">
-                    Suggested Tracks
-                  </button> */}
                   <button
-                    className="flex items-center gap-2 bg-zinc-800 p-4 w-40 rounded-md hover:bg-zinc-700"
-                    onClick={handleCreditsClick}
+                    className={`flex items-center gap-2 bg-zinc-800 p-4 w-40 rounded-md hover:bg-zinc-700 ${viewMode === "suggested" ? "bg-zinc-700" : ""
+                      }`}
+                    onClick={() => setViewMode("suggested")}
+                  >
+                    <Music className="h-5 w-5 text-white" />
+                    Recomended                  </button>
+                  <button
+                    className={`flex items-center gap-2 bg-zinc-800 p-4 w-40 rounded-md hover:bg-zinc-700 ${viewMode === "credits" ? "bg-zinc-700" : ""
+                      }`}
+                    onClick={() => setViewMode("credits")}
                   >
                     <Info className="h-5 w-5 text-white" />
                     Credits
@@ -132,7 +189,7 @@ const PreviewModal: React.FC<PreviewModalProps> = ({ track, isOpen, toggleModal 
                 </div>
 
                 {/* Conditional Rendering */}
-                {showCredits ? (
+                {viewMode === "credits" ? (
                   <div className="space-y-4">
                     <h3 className="text-xl font-semibold">Credits</h3>
                     <div className="space-y-2">
@@ -153,6 +210,48 @@ const PreviewModal: React.FC<PreviewModalProps> = ({ track, isOpen, toggleModal 
                         2023
                       </p>
                     </div>
+                  </div>
+                ) : viewMode === "suggested" ? (
+                  <div className="space-y-1 mt-auto">
+                    <h3 className="text-xl font-semibold mb-2">Suggested Tracks</h3>
+                    {loadingTracks ? (
+                      <p className="text-zinc-400">Loading tracks...</p>
+                    ) : suggestedTracks.length > 0 ? (
+                      suggestedTracks.map((suggestedTrack) => (
+                        <div
+                          key={suggestedTrack._id}
+                          className="flex items-center gap-3 p-2 hover:bg-zinc-700 rounded-lg cursor-pointer group"
+                        >
+                          <div className="relative w-20 h-20 bg-zinc-800 rounded">
+                            <img
+                              src={suggestedTrack.img || "/default-track.jpg"}
+                              alt={suggestedTrack.title}
+                              className="w-full h-full rounded object-cover shadow-md"
+                            />
+                            {/* Overlay and Play Button */}
+                            <div className="absolute inset-0 flex items-center justify-center bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity rounded">
+                              <button
+                                onClick={() => handlePlayTrack(suggestedTrack)}
+                              >
+                                <Play className="h-4 w-4 text-white" />
+                              </button>
+                            </div>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="truncate">{suggestedTrack.title}</p>
+                            <p className="text-sm text-zinc-400 truncate">
+                              {Array.isArray(suggestedTrack.artists)
+                                ? suggestedTrack.artists.join(", ")
+                                : suggestedTrack.artists}
+                            </p>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-zinc-400">
+                        No suggested tracks found for genre "{Array.isArray(track.genre) ? track.genre.join(", ") : track.genre || "Unknown"}".
+                      </p>
+                    )}
                   </div>
                 ) : (
                   <div className="space-y-1 mt-auto">

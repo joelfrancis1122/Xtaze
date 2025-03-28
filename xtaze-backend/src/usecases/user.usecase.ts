@@ -432,6 +432,19 @@ export default class UserUseCase {
       throw new Error("An error occurred while editing.");
     }
   }
+  async getAllTracks(): Promise<ITrack[] | null> {
+    try {
+      const tracks = await this._userRepository.getAllTracks();
+      if(!tracks){
+        return null
+      }
+      return tracks
+
+    } catch (error) {
+      console.error("Error during editing playlist:", error);
+      throw new Error("An error occurred while editing.");
+    }
+  }
 
 
   async getUpdatedArtist(artistId: string): Promise<IUser | null> {

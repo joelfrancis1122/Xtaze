@@ -7,7 +7,7 @@ import BannerModel from "../db/models/BannerModel";
 import { CouponModel } from "../db/models/CouponModel";
 import PlaylistModel from "../db/models/PlaylistModel";
 import { ITrack, Track } from "../db/models/TrackModel";
-import UserModel from "../db/models/UserModel"; 
+import UserModel from "../db/models/UserModel";
 
 export default class UserRepository implements IUserRepository {
 
@@ -54,15 +54,15 @@ export default class UserRepository implements IUserRepository {
     }
   }
 
-   async getCoupons(): Promise<ICoupon[] | null> {
-      try {
-        const coupons = await CouponModel.find();
-        return coupons
-      } catch (error: any) {
-        throw new Error("Failed to save coupon: " + error.message);
-      }
+  async getCoupons(): Promise<ICoupon[] | null> {
+    try {
+      const coupons = await CouponModel.find();
+      return coupons
+    } catch (error: any) {
+      throw new Error("Failed to save coupon: " + error.message);
     }
-  
+  }
+
   async getUserUpdated(userId: string): Promise<IUser | null> {
     return await UserModel.findById({ _id: userId });
   }
@@ -357,7 +357,7 @@ export default class UserRepository implements IUserRepository {
     try {
 
       const updatedCoupon = await CouponModel.findOneAndUpdate(
-        { code }, 
+        { code },
         { $set: updateData },
         { new: true, runValidators: true }
       );
@@ -381,4 +381,16 @@ export default class UserRepository implements IUserRepository {
       throw new Error(error.message || "Failed to check coupon usage");
     }
   }
+  async getAllTracks(): Promise<ITrack[]|null> {
+    try {
+      const track = await Track.find();
+      
+
+      return track
+    } catch (error: any) {
+      throw new Error(error.message || "Failed to check coupon usage");
+    }
+  }
+
+
 }
