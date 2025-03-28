@@ -64,6 +64,7 @@ export default function AdminCouponPage() {
   const validateCoupon = (coupon: typeof newCoupon) => {
     const newErrors: { [key: string]: string } = {};
 
+
     if (!coupon.code) newErrors.code = "Code is required";
     if (coupon.discountAmount < 0) newErrors.discountAmount = "Discount must be 0 or more";
     else if (coupon.discountAmount > 100) newErrors.discountAmount = "Discount cannot exceed 100%";
@@ -95,9 +96,9 @@ export default function AdminCouponPage() {
         { ...newCoupon, uses: 0 },
         { headers: { Authorization: `Bearer ${localStorage.getItem("adminToken") || ""}` } }
       );
-      console.log("Created coupon:", response.data); // Debug
+      console.log("Created coupon:", response.data); 
       const createdCoupon = response.data.result;
-      setCoupons([...coupons, { ...createdCoupon, _id: createdCoupon._id }]); // Ensure _id
+      setCoupons([...coupons, { ...createdCoupon, _id: createdCoupon._id }]); 
       setNewCoupon({ code: "", discountAmount: 0, expires: "", maxUses: 0 });
       setIsCreateFormOpen(false);
       setErrors({});
@@ -149,7 +150,7 @@ export default function AdminCouponPage() {
       return;
     }
     try {
-      await axios.delete(`http://localhost:3000/admin/coupons?id=${id}`, { // Changed to path param
+      await axios.delete(`http://localhost:3000/admin/coupons?id=${id}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("adminToken") || ""}` },
       });
       setCoupons(coupons.filter((c) => c._id !== id));

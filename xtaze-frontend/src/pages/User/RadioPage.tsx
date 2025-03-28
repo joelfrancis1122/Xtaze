@@ -20,14 +20,14 @@ interface Playlist {
   description: string;
   imageUrl: string|null;
   createdBy: string;
-  // tracks?:string[]
+  tracks?:string[]
   videos?: string[];
 }
 
 export default function RadioPage() {
   const [stations, setStations] = useState<RadioStation[]>([]);
   const [loading, setLoading] = useState(true);
-  const [playlists, setPlaylists] = useState<Playlist[]>([]);
+  const [playlists, setPlaylists] = useState<any[]>([]);
   const [currentStationUrl, setCurrentStationUrl] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [dropdownStationId, setDropdownStationId] = useState<string | null>(null);

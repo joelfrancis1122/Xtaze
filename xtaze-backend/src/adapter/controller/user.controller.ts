@@ -459,7 +459,7 @@ export default class UserController {
       } catch (error: any) {
         console.error("Webhook error:", error);
         res.status(400).send(`Webhook Error: ${error.message}`);
-        next(error); // Pass to error middleware
+        next(error); 
       }
     }
 
@@ -480,7 +480,7 @@ export default class UserController {
         res.status(200).json({ data: history });
       } catch (error: any) {
         console.error("Error in getSubscriptionHistory controller:", error);
-        next(error); // Pass to error middleware
+        next(error); 
       }
     }
 
@@ -491,7 +491,20 @@ export default class UserController {
         res.status(200).json({ data: tracks });
       } catch (error: any) {
         console.error("Error in getSubscriptionHistory controller:", error);
-        next(error); // Pass to error middleware
+        next(error);
+      }
+    }
+
+    async fetchGenreTracks(req: Request, res: Response, next: NextFunction): Promise<void> {
+      try {
+        const {GenreName} = req.query
+        console.log(GenreName)
+        const tracks = await this._userUseCase.fetchGenreTracks(GenreName as string);
+        console.log(tracks,"ssssssssssssssssssssssssssss")
+        res.status(200).json({ data: tracks });
+      } catch (error: any) {
+        console.error("Error in fetchGenreTracks controller:", error);
+        next(error); 
       }
     }
 

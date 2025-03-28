@@ -29,13 +29,12 @@ const PreviewModal: React.FC<PreviewModalProps> = ({ track, isOpen, toggleModal,
   const [suggestedTracks, setSuggestedTracks] = React.useState<Track[]>([]);
   const [loadingTracks, setLoadingTracks] = React.useState(false);
 
-  // Sync queue with localStorage
+  // Sync cheyan with localStorage
   React.useEffect(() => {
     const storedQueue = JSON.parse(localStorage.getItem("playQueue") || "[]");
     setPlayQueue(storedQueue);
   }, [isOpen]);
 
-  // Fetch all tracks when modal opens
   React.useEffect(() => {
     if (isOpen) {
       const loadAllTracks = async () => {
@@ -55,7 +54,7 @@ const PreviewModal: React.FC<PreviewModalProps> = ({ track, isOpen, toggleModal,
     }
   }, [isOpen]);
 
-  // Filter suggested tracks when switching to "suggested" mode
+  // recomended sthalam
   React.useEffect(() => {
     if (viewMode === "suggested" && allTracks.length > 0) {
       const currentGenres = Array.isArray(track.genre) ? track.genre : track.genre ? [track.genre] : [];
@@ -68,7 +67,7 @@ const PreviewModal: React.FC<PreviewModalProps> = ({ track, isOpen, toggleModal,
               trackGenres.some((genre) => currentGenres.includes(genre)) // Match any genre
             );
           })
-          .slice(0, 5); // Limit to 5 suggestions
+          .slice(0, 5); // Limit to 5
         setSuggestedTracks(filteredTracks);
       } else {
         setSuggestedTracks([]);

@@ -7,7 +7,7 @@ export function setupCronJobs() {
   const userController = new UserController(userDependencies); // Pass full dependencies object
 
 
-  cron.schedule("0 * * * * *", async () => {
+  cron.schedule("0 0 * * * *", async () => {
     console.log("Cron job: Running coupon status check at midnight...");
     try {
       await userController.checkCouponStatus();
@@ -15,7 +15,7 @@ export function setupCronJobs() {
       console.error("Cron job failed:", error);
     }
   }, {
-    timezone: "UTC" // Adjust as needed
+    timezone: "UTC" 
   });
 
   console.log("Cron jobs scheduled");

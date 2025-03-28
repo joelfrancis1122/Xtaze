@@ -7,5 +7,6 @@ export interface Track {
   fileUrl: string
   img: string
   listeners: number
+  createdAt?:number
 }
 

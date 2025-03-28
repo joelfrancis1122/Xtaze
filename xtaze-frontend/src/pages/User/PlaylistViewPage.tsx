@@ -146,7 +146,7 @@ export default function PlaylistPageView() {
   }, [page, hasMore, loadingMore, id, tracks.length]);
 
   const handlePlay = (track: Track) => {
-    baseHandlePlay(track); // Use useAudioPlayback's handlePlay
+    baseHandlePlay(track); 
     dispatch(setCurrentTrack(track));
     dispatch(setIsPlaying(true));
   };

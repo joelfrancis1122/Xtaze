@@ -195,6 +195,16 @@ export const fetchAllTrack = async ( ): Promise<Track[]> => {
   console.log(data,"liliiiii")
   return data.data
 };
+export const fetchGenreTracks = async (genre:string): Promise<Track[]> => {
+  console.log(genre,"alhildas")
+  const data = await apiCall<{ success: boolean; data: Track[] }>(
+    userApi,
+    "get",
+    `/fetchGenreTracks?GenreName=${genre}`,
+  );
+  console.log(data,"ambu")
+  return data.data
+};
 
 
 export const fetchLikedSongs = async (userId: string, token: string, songIds: string[]): Promise<Track[]> => {

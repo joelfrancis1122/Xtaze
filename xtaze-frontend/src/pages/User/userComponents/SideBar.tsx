@@ -69,10 +69,10 @@ export default function Sidebar() {
               <a onClick={() => navigate(`/playlist/${user?._id}`)} className="text-gray-300 hover:text-white block transition-colors">
                 Playlists
               </a>
-
+{/* 
               <a className="text-gray-300 hover:text-white block transition-colors">
                 Albums
-              </a>
+              </a> */}
               <a onClick={() => navigate("/recentSongs")} className="text-gray-300 hover:text-white block transition-colors">
                 Recent Songs
               </a>

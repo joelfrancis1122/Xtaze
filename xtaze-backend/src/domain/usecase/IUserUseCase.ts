@@ -35,4 +35,5 @@ export default interface IuserUseCase{
     checkAndUpdateCouponStatus():Promise<void> 
     getSubscriptionHistoryFromStripe():Promise<SubscriptionHistory[]>
     getAllTracks():Promise<ITrack[]|null> 
+    fetchGenreTracks(GenreName:string):Promise<ITrack[]|null> 
 }

@@ -33,5 +33,6 @@ router.get("/banners",(req:Request,res:Response,next:NextFunction)=>userControll
 router.get("/getTracksInPlaylist",authenticateUser,(req:Request,res:Response,next:NextFunction)=>userController.getTracksInPlaylist(req,res,next))
 router.post("/updateBanner",authenticateUser, upload.single("coverImage"),(req:Request,res:Response,next:NextFunction)=>userController.uploadBanner(req,res,next))
 router.get("/fetchAllTrack",(req:Request,res:Response,next:NextFunction)=>userController.fetchAllTrack(req,res,next))
+router.get("/fetchGenreTracks",(req:Request,res:Response,next:NextFunction)=>userController.fetchGenreTracks(req,res,next))
 
 export default router;

@@ -17,6 +17,8 @@ import YoutubeMusic from "../pages/User/VideosPage";
 import RadioPage from "../pages/User/RadioPage";
 import EqualizerPage from "../pages/User/EqualizerPage";
 import RecentSongsPage from "../pages/User/RecentSongs";
+import ExplorePage from "../pages/User/ExplorePage";
+import GenrePage from "../pages/User/SongsByGenre";
 
 export const UserRoutes = () => (
     <>
@@ -39,5 +41,7 @@ export const UserRoutes = () => (
     <Route path="/equalizer" element={<EqualizerPage />} />
     <Route path="/recentSongs" element={<RecentSongsPage />} />
     <Route path="/explore" element={<ExplorePage/>} />
+    <Route path="/genre/:genre" element={<GenrePage/>} />
+
     </>
 );

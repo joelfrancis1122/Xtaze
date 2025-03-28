@@ -445,6 +445,19 @@ export default class UserUseCase {
       throw new Error("An error occurred while editing.");
     }
   }
+  async fetchGenreTracks(GenreName:string): Promise<ITrack[] | null> {
+    try {
+      const tracks = await this._userRepository.fetchGenreTracks(GenreName);
+      if(!tracks){
+        return null
+      }
+      return tracks
+
+    } catch (error) {
+      console.error("Error during editing playlist:", error);
+      throw new Error("An error occurred while editing.");
+    }
+  }
 
 
   async getUpdatedArtist(artistId: string): Promise<IUser | null> {

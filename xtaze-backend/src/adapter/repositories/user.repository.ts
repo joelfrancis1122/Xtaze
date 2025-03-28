@@ -381,16 +381,25 @@ export default class UserRepository implements IUserRepository {
       throw new Error(error.message || "Failed to check coupon usage");
     }
   }
-  async getAllTracks(): Promise<ITrack[]|null> {
+  async getAllTracks(): Promise<ITrack[] | null> {
     try {
-      const track = await Track.find();
-      
 
+      const track = await Track.find();
       return track
     } catch (error: any) {
       throw new Error(error.message || "Failed to check coupon usage");
     }
   }
-
+  async fetchGenreTracks(GenreName: string): Promise<ITrack[] | null> {
+    try {
+      console.log(GenreName, "asasa  ")
+      const tracks = await Track.find({
+        genre: { $regex: new RegExp(`^${GenreName}$`, "i") }
+      });
+      return tracks;
+    } catch (error: any) {
+      throw new Error(error.message || "Failed to fetch tracks by genre");
+    }
+  }
 
 }
