@@ -447,7 +447,8 @@ export default class UserUseCase {
   }
   async fetchGenreTracks(GenreName:string): Promise<ITrack[] | null> {
     try {
-      const tracks = await this._userRepository.fetchGenreTracks(GenreName);
+      const tracks = await this._userRepository.
+      (GenreName);
       if(!tracks){
         return null
       }
