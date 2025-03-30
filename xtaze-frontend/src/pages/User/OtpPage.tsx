@@ -75,11 +75,10 @@ export default function OTPVerification() {
       return;
     }
 
-    // Type assertion or validation could be added here if needed
     try {
       setIsSubmitting(true);
       await verifyOtp(otpCode);
-      await registerUser(signupData); // Type matches if userSlice is updated
+      await registerUser(signupData); 
       toast.success("OTP verified successfully!");
       navigate("/home");
     } catch (error: any) {

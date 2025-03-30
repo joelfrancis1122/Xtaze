@@ -165,7 +165,7 @@ export default function MusicPlayer({
           className="relative w-12 h-12 flex-shrink-0 cursor-pointer"
           onClick={(e) => {
             e.stopPropagation();
-            toggleModal(); // Open PreviewModal instead of track card
+            toggleModal(); 
           }}
         >
           <img
