@@ -465,7 +465,6 @@ export default class UserUseCase {
   }
   async execute(userId: string, priceId: string, couponCode?: string): Promise<Stripe.Checkout.Session> {
     try {
-      // Check if user exists
       const user = await this._userRepository.findById(userId);
       if (!user) {
         throw new Error("User not found");
@@ -485,7 +484,7 @@ export default class UserUseCase {
         cancel_url: "http://localhost:5000/cancel",
         metadata: { 
           userId,
-          couponCode: couponCode || "", // Store couponCode in metadata
+          couponCode: couponCode || "", 
           planName, // Store planName for webhook
         },
       };
@@ -520,7 +519,6 @@ export default class UserUseCase {
         sessionConfig.discounts = [{ coupon: stripeCoupon.id }];
       }
 
-      // Create checkout session
       const session = await this.stripe.checkout.sessions.create(sessionConfig);
       return session;
     } catch (error: any) {
