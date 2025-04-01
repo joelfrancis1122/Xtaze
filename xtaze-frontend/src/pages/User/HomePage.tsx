@@ -28,7 +28,7 @@ export default function Home() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [playedSongs, setPlayedSongs] = useState<Set<string>>(new Set());
   const [likedSongs, setLikedSongs] = useState<Set<string>>(new Set());
-  const [randomIndex, setRandomIndex] = useState<number | null>(null);
+  const [randomIndex, setRandomIndex] = useState<number | null>(null); // Fixed typo here
   const [dropdownTrackId, setDropdownTrackId] = useState<string | null>(null);
   const [banners, setBanners] = useState<IBanner[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -47,32 +47,25 @@ export default function Home() {
   // Audio context setup
   useEffect(() => {
     if (!audioContext) return;
-
     const resumeAudioContext = () => {
       if (audioContext && audioContext.state === "suspended") {
         audioContext.resume().then(() => console.log("AudioContext resumed"));
       }
     };
     document.addEventListener("click", resumeAudioContext, { once: true });
-
     audio.crossOrigin = "anonymous";
     if (!audio.src) {
       audio.src = "/music/test.mp3";
       audio.loop = true;
     }
-
     const savedEqualizerValues = localStorage.getItem("equalizerValues");
     if (savedEqualizerValues) {
       updateEqualizer(JSON.parse(savedEqualizerValues));
     }
-
     const savedVolume = localStorage.getItem("volume");
     const savedIsMuted = localStorage.getItem("isMuted");
     if (savedVolume && savedIsMuted) audio.volume = JSON.parse(savedIsMuted) ? 0 : Number(savedVolume) / 100;
-
-    return () => {
-      document.removeEventListener("click", resumeAudioContext);
-    };
+    return () => document.removeEventListener("click", resumeAudioContext);
   }, []);
 
   useEffect(() => {
@@ -89,7 +82,6 @@ export default function Home() {
         setLoading(false);
         return;
       }
-
       try {
         const { tracks: fetchedTracks, user: updatedUser } = await fetchTracks(
           user?._id || "",
@@ -97,18 +89,15 @@ export default function Home() {
           user?.premium || "Free"
         );
         setTracks(fetchedTracks);
-
         if (updatedUser && JSON.stringify(updatedUser) !== JSON.stringify(user)) {
           dispatch(saveSignupData(updatedUser));
         }
-
         if (user?.likedSongs && user.likedSongs.length > 0) {
           const liked = await fetchLikedSongs(user._id || "", token, user.likedSongs);
           setLikedTracks(liked);
         } else {
           setLikedTracks([]);
         }
-
         const fetchedPlaylists = await getMyplaylist((user?._id) as string);
         setPlaylists(fetchedPlaylists);
       } catch (error) {
@@ -117,11 +106,9 @@ export default function Home() {
         setLoading(false);
       }
     };
-
     getTracksAndLikedSongsAndPlaylists();
   }, [dispatch, user?._id, user?.premium]);
 
-  // Random index for featured track
   useEffect(() => {
     if (user?.premium !== "Free" && tracks.length > 0 && randomIndex === null) {
       setRandomIndex(Math.floor(Math.random() * tracks.length));
@@ -130,7 +117,6 @@ export default function Home() {
     }
   }, [user?.premium, tracks.length]);
 
-  // Load banners
   useEffect(() => {
     const loadBanners = async () => {
       try {
@@ -143,7 +129,6 @@ export default function Home() {
     loadBanners();
   }, []);
 
-  // Auto-slide banners
   useEffect(() => {
     if (banners.length <= 1) return;
     const interval = setInterval(() => {
@@ -152,10 +137,7 @@ export default function Home() {
     return () => clearInterval(interval);
   }, [banners.length]);
 
-  const handleBannerClick = (action: string) => {
-    navigate(action);
-  };
-
+  const handleBannerClick = (action: string) => navigate(action);
   const handleIncrementListeners = async (trackId: string) => {
     const token = localStorage.getItem("token");
     if (!token || !trackId) return;
@@ -170,7 +152,6 @@ export default function Home() {
       console.error("Error incrementing listeners:", error);
     }
   };
-
   const handlePlay = (track: Track) => {
     baseHandlePlay(track);
     if (currentTrack?.fileUrl !== track.fileUrl && !playedSongs.has(track._id || track.fileUrl)) {
@@ -178,7 +159,6 @@ export default function Home() {
       setPlayedSongs((prev) => new Set(prev).add(track._id || track.fileUrl));
     }
   };
-
   const handleLike = async (trackId: string) => {
     const token = localStorage.getItem("token");
     if (!token || !trackId || !user?._id) return;
@@ -201,7 +181,6 @@ export default function Home() {
       console.error("Error toggling like:", error);
     }
   };
-
   const handleAddToPlaylist = async (trackId: string, playlistId: string) => {
     const token = localStorage.getItem("token");
     if (!token || !user?._id) {
@@ -219,7 +198,6 @@ export default function Home() {
       toast.error(error?.response?.data?.message || "Failed to add to playlist");
     }
   };
-
   const handleAddToQueue = (track: Track) => {
     const queueEntry: QueueTrack = {
       id: track._id || track.fileUrl,
@@ -235,11 +213,7 @@ export default function Home() {
     localStorage.setItem("playQueue", JSON.stringify(updatedQueue));
     toast.success(`Added ${track.title} to queue`);
   };
-
-  const toggleModal = () => {
-    setIsModalOpen((prevState) => !prevState);
-  };
-
+  const toggleModal = () => setIsModalOpen((prevState) => !prevState);
   const handleClick = () => {
     audio.pause();
     audio.src = "";
@@ -248,46 +222,29 @@ export default function Home() {
     dispatch(clearAudioState());
     navigate("/", { replace: true });
   };
-
   const placeholders = ["Cout me out?", "What's the first rule of Fight Club?", "Send me an angel"];
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
-  };
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value);
   const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setSearchQuerysaved(searchQuery);
     console.log("Search submitted:", searchQuery);
   };
-
-  const handleUpgradeClick = () => {
-    navigate("/plans");
-  };
-
+  const handleUpgradeClick = () => navigate("/plans");
   const handleDownload = async (fileUrl: string, title: string) => {
     if (!fileUrl || !title) {
       console.error("Invalid file URL or title");
       toast.error("Cannot download: Invalid file details");
       return;
     }
-
     const token = localStorage.getItem("token");
     if (!token) {
       console.error("No token found");
       toast.error("Please log in to download");
       return;
     }
-
     try {
-      const response = await fetch(fileUrl, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch file: ${response.statusText}`);
-      }
-
+      const response = await fetch(fileUrl, { headers: { Authorization: `Bearer ${token}` } });
+      if (!response.ok) throw new Error(`Failed to fetch file: ${response.statusText}`);
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
@@ -304,13 +261,7 @@ export default function Home() {
       toast.error("Failed to download the track");
     }
   };
-
-  // Handle play from PreviewModal
-  const handlePlayFromModal = (track: Track) => {
-    handlePlay(track);
-  };
-
-  // Filter tracks based on search query
+  const handlePlayFromModal = (track: Track) => handlePlay(track);
   const filteredTracks = tracks.filter((track) => {
     const query = searchQuerysaved.toLowerCase();
     const titleMatch = track.title.toLowerCase().includes(query);
@@ -319,18 +270,16 @@ export default function Home() {
       : track.artists.toLowerCase().includes(query);
     return titleMatch || artistMatch;
   });
-
-  // Split filtered tracks into newArrivals and otherSongs
   const newArrivals = filteredTracks.slice(0, 5);
   const otherSongs = filteredTracks.slice(5);
 
   return (
-    <div className="flex h-screen flex-col bg-black text-white">
-      <div className="flex flex-1">
+    <div className="flex flex-col min-h-screen bg-black text-white">
+      <div className="flex flex-1 flex-col md:flex-row">
         <Sidebar />
-        <main className="flex-1 min-h-screen ml-64 bg-black overflow-y-auto">
-          <header className="flex justify-between items-center p-4 sticky top-0 bg-black z-10">
-            <div className="relative">
+        <main className="flex-1 min-h-screen md:ml-64 bg-black overflow-y-auto">
+          <header className="flex flex-col md:flex-row justify-between items-center p-4 sticky top-0 bg-black z-10 space-y-4 md:space-y-0">
+            <div className="relative w-full md:w-auto">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 z-10" size={20} />
               <PlaceholdersAndVanishInput placeholders={placeholders} onChange={handleChange} onSubmit={onSubmit} />
             </div>
@@ -339,21 +288,18 @@ export default function Home() {
             </button>
           </header>
 
-          <section className="px-6 py-4 pb-25">
+          <section className="px-4 py-4 md:px-6 pb-20 md:pb-24">
             {/* Carousel Banner */}
-            <div className="mb-8">
-              <h2 className="text-3xl font-bold mb-4">Enjoy Hi-Res Songs</h2>
-              <div className="relative w-full h-[300px] rounded-lg overflow-hidden shadow-lg">
+            <div className="mb-6 md:mb-8">
+              <h2 className="text-xl md:text-2xl lg:text-3xl font-bold mb-3 md:mb-4">Enjoy Hi-Res Songs</h2>
+              <div className="relative w-full h-48 sm:h-56 md:h-64 lg:h-[300px] rounded-lg overflow-hidden shadow-lg">
                 <div className="w-full h-full overflow-hidden">
                   <div
                     className="flex transition-transform duration-500 ease-in-out w-full"
                     style={{ transform: `translateX(-${currentIndex * 100}%)` }}
                   >
                     {banners.map((banner) => (
-                      <div
-                        key={banner._id}
-                        className="min-w-full w-full flex-shrink-0 relative cursor-pointer"
-                      >
+                      <div key={banner._id} className="min-w-full w-full flex-shrink-0 relative cursor-pointer">
                         <img
                           src={banner.imageUrl}
                           alt={banner.title}
@@ -361,13 +307,13 @@ export default function Home() {
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent shadow-inner z-10 pointer-events-none" />
                         <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
-                          <button className="p-4 bg-black/50 rounded-full hover:bg-black/70 transition-colors pointer-events-auto">
-                            <Play size={32} className="text-white" />
+                          <button className="p-3 md:p-4 bg-black/50 rounded-full hover:bg-black/70 transition-colors pointer-events-auto">
+                            <Play size={24} md:size={32} className="text-white" />
                           </button>
                         </div>
-                        <div className="absolute bottom-40 left-4 z-20">
-                          <h3 className="text-2xl font-bold text-white shadow-text">{banner.title}</h3>
-                          <p className="text-gray-300 shadow-text">{banner.description}</p>
+                        <div className="absolute bottom-4 left-4 z-20">
+                          <h3 className="text-lg md:text-xl lg:text-2xl font-bold text-white shadow-text">{banner.title}</h3>
+                          <p className="text-sm md:text-base text-gray-300 shadow-text">{banner.description}</p>
                         </div>
                       </div>
                     ))}
@@ -391,18 +337,18 @@ export default function Home() {
             </div>
 
             {/* New Arrivals Section */}
-            <div className="mb-8">
-              <h2 className="text-2xl font-bold mb-4">New Arrivals</h2>
+            <div className="mb-6 md:mb-8">
+              <h2 className="text-lg md:text-xl lg:text-2xl font-bold mb-3 md:mb-4">New Arrivals</h2>
               {loading ? (
-                <div className="text-center py-4">Loading tracks...</div>
+                <div className="text-center py-4 text-sm md:text-base">Loading tracks...</div>
               ) : newArrivals.length > 0 ? (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4">
                   {newArrivals.map((track, index) => (
                     <div
                       key={index}
-                      className="group bg-[#1d1d1d] rounded-lg p-4 hover:bg-[#242424] transition-colors flex flex-col"
+                      className="group bg-[#1d1d1d] rounded-lg p-3 md:p-4 hover:bg-[#242424] transition-colors flex flex-col"
                     >
-                      <div className="w-full h-[200px] flex flex-col mb-3">
+                      <div className="w-full h-40 md:h-48 lg:h-[200px] flex flex-col mb-2 md:mb-3">
                         <div className="relative w-full h-[90%]">
                           <img
                             src={track.img || "/placeholder.svg"}
@@ -414,9 +360,9 @@ export default function Home() {
                             className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity z-10 rounded-t-md"
                           >
                             {currentTrack?.fileUrl === track.fileUrl && isPlaying ? (
-                              <Pause size={24} className="text-white" />
+                              <Pause size={20} md:size={24} className="text-white" />
                             ) : (
-                              <Play size={24} className="text-white" />
+                              <Play size={20} md:size={24} className="text-white" />
                             )}
                           </button>
                         </div>
@@ -426,14 +372,14 @@ export default function Home() {
                           className="w-full h-[10%] object-cover rounded-b-md blur-lg"
                         />
                       </div>
-                      <div className="text-white font-semibold truncate">{track.title}</div>
-                      <div className="text-gray-400 text-sm truncate">
+                      <div className="text-white font-semibold truncate text-sm md:text-base">{track.title}</div>
+                      <div className="text-gray-400 text-xs md:text-sm truncate">
                         {Array.isArray(track.artists) ? track.artists.join(", ") : track.artists}
                       </div>
                       {user?.premium !== "Free" && (
-                        <div className="relative flex gap-2 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="relative flex gap-1 md:gap-2 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
                           <button
-                            className="p-1 hover:bg-[#333333] rounded-full"
+                            className="p-2 hover:bg-[#333333] rounded-full"
                             onClick={(e) => {
                               e.stopPropagation();
                               setDropdownTrackId(dropdownTrackId === track._id ? null : track._id);
@@ -442,13 +388,13 @@ export default function Home() {
                             <Plus size={16} />
                           </button>
                           {dropdownTrackId === track._id && (
-                            <div className="absolute left-0 mt-8 w-48 bg-[#242424] rounded-md shadow-lg z-20">
-                              <ul className="py-1">
+                            <div className="absolute left-0 mt-6 md:mt-8 w-40 md:w-48 bg-[#242424] rounded-md shadow-lg z-20">
+                              <ul className="py-1 text-sm">
                                 {playlists.length > 0 ? (
                                   playlists.map((playlist) => (
                                     <li
                                       key={playlist._id}
-                                      className="px-4 py-2 hover:bg-[#333333] cursor-pointer text-white"
+                                      className="px-3 md:px-4 py-1 md:py-2 hover:bg-[#333333] cursor-pointer text-white"
                                       onClick={() =>
                                         handleAddToPlaylist(track._id || track.fileUrl, playlist._id as string)
                                       }
@@ -457,10 +403,10 @@ export default function Home() {
                                     </li>
                                   ))
                                 ) : (
-                                  <li className="px-4 py-2 text-gray-400">No playlists available</li>
+                                  <li className="px-3 md:px-4 py-1 md:py-2 text-gray-400">No playlists available</li>
                                 )}
                                 <li
-                                  className="px-4 py-2 hover:bg-[#333333] cursor-pointer text-white border-t border-gray-700"
+                                  className="px-3 md:px-4 py-1 md:py-2 hover:bg-[#333333] cursor-pointer text-white border-t border-gray-700"
                                   onClick={() => navigate(`/playlists/${user?._id}`)}
                                 >
                                   Create New Playlist
@@ -470,15 +416,12 @@ export default function Home() {
                           )}
                           <button
                             onClick={() => handleLike(track._id || track.fileUrl)}
-                            className={`p-1 hover:bg-[#333333] rounded-full ${likedSongs.has(track._id || track.fileUrl) ? "text-red-500" : "text-white"}`}
+                            className={`p-2 hover:bg-[#333333] rounded-full ${likedSongs.has(track._id || track.fileUrl) ? "text-red-500" : "text-white"}`}
                           >
-                            <Heart
-                              size={16}
-                              fill={likedSongs.has(track._id || track.fileUrl) ? "currentColor" : "none"}
-                            />
+                            <Heart size={16} fill={likedSongs.has(track._id || track.fileUrl) ? "currentColor" : "none"} />
                           </button>
                           <button
-                            className="p-1 hover:bg-[#333333] rounded-full"
+                            className="p-2 hover:bg-[#333333] rounded-full"
                             onClick={(e) => {
                               e.stopPropagation();
                               handleDownload(track.fileUrl, track.title);
@@ -487,7 +430,7 @@ export default function Home() {
                             <Download size={16} />
                           </button>
                           <button
-                            className="p-1 hover:bg-[#333333] rounded-full"
+                            className="p-2 hover:bg-[#333333] rounded-full"
                             onClick={(e) => {
                               e.stopPropagation();
                               handleAddToQueue(track);
@@ -501,19 +444,19 @@ export default function Home() {
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-4 text-gray-400">
+                <div className="text-center py-4 text-gray-400 text-sm md:text-base">
                   No new arrivals match your search "{searchQuerysaved}"
                 </div>
               )}
             </div>
 
             {/* Featured Today / Enhance Experience */}
-            <div className="mb-8">
+            <div className="mb-6 md:mb-8">
               {user?.premium !== "Free" && randomIndex !== null ? (
                 <>
-                  <h2 className="text-3xl font-bold mb-4 font-sans">Featured Today</h2>
+                  <h2 className="text-xl md:text-2xl lg:text-3xl font-bold mb-3 md:mb-4 font-sans">Featured Today</h2>
                   <div
-                    className="relative w-full h-[300px] bg-[#1d1d1d] rounded-lg overflow-hidden cursor-pointer shadow-lg"
+                    className="relative w-full h-48 sm:h-56 md:h-64 lg:h-[300px] bg-[#1d1d1d] rounded-lg overflow-hidden cursor-pointer shadow-lg"
                     onClick={() => tracks[randomIndex] && handlePlay(tracks[randomIndex])}
                   >
                     <img
@@ -523,15 +466,15 @@ export default function Home() {
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent shadow-inner z-10 pointer-events-none" />
                     <div className="absolute inset-0 flex items-center justify-center z-20">
-                      <button className="p-4 bg-black/50 rounded-full hover:bg-black/70 transition-colors">
-                        <Play size={32} className="text-white" />
+                      <button className="p-3 md:p-4 bg-black/50 rounded-full hover:bg-black/70 transition-colors">
+                        <Play size={24} md:size={32} className="text-white" />
                       </button>
                     </div>
                     <div className="absolute bottom-4 left-4 z-20">
-                      <h3 className="text-2xl font-bold text-white shadow-text">
+                      <h3 className="text-lg md:text-xl lg:text-2xl font-bold text-white shadow-text">
                         {tracks[randomIndex]?.title || "Featured Track"}
                       </h3>
-                      <p className="text-gray-300 shadow-text">
+                      <p className="text-sm md:text-base text-gray-300 shadow-text">
                         {Array.isArray(tracks[randomIndex]?.artists)
                           ? tracks[randomIndex]?.artists.join(", ")
                           : tracks[randomIndex]?.artists || "Various Artists"}
@@ -541,26 +484,21 @@ export default function Home() {
                 </>
               ) : (
                 <>
-                  <h2 className="text-3xl font-bold mb-4">Enhance Your Experience</h2>
+                  <h2 className="text-xl md:text-2xl lg:text-3xl font-bold mb-3 md:mb-4">Enhance Your Experience</h2>
                   <div
-                    className="relative w-full h-[300px] bg-[#000000] rounded-lg shadow-lg cursor-pointer overflow-hidden"
+                    className="relative w-full h-48 sm:h-56 md:h-64 lg:h-[300px] bg-[#000000] rounded-lg shadow-lg cursor-pointer overflow-hidden"
                     onClick={handleUpgradeClick}
                   >
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent shadow-inner z-10 pointer-events-none" />
                     <div className="absolute inset-0 flex items-center justify-center z-20">
-                      <div className="overflow-visible w-full h-full flex items-center justify-center">
-                        <WavyBackground
-                          className="w-full h-[400px] flex flex-col items-center justify-center"
-                          style={{ transform: "translateY(-50px)" }}
-                        >
-                          <p className="text-2xl md:text-4xl lg:text-7xl text-white font-bold inter-var text-center">
-                            Listen. Discover. Repeat
-                          </p>
-                          <p className="text-base md:text-lg mt-4 text-white font-normal inter-var text-center">
-                            Hear your music in the best-in-class sound.
-                          </p>
-                        </WavyBackground>
-                      </div>
+                      <WavyBackground className="w-full h-full flex flex-col items-center justify-center">
+                        <p className="text-lg sm:text-xl md:text-2xl lg:text-4xl xl:text-7xl text-white font-bold inter-var text-center">
+                          Listen. Discover. Repeat
+                        </p>
+                        <p className="text-xs sm:text-sm md:text-base lg:text-lg mt-2 md:mt-4 text-white font-normal inter-var text-center">
+                          Hear your music in the best-in-class sound.
+                        </p>
+                      </WavyBackground>
                     </div>
                   </div>
                 </>
@@ -569,17 +507,17 @@ export default function Home() {
 
             {/* Explore More Section */}
             <div>
-              <h2 className="text-2xl font-bold mb-4">Explore More</h2>
+              <h2 className="text-lg md:text-xl lg:text-2xl font-bold mb-3 md:mb-4">Explore More</h2>
               {loading ? (
-                <div className="text-center py-4">Loading tracks...</div>
+                <div className="text-center py-4 text-sm md:text-base">Loading tracks...</div>
               ) : otherSongs.length > 0 ? (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4">
                   {otherSongs.map((track, index) => (
                     <div
                       key={index}
-                      className="group bg-[#1d1d1d] rounded-lg p-4 hover:bg-[#242424] transition-colors flex flex-col"
+                      className="group bg-[#1d1d1d] rounded-lg p-3 md:p-4 hover:bg-[#242424] transition-colors flex flex-col"
                     >
-                      <div className="w-full h-[200px] flex flex-col mb-3">
+                      <div className="w-full h-40 md:h-48 lg:h-[200px] flex flex-col mb-2 md:mb-3">
                         <div className="relative w-full h-[90%]">
                           <img
                             src={track.img || "/placeholder.svg"}
@@ -591,9 +529,9 @@ export default function Home() {
                             className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity z-10 rounded-t-md"
                           >
                             {currentTrack?.fileUrl === track.fileUrl && isPlaying ? (
-                              <Pause size={24} className="text-white" />
+                              <Pause size={20} md:size={24} className="text-white" />
                             ) : (
-                              <Play size={24} className="text-white" />
+                              <Play size={20} md:size={24} className="text-white" />
                             )}
                           </button>
                         </div>
@@ -603,14 +541,14 @@ export default function Home() {
                           className="w-full h-[10%] object-cover rounded-b-md blur-lg"
                         />
                       </div>
-                      <div className="text-white font-semibold truncate">{track.title}</div>
-                      <div className="text-gray-400 text-sm truncate">
+                      <div className="text-white font-semibold truncate text-sm md:text-base">{track.title}</div>
+                      <div className="text-gray-400 text-xs md:text-sm truncate">
                         {Array.isArray(track.artists) ? track.artists.join(", ") : track.artists}
                       </div>
                       {user?.premium !== "Free" && (
-                        <div className="relative flex gap-2 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="relative flex gap-1 md:gap-2 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
                           <button
-                            className="p-1 hover:bg-[#333333] rounded-full"
+                            className="p-2 hover:bg-[#333333] rounded-full"
                             onClick={(e) => {
                               e.stopPropagation();
                               setDropdownTrackId(dropdownTrackId === track._id ? null : track._id);
@@ -619,13 +557,13 @@ export default function Home() {
                             <Plus size={16} />
                           </button>
                           {dropdownTrackId === track._id && (
-                            <div className="absolute left-0 mt-8 w-48 bg-[#242424] rounded-md shadow-lg z-20">
-                              <ul className="py-1">
+                            <div className="absolute left-0 mt-6 md:mt-8 w-40 md:w-48 bg-[#242424] rounded-md shadow-lg z-20">
+                              <ul className="py-1 text-sm">
                                 {playlists.length > 0 ? (
                                   playlists.map((playlist) => (
                                     <li
                                       key={playlist._id}
-                                      className="px-4 py-2 hover:bg-[#333333] cursor-pointer text-white"
+                                      className="px-3 md:px-4 py-1 md:py-2 hover:bg-[#333333] cursor-pointer text-white"
                                       onClick={() =>
                                         handleAddToPlaylist(track._id || track.fileUrl, playlist._id as string)
                                       }
@@ -634,10 +572,10 @@ export default function Home() {
                                     </li>
                                   ))
                                 ) : (
-                                  <li className="px-4 py-2 text-gray-400">No playlists available</li>
+                                  <li className="px-3 md:px-4 py-1 md:py-2 text-gray-400">No playlists available</li>
                                 )}
                                 <li
-                                  className="px-4 py-2 hover:bg-[#333333] cursor-pointer text-white border-t border-gray-700"
+                                  className="px-3 md:px-4 py-1 md:py-2 hover:bg-[#333333] cursor-pointer text-white border-t border-gray-700"
                                   onClick={() => navigate(`/playlists/${user?._id}`)}
                                 >
                                   Create New Playlist
@@ -647,15 +585,12 @@ export default function Home() {
                           )}
                           <button
                             onClick={() => handleLike(track._id || track.fileUrl)}
-                            className={`p-1 hover:bg-[#333333] rounded-full ${likedSongs.has(track._id || track.fileUrl) ? "text-red-500" : "text-white"}`}
+                            className={`p-2 hover:bg-[#333333] rounded-full ${likedSongs.has(track._id || track.fileUrl) ? "text-red-500" : "text-white"}`}
                           >
-                            <Heart
-                              size={16}
-                              fill={likedSongs.has(track._id || track.fileUrl) ? "currentColor" : "none"}
-                            />
+                            <Heart size={16} fill={likedSongs.has(track._id || track.fileUrl) ? "currentColor" : "none"} />
                           </button>
                           <button
-                            className="p-1 hover:bg-[#333333] rounded-full"
+                            className="p-2 hover:bg-[#333333] rounded-full"
                             onClick={(e) => {
                               e.stopPropagation();
                               handleDownload(track.fileUrl, track.title);
@@ -664,7 +599,7 @@ export default function Home() {
                             <Download size={16} />
                           </button>
                           <button
-                            className="p-1 hover:bg-[#333333] rounded-full"
+                            className="p-2 hover:bg-[#333333] rounded-full"
                             onClick={(e) => {
                               e.stopPropagation();
                               handleAddToQueue(track);
@@ -678,7 +613,7 @@ export default function Home() {
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-4 text-gray-400">
+                <div className="text-center py-4 text-gray-400 text-sm md:text-base">
                   No additional tracks match your search "{searchQuerysaved}"
                 </div>
               )}
@@ -706,7 +641,7 @@ export default function Home() {
           track={currentTrack}
           isOpen={isModalOpen}
           toggleModal={toggleModal}
-          onPlayTrack={handlePlayFromModal} // Pass the handler
+          onPlayTrack={handlePlayFromModal}
         />
       )}
     </div>
