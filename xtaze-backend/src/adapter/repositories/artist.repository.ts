@@ -17,15 +17,39 @@ export default class ArtistRepository implements IArtistRepository {
       throw error
     }
   }
+  
+  
   async upload(track: ITrack): Promise<ITrack | null> {
     console.log(track, "ithan last ")
     const newTrack = new Track(track)
     console.log(newTrack, "ithan last final destination ")
     return await newTrack.save()
   }
+  async updateTrackByArtist(track: ITrack, trackId: string): Promise<ITrack | null> {
+    try {
+      const updatedTrack = await Track.findByIdAndUpdate(
+        trackId, 
+        { $set: track }, 
+        { new: true, runValidators: true } 
+      );
+  
+      return updatedTrack;
+    } catch (error) {
+      console.error("Error updating track:", error);
+      return null;
+    }
+  }
+  
+
+
+
+
   async getAllArtists(): Promise<IUser[]> {
     return await UserModel.find({ role: { $ne: "admin" } });
   }
+
+
+
   async getAllTracksByArtist(userId: string): Promise<ITrack[]> {
     try {
       console.log("Fetching tracks for artist with userId:", userId);
@@ -43,6 +67,8 @@ export default class ArtistRepository implements IArtistRepository {
       throw new Error("Failed to fetch tracks");
     }
   }
+
+
   async increment(trackId: string): Promise<ITrack | null> {
     try {
       console.log("Fetching track with ID:", trackId);

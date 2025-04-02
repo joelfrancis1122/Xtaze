@@ -100,6 +100,48 @@ export default class ArtistController {
       next(error);
     }
   }
+  async updateTrackByArtist(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { TrackId } = req.query;
+      const { title, artists, genre, album } = req.body;
+  
+      if (!TrackId) {
+         res.status(400).json({ success: false, message: "Track ID is required" });
+      }
+  
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
+      const songFile = files?.['fileUrl']?.[0];
+      const imageFile = files?.['img']?.[0];
+  
+      const genreArray = genre ? genre.split(",").map((g: string) => g.trim()) : [];
+      const artistArray = artists ? artists.split(",").map((g: string) => g.trim()) : [];
+  
+      console.log({ songFile, imageFile }, "Processed Files");
+  
+      console.log("joel1",TrackId as string,
+        title,
+        artistArray,
+        genreArray,
+        album,
+        songFile,
+        imageFile)
+      const updatedTrack = await this._artistnUseCase.updateTrackByArtist(
+        TrackId as string,
+        title,
+        artistArray,
+        genreArray,
+        album,
+        songFile,
+        imageFile
+      );
+  
+      res.status(200).json({ success: true, message: "Track updated successfully", track: updatedTrack });
+  
+    } catch (error) {
+      next(error);
+    }
+  }
+  
 
   async incrementListeners(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
@@ -127,7 +169,7 @@ export default class ArtistController {
       const { songName, artist, genre, album } = req.body;
       const songFile = (req.files as { [fieldname: string]: Express.Multer.File[] }).file[0];
       const imageFile = (req.files as { [fieldname: string]: Express.Multer.File[] }).image[0];
-
+      
       console.log(songFile, imageFile, "Extracted files");
       const genreArray = genre ? genre.split(",").map((g: string) => g.trim()) : [];
       const artistArray = artist ? artist.split(",").map((g: string) => g.trim()) : [];
@@ -143,6 +185,7 @@ export default class ArtistController {
       next(error); // Pass error to middleware
     }
   }
+  
   async statsOfArtist(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { userId } = req.query

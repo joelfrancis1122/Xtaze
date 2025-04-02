@@ -32,7 +32,7 @@ const ArtistSidebar = () => {
         </Button>
         <Button variant="ghost" className="w-full justify-start gap-2" onClick={() => navigate("/artist/analytics")}>
           <Globe className="h-4 w-4" />
-          Analytics
+          Update Tracks
         </Button>
         <Button variant="ghost" className="w-full justify-start gap-2" onClick={() => navigate("/artist/releases")}>
           <Home className="h-4 w-4" />

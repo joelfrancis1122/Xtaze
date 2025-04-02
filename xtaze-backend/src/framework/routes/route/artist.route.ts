@@ -25,6 +25,7 @@ router.get("/statsOfArtist",(req:Request,res:Response,next:NextFunction)=>artist
 router.get("/checkcard",(req:Request,res:Response,next:NextFunction)=>artistController.checkcard(req,res,next))
 router.post("/saveCard",(req:Request,res:Response,next:NextFunction)=>artistController.saveCard(req,res,next))
 
+router.put("/updateTrackByArtist",authenticateArtist,upload.fields([{ name: "fileUrl", maxCount: 1 }, { name: "img", maxCount: 1 }]),(req:Request,res:Response,next:NextFunction)=>artistController.updateTrackByArtist(req,res,next))
 
 
 

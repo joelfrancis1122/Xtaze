@@ -3,8 +3,8 @@ export interface ITrack {
   title: string;
   genre: string[];
   album: string;
-  fileUrl: string;
-  img: string;
+  fileUrl?: string;
+  img?: string;
   createdAt?: Date;
   listeners?: number;
   artists: string[];

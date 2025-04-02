@@ -21,7 +21,7 @@ interface useCaseDependencies {
 }
 
 export default class ArtistUseCase {
-  private _userRepository:IUserRepository
+  private _userRepository: IUserRepository
   private _artistRepository: IArtistRepository
   private _passwordService: IPasswordService
 
@@ -29,7 +29,7 @@ export default class ArtistUseCase {
     this._artistRepository = dependencies.repository.artistRepository
     this._passwordService = dependencies.service.passwordService
     this._userRepository = dependencies.repository.userRepository
-    
+
   }
 
   async login(email: string, password: string): Promise<{ success: boolean; message: string; token?: string; ArefreshToken?: string; artist?: IUser }> {
@@ -49,17 +49,17 @@ export default class ArtistUseCase {
     if (!isPasswordValid) {
       return { success: false, message: "Invalid credentials!" };
     }
- const token = jwt.sign(
-       { userId: artist._id, email: artist.email, role: "artist" },
-       process.env.JWT_SECRET!,
-       { expiresIn: "10M" } // Short-lived access token
-     );
-     console.log("ith unda refresh all jwts");
-     const ArefreshToken = jwt.sign(
-       { userId: artist._id },
-       process.env.JWT_REFRESH_SECRET!,
-       { expiresIn: "7d" } // Long-lived refresh token
-     );
+    const token = jwt.sign(
+      { userId: artist._id, email: artist.email, role: "artist" },
+      process.env.JWT_SECRET!,
+      { expiresIn: "10M" } // Short-lived access token
+    );
+    console.log("ith unda refresh all jwts");
+    const ArefreshToken = jwt.sign(
+      { userId: artist._id },
+      process.env.JWT_REFRESH_SECRET!,
+      { expiresIn: "7d" } // Long-lived refresh token
+    );
     return {
       success: true,
       message: "Login successful!",
@@ -68,7 +68,7 @@ export default class ArtistUseCase {
       artist
     };
   }
- async refresh(refreshToken: string): Promise<{ success: boolean; message: string; token?: string; ArefreshToken?: string }> {
+  async refresh(refreshToken: string): Promise<{ success: boolean; message: string; token?: string; ArefreshToken?: string }> {
     try {
       console.log("yeaah ithil varunind");
       const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET!) as { userId: string };
@@ -83,7 +83,7 @@ export default class ArtistUseCase {
       );
       const newRefreshToken = jwt.sign(
         { userId: user._id },
-        process.env.JWT_REFRESH_SECRET!,  
+        process.env.JWT_REFRESH_SECRET!,
         { expiresIn: "7d" }
       );
 
@@ -117,40 +117,60 @@ export default class ArtistUseCase {
     return await this._artistRepository.upload(newTrack);
   }
 
+  async updateTrackByArtist(TrackId: string,songName: string,artist: string[],genre: string[],album: string,songFile?: Express.Multer.File,imageFile?: Express.Multer.File
+  ): Promise<ITrack | null> {
+    const songUpload = songFile ? await uploadSongToCloud(songFile) : null;
+    const imageUpload = imageFile ? await uploadImageToCloud(imageFile) : null;
+  
+    const updatedTrack: Omit<ITrack, 'fileUrl' | 'img'> & { fileUrl?: string; img?: string } = {
+      title: songName || "", 
+      genre,
+      album,
+      artists: artist,
+      ...(imageUpload && { img: imageUpload.secure_url }),
+      ...(songUpload && { fileUrl: songUpload.secure_url }),
+    };
+  
+    // Update only the provided fields
+    console.log(updatedTrack,"joellll")
+    return await this._artistRepository.updateTrackByArtist(updatedTrack, TrackId);
+  }
+  
+
   async listArtists(): Promise<IUser[]> {
     return await this._artistRepository.getAllArtists() as IUser[];
 
-  } 
+  }
 
-  async listArtistReleases(userId:string): Promise<ITrack[]> {
-    
+  async listArtistReleases(userId: string): Promise<ITrack[]> {
+
     return await this._artistRepository.getAllTracksByArtist(userId) as ITrack[];
 
-  } 
-  async increment(trackId:string): Promise<ITrack|null> {
-    
+  }
+  async increment(trackId: string): Promise<ITrack | null> {
+
     return await this._artistRepository.increment(trackId);
-    
 
-  } 
-  async statsOfArtist(userId:string): Promise<ArtistMonetization[]> {
-    
+
+  }
+  async statsOfArtist(userId: string): Promise<ArtistMonetization[]> {
+
     return await this._artistRepository.statsOfArtist(userId);
-    
 
-  } 
-  async saveCard(artistId:string,paymentMethodId:string):Promise<IUser|null> {
-    
-    return await this._artistRepository.saveCard(artistId,paymentMethodId);
-    
 
-  } 
-  async checkcard(artistId:string):Promise<IUser|null>{
-    
+  }
+  async saveCard(artistId: string, paymentMethodId: string): Promise<IUser | null> {
+
+    return await this._artistRepository.saveCard(artistId, paymentMethodId);
+
+
+  }
+  async checkcard(artistId: string): Promise<IUser | null> {
+
     return await this._artistRepository.checkcard(artistId);
-    
 
-  } 
+
+  }
 
   // async toggleBlockUnblockArtist(id: string): Promise<IUser | null> {
   //   console.log("Artist coming to the toggle");
@@ -159,12 +179,12 @@ export default class ArtistUseCase {
   //   if (!artist) {
   //     throw new Error("Artist not found");
   //   }
-  
+
   //   const newStatus = !artist.isActive;
   //   console.log(newStatus, "new status");
-  
+
   //   return await this._artistRepository.updateArtistStatus(id, newStatus);
   // }
-  
+
 
 }
