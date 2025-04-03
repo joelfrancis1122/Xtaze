@@ -598,9 +598,11 @@ export default class UserUseCase {
       return banners;
   
     }
+    async becomeArtist(id:string): Promise<IUser|null> {
+      return await this._userRepository.becomeArtist(id)  
+    }
 
-    
-    
+      
     async getSubscriptionHistoryFromStripe(): Promise<SubscriptionHistory[]> {
       try {
         // Fetch recent checkout sessions from Stripe

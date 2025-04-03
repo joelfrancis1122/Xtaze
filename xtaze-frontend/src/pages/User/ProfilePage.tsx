@@ -9,10 +9,8 @@ import { toast } from "sonner";
 import Cropper, { Area } from "react-easy-crop";
 import { Camera, Power, Search } from "lucide-react";
 import Sidebar from "./userComponents/SideBar";
-import { uploadProfileImage } from "../../services/userService";
+import { becomeArtist, uploadProfileImage } from "../../services/userService"; // Import the new service
 import { UserSignupData } from "./types/IUser";
-
-
 
 export default function Home() {
   const user = useSelector((state: RootState) => state.user.signupData) as UserSignupData | null;
@@ -85,6 +83,7 @@ export default function Home() {
       };
     });
   };
+
   const token = localStorage.getItem("token");
 
   const handleCropConfirm = async () => {
@@ -93,7 +92,7 @@ export default function Home() {
       setCroppedImage(cropped);
       setShowCropper(false);
       try {
-        const updatedUser = await uploadProfileImage(user?._id || "", cropped,token as string);
+        const updatedUser = await uploadProfileImage(user?._id || "", cropped, token as string);
         dispatch(saveSignupData(updatedUser));
         toast.success("Profile picture updated!");
       } catch (error) {
@@ -104,6 +103,32 @@ export default function Home() {
 
   const handleSubscribe = () => {
     navigate("/plans");
+  };
+
+  const handleBecomeArtist = async () => {
+    // Show confirmation dialog
+    const confirm = window.confirm(
+      "Are you sure you want to become an Artist? This is a permanent change, and you cannot revert to a regular user account once you proceed."
+    );
+    if (!confirm) return;
+
+    if (!user?._id ) {
+      toast.error("Please log in to become an artist");
+      return;
+    }
+
+    try {
+      const updatedUser = await becomeArtist(user._id);
+      if(updatedUser){
+        alert("odi")
+      }
+      dispatch(clearSignupData());
+
+      toast.success("You are now an Artist!");
+    } catch (error) {
+      console.error("Error becoming an artist:", error);
+      toast.error("Failed to become an artist");
+    }
   };
 
   return (
@@ -189,7 +214,7 @@ export default function Home() {
 
             <h3 className="text-2xl font-bold text-white mb-6">Your Subscription Plan</h3>
             <div className="bg-[#1d1d1d] p-6 rounded-xl shadow-lg flex flex-col items-center border border-gray-800 transition-all hover:shadow-xl">
-              {user?.premium!=="Free" ? (
+              {user?.premium !== "Free" ? (
                 <div className="text-center space-y-2">
                   <p className="text-xl font-semibold text-white">{user?.premium}</p>
                   <p className="text-sm text-gray-300">Enjoy full access to all features!</p>
@@ -215,14 +240,27 @@ export default function Home() {
             <div className="bg-[#1d1d1d] p-6 rounded-lg shadow-md">
               <div className="flex items-center justify-between mb-4">
                 <p className="text-white">Change Password</p>
-                
               </div>
-              <div onClick={()=>navigate("/equalizer")} className="flex items-center justify-between">
+              <div onClick={() => navigate("/equalizer")} className="flex items-center justify-between mb-4">
                 <p className="text-white">Equalizer</p>
                 <button className="bg-indigo-500 px-5 py-2 text-white rounded-lg hover:bg-red-600 transition">
                   Tune
                 </button>
               </div>
+              {user?.role !== "Artist" && (
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-white">Become an Artist</p>
+                    <p className="text-sm text-red-400">Warning: This is a permanent change</p>
+                  </div>
+                  <button
+                    onClick={handleBecomeArtist}
+                    className="bg-red-500 px-5 py-2 text-white rounded-lg hover:bg-red-600 transition"
+                  >
+                    Become Artist
+                  </button>
+                </div>
+              )}
             </div>
           </section>
         </main>

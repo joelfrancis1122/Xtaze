@@ -35,4 +35,6 @@ router.post("/updateBanner",authenticateUser, upload.single("coverImage"),(req:R
 router.get("/fetchAllTrack",(req:Request,res:Response,next:NextFunction)=>userController.fetchAllTrack(req,res,next))
 router.get("/fetchGenreTracks",(req:Request,res:Response,next:NextFunction)=>userController.fetchGenreTracks(req,res,next))
 
+router.put("/becomeArtist",(req:Request,res:Response,next:NextFunction)=>userController.becomeArtist(req,res,next))
+
 export default router;

@@ -21,7 +21,7 @@ const userSchema = new mongoose.Schema(
     profilePic: { type: String, default: null },
     bio: { type: String, default: null },
     banner:{type:String,default:null},
-    likedSongs:{type:[String],default:null},
+    likedSongs:{type:[String],default:[]},
     stripePaymentMethodId:{type:String},
     paymentStatus:{type:Boolean,default:false}
   },

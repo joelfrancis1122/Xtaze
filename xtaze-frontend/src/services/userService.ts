@@ -186,23 +186,24 @@ export const fetchTracks = async (
 };
 
 // Fetch liked songs
-export const fetchAllTrack = async ( ): Promise<Track[]> => {
+export const fetchAllTrack = async (): Promise<Track[]> => {
   const data = await apiCall<{ success: boolean; data: Track[] }>(
     userApi,
     "get",
     `/fetchAllTrack`,
   );
-  console.log(data,"liliiiii")
+  console.log(data, "liliiiii")
   return data.data
 };
-export const fetchGenreTracks = async (genre:string): Promise<Track[]> => {
-  console.log(genre,"alhildas")
+
+export const fetchGenreTracks = async (genre: string): Promise<Track[]> => {
+  console.log(genre, "alhildas")
   const data = await apiCall<{ success: boolean; data: Track[] }>(
     userApi,
     "get",
     `/fetchGenreTracks?GenreName=${genre}`,
   );
-  console.log(data,"ambu")
+  console.log(data, "ambu")
   return data.data
 };
 
@@ -356,6 +357,20 @@ export const updatePlaylistName = async (
   );
   if (!data.success) throw new Error(data.message || "Failed to add track to playlist");
 };
+
+export const becomeArtist = async (
+  id: string,
+): Promise<void> => {
+  const data = await apiCall<{ success: boolean; message?: string, data:any }>(
+    userApi,
+    "put",
+    "/becomeArtist",
+    { id},
+  );
+  return data.data
+  // if (!data.success) throw new Error(data.message || "Failed to add track to playlist");
+};
+
 export const updatePlaylistImage = async (id: string, file: File): Promise<any> => {
   const formData = new FormData();
   formData.append("id", id);
@@ -383,7 +398,7 @@ export const initiateCheckout = async (
     userApi,
     "post",
     "/checkOut",
-    { userId, priceId ,code}
+    { userId, priceId, code }
   );
   console.log("Checkout response:", data);
   return data.sessionId;

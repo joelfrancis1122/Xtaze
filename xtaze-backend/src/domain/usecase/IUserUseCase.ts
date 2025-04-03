@@ -36,4 +36,6 @@ export default interface IuserUseCase{
     getSubscriptionHistoryFromStripe():Promise<SubscriptionHistory[]>
     getAllTracks():Promise<ITrack[]|null> 
     fetchGenreTracks(GenreName:string):Promise<ITrack[]|null> 
+    becomeArtist(id:string): Promise<IUser|null>
+
 }

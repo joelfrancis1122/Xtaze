@@ -390,6 +390,23 @@ export default class UserRepository implements IUserRepository {
       throw new Error(error.message || "Failed to check coupon usage");
     }
   }
+  async becomeArtist(id: string): Promise<IUser | null> {
+    try {
+      const updatedUser = await UserModel.findByIdAndUpdate(
+        id,
+        { $set: { role: "artist" } },
+        { new: true } // Return the updated document
+      );
+  
+      return updatedUser as unknown as IUser
+    } catch (error: any) {
+      throw new Error(error.message || "Failed to update user role");
+    }
+  }
+  
+  
+
+
   async fetchGenreTracks(GenreName: string): Promise<ITrack[] | null> {
     try {
       console.log(GenreName, "asasa  ")
