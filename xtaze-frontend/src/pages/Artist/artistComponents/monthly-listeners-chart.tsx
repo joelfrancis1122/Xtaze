@@ -89,7 +89,7 @@ export function MonthlyListenersChart() {
         }`}
     >
       <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={data} isAnimationActive={false}>
+        <LineChart data={data} >
           <XAxis
             dataKey="month"
             stroke="#888888"
@@ -113,7 +113,8 @@ export function MonthlyListenersChart() {
                       <div className="flex flex-col">
                         <span className="text-[0.70rem] uppercase text-muted-foreground">Plays</span>
                         <span className="font-bold text-muted-foreground">
-                          {payload[0].value.toLocaleString()}
+                          {payload?.[0]?.value?.toLocaleString() || "0"}
+
                         </span>
                       </div>
                       <div className="flex flex-col">

@@ -46,10 +46,10 @@ const ArtistSidebar = () => {
           <LifeBuoy className="h-4 w-4" />
           Monetization
         </Button>
-        <Button variant="ghost" className="w-full justify-start gap-2" onClick={() => navigate("/artist/settings")}>
+        {/* <Button variant="ghost" className="w-full justify-start gap-2" onClick={() => navigate("/artist/settings")}>
           <Settings className="h-4 w-4" />
           Settings
-        </Button>
+        </Button> */}
       </nav>
 
       {/* Logout Button */}

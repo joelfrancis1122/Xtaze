@@ -8,7 +8,7 @@ export function setupCronJobs() {
 
 
   cron.schedule("0 0 * * * *", async () => {
-    console.log("Cron job: Running coupon status check at midnight...");
+    console.log("Cron job: Running coupon status check at midnight.");
     try {
       await userController.checkCouponStatus();
     } catch (error) {
@@ -19,4 +19,22 @@ export function setupCronJobs() {
   });
 
   console.log("Cron jobs scheduled");
+
+
+  cron.schedule("0 0 1 * *", async () => {
+      console.log("Cron job: Running another midnight task...");
+      try {
+        await userController.resetPaymentStatus()
+      } catch (error) {
+        console.error("Second cron job failed:", error);
+      }
+    },
+    { timezone: "UTC" }
+  );
+
+  console.log("Cron jobs scheduled");
+
 }
+
+
+ 

@@ -21,13 +21,14 @@ export default function AdminSubscriptionHistoryPage() {
   const [error, setError] = useState<string | null>(null);
   const [subscriptionPage, setSubscriptionPage] = useState(0);
   const [payoutPage, setPayoutPage] = useState(0);
-  const itemsPerPage = 10;
+  const itemsPerPage = 5;
 
   useEffect(() => {
     const fetchSubscriptionHistory = async () => {
       try {
         setLoading(true);
         const response = await axios.get("http://localhost:3000/admin/stripe/subscription-history");
+        console.log(response.data.data  ,"asssssssss")
         setHistory(response.data.data);
         setError(null);
       } catch (err) {

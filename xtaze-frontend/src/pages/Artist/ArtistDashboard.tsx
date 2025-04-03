@@ -56,7 +56,7 @@ const ArtistDashboard = () => {
         // Calculate Most Listened Song (based on total plays)
         let maxPlays = 0;
         let mostListened = "None";
-        tracks.forEach((track: Track) => {
+        tracks.forEach((track) => {
           const trackPlays = track.playHistory.reduce(
             (sum: number, entry: PlayHistory) => sum + entry.plays,
             0

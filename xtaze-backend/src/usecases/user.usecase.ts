@@ -24,7 +24,7 @@ interface useCaseDependencies {
   service: {
     PasswordService: IPasswordService,
     OtpService: IOtpService;
-    EmailService:IEmailService;
+    EmailService: IEmailService;
   }
 }
 
@@ -32,7 +32,7 @@ export default class UserUseCase {
   private _userRepository: IUserRepository //space for storage box 
   private _passwordService: IPasswordService // space for painting brush 
   private _otpService: IOtpService; // space for another tool
-  private _emailService :IEmailService;
+  private _emailService: IEmailService;
   private stripe: Stripe;
 
   constructor(dependencies: useCaseDependencies) { // boss giving the toys here 
@@ -97,47 +97,47 @@ export default class UserUseCase {
     if (!user) {
       throw new Error("User not found");
     }
-  
+
     const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET!, {
       expiresIn: "1h",
     });
-  
+
     await this._emailService.sendEmail(email, "Password Reset", token);
-  
+
     return { success: true, message: "Reset link sent successfully" };  // ✅ Add return statement
   }
-  
+
   async resetPassword(token: string, password: string): Promise<{ success: boolean; message: string }> {
     // Create an instance of PasswordService
-    
+
     try {
-        // Verify JWT token
-        const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { userId: string };
-        if(!decoded){
-          console.log("token is wrong")
-        }
-        // Find user
-        const user = await this._userRepository.findById(decoded.userId);
-        if (!user) {
-            throw new Error("User not found");
-        }
-        
-        // Use PasswordService to hash the new password
-        const hashedPassword = await this._passwordService.hashPassword(password);
-        
-        // Update user's password
-        user.password = hashedPassword;
-        console.log(user,"sudpated yser ")
-        await this._userRepository.updatePassword(user);
-        
-        return { 
-            success: true, 
-            message: "Password reset successfully" 
-        };
+      // Verify JWT token
+      const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { userId: string };
+      if (!decoded) {
+        console.log("token is wrong")
+      }
+      // Find user
+      const user = await this._userRepository.findById(decoded.userId);
+      if (!user) {
+        throw new Error("User not found");
+      }
+
+      // Use PasswordService to hash the new password
+      const hashedPassword = await this._passwordService.hashPassword(password);
+
+      // Update user's password
+      user.password = hashedPassword;
+      console.log(user, "sudpated yser ")
+      await this._userRepository.updatePassword(user);
+
+      return {
+        success: true,
+        message: "Password reset successfully"
+      };
     } catch (error) {
-        throw error; // You might want to handle this more specifically based on your needs
+      throw error; // You might want to handle this more specifically based on your needs
     }
-}
+  }
 
 
   async verifyOTP(otp: string): Promise<{ success: boolean; message: string }> {
@@ -299,17 +299,17 @@ export default class UserUseCase {
     }
 
   }
-  async updateImagePlaylist(id: string, file: Express.Multer.File): Promise<{ success: boolean; message: string,data?:IPlaylist }> {
+  async updateImagePlaylist(id: string, file: Express.Multer.File): Promise<{ success: boolean; message: string, data?: IPlaylist }> {
     try {
       const cloudinaryResponse = await uploadImageToCloud(file);
 
       const coverpage = cloudinaryResponse.secure_url;
       const updatedData = await this._userRepository.updateImagePlaylist(id, coverpage);
       if (!updatedData) {
-        return { success: false, message: "Failed to update profile"};
+        return { success: false, message: "Failed to update profile" };
       }
 
-      return { success: true, message: "Banner updated successfully", data:updatedData};
+      return { success: true, message: "Banner updated successfully", data: updatedData };
     } catch (error) {
       console.error("Error during Banner upload:", error);
       return { success: false, message: "An error occurred while updating the profile" };
@@ -347,14 +347,14 @@ export default class UserUseCase {
     }
   }
 
-  async addToPlaylist(userId:string,playlistId:string,trackId:string): Promise<IPlaylist | null> {
+  async addToPlaylist(userId: string, playlistId: string, trackId: string): Promise<IPlaylist | null> {
     try {
-      const user = await this._userRepository.addToPlaylist(userId, trackId,playlistId);
+      const user = await this._userRepository.addToPlaylist(userId, trackId, playlistId);
       if (!user) {
         return null;
       }
 
-      return user; 
+      return user;
     } catch (error) {
       console.error("Error during adding liked song:", error);
       throw new Error("An error occurred while updating liked songs.");
@@ -364,7 +364,7 @@ export default class UserUseCase {
 
   async createPlaylist(_id: string, newplaylist: IPlaylist): Promise<IPlaylist | null> {
     try {
-      const playlist = await this._userRepository.createPlaylist(_id,newplaylist);
+      const playlist = await this._userRepository.createPlaylist(_id, newplaylist);
 
       if (!playlist) {
         return null;
@@ -376,11 +376,11 @@ export default class UserUseCase {
       throw new Error("An error occurred while creating playlist.");
     }
   }
-  async getAllPlaylist(userId:string): Promise<IPlaylist[] | null> {
+  async getAllPlaylist(userId: string): Promise<IPlaylist[] | null> {
     try {
       const playlist = await this._userRepository.findByCreator(userId);
 
-      console.log(playlist,"this s the playlist")
+      console.log(playlist, "this s the playlist")
       if (!playlist) {
         return null;
       }
@@ -391,11 +391,11 @@ export default class UserUseCase {
       throw new Error("An error occurred while creating playlist.");
     }
   }
-  async getPlaylist(id:string,pageNum:number,limitNum:number,skip:number): Promise<{ tracks: ITrack[]; total: number } | null> {
+  async getPlaylist(id: string, pageNum: number, limitNum: number, skip: number): Promise<{ tracks: ITrack[]; total: number } | null> {
     try {
-      const playlist = await this._userRepository.getPlaylist(id,pageNum,limitNum,skip);
+      const playlist = await this._userRepository.getPlaylist(id, pageNum, limitNum, skip);
 
-      console.log(playlist,"this s the playlistodi odi ")
+      console.log(playlist, "this s the playlistodi odi ")
       if (!playlist) {
         return null;
       }
@@ -406,10 +406,10 @@ export default class UserUseCase {
       throw new Error("An error occurred while creating playlist.");
     }
   }
-  async deletePlaylist(id:string): Promise<IPlaylist | null> {
+  async deletePlaylist(id: string): Promise<IPlaylist | null> {
     try {
       const playlist = await this._userRepository.deletePlaylist(id);
-      if(!playlist){
+      if (!playlist) {
         return null
       }
       return playlist
@@ -419,10 +419,10 @@ export default class UserUseCase {
       throw new Error("An error occurred while deleteing.");
     }
   }
-  async updateNamePlaylist(id:string,playlistName:string): Promise<IPlaylist | null> {
+  async updateNamePlaylist(id: string, playlistName: string): Promise<IPlaylist | null> {
     try {
-      const playlist = await this._userRepository.updateNamePlaylist(id,playlistName);
-      if(!playlist){
+      const playlist = await this._userRepository.updateNamePlaylist(id, playlistName);
+      if (!playlist) {
         return null
       }
       return playlist
@@ -435,7 +435,7 @@ export default class UserUseCase {
   async getAllTracks(): Promise<ITrack[] | null> {
     try {
       const tracks = await this._userRepository.getAllTracks();
-      if(!tracks){
+      if (!tracks) {
         return null
       }
       return tracks
@@ -445,10 +445,10 @@ export default class UserUseCase {
       throw new Error("An error occurred while editing.");
     }
   }
-  async fetchGenreTracks(GenreName:string): Promise<ITrack[] | null> {
+  async fetchGenreTracks(GenreName: string): Promise<ITrack[] | null> {
     try {
       const tracks = await this._userRepository.fetchGenreTracks(GenreName);
-      if(!tracks){
+      if (!tracks) {
         return null
       }
       return tracks
@@ -456,6 +456,15 @@ export default class UserUseCase {
     } catch (error) {
       console.error("Error during editing playlist:", error);
       throw new Error("An error occurred while editing.");
+    }
+  }
+  async resetPaymentStatus(): Promise<void> {
+    try {
+      await this._userRepository.resetPaymentStatus();
+  
+    } catch (error) {
+      console.error("Error during reset:", error);
+      throw new Error("An error occurred while reset.");
     }
   }
 
@@ -482,9 +491,9 @@ export default class UserUseCase {
         mode: "subscription",
         success_url: "http://localhost:5000/success",
         cancel_url: "http://localhost:5000/cancel",
-        metadata: { 
+        metadata: {
           userId,
-          couponCode: couponCode || "", 
+          couponCode: couponCode || "",
           planName, // Store planName for webhook
         },
       };
@@ -576,16 +585,16 @@ export default class UserUseCase {
     try {
       const coupons = await this._userRepository.getCoupons();
       const currentDate = new Date();
-  if(coupons)
-      for (const coupon of coupons) {
-        const expirationDate = new Date(coupon.expires);
-        if (expirationDate < currentDate && coupon.status === "active") {
-          await this._userRepository.updateCouponByCode(coupon.code, {
-            status: "expired",
-          });
-          console.log(`Coupon ${coupon.code} expired and status updated to expired`);
+      if (coupons)
+        for (const coupon of coupons) {
+          const expirationDate = new Date(coupon.expires);
+          if (expirationDate < currentDate && coupon.status === "active") {
+            await this._userRepository.updateCouponByCode(coupon.code, {
+              status: "expired",
+            });
+            console.log(`Coupon ${coupon.code} expired and status updated to expired`);
+          }
         }
-      }
       console.log("Coupon status check completed");
     } catch (error: any) {
       console.error("Error in checkAndUpdateCouponStatus:", error);
@@ -593,61 +602,61 @@ export default class UserUseCase {
     }
   }
 
-    async getAllBanners(): Promise<IBanner[] | null> {
-      const banners = await this._userRepository.findAll()
-      return banners;
-  
-    }
-    async becomeArtist(id:string): Promise<IUser|null> {
-      return await this._userRepository.becomeArtist(id)  
-    }
+  async getAllBanners(): Promise<IBanner[] | null> {
+    const banners = await this._userRepository.findAll()
+    return banners;
 
-      
-    async getSubscriptionHistoryFromStripe(): Promise<SubscriptionHistory[]> {
-      try {
-        // Fetch recent checkout sessions from Stripe
-        const sessions = await this.stripe.checkout.sessions.list({
-          limit: 50, // Max 100, adjust as needed
-          expand: ["data.customer"], // Expand customer for email
-        });
-        
-        // Filter only completed sessions
-        const completedSessions = sessions.data.filter(
-          (session) => session.status === "complete"
-        );
-        
-        const history: SubscriptionHistory[] = await Promise.all(
-          completedSessions.map(async (session) => {
-            const userId = session.metadata?.userId || "unknown";
-            const planName = session.metadata?.planName || "Unknown Plan";
-            const price = (session.amount_total || 0) / 100; // Convert cents to dollars
-            const purchaseDate = new Date(session.created * 1000).toISOString(); // Convert Unix timestamp
-            
-            // Fetch email from customer if available, or fallback to repository
-            let email = (session.customer as Stripe.Customer)?.email || "N/A";
-            if (!email || email === "N/A") {
-              const user = await this._userRepository.findById(userId);
-              email = user?.email || "N/A";
-            }
-            
-            return {
-              userId,
-              email,
-              planName,
-              price,
-              purchaseDate,
-            };
-          })
-        );
-        
-        // Sort by purchase date descending (most recent first)
-        return history.sort((a, b) => new Date(b.purchaseDate).getTime() - new Date(a.purchaseDate).getTime());
-      } catch (error: any) {
-        console.error("Error in getSubscriptionHistoryFromStripe:", error);
-        throw error;
-      }
+  }
+  async becomeArtist(id: string): Promise<IUser | null> {
+    return await this._userRepository.becomeArtist(id)
+  }
+
+
+  async getSubscriptionHistoryFromStripe(): Promise<SubscriptionHistory[]> {
+    try {
+      // Fetch recent checkout sessions from Stripe
+      const sessions = await this.stripe.checkout.sessions.list({
+        limit: 50, // Max 100, adjust as needed
+        expand: ["data.customer"], // Expand customer for email
+      });
+
+      // Filter only completed sessions
+      const completedSessions = sessions.data.filter(
+        (session) => session.status === "complete"
+      );
+
+      const history: SubscriptionHistory[] = await Promise.all(
+        completedSessions.map(async (session) => {
+          const userId = session.metadata?.userId || "unknown";
+          const planName = session.metadata?.planName || "Unknown Plan";
+          const price = (session.amount_total || 0) / 100; // Convert cents to dollars
+          const purchaseDate = new Date(session.created * 1000).toISOString(); // Convert Unix timestamp
+
+          // Fetch email from customer if available, or fallback to repository
+          let email = (session.customer as Stripe.Customer)?.email || "N/A";
+          if (!email || email === "N/A") {
+            const user = await this._userRepository.findById(userId);
+            email = user?.email || "N/A";
+          }
+
+          return {
+            userId,
+            email,
+            planName,
+            price,
+            purchaseDate,
+          };
+        })
+      );
+
+      // Sort by purchase date descending (most recent first)
+      return history.sort((a, b) => new Date(b.purchaseDate).getTime() - new Date(a.purchaseDate).getTime());
+    } catch (error: any) {
+      console.error("Error in getSubscriptionHistoryFromStripe:", error);
+      throw error;
     }
-  
-    
-  }  
-  
+  }
+
+
+}
+

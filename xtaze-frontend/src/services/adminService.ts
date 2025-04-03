@@ -28,6 +28,7 @@ const apiCall = async <T>(
 };
 
 export interface Song {
+  playHistory: any;
   _id: string;
   title: string;
   fileUrl: string;

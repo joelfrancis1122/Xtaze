@@ -473,6 +473,16 @@ export default class UserController {
         throw error;
       }
     }
+    async resetPaymentStatus(): Promise<void> {
+      try {
+        console.log("UserController: Starting coupon status check...");
+        await this._userUseCase.resetPaymentStatus();
+        console.log("UserController: Coupon status check completed");
+      } catch (error: any) {
+        console.error("UserController: Error during coupon status check:", error);
+        throw error;
+      }
+    }
 
     async getSubscriptionHistory(req: Request, res: Response, next: NextFunction): Promise<void> {
       try {

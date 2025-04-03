@@ -5,7 +5,7 @@ import { Button } from "../../components/ui/button";
 import { Card } from "../../components/ui/card";
 import { Table, TableHead, TableRow, TableCell, TableBody } from "../../components/ui/table";
 import { Eye, Ban, CheckCircle } from "lucide-react";
-import profileImg from "../../assets/profile6.jpeg";
+import profileImg from "../../assets/profile5.jpeg";
 import Sidebar from "./adminComponents/aside-side";
 import { motion } from "framer-motion";
 import { fetchArtists, toggleBlockArtist, Artist } from "../../services/adminService"; // Adjust path
@@ -75,7 +75,7 @@ export default function ArtistList() {
                 <TableRow key={artist.id} className="border-b">
                   <TableCell className="flex items-center gap-4 p-4">
                     <img
-                      src={artist.image || profileImg}
+                      src={artist.image ? artist.image : profileImg}
                       alt={artist.name}
                       width={50}
                       height={50}
@@ -86,11 +86,10 @@ export default function ArtistList() {
                   <TableCell className="p-4">{artist.role}</TableCell>
                   <TableCell className="p-4">
                     <motion.span
-                      className={`blur relative px-6 py-2 text-sm font-semibold text-white shadow transition-all duration-300 ease-in-out ${
-                        artist.isActive
+                      className={`blur relative px-6 py-2 text-sm font-semibold text-white shadow transition-all duration-300 ease-in-out ${artist.isActive
                           ? "bg-green-900/70 shadow-green-500/50 hover:bg-green-700"
                           : "bg-red-900/70 shadow-red-500/50 hover:bg-red-700"
-                      }`}
+                        }`}
                       style={{
                         borderRadius: "50%",
                         paddingLeft: "15px",

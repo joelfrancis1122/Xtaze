@@ -41,6 +41,7 @@ export const uploadTrack = async (req: Request, res: Response, next: NextFunctio
 
 export const getAllTracks = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
+    console.log("111")
     const userId = req.query.userId as string;
 
     if (!userId) {
@@ -61,7 +62,7 @@ export const getAllTracks = async (req: Request, res: Response, next: NextFuncti
     if (!tracks || tracks.length === 0) {
       throw new AppError("No tracks found", 404); 
     }
-
+console.log("2222")
     res.status(200).json({
       success: true,
       message: "Tracks and user data fetched successfully",

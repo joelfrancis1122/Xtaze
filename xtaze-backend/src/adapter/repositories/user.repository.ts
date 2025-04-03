@@ -21,6 +21,18 @@ export default class UserRepository implements IUserRepository {
       throw error
     }
   }
+  async resetPaymentStatus(): Promise<void> {
+    try {
+      console.log("111")
+      const result = await UserModel.updateMany(
+        {}, 
+        { $set: { paymentStatus: false } } 
+      );
+      console.log("222",result)
+    } catch (error) {
+      throw error
+    }
+  }
   async updatePassword(user: IUser): Promise<IUser> {
     try {
       const updatedUser = await UserModel.findByIdAndUpdate(
