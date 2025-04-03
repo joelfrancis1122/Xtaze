@@ -47,6 +47,7 @@ router.get("/stripe/subscription-history", (req: Request, res: Response, next: N
 
 router.get("/music/monetization", (req: Request, res: Response, next: NextFunction) => adminController.getMusicMonetization(req, res, next));
 router.post("/artistPayout", (req: Request, res: Response, next: NextFunction) => adminController.artistPayout(req, res, next));
+router.post("/getUsersByIds", (req: Request, res: Response, next: NextFunction) => adminController.getUsersByIds(req, res, next));
 
 export default router;
 

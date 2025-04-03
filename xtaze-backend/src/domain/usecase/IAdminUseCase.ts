@@ -24,5 +24,6 @@ export default interface IAdminUseCase {
     verifyCoupon(code:string):Promise<ICoupon|null>
     getMusicMonetization():Promise<MusicMonetization[]|null>
     artistPayout(artistName:string):  Promise<{ success: boolean; payoutId?: string }> 
+    getUsersByIds(userIds:string[]):  Promise<IUser[]|null>
 }
 

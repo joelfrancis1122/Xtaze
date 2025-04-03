@@ -52,7 +52,7 @@ export default class ArtistUseCase {
     const token = jwt.sign(
       { userId: artist._id, email: artist.email, role: "artist" },
       process.env.JWT_SECRET!,
-      { expiresIn: "10M" } // Short-lived access token
+      { expiresIn: "30M" } // Short-lived access token
     );
     console.log("ith unda refresh all jwts");
     const ArefreshToken = jwt.sign(
@@ -79,7 +79,7 @@ export default class ArtistUseCase {
       const newToken = jwt.sign(
         { userId: user._id, email: user.email, role: "artist" },
         process.env.JWT_SECRET!,
-        { expiresIn: "10m" }
+        { expiresIn: "30m" }
       );
       const newRefreshToken = jwt.sign(
         { userId: user._id },
@@ -110,7 +110,7 @@ export default class ArtistUseCase {
       album: album,
       fileUrl: songUpload.secure_url,
       img: imageUpload.secure_url,
-      listeners: 0,
+      listeners: [],
       artists: artist,
     };
 
@@ -147,9 +147,9 @@ export default class ArtistUseCase {
     return await this._artistRepository.getAllTracksByArtist(userId) as ITrack[];
 
   }
-  async increment(trackId: string): Promise<ITrack | null> {
+  async increment(trackId: string,id:string): Promise<ITrack | null> {
 
-    return await this._artistRepository.increment(trackId);
+    return await this._artistRepository.increment(trackId,id);
 
 
   }

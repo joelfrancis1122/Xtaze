@@ -11,7 +11,7 @@ export default interface IArtistUseCase {
 
     listArtists(): Promise<IUser[]>
     listArtistReleases(userId: string): Promise<ITrack[]>
-    increment(trackId: string): Promise<ITrack | null>
+    increment(trackId: string,id:string): Promise<ITrack | null>
     statsOfArtist(userId: string): Promise<ArtistMonetization[]>
     saveCard(artistId: string, paymentMethodId: string): Promise<IUser | null>;
     checkcard(artistId: string): Promise<IUser | null>;

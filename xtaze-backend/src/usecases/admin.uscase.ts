@@ -336,6 +336,13 @@ export default class AdminUseCase {
     return tracks
 
   }
+  async getUsersByIds(userIds:string[]): Promise<IUser[]|null> {
+
+    const users = await this._adminRepository.getUsersByIds(userIds)
+    console.log(users, "this is what i got ")
+    return users
+
+  }
 
   async artistPayout(artistName: string): Promise<{ success: boolean; sessionUrl: string }> {
     try {

@@ -6,7 +6,7 @@ export interface ITrack {
   fileUrl?: string;
   img?: string;
   createdAt?: Date;
-  listeners?: number;
+  listeners?: string[];
   artists: string[];
   playHistory?: { month: string; plays: number,paymentStatus?:boolean }[];
 }

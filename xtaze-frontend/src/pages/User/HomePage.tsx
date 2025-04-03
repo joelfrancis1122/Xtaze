@@ -158,18 +158,26 @@ export default function Home() {
 
   const handleIncrementListeners = async (trackId: string) => {
     const token = localStorage.getItem("token");
-    if (!token || !trackId) return;
+    if (!token || !trackId || !user?._id) return;
+  
     try {
-      await incrementListeners(trackId, token);
+      await incrementListeners(trackId,token, user._id);
+  
       setTracks((prevTracks) =>
         prevTracks.map((track) =>
-          track._id === trackId ? { ...track, listeners: (track.listeners || 0) + 1 } : track
+          track._id === trackId
+            ? {
+                ...track,
+                listeners: [...(track.listeners || []), user._id].filter(Boolean) as string[], // Ensure no `undefined`
+              }
+            : track
         )
       );
     } catch (error) {
       console.error("Error incrementing listeners:", error);
     }
   };
+  
 
   const handlePlay = (track: Track) => {
     baseHandlePlay(track);

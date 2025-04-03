@@ -16,7 +16,7 @@ interface Song {
   _id: string;
   title: string;
   fileUrl: string;
-  listeners: number;
+  listeners: string[];
   genre?: string[];
   album?: string;
   img?: string;
@@ -245,7 +245,7 @@ export function ArtistSongUpdatePage() {
                         </TableCell>
                         <TableCell className="text-xs md:text-sm font-medium">{song.title}</TableCell>
                         <TableCell className="text-xs md:text-sm text-center">
-                          {song.listeners.toLocaleString()}
+                          {song.listeners.length.toLocaleString()}
                         </TableCell>
                         <TableCell className="text-center">
                           <button

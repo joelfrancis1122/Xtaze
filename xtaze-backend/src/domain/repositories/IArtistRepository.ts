@@ -8,7 +8,7 @@ export interface IArtistRepository {
   updateTrackByArtist: (data: ITrack,TrackId:string) => Promise<ITrack | null>;
   getAllArtists(): Promise<IUser[]>;
   getAllTracksByArtist(userId:string):Promise<ITrack[]>
-  increment(trackId:string):Promise<ITrack|null>
+  increment(trackId:string, id:string):Promise<ITrack|null>
   statsOfArtist(userId:string):Promise<ArtistMonetization[]>
   saveCard(artistId:string,paymentMethodId:string):Promise<IUser|null>;
   checkcard(artistId:string):Promise<IUser|null>;

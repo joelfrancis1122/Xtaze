@@ -69,34 +69,34 @@ export default class ArtistRepository implements IArtistRepository {
   }
 
 
-  async increment(trackId: string): Promise<ITrack | null> {
+  async increment(trackId: string, id: string): Promise<ITrack | null> {
     try {
       console.log("Fetching track with ID:", trackId);
-
-      const currentMonth = new Date().toISOString().slice(0, 7); // e.g., "2025-03"
-
+  
+      const currentMonth = new Date().toISOString().slice(0, 7); //ith engana varum"2025-03"
+  
       const track = await Track.findById(trackId);
       if (!track) throw new Error("Track not found");
-
-      if (track.listeners === undefined) {
-        track.listeners = 0;
+  
+      if (!track.listeners) {
+        track.listeners = [];
       }
       if (!track.playHistory) {
         track.playHistory = [];
       }
-
+  
       const monthIndex = track.playHistory.findIndex((h) => h.month === currentMonth);
-
+  
       if (monthIndex === -1) {
         track.playHistory.push({ month: currentMonth, plays: 1 });
       } else {
         track.playHistory[monthIndex].plays += 1;
       }
-
-      track.listeners += 1;
-
+      
+      const rrrr = await Track.updateOne({ _id: trackId }, { $addToSet: { listeners: id } });
+      console.log('tssss',rrrr)
       await track.save();
-
+  
       console.log("Updated track:", track);
       return track;
     } catch (error: any) {
@@ -135,7 +135,6 @@ export default class ArtistRepository implements IArtistRepository {
     }
   }
   
-
   async statsOfArtist(userId: string): Promise<ArtistMonetization[]> {
     try {
       const artist = await UserModel.findById(userId);
@@ -143,32 +142,39 @@ export default class ArtistRepository implements IArtistRepository {
         throw new Error("Artist not found");
       }
       console.log(artist, "as");
-
-      const tracks = await Track.find({ artists: { $regex: new RegExp(`^${artist.username}$`, "i") } });
-
+  
+      const tracks = await Track.find({
+        artists: { $regex: new RegExp(`^${artist.username}$`, "i") }
+      });
+  
       const currentMonth = new Date().toISOString().slice(0, 7); // e.g., "2025-03"
-
+  
       const monetizationData: ArtistMonetization[] = tracks
         .map((track) => {
           const typedTrack = track as ITrack;
+  
+          // ✅ Corrected total plays calculation
+          const totalPlays = typedTrack.playHistory?.reduce((sum, h) => sum + h.plays, 0) || 0;
+  
+          // Extract only the current month's plays
           const monthlyPlays = typedTrack.playHistory?.find((h) => h.month === currentMonth)?.plays || 0;
-
+  
           return {
             trackName: typedTrack.title,
-            totalPlays: typedTrack.listeners || 0,
-            monthlyPlays,
+            totalPlays, // ✅ Now correctly sums all months' plays
+            monthlyPlays, // Only current month plays
             lastUpdated: typedTrack?.createdAt?.toISOString() || "",
-
           };
         })
         .sort((a, b) => b.totalPlays - a.totalPlays);
-
+  
       return monetizationData;
     } catch (error: any) {
       console.error("Error in statsOfArtist:", error);
       throw new Error(error.message || "Failed to fetch artist stats");
     }
   }
+  
 
 
 }

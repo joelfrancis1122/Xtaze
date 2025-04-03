@@ -213,6 +213,7 @@ export default function AdminMusicMonetizationPage() {
                         <span>Total Plays</span>
                         <span>Monthly Plays</span>
                         <span>Total Revenue</span>
+                        
                         <span>Monthly Revenue</span>
                       </div>
                       {artist.songs.map((song) => (

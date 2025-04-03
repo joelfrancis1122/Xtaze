@@ -21,4 +21,5 @@ export interface IAdminRepository {
 
   getMusicMonetization(): Promise<MusicMonetization[] | null>
   StripefindByname(artistName:string):Promise<string | null>;
+  getUsersByIds(userIds:string[]):Promise<IUser[]|null>;
 }

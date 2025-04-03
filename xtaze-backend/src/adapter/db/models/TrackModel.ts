@@ -7,7 +7,7 @@ export interface ITrack extends Document {
   fileUrl: string;
   img: string;
   createdAt: Date;
-  listeners?: number;
+  listeners?: string[];
   artists: string[]; 
   playHistory?: { month: string; plays: number }[]; // Monthly play history
 }
@@ -19,7 +19,7 @@ const TrackSchema = new Schema<ITrack>({
   fileUrl: { type: String, required: true },
   img: { type: String, required: true },
   createdAt: { type: Date, default: Date.now },
-  listeners: { type: Number, default: 0 },
+  listeners: {type:[String],default:[]},
   artists: { type: [String], required: true }, 
   playHistory: [
     {

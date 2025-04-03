@@ -327,7 +327,7 @@ export default function ArtistProfile() {
                   tracks.map((track) => (
                     <div key={track._id} className="bg-black p-4 border border-white">
                       <p className="text-white font-semibold">{track.title}</p>
-                      <p className="text-white text-sm">Listeners: {track.listeners.toLocaleString()}</p>
+                      <p className="text-white text-sm">Listeners: {track.listeners.length.toLocaleString()}</p>
                     </div>
                   ))
                 ) : (

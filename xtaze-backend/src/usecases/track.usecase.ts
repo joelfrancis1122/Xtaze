@@ -15,7 +15,7 @@ export class UploadTrackUseCase {
       album: songUpload.album,
       fileUrl: songUpload.secure_url,
       img: imageUpload.secure_url,
-      listeners: 0,
+      listeners: [],
       artists: songUpload.artist,
     };
 

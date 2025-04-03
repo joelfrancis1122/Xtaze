@@ -145,9 +145,9 @@ export default class ArtistController {
 
   async incrementListeners(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      console.log("increment");
-      const { trackId } = req.body;
-      const track = await this._artistnUseCase.increment(trackId as string);
+      console.log("increment",req.body);
+      const { trackId ,id} = req.body;
+      const track = await this._artistnUseCase.increment(trackId as string,id as string);
 
       console.log(req.body);
       res.status(200).json({ success: true, message: "List Of Artists" });

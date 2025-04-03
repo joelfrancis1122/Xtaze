@@ -27,6 +27,13 @@ const apiCall = async <T>(
   }
 };
 
+export interface Song {
+  _id: string;
+  title: string;
+  fileUrl: string;
+  listeners: string[];
+  duration?: string;
+}
 // Define Artist interface
 export interface Artist {
   id: string;
@@ -86,6 +93,27 @@ export const fetchArtists = async (token: string): Promise<Artist[]> => {
     }));
   } catch (error) {
     console.error("Fetch artists error:", error);
+    throw error;
+  }
+};
+
+
+export const fetchArtistTracks = async (userId: string, token: string): Promise<Song[]> => {
+  try {
+    const data = await apiCall<{ success: boolean; tracks?: Song[]; message?: string }>(
+      artistApi,
+      "get",
+      `/getAllTracksArtist?userId=${userId}`,
+      undefined,
+      token
+    );
+    console.log("Fetch artist tracks response:", data);
+    if (!data.success || !Array.isArray(data.tracks)) {
+      throw new Error(data.message || "Failed to fetch artist tracks");
+    }
+    return data.tracks;
+  } catch (error) {
+    console.error("Error fetching artist tracks:", error);
     throw error;
   }
 };
@@ -188,4 +216,30 @@ export const updateBanner = async (
 export const deleteBanner = async (id: string, token: string): Promise<void> => {
   await apiCall<{ success: boolean }>(adminApi, "delete", `/banners/${id}`, undefined, token);
 
+};
+
+export interface ListenerUser {
+  _id: string;
+  gender: string; 
+  year:number
+  age: number; 
+  country: string; 
+}
+
+export const fetchUserDetails = async (userIds: string[], token: string): Promise<ListenerUser[]> => {
+  try {
+    const data = await apiCall<{ success: boolean; data: ListenerUser[]; message?: string }>(
+      adminApi,
+      "post",
+      "/getUsersByIds",
+      { userIds },
+      token
+    );
+    console.log("Fetch user details response:", data);
+ 
+    return data.data;
+  } catch (error) {
+    console.error("Error fetching user details:", error);
+    throw error;
+  }
 };

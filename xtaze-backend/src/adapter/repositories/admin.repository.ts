@@ -22,6 +22,23 @@ export default class AdminRepository implements IAdminRepository {
       throw error
     }
   }
+  async getUsersByIds(userIds: string[]): Promise<IUser[] | null> {
+    try {
+      console.log(userIds, "console");
+  
+      const users = await UserModel.find({ _id: { $in: userIds } });
+  
+      const formattedUsers: IUser[] = users.map(user => ({
+        ...user.toObject(),
+        _id: user._id.toString(), 
+      }));
+  
+      return formattedUsers;
+    } catch (error) {
+      throw error;
+    }
+  }
+  
 
   async getArtistById(id: string): Promise<IUser | null> {
     return await UserModel.findById(id);
@@ -177,7 +194,7 @@ async StripefindByname(artistName: string): Promise<string | null> {
             _id: string;
             title: string;
             artists: string[];
-            listeners?: number;
+            listeners?: string[];
             playHistory?: { month: string; plays: number }[];
             createdAt?: Date;
           };
@@ -186,16 +203,17 @@ async StripefindByname(artistName: string): Promise<string | null> {
           const artist = await UserModel.findOne({ username: typedTrack.artists[0] });
   
           const monthlyPlays = typedTrack.playHistory?.find((h) => h.month === currentMonth)?.plays || 0;
-          
+          const totalPlays = typedTrack.playHistory?.reduce((sum, h) => sum + h.plays, 0) || 0;
+  
           return {
             trackId: typedTrack._id.toString(),
             trackName: typedTrack.title,
             artistName: typedTrack.artists[0] || "Unknown Artist",
-            totalPlays: typedTrack.listeners || 0,
+            totalPlays, 
             monthlyPlays,
-            paymentStatus: artist?.paymentStatus ?? false, // Ensure boolean value
-            totalRevenue: (typedTrack.listeners || 0) * revenuePerPlay,
-            monthlyRevenue: monthlyPlays * revenuePerPlay, // Current month's revenue
+            paymentStatus: artist?.paymentStatus ?? false, 
+            totalRevenue: totalPlays * revenuePerPlay, 
+            monthlyRevenue: monthlyPlays * revenuePerPlay, 
             lastUpdated: typedTrack.createdAt ? typedTrack.createdAt.toISOString() : "",
           };
         })
@@ -207,5 +225,4 @@ async StripefindByname(artistName: string): Promise<string | null> {
       throw new Error(error.message || "Failed to fetch music monetization data");
     }
   }
-  
 }

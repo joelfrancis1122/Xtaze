@@ -6,7 +6,7 @@ export interface Track {
   genre: string
   fileUrl: string
   img: string
-  listeners: number
+  listeners: string[]
   createdAt?:number
 }
 

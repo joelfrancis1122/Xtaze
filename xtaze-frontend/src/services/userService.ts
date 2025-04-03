@@ -180,7 +180,7 @@ export const fetchTracks = async (
     genre: Array.isArray(track.genre) ? track.genre[0] : track.genre || "Unknown Genre",
     fileUrl: track.fileUrl,
     img: track.img,
-    listeners: track.listeners || 0,
+    listeners: track.listeners || [],
   })) || [];
   return { tracks, user: data.user };
 };
@@ -221,9 +221,9 @@ export const fetchLikedSongs = async (userId: string, token: string, songIds: st
 };
 
 // Increment listeners
-export const incrementListeners = async (trackId: string, token: string): Promise<void> => {
-  console.log("Incrementing listeners:", { trackId, token });
-  const data = await apiCall<{ success: boolean }>(artistApi, "post", "/incrementListeners", { trackId }, token);
+export const incrementListeners = async (trackId: string, token: string,id:string): Promise<void> => {
+  console.log("Incrementing listeners:", { trackId, token,id });
+  const data = await apiCall<{ success: boolean }>(artistApi, "post", "/incrementListeners", { trackId,id }, token);
   if (!data.success) throw new Error("Failed to increment listeners");
 };
 

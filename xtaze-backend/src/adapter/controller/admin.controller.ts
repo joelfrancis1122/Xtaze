@@ -281,7 +281,7 @@ export default class AdminController {
   async getMusicMonetization(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const monetizationData = await this._adminUseCase.getMusicMonetization();
-
+      console.log(monetizationData,"joellll")
       res.status(200).json({ data: monetizationData });
     } catch (error: any) {
       console.error("Error in getMusicMonetization controller:", error);
@@ -296,7 +296,20 @@ export default class AdminController {
       console.log(data,"sasaasassa")
       res.status(200).json({ data: data });
     } catch (error: any) {
-      console.error("Error in getMusicMonetization controller:", error);
+      console.error("Error in payout controller:", error);
+      next(error);
+    }
+  }
+  async getUsersByIds(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { userIds } = req.body
+      console.log(req.body,'ssssssa',userIds as string)
+      
+      const data = await this._adminUseCase.getUsersByIds(userIds);
+      console.log(data,"sasaasassa")
+      res.status(200).json({ data: data });
+    } catch (error: any) {
+      console.error("Error in getUsers controller:", error);
       next(error);
     }
   }

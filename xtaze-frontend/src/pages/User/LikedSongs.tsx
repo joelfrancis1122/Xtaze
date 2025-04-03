@@ -131,7 +131,7 @@ export default function LikedSongsPage() {
         img: song.img,
         album: song.album,
         genre: song.genre,
-        listeners: song.listeners || 0,
+        listeners: song.listeners || [],
       })
     );
     dispatch(setIsPlaying(true));
