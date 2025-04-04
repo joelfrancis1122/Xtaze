@@ -2,7 +2,6 @@ import { useDispatch } from "react-redux";
 import { artistApi, deezerApi, providerApi, userApi } from "../api/axios";
 import { Track } from "../pages/User/types/ITrack";
 import { saveSignupData } from "../redux/userSlice";
-import { String } from "lodash";
 import { Playlist } from "../pages/User/types/IPlaylist";
 import { IBanner } from "../pages/User/types/IBanner";
 
@@ -181,6 +180,7 @@ export const fetchTracks = async (
     fileUrl: track.fileUrl,
     img: track.img,
     listeners: track.listeners || [],
+    playHistory: track.playHistory || [],
   })) || [];
   return { tracks, user: data.user };
 };

@@ -3,7 +3,6 @@ import { ChevronLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import Sidebar from "./adminComponents/aside-side";
-import { toast } from "sonner";
 import ReactPaginate from "react-paginate";
 
 interface SubscriptionHistory {

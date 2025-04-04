@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ChevronRight, Play, Pause, Plus, Heart, Download, ListMusic } from "lucide-react";
+import { Play, Pause, Plus, Heart, Download, ListMusic } from "lucide-react";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "../../store/store";
 import Sidebar from "./userComponents/SideBar";

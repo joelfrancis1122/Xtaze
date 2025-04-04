@@ -175,7 +175,7 @@ export default function VideoPage() {
           }))
         );
 
-        const fetchedPlaylists = await getMyplaylist(userId);
+         await getMyplaylist(userId);
         // setPlaylists(fetchedPlaylists);
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -188,27 +188,8 @@ export default function VideoPage() {
     fetchAllVideosAndPlaylists();
   }, [userId, token]);
 
-  const addVideoToPlaylist = async (userId: string, playlistId: string, videoId: string, token: string) => {
-    try {
-      const response = await fetch(`/api/users/${userId}/playlists/${playlistId}/videos`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ videoId }),
-      });
-      if (!response.ok) throw new Error("Failed to add video to playlist");
-      return await response.json();
-    } catch (error) {
-      console.error("Error adding video to playlist:", error);
-      throw error;
-    }
-  };
+  
 
-  const handleAddToPlaylist = async (videoId: string, playlistId: string) => {
-   
-  };
 
   const handlePlayVideo = (videoId: string) => {
     // Toggle off if same video, otherwise play new one

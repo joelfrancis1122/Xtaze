@@ -16,12 +16,7 @@ interface PlayHistory {
   plays: number;
 }
 
-interface Track {
-  _id: string;
-  title: string;
-  listeners: string[];
-  playHistory: PlayHistory[];
-}
+
 
 const ArtistDashboard = () => {
   const [mostListenedSong, setMostListenedSong] = useState("None");

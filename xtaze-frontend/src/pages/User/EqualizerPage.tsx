@@ -2,12 +2,22 @@ import { useState, useEffect } from "react";
 import { Volume2, VolumeX, Music, Undo } from "lucide-react";
 import Sidebar from "./userComponents/SideBar";
 import { audio, audioContext, updateEqualizer, resetEqualizer } from "../../utils/audio";
-import Chart from "react-apexcharts";
 import { useSelector } from "react-redux";
 import { RootState } from "../../store/store";
+import ReactApexChartOriginal from "react-apexcharts";
+import MusicPlayer from "./userComponents/TrackBar";
+import PreviewModal from "./PreviewPage";
 import { useAudioPlayback } from "./userComponents/audioPlayback";
 import { Track } from "./types/ITrack";
-import MusicPlayer from "./userComponents/TrackBar";
+
+// Type assertion for ReactApexChart
+const ReactApexChart = ReactApexChartOriginal as unknown as React.FC<{
+  options: ApexCharts.ApexOptions;
+  series: ApexCharts.ApexOptions["series"];
+  type: string;
+  height?: number | string;
+  width?: number | string;
+}>;
 
 export default function EqualizerPage() {
   const bands = [
@@ -51,9 +61,9 @@ export default function EqualizerPage() {
     const saved = localStorage.getItem("activePreset");
     return saved ? saved : "custom";
   });
-  const { currentTrack, isPlaying, isShuffled, isRepeating } = useSelector((state: RootState) => state.audio);
-  const [tracks, setTracks] = useState<Track[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const { currentTrack, isPlaying, isShuffled, isRepeating } = useSelector((state: RootState) => state.audio);
 
   const {
     handlePlay: baseHandlePlay,
@@ -61,22 +71,26 @@ export default function EqualizerPage() {
     handleSkipForward,
     handleToggleShuffle,
     handleToggleRepeat,
-  } = useAudioPlayback(tracks);
+  } = useAudioPlayback([]); // Pass an empty array since we're not fetching tracks here
 
   const toggleModal = () => {
     setIsModalOpen((prevState) => !prevState);
   };
 
+  const handlePlayFromModal = (track: Track) => {
+    baseHandlePlay(track);
+  };
+
   useEffect(() => {
     if (!audioContext) return;
-  
+
     const resumeAudioContext = () => {
       if (audioContext && audioContext.state === "suspended") {
         audioContext.resume().then(() => console.log("AudioContext resumed"));
       }
     };
     document.addEventListener("click", resumeAudioContext, { once: true });
-  
+
     audio.crossOrigin = "anonymous";
     if (!audio.src && currentTrack) {
       audio.src = currentTrack.fileUrl; // Use currentTrack if available
@@ -84,14 +98,13 @@ export default function EqualizerPage() {
       audio.src = "/music/test.mp3"; // Fallback
       audio.loop = true;
     }
-    // Remove audio.play() from here
-  
+
     updateEqualizer(equalizerValues);
-  
+
     return () => {
       document.removeEventListener("click", resumeAudioContext);
     };
-  }, [equalizerValues, currentTrack]); // Add currentTrack to dependencies
+  }, [equalizerValues, currentTrack]);
 
   useEffect(() => {
     audio.volume = isMuted ? 0 : volume / 100;
@@ -143,16 +156,16 @@ export default function EqualizerPage() {
     resetEqualizer();
   };
 
-  // ApexCharts configuration
-  const chartOptions = {
+  // ApexCharts configuration with proper typing
+  const chartOptions: ApexCharts.ApexOptions = {
     chart: {
-      type: "area" as const,
+      type: "area",
       height: 130,
-      background: "!bg-black", // bg-var(--foreground) !important
+      background: "#000000",
       toolbar: { show: false },
     },
     stroke: {
-      curve: "smooth" as const,
+      curve: "smooth",
       width: 3,
       colors: ["#ff0000"],
     },
@@ -178,7 +191,7 @@ export default function EqualizerPage() {
       axisBorder: { show: false },
     },
     grid: {
-      borderColor: "!bg-black",
+      borderColor: "#000000",
       strokeDashArray: 4,
       padding: { top: 0, bottom: 0, left: 10, right: 10 },
       yaxis: { lines: { show: true } },
@@ -188,7 +201,7 @@ export default function EqualizerPage() {
     dataLabels: { enabled: false },
   };
 
-  const chartSeries = [
+  const chartSeries: ApexCharts.ApexOptions["series"] = [
     {
       name: "Equalizer",
       data: equalizerValues,
@@ -199,8 +212,8 @@ export default function EqualizerPage() {
     <div className="flex min-h-screen bg-var(--foreground) !important text-white">
       <Sidebar />
       <div className="flex-1 ml-64 py-8 px-6 bg-black">
-      <div className="!bg-black border border-[#1f2937] rounded-lg">
-      <div className="border-b border-[#1f2937] p-6">
+        <div className="!bg-black border border-[#1f2937] rounded-lg">
+          <div className="border-b border-[#1f2937] p-6">
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-2xl font-bold flex items-center gap-2 text-white bg-var(--foreground) ">
@@ -245,7 +258,12 @@ export default function EqualizerPage() {
             </div>
             <div className="w-full h-[150px] mb-10 bg-var(--foreground) !important rounded-lg border border-[#1f2937] relative">
               <div className="p-2 pb-6">
-                <Chart options={chartOptions} series={chartSeries} type="area" height={130} />
+                <ReactApexChart
+                  options={chartOptions}
+                  series={chartSeries}
+                  type="area"
+                  height={130}
+                />
               </div>
               <div className="absolute bottom-1 left-0 right-0 flex justify-between px-4 text-xs text-gray-500">
                 {bands.map((band) => (
@@ -356,6 +374,14 @@ export default function EqualizerPage() {
           isRepeating={isRepeating}
           audio={audio}
           toggleModal={toggleModal}
+        />
+      )}
+      {currentTrack && (
+        <PreviewModal
+          track={currentTrack}
+          isOpen={isModalOpen}
+          toggleModal={toggleModal}
+          onPlayTrack={handlePlayFromModal}
         />
       )}
     </div>

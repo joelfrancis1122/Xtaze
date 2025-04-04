@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom";
+import { Route } from "react-router-dom";
 import AdminLogin from "../pages/Admin/AdminLogin";
 import GenreManagement from "../pages/Admin/GenrePage";
 import ArtistList from "../pages/Admin/ArtistPage";

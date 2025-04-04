@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom" // ✅ React Router navigation
 import { Button } from "../../../components/ui/button"
-import { LayoutDashboard, Mic2, Music, Settings, Video, Image, PieChart, Headphones, Menu, LogOut,BadgePercent, Gem, BadgeDollarSign, History } from "lucide-react" // Add LogOut icon
+import { LayoutDashboard, Mic2, Music, Image, PieChart, Headphones, Menu, LogOut,BadgePercent, Gem, BadgeDollarSign, History } from "lucide-react" // Add LogOut icon
 import { useDispatch } from "react-redux"
 import { clearAdminData } from "../../../redux/adminSlice"
 export default function Sidebar() {

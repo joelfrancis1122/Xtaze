@@ -118,10 +118,8 @@ export default function Home() {
     }
 
     try {
-      const updatedUser = await becomeArtist(user._id);
-      if(updatedUser){
-        alert("odi")
-      }
+      await becomeArtist(user._id);
+   
       dispatch(clearSignupData());
 
       toast.success("You are now an Artist!");

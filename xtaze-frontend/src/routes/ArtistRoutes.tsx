@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom";
+import { Route } from "react-router-dom";
 import ArtistLogin from "../pages/Artist/ArtistLogin";
 import ArtistProfile from "../pages/Artist/ArtistProfile";
 import ArtistSongImprovementsPage from "../pages/Artist/ArtistMonetization";

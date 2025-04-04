@@ -7,7 +7,7 @@ import { RootState } from "../../store/store";
 import { Play, Pause, Edit2, Save, X, ChevronDown } from "lucide-react";
 import { Button } from "../../components/ui/button";
 import { Card } from "../../components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../components/ui/table";
+import { Table, TableBody, TableCell, TableRow } from "../../components/ui/table";
 import ArtistSidebar from "./artistComponents/artist-aside";
 import { toast } from "sonner";
 
@@ -22,6 +22,7 @@ interface Song {
   img?: string;
   artists?: string[];
 }
+
 
 export function ArtistSongUpdatePage() {
   const [topSongs, setTopSongs] = useState<Song[]>([]);
@@ -116,13 +117,15 @@ export function ArtistSongUpdatePage() {
     setEditedSong({
       _id: song._id,
       title: song.title,
-      artists: Array.isArray(song.artists) ? song.artists.join(", ") : song.artists?.join(", ") || "",
-      genre: Array.isArray(song.genre) ? song.genre.join(", ") : song.genre?.join(", ") || "",
+      artists: song.artists ?? [],
+      genre: song.genre ?? [],
       album: song.album || "",
     });
+
     setImageFile(null);
     setAudioFile(null);
   };
+
 
   // Handle text input changes
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {

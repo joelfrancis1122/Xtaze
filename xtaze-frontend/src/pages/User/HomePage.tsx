@@ -108,7 +108,7 @@ export default function Home() {
         } else {
           setLikedTracks([]);
         }
-
+        console.log(likedSongs,likedTracks)
         const fetchedPlaylists = await getMyplaylist((user?._id) as string);
         setPlaylists(fetchedPlaylists);
       } catch (error) {
@@ -152,9 +152,9 @@ export default function Home() {
     return () => clearInterval(interval);
   }, [banners.length]);
 
-  const handleBannerClick = (action: string) => {
-    navigate(action);
-  };
+  // const handleBannerClick = (action: string) => {
+  //   navigate(action);
+  // };
 
   const handleIncrementListeners = async (trackId: string) => {
     const token = localStorage.getItem("token");

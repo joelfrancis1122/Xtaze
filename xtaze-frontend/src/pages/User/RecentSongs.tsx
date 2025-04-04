@@ -7,14 +7,13 @@ import { RootState } from "../../store/store";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { PlayCircle, PauseCircle } from "lucide-react";
-import { setCurrentTrack, setIsPlaying, toggleShuffle, toggleRepeat, setShuffleIndices, setCurrentShuffleIndex } from "../../redux/audioSlice";
+import { setShuffleIndices, setCurrentShuffleIndex } from "../../redux/audioSlice";
 import { Track } from "./types/ITrack";
 import { fetchTracks } from "../../services/userService";
 import MusicPlayer from "./userComponents/TrackBar";
 import { audio } from "../../utils/audio";
 import { UserSignupData } from "./types/IUser";
 import { useAudioPlayback } from "./userComponents/audioPlayback";
-
 
 interface RecentSongItem {
   id: string;
@@ -27,19 +26,16 @@ export default function RecentSongsPage() {
   const [loading, setLoading] = useState(true);
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { currentTrack, isPlaying, isShuffled, isRepeating, shuffleIndices, currentShuffleIndex } = useSelector((state: RootState) => state.audio);
+  const { currentTrack, isPlaying, isShuffled, isRepeating, shuffleIndices } = useSelector((state: RootState) => state.audio);
   const user = useSelector((state: RootState) => state.user.signupData) as UserSignupData | null;
 
-
-    const {
-      handlePlay: baseHandlePlay,
-      handleSkipBack,
-      handleSkipForward,
-      handleToggleShuffle,
-      handleToggleRepeat,
-    } = useAudioPlayback(tracks);
-  
-
+  const {
+    handlePlay: baseHandlePlay,
+    handleSkipBack,
+    handleSkipForward,
+    handleToggleShuffle,
+    handleToggleRepeat,
+  } = useAudioPlayback(tracks);
 
   useEffect(() => {
     const getRecentSongs = async () => {
@@ -47,6 +43,7 @@ export default function RecentSongsPage() {
       if (!token || !user?._id) {
         console.log("No token or user ID:", { token, userId: user?._id });
         setRecentSongs([]);
+        setTracks([]); // Ensure tracks is also reset
         setLoading(false);
         toast.error("Please log in to see recent songs");
         navigate("/");
@@ -59,13 +56,14 @@ export default function RecentSongsPage() {
       
       if (storedSongs.length === 0) {
         setRecentSongs([]);
+        setTracks([]); 
         setLoading(false);
         return;
       }
 
       try {
-        // Get all tracks to cross reference with recent song IDs
-        const { tracks } = await fetchTracks(user._id, token, user.premium || false);
+        // Get all tracks to cross-reference with recent song IDs
+        const { tracks } = await fetchTracks(user._id, token, user.premium || "Free");
         console.log("All tracks fetched:", tracks);
 
         // Sort recent songs by playedAt time (newest first)
@@ -84,7 +82,7 @@ export default function RecentSongsPage() {
               // Add playedAt info to the track for reference
               return {
                 ...matchedTrack,
-                playedAt: recentSong.playedAt
+                playedAt: recentSong.playedAt,
               };
             }
             return null;
@@ -93,6 +91,10 @@ export default function RecentSongsPage() {
 
         console.log("Mapped recent tracks:", recentTracks);
         setRecentSongs(recentTracks);
+
+        // Set tracks for useAudioPlayback, excluding playedAt
+        const tracksForPlayback = recentTracks.map(({ playedAt, ...track }) => track);
+        setTracks(tracksForPlayback);
 
         // Initialize shuffle indices if needed
         if (isShuffled && shuffleIndices.length === 0 && recentTracks.length > 0) {
@@ -107,6 +109,8 @@ export default function RecentSongsPage() {
       } catch (error) {
         console.error("Error fetching track details for recent songs:", error);
         toast.error("Failed to load recent songs details");
+        setRecentSongs([]);
+        setTracks([]); // Reset tracks on error
       } finally {
         setLoading(false);
       }
@@ -121,20 +125,13 @@ export default function RecentSongsPage() {
     }
   }, [user, navigate]);
 
-
-
- 
-
- 
-
-
   // Format timestamp to a readable date
   const formatPlayedDate = (timestamp: string) => {
     return new Date(timestamp).toLocaleString('en-US', {
       month: 'short',
       day: 'numeric',
       hour: '2-digit', 
-      minute: '2-digit'
+      minute: '2-digit',
     });
   };
 

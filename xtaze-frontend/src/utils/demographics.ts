@@ -1,4 +1,3 @@
-// utils/demographics.ts
 
 import { ListenerUser } from "../services/adminService";
 

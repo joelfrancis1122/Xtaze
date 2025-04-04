@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { RootState } from "../../store/store"; // Adjust path
 import { Trash2, Edit, Plus, Save } from "lucide-react";
@@ -16,7 +15,6 @@ interface UserSignupData {
 }
 
 export default function AdminBannerManagement() {
-  const navigate = useNavigate();
   const user = useSelector((state: RootState) => state.user.signupData) as UserSignupData | null;
   const [banners, setBanners] = useState<IBanner[]>([]);
   const [loading, setLoading] = useState(true);

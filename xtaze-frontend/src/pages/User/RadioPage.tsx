@@ -14,15 +14,6 @@ interface RadioStation {
   favicon: string;
 }
 
-interface Playlist {
-  _id: string | number;
-  title: string;
-  description: string;
-  imageUrl: string|null;
-  createdBy: string;
-  tracks?:string[]
-  videos?: string[];
-}
 
 export default function RadioPage() {
   const [stations, setStations] = useState<RadioStation[]>([]);
@@ -157,7 +148,7 @@ export default function RadioPage() {
 
   const renderStationCard = (station: RadioStation, index: number) => (
     <div
-      key={station.stationuuid}
+      key={index}
       ref={(el) => (stationRefs.current[station.stationuuid] = el)}
       data-station-id={station.stationuuid}
       className="group bg-[#1d1d1d] rounded-lg p-4 hover:bg-[#242424] transition-colors flex flex-col"

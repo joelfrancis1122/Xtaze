@@ -1,6 +1,5 @@
 import { Card } from "../../../components/ui/card"
 import { ArrowUpRight } from "lucide-react"
-import type React from "react" // Added import for React
 
 interface MetricsCardProps {
   title: string

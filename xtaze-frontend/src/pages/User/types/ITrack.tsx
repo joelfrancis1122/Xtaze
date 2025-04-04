@@ -8,5 +8,10 @@ export interface Track {
   img: string
   listeners: string[]
   createdAt?:number
+  playHistory:PlayHistory[],
 }
 
+interface PlayHistory {
+  month: string;
+  plays: number;
+}

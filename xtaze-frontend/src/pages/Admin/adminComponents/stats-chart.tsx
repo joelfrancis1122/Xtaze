@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Line, LineChart, ResponsiveContainer, Tooltip } from "recharts";
 
 interface Subscription {
   userId: string;
@@ -74,8 +74,8 @@ export function StatsChart() {
     <div className="h-[300px] w-full">
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={chartData}>
-          <XAxis dataKey="date" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
-          <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `${value}`} />
+          {/* <XAxis dataKey="date" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} /> */}
+          {/* <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `${value}`} /> */}
           <Tooltip
             content={({ active, payload }) => {
               if (active && payload && payload.length) {
