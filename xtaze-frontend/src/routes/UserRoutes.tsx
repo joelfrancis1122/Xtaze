@@ -31,7 +31,7 @@ export const UserRoutes = () => (
     <Route path="/cancel" element={<CancelPage />} />
     <Route path="/playlist/:userId" element={<PlaylistsPage />} />
     <Route path="/playlist/:userId/:id" element={<PlaylistPageView />} />
-    <Route path="/likedSongs" element={<LikedSongsPage />} />
+    <Route path="/  " element={<LikedSongsPage />} />
     <Route path="/uploadTrack" element={<UploadMusicPage />} />
     <Route path="/rough" element={<WavyBackgroundDemo />} />
     <Route path="/forgot-password" element={<ForgotPassword />} />
