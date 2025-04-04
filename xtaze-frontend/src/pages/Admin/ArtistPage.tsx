@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Button } from "../../components/ui/button";
 import { Card } from "../../components/ui/card";
 import { Table, TableHead, TableRow, TableCell, TableBody } from "../../components/ui/table";
-import { Eye, Ban, CheckCircle } from "lucide-react";
+import { Ban, CheckCircle } from "lucide-react";
 import profileImg from "../../assets/profile5.jpeg";
 import Sidebar from "./adminComponents/aside-side";
 import { motion } from "framer-motion";

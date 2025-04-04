@@ -19,7 +19,7 @@ interface Track {
   _id: string;
   title: string;
   releaseDate: string;
-  listeners: number;
+  listeners: string[];
 }
 
 export default function ArtistProfile() {

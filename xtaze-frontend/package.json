@@ -17,10 +17,12 @@
     "@stripe/stripe-js": "^5.7.0",
     "@tabler/icons-react": "^3.29.0",
     "@tailwindcss/vite": "^4.0.0",
+    "amqplib": "^0.10.7",
     "axios": "^1.7.9",
     "chart.js": "^4.4.8",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "core-js": "^3.41.0",
     "framer-motion": "^12.4.1",
     "howler": "^2.2.4",
     "js-cookie": "^3.0.5",
@@ -43,8 +45,9 @@
     "simplex-noise": "^4.0.3",
     "sonner": "^1.7.2",
     "stripe": "^17.7.0",
-    "tailwind": "^4.0.0",
-    "tailwind-merge": "^2.6.0"
+    "tailwind": "^2.3.1",
+    "tailwind-merge": "^2.6.0",
+    "uuid": "^11.1.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.17.0",
