@@ -1,4 +1,3 @@
-import { User } from "lucide-react";
 import { IBanner } from "../../domain/entities/IBanner";
 import { ICoupon } from "../../domain/entities/ICoupon";
 import { MusicMonetization } from "../../domain/entities/IMonetization";
