@@ -15,9 +15,11 @@ const app = express();
 
 
 app.use(cors({
-    origin: '*'
+    origin: ['https://xtaze.fun'], // allow frontend domain
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true
   }));
-  
 app.use('/webhook', stripeRoute)
 app.use(express.json());
 app.use(cookieParser())
