@@ -10,9 +10,17 @@ import { setupCronJobs } from "../routes/cron/cronJobs";
 dotenv.config();
 
 const app = express();
-const corsOptions:CorsOptions = {origin:[process.env.URL!],credentials:true}
-app.use(cors(corsOptions));
+// const corsOptions:CorsOptions = {origin:[process.env.URL!],credentials:true}
+// app.use(cors(corsOptions));
 
+
+app.use(cors({
+    origin: 'https://www.xtaze.fun',
+    credentials: true,                  
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+  }));
+  
 app.use('/webhook', stripeRoute)
 app.use(express.json());
 app.use(cookieParser())
