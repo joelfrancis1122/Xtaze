@@ -1,4 +1,4 @@
-import { LayoutGrid  , Globe, Home, LifeBuoy, Music, Settings, User, LogOut } from "lucide-react";
+import { LayoutGrid  , Globe, Home, LifeBuoy, Music, User, LogOut } from "lucide-react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { clearArtistData } from "../../../redux/artistSlice";

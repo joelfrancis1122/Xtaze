@@ -1,6 +1,6 @@
 import { useEffect, useState, ChangeEvent } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Clock, Heart, MoreHorizontal, Play, PauseCircle, PlayCircle, Share2, Shuffle, ChevronLeft } from "lucide-react";
+import {  MoreHorizontal, PauseCircle, PlayCircle, Share2, ChevronLeft } from "lucide-react";
 import Sidebar from "./userComponents/SideBar";
 import { fetchPlaylistTracks, deletePlaylist, updatePlaylistName, updatePlaylistImage, getMyplaylist } from "../../services/userService";
 import { useDispatch, useSelector } from "react-redux";
@@ -11,7 +11,7 @@ import MusicPlayer from "./userComponents/TrackBar";
 import image from "../../assets/ab67706f0000000216605bf6c66f6e5a783411b8.jpeg";
 import PreviewModal from "./PreviewPage";
 import { toast } from "sonner";
-import { Playlist } from "./types/IPlaylist";
+// import { Playlist } from "./types/IPlaylist";
 import { Track } from "./types/ITrack";
 import { useAudioPlayback } from "./userComponents/audioPlayback";
 
@@ -28,7 +28,7 @@ export default function PlaylistPageView() {
   const [playlistName, setPlaylistName] = useState("");
   const [description, setPlaylistDes] = useState("");
   const [playlistImage, setPlaylistImage] = useState(image);
-  const [playlists, setPlaylists] = useState<Playlist[]>([]);
+  // const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const limit = 10;
@@ -96,7 +96,7 @@ export default function PlaylistPageView() {
 
         if (userId) {
           const playlistsResponse = await getMyplaylist(userId);
-          setPlaylists(playlistsResponse);
+          // setPlaylists(playlistsResponse);
           const matchedPlaylist = playlistsResponse.find((playlist) => playlist._id?.toString() === id?.toString());
           if (matchedPlaylist) {
             setPlaylistName(matchedPlaylist.title || "Unnamed Playlist");
