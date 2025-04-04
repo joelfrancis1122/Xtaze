@@ -1,6 +1,6 @@
 import { useDispatch } from "react-redux";
 import { saveAdminData } from "../redux/adminSlice";
-import { adminApi, artistApi, deezerApi, providerApi, userApi } from "../api/axios";
+import { adminApi, artistApi } from "../api/axios";
 import { IBanner } from "../pages/User/types/IBanner";
 
 // Generic API Call Helper

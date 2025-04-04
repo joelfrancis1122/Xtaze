@@ -18,7 +18,7 @@ interface Subscription {
 }
 
 export default function Page() {
-    const [history, setHistory] = useState<Subscription[]>([]);
+    // const [history, setHistory] = useState<Subscription[]>([]);
     const [totalArtists, setTotalArtists] = useState<number>(0);
     const [totalRevenue, setTotalRevenue] = useState<number>(0);
 
@@ -32,7 +32,7 @@ export default function Page() {
           
           const revenue = validSubscriptions.reduce((sum, sub) => sum + sub.price, 0);
           setTotalRevenue(revenue);
-          setHistory(validSubscriptions);
+          // setHistory(validSubscriptions);
         } catch (err) {
           console.error("Error fetching subscription history:", err);
         }
