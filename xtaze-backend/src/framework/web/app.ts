@@ -15,11 +15,12 @@ const app = express();
 
 
 app.use(cors({
-    origin: ['https://xtaze.fun'], 
+    origin: 'https://xtaze.fun',
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true
   }));
+  
   app.options('*', cors());
 app.use('/webhook', stripeRoute)
 app.use(express.json());
