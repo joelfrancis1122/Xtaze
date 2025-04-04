@@ -6,7 +6,7 @@ import { RootState } from "../../store/store";
 import Sidebar from "./userComponents/SideBar";
 import { fetchGenreTracks, toggleLike, addTrackToPlaylist, getMyplaylist } from "../../services/userService";
 import { Track } from "./types/ITrack";
-import { setCurrentTrack, setIsPlaying, setCurrentTime, setDuration } from "../../redux/audioSlice";
+import {  setCurrentTime, setDuration } from "../../redux/audioSlice";
 import { audio, audioContext, updateEqualizer } from "../../utils/audio";
 import { useAudioPlayback } from "./userComponents/audioPlayback";
 import MusicPlayer from "./userComponents/TrackBar";

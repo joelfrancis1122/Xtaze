@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { Play, Pause, SkipBack, SkipForward, Shuffle, Repeat, Volume2, Clock } from "lucide-react";
 import type { Track } from "../types/ITrack";
 import { useSelector, useDispatch } from "react-redux";
-import { audio } from "../../../utils/audio";
 import {
   setIsPlaying,
   setCurrentTime,

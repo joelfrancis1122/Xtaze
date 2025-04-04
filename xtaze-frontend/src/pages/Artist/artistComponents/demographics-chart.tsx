@@ -6,8 +6,6 @@ import {
   Bar,
   BarChart,
   ResponsiveContainer,
-  XAxis,
-  YAxis,
   PieChart,
   Pie,
   Cell,
@@ -98,22 +96,24 @@ export function DemographicsChart() {
                 cy="50%"
                 outerRadius={100}
                 fill="#8884d8"
-                label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                label={({ name, percent }: { name: string; percent: number }) =>
+                  `${name}: ${(percent * 100).toFixed(0)}%`
+                }
                 labelLine={true}
                 isAnimationActive={false}
               >
-                {genderData.map((entry, index) => (
-                  <Cell 
-                    key={`cell-${index}`} 
-                    fill={genderColors[index % genderColors.length]} 
+                {genderData.map((_, index) => (
+                  <Cell
+                    key={`cell-${index}`}
+                    fill={genderColors[index % genderColors.length]}
                   />
                 ))}
               </Pie>
               {/* Tooltip removed to disable hover effects */}
-              <Legend 
-                verticalAlign="bottom" 
+              <Legend
+                verticalAlign="bottom"
                 align="center"
-                wrapperStyle={{ paddingTop: "10px" }} 
+                wrapperStyle={{ paddingTop: "10px" }}
               />
             </PieChart>
           </ResponsiveContainer>
@@ -131,11 +131,11 @@ export function DemographicsChart() {
       {ageData.length > 0 ? (
         <div className="h-[250px] w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart 
-              data={ageData} 
+            <BarChart
+              data={ageData}
               margin={{ top: 20, right: 30, left: 0, bottom: 20 }}
             >
-              <XAxis
+              {/* <XAxis
                 dataKey="category"
                 stroke="#888888"
                 fontSize={12}
@@ -147,21 +147,21 @@ export function DemographicsChart() {
                 fontSize={12}
                 tickLine={false}
                 axisLine={false}
-                tickFormatter={(value) => `${Math.round(value)}%`}
+                tickFormatter={(value: number) => `${Math.round(value)}%`}
                 domain={[0, 100]}
-              />
+              /> */}
               {/* Tooltip removed to disable hover effects */}
               <Legend />
-              <Bar 
-                dataKey="value" 
-                radius={[4, 4, 0, 0]} 
+              <Bar
+                dataKey="value"
+                radius={[4, 4, 0, 0]}
                 barSize={30}
                 isAnimationActive={false}
               >
-                {ageData.map((entry, index) => (
-                  <Cell 
-                    key={`cell-${index}`} 
-                    fill={ageColors[index % ageColors.length]} 
+                {ageData.map((_, index) => (
+                  <Cell
+                    key={`cell-${index}`}
+                    fill={ageColors[index % ageColors.length]}
                   />
                 ))}
               </Bar>
@@ -181,11 +181,11 @@ export function DemographicsChart() {
       {countryData.length > 0 ? (
         <div className="h-[250px] w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart 
-              data={countryData} 
+            <BarChart
+              data={countryData}
               margin={{ top: 20, right: 30, left: 0, bottom: 20 }}
             >
-              <XAxis
+              {/* <XAxis
                 dataKey="category"
                 stroke="#888888"
                 fontSize={12}
@@ -197,21 +197,21 @@ export function DemographicsChart() {
                 fontSize={12}
                 tickLine={false}
                 axisLine={false}
-                tickFormatter={(value) => `${Math.round(value)}%`}
+                tickFormatter={(value: number) => `${Math.round(value)}%`}
                 domain={[0, 100]}
-              />
+              /> */}
               {/* Tooltip removed to disable hover effects */}
               <Legend />
-              <Bar 
-                dataKey="value" 
-                radius={[4, 4, 0, 0]} 
+              <Bar
+                dataKey="value"
+                radius={[4, 4, 0, 0]}
                 barSize={30}
                 isAnimationActive={false}
               >
-                {countryData.map((entry, index) => (
-                  <Cell 
-                    key={`cell-${index}`} 
-                    fill={countryColors[index % countryColors.length]} 
+                {countryData.map((_, index) => (
+                  <Cell
+                    key={`cell-${index}`}
+                    fill={countryColors[index % countryColors.length]}
                   />
                 ))}
               </Bar>
