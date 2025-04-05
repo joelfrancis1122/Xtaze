@@ -71,6 +71,7 @@ const Login = () => {
       toast.success("User Login success!", { position: "top-right" });
       navigate("/home");
     } catch (error: any) {
+      console.log("odii")
       toast.warning(error.response.data.message, { position: "top-right" });
     }
   };

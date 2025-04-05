@@ -15,6 +15,7 @@ import { ITrack } from '../domain/entities/ITrack';
 import { IBanner } from '../domain/entities/IBanner';
 import { SubscriptionHistory } from '../domain/entities/ISubscriptionHistory';
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2023-08-16" });
+dotenv.config();
 
 dotenv.config();
 interface useCaseDependencies {
@@ -163,6 +164,7 @@ export default class UserUseCase {
 
     const isPasswordValid = await this._passwordService.comparePassword(password, user.password);
     if (!isPasswordValid) throw new Error("Invalid credentials!");
+    console.log("JWT_SECRET at login:", process.env.JWT_SECRET);
 
     console.log("ith unda");
     const token = jwt.sign(
