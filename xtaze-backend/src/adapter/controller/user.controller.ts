@@ -88,10 +88,10 @@ export default class UserController {
         console.log(response.token, "emt vannilessssssss");
         // Only set refreshToken in cookie
         res.cookie("refreshToken", response.refreshToken, {
-          httpOnly: false,
+          httpOnly: true,                           
           secure: process.env.NODE_ENV === "production",
-          sameSite: "lax",
-          maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+          sameSite: "none",                         
+          maxAge: 7 * 24 * 60 * 60 * 1000, 
         });
         res.status(200).json({
           success: true,
@@ -117,10 +117,10 @@ export default class UserController {
       if (response.success && response.token && response.refreshToken) {
         // Only set refreshToken in cookie
         res.cookie("refreshToken", response.refreshToken, {
-          httpOnly: false,
+          httpOnly: true,                           
           secure: process.env.NODE_ENV === "production",
-          sameSite: "lax",
-          maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+          sameSite: "none",                         
+          maxAge: 7 * 24 * 60 * 60 * 1000, 
         });
         res.status(200).json({
           success: true,
@@ -148,10 +148,10 @@ export default class UserController {
       if (response.success && response.token && response.refreshToken) {
         // Only set refreshToken in cookie
         res.cookie("refreshToken", response.refreshToken, {
-          httpOnly: false,
+          httpOnly: true,                           
           secure: process.env.NODE_ENV === "production",
-          sameSite: "lax",
-          maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+          sameSite: "none",                         
+          maxAge: 7 * 24 * 60 * 60 * 1000, 
         });
         res.status(200).json({
           success: true,
