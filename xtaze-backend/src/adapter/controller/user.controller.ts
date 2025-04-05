@@ -88,10 +88,10 @@ export default class UserController {
         console.log(response.token, "emt vannilessssssss");
         // Only set refreshToken in cookie
         res.cookie("refreshToken", response.refreshToken, {
-          httpOnly: true,                           
-          secure: process.env.NODE_ENV === "production",
-          sameSite: "none",                         
-          maxAge: 7 * 24 * 60 * 60 * 1000, 
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production", // only true in prod
+          sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // lax for localhost
+          maxAge: 7 * 24 * 60 * 60 * 1000,
         });
         res.status(200).json({
           success: true,
@@ -117,10 +117,10 @@ export default class UserController {
       if (response.success && response.token && response.refreshToken) {
         // Only set refreshToken in cookie
         res.cookie("refreshToken", response.refreshToken, {
-          httpOnly: true,                           
-          secure: process.env.NODE_ENV === "production",
-          sameSite: "none",                         
-          maxAge: 7 * 24 * 60 * 60 * 1000, 
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production", // only true in prod
+          sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // lax for localhost
+          maxAge: 7 * 24 * 60 * 60 * 1000,
         });
         res.status(200).json({
           success: true,
@@ -148,10 +148,10 @@ export default class UserController {
       if (response.success && response.token && response.refreshToken) {
         // Only set refreshToken in cookie
         res.cookie("refreshToken", response.refreshToken, {
-          httpOnly: true,                           
-          secure: process.env.NODE_ENV === "production",
-          sameSite: "none",                         
-          maxAge: 7 * 24 * 60 * 60 * 1000, 
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production", // only true in prod
+          sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // lax for localhost
+          maxAge: 7 * 24 * 60 * 60 * 1000,
         });
         res.status(200).json({
           success: true,

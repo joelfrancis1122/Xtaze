@@ -26,10 +26,10 @@ export default class ArtistController {
         throw new AppError(response.message || "Login failed", 400); // Use message from use case
       }
       res.cookie("ArefreshToken", response.ArefreshToken, {
-        httpOnly: false,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production", // only true in prod
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // lax for localhost
+        maxAge: 7 * 24 * 60 * 60 * 1000,
       });
       res.status(200).json(response);
     } catch (error) {
@@ -50,9 +50,9 @@ export default class ArtistController {
 
       if (response.success && response.token && response.ArefreshToken) {
         res.cookie("ArefreshToken", response.ArefreshToken, {
-          httpOnly: true,                           
-          secure: process.env.NODE_ENV === "production",
-          sameSite: "none",                         
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production", // only true in prod
+          sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // lax for localhost
           maxAge: 7 * 24 * 60 * 60 * 1000,        
         });
         res.status(200).json({
