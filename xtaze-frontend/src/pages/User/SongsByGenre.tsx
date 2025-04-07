@@ -31,6 +31,7 @@ export default function GenrePage() {
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [dropdownTrackId, setDropdownTrackId] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const {
     handlePlay: baseHandlePlay,
@@ -257,7 +258,13 @@ export default function GenrePage() {
 
   return (
     <div className="flex min-h-screen bg-black text-white">
-      <Sidebar />
+  <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
+        {isSidebarOpen && (
+          <div
+            className="fixed inset-0 bg-black/50 z-20 md:hidden"
+            onClick={() => setIsSidebarOpen(false)}
+          ></div>
+        )}
       <div className="flex-1 ml-64">
         <main className="container px-4 py-8">
           <div className="flex items-center justify-between mb-6">

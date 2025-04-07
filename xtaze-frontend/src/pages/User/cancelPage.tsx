@@ -2,13 +2,21 @@
 
 import { useNavigate } from "react-router-dom";
 import Sidebar from "./userComponents/SideBar";
+import { useState } from "react";
 
 export default function CancelPage() {
   const navigate = useNavigate();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-black text-white flex">
-      <Sidebar />
+      <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
+        {isSidebarOpen && (
+          <div
+            className="fixed inset-0 bg-black/50 z-20 md:hidden"
+            onClick={() => setIsSidebarOpen(false)}
+          ></div>
+        )}
       <main className="flex-1 ml-64 py-20 px-4 overflow-y-auto">
         <div className="max-w-4xl mx-auto space-y-12">
           <div className="bg-[#1d1d1d] p-6 rounded-xl shadow-lg w-full max-w-md mx-auto text-center space-y-6">

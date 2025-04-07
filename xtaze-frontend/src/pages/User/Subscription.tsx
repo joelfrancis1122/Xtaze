@@ -35,6 +35,8 @@ interface Coupon {
 export default function PricingPage() {
   const user = useSelector((state: RootState) => state.user.signupData);
   const navigate = useNavigate();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
   const [plans, setPlans] = useState<PricingPlan[]>([
     {
       name: "Free",
@@ -143,7 +145,13 @@ export default function PricingPage() {
 
   return (
     <div className="min-h-screen bg-black text-white flex">
-      <Sidebar />
+       <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
+             {isSidebarOpen && (
+               <div
+                 className="fixed inset-0 bg-black/50 z-20 md:hidden"
+                 onClick={() => setIsSidebarOpen(false)}
+               ></div>
+             )}
       <main className="flex-1 ml-64 py-20 px-4 overflow-y-auto">
         <div className="max-w-4xl mx-auto space-y-12">
           <div className="text-center space-y-4">

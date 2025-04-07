@@ -151,7 +151,7 @@ export default function MusicPlayer({
   if (!currentTrack) return null;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-[#121212] py-3 px-6 flex items-center justify-between z-50 border-t border-gray-800 shadow-lg">
+    <div className="fixed bottom-0 left-0 right-0 bg-[#121212] py-3 px-4 flex flex-col sm:flex-row items-center justify-between z-50 border-t border-gray-800 shadow-lg">
       <div
         className="absolute top-0 left-0 right-0 h-1 bg-[#121212] filter blur-3xl"
         style={{
@@ -159,12 +159,12 @@ export default function MusicPlayer({
         }}
       />
       {/* Track Info */}
-      <div className="flex items-center w-[300px] relative z-10">
+      <div className="flex items-center w-full sm:w-auto relative z-10 mb-2 sm:mb-0">
         <div
           className="relative w-12 h-12 flex-shrink-0 cursor-pointer"
           onClick={(e) => {
             e.stopPropagation();
-            toggleModal(); 
+            toggleModal();
           }}
         >
           <img
@@ -173,7 +173,7 @@ export default function MusicPlayer({
             className="w-full h-full object-cover rounded-md shadow-md"
           />
         </div>
-        <div className="ml-3 overflow-hidden">
+        <div className="ml-3 overflow-hidden flex-1">
           <p className="text-sm font-semibold text-white truncate">{currentTrack.title}</p>
           <p className="text-xs text-gray-400 truncate">
             {Array.isArray(currentTrack.artists) ? currentTrack.artists.join(", ") : currentTrack.artists}
@@ -181,8 +181,8 @@ export default function MusicPlayer({
         </div>
       </div>
       {/* Playback Controls */}
-      <div className="flex flex-col items-center gap-2 z-10">
-        <div className="flex items-center gap-4">
+      <div className="flex flex-col items-center gap-2 w-full sm:w-auto z-10">
+        <div className="flex items-center gap-4 justify-center">
           <button
             onClick={toggleShuffle}
             className={`p-1 rounded-full hover:bg-[#242424] transition-colors ${isShuffled ? "text-red-500" : "text-gray-300"}`}
@@ -214,7 +214,7 @@ export default function MusicPlayer({
             <Repeat size={18} />
           </button>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 w-full">
           <span className="text-xs text-gray-400 w-[30px] text-right">{formatTime(localCurrentTime)}</span>
           <input
             type="range"
@@ -222,7 +222,7 @@ export default function MusicPlayer({
             max={localDuration || 0}
             value={localCurrentTime || 0}
             step="0.02"
-            className="w-96 h-1 bg-gray-700 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:shadow-md"
+            className="w-full sm:w-96 h-1 bg-gray-700 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:shadow-md"
             onChange={(e) => {
               const newTime = Number.parseFloat(e.target.value);
               audio.currentTime = newTime;
@@ -234,16 +234,14 @@ export default function MusicPlayer({
         </div>
       </div>
       {/* Volume Control and Sleep Timer */}
-      <div className="flex items-center gap-4 w-[300px] justify-end z-10">
+      <div className="flex items-center gap-4 w-full sm:w-auto justify-end mt-2 sm:mt-0 z-10">
         <div className="relative">
           <button
             className="flex items-center gap-1 p-1 rounded-full hover:bg-[#242424] text-gray-300 transition-colors"
             onClick={toggleSleepDropdown}
           >
             <Clock size={18} />
-            <span className="text-xs">
-              {sleepTimer ? ` ${sleepTimer}m` : ""}
-            </span>
+            <span className="text-xs">{sleepTimer ? ` ${sleepTimer}m` : ""}</span>
           </button>
           {isSleepDropdownOpen && (
             <div className="absolute right-0 bottom-10 bg-[#1d1d1d] rounded-md shadow-lg border border-gray-800 w-30">
@@ -275,7 +273,7 @@ export default function MusicPlayer({
             max="1"
             step="0.1"
             value={localVolume}
-            className="w-24 h-1 bg-gray-700 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:shadow-md"
+            className="w-24 sm:w-24 h-1 bg-gray-700 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:shadow-md"
             onChange={(e) => handleVolumeChange(Number.parseFloat(e.target.value))}
           />
         </div>

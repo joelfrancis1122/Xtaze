@@ -38,6 +38,7 @@ export default function LikedSongsPage() {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { currentTrack, isPlaying, isShuffled, isRepeating } = useSelector((state: RootState) => state.audio);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // Pass likedSongs to useAudioPlayback
   const {
@@ -177,7 +178,13 @@ export default function LikedSongsPage() {
 
   return (
     <div className="min-h-screen bg-black text-white flex">
-      <Sidebar />
+    <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
+        {isSidebarOpen && (
+          <div
+            className="fixed inset-0 bg-black/50 z-20 md:hidden"
+            onClick={() => setIsSidebarOpen(false)}
+          ></div>
+        )}
       <main className="flex-1 ml-[240px] py-16 px-10 pb-24">
         <div className="max-w-7xl mx-auto space-y-10">
           <div className="flex items-center justify-between">

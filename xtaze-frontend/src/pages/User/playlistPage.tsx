@@ -19,6 +19,7 @@ import PreviewModal from "./PreviewPage";
 
 export default function PlaylistsPage() {
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const [newPlaylistName, setNewPlaylistName] = useState("");
   const [newPlaylistDescription, setNewPlaylistDescription] = useState("");
@@ -92,7 +93,13 @@ export default function PlaylistsPage() {
 
   return (
     <div className="flex min-h-screen bg-black text-white">
-      <Sidebar />
+       <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
+        {isSidebarOpen && (
+          <div
+            className="fixed inset-0 bg-black/50 z-20 md:hidden"
+            onClick={() => setIsSidebarOpen(false)}
+          ></div>
+        )}
       <div className="flex-1 ml-64 p-6 overflow-y-auto">
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-5xl font-bold">Your Playlists</h1>

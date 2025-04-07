@@ -26,6 +26,7 @@ export default function RadioPage() {
   const stationRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
   const [visibleStations, setVisibleStations] = useState<Set<string>>(new Set());
   const navigate = useNavigate();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const userId = "mockUserId"; // Replace with useSelector
   const token = localStorage.getItem("token");
@@ -228,7 +229,13 @@ export default function RadioPage() {
   return (
     <div className="flex h-screen flex-col bg-black text-white">
       <div className="flex flex-1">
-        <Sidebar />
+      <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
+        {isSidebarOpen && (
+          <div
+            className="fixed inset-0 bg-black/50 z-20 md:hidden"
+            onClick={() => setIsSidebarOpen(false)}
+          ></div>
+        )}
         <main className="flex-1 min-h-screen ml-64 bg-black overflow-y-auto">
           <section className="px-6 py-4">
             <h2 className="text-3xl font-bold mb-6">Chillout Radio Stations</h2>

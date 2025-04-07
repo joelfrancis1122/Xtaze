@@ -44,6 +44,7 @@ export default function EqualizerPage() {
     classical: [1, 2, 2, 1, 0, -1, -1, 0, 1, 2],
     jazz: [3, 3, 2, 1, 0, 1, 2, 2, 1, 0],
   };
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const [equalizerValues, setEqualizerValues] = useState(() => {
     const saved = localStorage.getItem("equalizerValues");
@@ -210,7 +211,13 @@ export default function EqualizerPage() {
 
   return (
     <div className="flex min-h-screen bg-var(--foreground) !important text-white">
-      <Sidebar />
+    <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
+        {isSidebarOpen && (
+          <div
+            className="fixed inset-0 bg-black/50 z-20 md:hidden"
+            onClick={() => setIsSidebarOpen(false)}
+          ></div>
+        )}
       <div className="flex-1 ml-64 py-8 px-6 bg-black">
         <div className="!bg-black border border-[#1f2937] rounded-lg">
           <div className="border-b border-[#1f2937] p-6">

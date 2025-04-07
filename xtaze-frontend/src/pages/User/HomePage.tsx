@@ -11,7 +11,7 @@ import { RootState } from "../../store/store";
 import { useNavigate } from "react-router-dom";
 import { audio, audioContext, updateEqualizer } from "../../utils/audio";
 import { PlaceholdersAndVanishInput } from "../../utils/placeholders-and-vanish-input";
-import { Search, Power, Play, Pause, Plus, Heart, Download, ListMusic } from "lucide-react";
+import { Search, Power, Play, Pause, Plus, Heart, Download, ListMusic, Menu } from "lucide-react";
 import { fetchTracks, fetchLikedSongs, incrementListeners, toggleLike, getMyplaylist, addTrackToPlaylist, fetchBanners } from "../../services/userService";
 import { toast } from "sonner";
 import { IBanner } from "./types/IBanner";
@@ -34,6 +34,7 @@ export default function Home() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [searchQuerysaved, setSearchQuerysaved] = useState<string>("");
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false); // State to toggle sidebar
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -108,7 +109,7 @@ export default function Home() {
         } else {
           setLikedTracks([]);
         }
-        console.log(likedSongs,likedTracks)
+        console.log(likedSongs, likedTracks);
         const fetchedPlaylists = await getMyplaylist((user?._id) as string);
         setPlaylists(fetchedPlaylists);
       } catch (error) {
@@ -152,23 +153,19 @@ export default function Home() {
     return () => clearInterval(interval);
   }, [banners.length]);
 
-  // const handleBannerClick = (action: string) => {
-  //   navigate(action);
-  // };
-
   const handleIncrementListeners = async (trackId: string) => {
     const token = localStorage.getItem("token");
     if (!token || !trackId || !user?._id) return;
-  
+
     try {
-      await incrementListeners(trackId,token, user._id);
-  
+      await incrementListeners(trackId, token, user._id);
+
       setTracks((prevTracks) =>
         prevTracks.map((track) =>
           track._id === trackId
             ? {
                 ...track,
-                listeners: [...(track.listeners || []), user._id].filter(Boolean) as string[], // Ensure no `undefined`
+                listeners: [...(track.listeners || []), user._id].filter(Boolean) as string[],
               }
             : track
         )
@@ -177,7 +174,6 @@ export default function Home() {
       console.error("Error incrementing listeners:", error);
     }
   };
-  
 
   const handlePlay = (track: Track) => {
     baseHandlePlay(track);
@@ -334,12 +330,30 @@ export default function Home() {
 
   return (
     <div className="flex h-screen flex-col bg-black text-white">
-      <div className="flex flex-1">
-        <Sidebar />
-        <main className="flex-1 min-h-screen ml-64 bg-black overflow-y-auto">
+      <div className="flex flex-1 relative">
+        <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
+        {/* Overlay for mobile */}
+        {isSidebarOpen && (
+          <div
+            className="fixed inset-0 bg-black/50 z-20 md:hidden"
+            onClick={() => setIsSidebarOpen(false)}
+          ></div>
+        )}
+        <main
+          className={`flex-1 min-h-screen bg-black overflow-y-auto transition-all duration-300 ${
+            isSidebarOpen ? "ml-64" : "ml-0"
+          } md:ml-[256px]`} // Dynamic margin on mobile, fixed on desktop
+        >
           <header className="flex justify-between items-center p-4 sticky top-0 bg-black z-10">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 z-10" size={20} />
+            {/* Hamburger menu for mobile */}
+            <button
+              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+              className="text-white p-2 hover:bg-[#242424] rounded-full md:hidden"
+            >
+              <Menu size={24} />
+            </button>
+            <div className="relative flex-1 mx-4">
+              <Search className="absolute left-78 top-1/2 transform -translate-y-1/2 text-gray-400 z-10" size={20} />
               <PlaceholdersAndVanishInput placeholders={placeholders} onChange={handleChange} onSubmit={onSubmit} />
             </div>
             <button className="p-2 hover:bg-[#242424] rounded-full" onClick={handleClick}>
@@ -714,7 +728,7 @@ export default function Home() {
           track={currentTrack}
           isOpen={isModalOpen}
           toggleModal={toggleModal}
-          onPlayTrack={handlePlayFromModal} // Pass the handler
+          onPlayTrack={handlePlayFromModal}
         />
       )}
     </div>

@@ -148,7 +148,7 @@ export default class UserController {
       if (response.success && response.token && response.refreshToken) {
         // Only set refreshToken in cookie
         res.cookie("refreshToken", response.refreshToken, {
-           httpOnly: false, // for frontend access
+           httpOnly: false, 
           secure: true,
           sameSite: "none",
           maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days

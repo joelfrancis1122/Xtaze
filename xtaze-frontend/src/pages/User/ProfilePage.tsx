@@ -16,6 +16,7 @@ export default function Home() {
   const user = useSelector((state: RootState) => state.user.signupData) as UserSignupData | null;
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const [imageSrc, setImageSrc] = useState<string | null>(null);
   const [crop, setCrop] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
@@ -159,7 +160,13 @@ export default function Home() {
       )}
 
       <div className="flex flex-1">
-        <Sidebar />
+      <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
+        {isSidebarOpen && (
+          <div
+            className="fixed inset-0 bg-black/50 z-20 md:hidden"
+            onClick={() => setIsSidebarOpen(false)}
+          ></div>
+        )}
         <main className="flex-1 min-h-screen ml-64 bg-black">
           <header className="flex justify-between items-center p-4">
             <div className="relative">

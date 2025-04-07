@@ -23,6 +23,8 @@ interface RecentSongItem {
 export default function RecentSongsPage() {
   const [recentSongs, setRecentSongs] = useState<Track[]>([]);
   const [tracks, setTracks] = useState<Track[]>([]);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
   const [loading, setLoading] = useState(true);
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -137,7 +139,13 @@ export default function RecentSongsPage() {
 
   return (
     <div className="min-h-screen bg-black text-white flex">
-      <Sidebar />
+     <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
+        {isSidebarOpen && (
+          <div
+            className="fixed inset-0 bg-black/50 z-20 md:hidden"
+            onClick={() => setIsSidebarOpen(false)}
+          ></div>
+        )}
       <main className="flex-1 ml-[240px] py-16 px-10 pb-24">
         <div className="max-w-7xl mx-auto space-y-10">
           <div className="flex items-center justify-between">

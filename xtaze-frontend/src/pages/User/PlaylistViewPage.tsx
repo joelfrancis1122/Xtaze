@@ -28,6 +28,8 @@ export default function PlaylistPageView() {
   const [playlistName, setPlaylistName] = useState("");
   const [description, setPlaylistDes] = useState("");
   const [playlistImage, setPlaylistImage] = useState(image);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
   // const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
@@ -82,14 +84,13 @@ export default function PlaylistPageView() {
       document.removeEventListener("click", resumeAudioContext);
     };
   }, []);
-  const token = localStorage.getItem("token");
 
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
         setLoading(true);
 
-        const { tracks: initialTracks, total } = await fetchPlaylistTracks(id as string, 1, limit,token as string);
+        const { tracks: initialTracks, total } = await fetchPlaylistTracks(id as string, 1, limit);
         setTracks(initialTracks || []);
         setTotalTracks(total || 0);
         setPage(2);
@@ -129,7 +130,7 @@ export default function PlaylistPageView() {
       ) {
         setLoadingMore(true);
         try {
-          const { tracks: newTracks, total } = await fetchPlaylistTracks(id as string, page, limit, token as string);
+          const { tracks: newTracks, total } = await fetchPlaylistTracks(id as string, page, limit);
           setTracks((prev) => [...prev, ...(newTracks || [])]);
           setPage((prev) => prev + 1);
           setHasMore(newTracks.length > 0 && tracks.length + newTracks.length < total);
@@ -204,7 +205,13 @@ export default function PlaylistPageView() {
 
   return (
     <div className="flex min-h-screen bg-black text-white">
-      <Sidebar />
+   <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
+        {isSidebarOpen && (
+          <div
+            className="fixed inset-0 bg-black/50 z-20 md:hidden"
+            onClick={() => setIsSidebarOpen(false)}
+          ></div>
+        )}
       <div className="flex-1 ml-64 py-7 px-6 pb-20">
         <button
           onClick={() => navigate(-1)}

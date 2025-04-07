@@ -29,6 +29,8 @@ export default function ExplorePage() {
   const [likedSongs, setLikedSongs] = useState<Set<string>>(new Set());
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [dropdownTrackId, setDropdownTrackId] = useState<string | null>(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const {
@@ -281,7 +283,13 @@ export default function ExplorePage() {
 
   return (
     <div className="flex min-h-screen bg-black text-white">
-      <Sidebar />
+     <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
+             {isSidebarOpen && (
+               <div
+                 className="fixed inset-0 bg-black/50 z-20 md:hidden"
+                 onClick={() => setIsSidebarOpen(false)}
+               ></div>
+             )}
       <div className="flex-1 ml-64">
         <main className="container px-4 py-8">
           <section className="mb-10">
