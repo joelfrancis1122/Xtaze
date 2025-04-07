@@ -542,7 +542,7 @@ export default class UserUseCase {
 
   async confirmPayment(rawBody: Buffer, signature: string): Promise<void> {
     try {
-      const webhookSecret = "whsec_BMk81tL4PBLW3lpxjxsO1xS9MrZ7ItHc"; // Your CLI secret
+      const webhookSecret = "whsec_FcgdilLPqYodrGbfaDLfygnA9ZD3nMlv"; // Your CLI secret
       const event = this.stripe.webhooks.constructEvent(rawBody, signature, webhookSecret);
 
       if (event.type === "checkout.session.completed") {
