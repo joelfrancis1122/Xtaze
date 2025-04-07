@@ -50,14 +50,7 @@ export default function EqualizerPage() {
     const saved = localStorage.getItem("equalizerValues");
     return saved ? JSON.parse(saved) : bands.map((band) => band.defaultValue);
   });
-  // const [volume, setVolume] = useState(() => {
-  //   const saved = localStorage.getItem("volume");
-  //   return saved ? Number(saved) : 75;
-  // });
-  const [isMuted, setIsMuted] = useState(() => {
-    const saved = localStorage.getItem("isMuted");
-    return saved ? JSON.parse(saved) : false;
-  });
+
   const [activePreset, setActivePreset] = useState(() => {
     const saved = localStorage.getItem("activePreset");
     return saved ? saved : "custom";
@@ -114,9 +107,6 @@ export default function EqualizerPage() {
 
 
 
-  useEffect(() => {
-    localStorage.setItem("isMuted", JSON.stringify(isMuted));
-  }, [isMuted]);
 
   useEffect(() => {
     localStorage.setItem("activePreset", activePreset);
