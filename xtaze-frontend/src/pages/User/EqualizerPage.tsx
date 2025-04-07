@@ -32,7 +32,6 @@ export default function EqualizerPage() {
     { name: "8kHz", frequency: 8000, defaultValue: 0 },
     { name: "16kHz", frequency: 16000, defaultValue: 0 },
   ];
-
   const presets = {
     flat: bands.map(() => 0),
     bass: [6, 5, 4, 2, 1, 0, 0, 0, 0, 0],
@@ -50,7 +49,6 @@ export default function EqualizerPage() {
     const saved = localStorage.getItem("equalizerValues");
     return saved ? JSON.parse(saved) : bands.map((band) => band.defaultValue);
   });
-
   const [activePreset, setActivePreset] = useState(() => {
     const saved = localStorage.getItem("activePreset");
     return saved ? saved : "custom";
@@ -87,9 +85,9 @@ export default function EqualizerPage() {
 
     audio.crossOrigin = "anonymous";
     if (!audio.src && currentTrack) {
-      audio.src = currentTrack.fileUrl; // Use currentTrack if available
+      audio.src = currentTrack.fileUrl; 
     } else if (!audio.src) {
-      audio.src = "/music/test.mp3"; // Fallback
+      audio.src = "/music/test.mp3"; 
       audio.loop = true;
     }
 
@@ -191,13 +189,13 @@ export default function EqualizerPage() {
 
   return (
     <div className="flex min-h-screen bg-var(--foreground) !important text-white">
-    <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
-        {isSidebarOpen && (
-          <div
-            className="fixed inset-0 bg-black/50 z-20 md:hidden"
-            onClick={() => setIsSidebarOpen(false)}
-          ></div>
-        )}
+      <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
+      {isSidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-20 md:hidden"
+          onClick={() => setIsSidebarOpen(false)}
+        ></div>
+      )}
       <div className="flex-1 ml-64 py-8 px-6 bg-black">
         <div className="!bg-black border border-[#1f2937] rounded-lg">
           <div className="border-b border-[#1f2937] p-6">
