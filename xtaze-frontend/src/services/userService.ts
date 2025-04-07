@@ -1,5 +1,5 @@
 import { useDispatch } from "react-redux";
-import { artistApi, deezerApi, providerApi, userApi } from "../api/axios";
+import { adminApi, artistApi, deezerApi, providerApi, userApi } from "../api/axios";
 import { Track } from "../pages/User/types/ITrack";
 import { saveSignupData } from "../redux/userSlice";
 import { Playlist } from "../pages/User/types/IPlaylist";
@@ -414,4 +414,54 @@ export const initiateCheckout = async (
   console.log("Checkout response:", data);
   return data.sessionId;
 };
+export const fetchPlans = async (): Promise<string> => {
+  const data = await apiCall<{ sessionId: string }>(
+    adminApi,
+    "get",
+    "/stripe/plans",
+  );
+  console.log("Checkout response:", data);
+  return data.sessionId;
+};
 
+export const fetchPricingPlans = async (): Promise<any[]> => {
+  console.log("Fetching pricing plans...");
+  try {
+    const data = await apiCall<{ data: any[] }>(
+      adminApi, // Use adminApi for admin endpoints
+      "get",
+      "/stripe/plans",
+      undefined,
+    );
+    console.log("Pricing plans response:", data);
+    return data.data.map((plan: any) => ({
+      name: plan.product.name,
+      price: plan.price.unit_amount / 100,
+      period: plan.price.recurring?.interval || "month",
+      features: ["Full-length songs", "High-quality FLAC", "Offline playback", "Exclusive content"],
+      priceId: plan.price.id,
+      featured: true,
+    }));
+  } catch (error: any) {
+    console.error("Error fetching pricing plans:", error);
+    throw new Error(error.message || "Failed to fetch pricing plans");
+  }
+};
+
+export const verifyCoupon = async (code: string, token?: string): Promise<any> => {
+  console.log("Verifying coupon:", code);
+  try {
+    const data = await apiCall<{ data: any }>(
+      adminApi, // Use adminApi for admin endpoints
+      "post",
+      "/coupons/verify",
+      { code },
+      token
+    );
+    console.log("Coupon verification response:", data);
+    return data.data; // Return raw coupon data for component to validate
+  } catch (error: any) {
+    console.error("Coupon verification error:", error);
+    throw new Error(error.response?.data?.message || "Failed to verify coupon");
+  }
+};

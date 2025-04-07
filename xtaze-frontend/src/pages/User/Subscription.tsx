@@ -8,8 +8,7 @@ import { useSelector } from "react-redux";
 import { RootState } from "../../store/store";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { initiateCheckout } from "../../services/userService";
-import axios from "axios";
+import { fetchPricingPlans, initiateCheckout, verifyCoupon } from "../../services/userService";
 
 const stripePromise = loadStripe("pk_test_51QuvsvQV9aXBcHmZPYCW1A2NRrd5mrEffAOVJMFOlrYDOl9fmb028A85ZE9WfxKMdNgTTA5MYoG4ZwCUQzHVydZj00eBUQVOo9");
 
@@ -58,15 +57,7 @@ export default function PricingPage() {
     const fetchPlans = async () => {
       try {
         setLoading(true);
-        const response = await axios.get("http://localhost:3000/admin/stripe/plans");
-        const stripePlans: PricingPlan[] = response.data.data.map((plan: any) => ({
-          name: plan.product.name,
-          price: plan.price.unit_amount / 100,
-          period: plan.price.recurring?.interval || "month",
-          features: ["Full-length songs", "High-quality FLAC", "Offline playback", "Exclusive content"],
-          priceId: plan.price.id,
-          featured: true,
-        }));
+        const stripePlans = await fetchPricingPlans(); 
         setPlans([
           {
             name: "Free",
@@ -76,9 +67,9 @@ export default function PricingPage() {
           },
           ...stripePlans,
         ]);
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error fetching plans:", error);
-        toast.error("Failed to load premium plans", { position: "top-right" });
+        toast.error(error.message || "Failed to load premium plans", { position: "top-right" });
       } finally {
         setLoading(false);
       }
@@ -86,32 +77,28 @@ export default function PricingPage() {
     fetchPlans();
   }, [user, navigate]);
 
-  const validateCoupon = async () => {
-    if (!couponCode.trim()) {
-      setCouponError("Please enter a coupon code");
-      setAppliedCoupon(null);
-      return;
+const validateCoupon = async () => {
+  if (!couponCode.trim()) {
+    setCouponError("Please enter a coupon code");
+    setAppliedCoupon(null);
+    return;
+  }
+  try {
+    const token = localStorage.getItem("token") || "";
+    const coupon = await verifyCoupon(couponCode, token);
+    if (coupon.status === "active" && coupon.uses < coupon.maxUses && new Date(coupon.expires) >= new Date()) {
+      setAppliedCoupon(coupon);
+      setCouponError(null);
+      toast.success("Coupon applied successfully!", { position: "top-right" });
+    } else {
+      throw new Error("Coupon is expired");
     }
-    try {
-      const response = await axios.post(
-        "http://localhost:3000/admin/coupons/verify",
-        { code: couponCode },
-        { headers: { Authorization: `Bearer ${localStorage.getItem("token") || ""}` } }
-      );
-      const coupon: Coupon = response.data.data;
-      if (coupon.status === "active" && coupon.uses < coupon.maxUses && new Date(coupon.expires) >= new Date()) {
-        setAppliedCoupon(coupon);
-        setCouponError(null);
-        toast.success("Coupon applied successfully!", { position: "top-right" });
-      } else {
-        throw new Error("Coupon is expired");
-      }
-    } catch (error: any) {
-      setAppliedCoupon(null);
-      setCouponError(error.response?.data?.message || "Invalid coupon code");
-      toast.error(error.response?.data?.message || "Invalid coupon code", { position: "top-right" });
-    }
-  };
+  } catch (error: any) {
+    setAppliedCoupon(null);
+    setCouponError(error.message || "Invalid coupon code");
+    toast.error(error.message || "Invalid coupon code", { position: "top-right" });
+  }
+};
 
   const getDiscountedPrice = (price: number) => {
     if (!appliedCoupon) return price;
