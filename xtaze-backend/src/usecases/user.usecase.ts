@@ -491,8 +491,8 @@ export default class UserUseCase {
         payment_method_types: ["card", "link"],
         line_items: [{ price: priceId, quantity: 1 }],
         mode: "subscription",
-        success_url: "http://localhost:5000/success",
-        cancel_url: "http://localhost:5000/cancel",
+        success_url: "https://xtaze.fun/success",
+        cancel_url: "https://xtaze.fun/cancel",
         metadata: {
           userId,
           couponCode: couponCode || "",

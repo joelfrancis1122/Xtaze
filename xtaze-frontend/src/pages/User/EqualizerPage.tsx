@@ -50,10 +50,10 @@ export default function EqualizerPage() {
     const saved = localStorage.getItem("equalizerValues");
     return saved ? JSON.parse(saved) : bands.map((band) => band.defaultValue);
   });
-  const [volume, setVolume] = useState(() => {
-    const saved = localStorage.getItem("volume");
-    return saved ? Number(saved) : 75;
-  });
+  // const [volume, setVolume] = useState(() => {
+  //   const saved = localStorage.getItem("volume");
+  //   return saved ? Number(saved) : 75;
+  // });
   const [isMuted, setIsMuted] = useState(() => {
     const saved = localStorage.getItem("isMuted");
     return saved ? JSON.parse(saved) : false;
@@ -107,19 +107,19 @@ export default function EqualizerPage() {
     };
   }, [equalizerValues, currentTrack]);
 
-  useEffect(() => {
-    audio.volume = isMuted ? 0 : volume / 100;
-    console.log("Volume set to:", audio.volume, "Muted:", isMuted);
-  }, [volume, isMuted]);
+  // useEffect(() => {
+  //   audio.volume = isMuted ? 0 : volume / 100;
+  //   console.log("Volume set to:", audio.volume, "Muted:", isMuted);
+  // }, [volume, isMuted]);
 
   useEffect(() => {
     localStorage.setItem("equalizerValues", JSON.stringify(equalizerValues));
     updateEqualizer(equalizerValues);
   }, [equalizerValues]);
 
-  useEffect(() => {
-    localStorage.setItem("volume", volume.toString());
-  }, [volume]);
+  // useEffect(() => {
+  //   localStorage.setItem("volume", volume.toString());
+  // }, [volume]);
 
   useEffect(() => {
     localStorage.setItem("isMuted", JSON.stringify(isMuted));
@@ -278,48 +278,7 @@ export default function EqualizerPage() {
                 ))}
               </div>
             </div>
-            <div className="flex items-center gap-4 mb-8 bg-var(--foreground) !important p-4 rounded-lg border border-[#1f2937]">
-              <button
-                onClick={toggleMute}
-                className="bg-var(--foreground) !important text-gray-400 hover:bg-[#1f2937] hover:text-white transition w-10 h-10 flex items-center justify-center rounded-full"
-              >
-                {isMuted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
-              </button>
-              <input
-                type="range"
-                min={0}
-                max={100}
-                step={1}
-                value={isMuted ? 0 : volume}
-                onChange={(e) => {
-                  setVolume(Number(e.target.value));
-                  if (isMuted && Number(e.target.value) > 0) setIsMuted(false);
-                }}
-                className="flex-1 h-2 rounded-full appearance-none cursor-pointer bg-[var(--foreground) !important]
-                [&::-webkit-slider-runnable-track]:bg-red-800 
-                [&::-webkit-slider-runnable-track]:h-2 
-                [&::-webkit-slider-runnable-track]:rounded-full 
-                [&::-webkit-slider-runnable-track]:opacity-70 
-                [&::-moz-range-track]:var(--foreground) !important
-                [&::-moz-range-track]:h-2 
-                [&::-moz-range-track]:rounded-full 
-                [&::-moz-range-track]:opacity-100 
-                [&::-webkit-slider-thumb]:appearance-none 
-                [&::-webkit-slider-thumb]:w-5 
-                [&::-webkit-slider-thumb]:h-5 
-                [&::-webkit-slider-thumb]:bg-red-900 
-                [&::-webkit-slider-thumb]:rounded-full 
-                [&::-webkit-slider-thumb]:opacity-100
-                [&::-webkit-slider-thumb]:-mt-[6px] 
-                [&::-moz-range-thumb]:w-5 
-                [&::-moz-range-thumb]:h-5 
-                [&::-moz-range-thumb]:bg-white 
-                [&::-moz-range-thumb]:rounded-full 
-                [&::-moz-range-thumb]:opacity-100 
-                [&::-moz-range-thumb]:-mt-[6px]"
-              />
-              <span className="text-sm text-gray-400 w-8 text-right">{isMuted ? "0" : volume}%</span>
-            </div>
+
             <div className="mb-10 bg-var(--foreground) !important p-20 rounded-lg border border-[#1f2937] overflow-x-auto">
               <div className="flex space-x-4 min-w-max">
                 {bands.map((band, index) => (

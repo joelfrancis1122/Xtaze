@@ -385,8 +385,8 @@ export default class AdminUseCase {
           },
         ],
         mode: "payment",
-        success_url: "http://localhost:5000/admin/payoutSuccess?artistName=" + encodeURIComponent(artistName),
-        cancel_url: "http://localhost:5000/admin/payoutCancel",
+        success_url: "https://xtaze.fun:5000/admin/payoutSuccess?artistName=" + encodeURIComponent(artistName),
+        cancel_url: "https://xtaze.fun:5000/admin/payoutCancel",
         metadata: { artistName, amount: amount.toString() }, // Track artist details
       });
 

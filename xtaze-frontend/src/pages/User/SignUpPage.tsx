@@ -115,7 +115,7 @@ const Signup = () => {
       dispatch(saveSignupData(formData));
       navigate("/otp", { state: { otpSent: true } });
     } catch (error: any) {
-      toast.error(error.message || "Error sending OTP", { position: "top-right" });
+      toast.error(error.response.data.message || "Error sending OTP", { position: "top-right" });
     }
   };
 
