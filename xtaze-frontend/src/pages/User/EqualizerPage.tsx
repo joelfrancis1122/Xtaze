@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Volume2, VolumeX, Music, Undo } from "lucide-react";
+import { Music, Undo } from "lucide-react";
 import Sidebar from "./userComponents/SideBar";
 import { audio, audioContext, updateEqualizer, resetEqualizer } from "../../utils/audio";
 import { useSelector } from "react-redux";
@@ -107,19 +107,12 @@ export default function EqualizerPage() {
     };
   }, [equalizerValues, currentTrack]);
 
-  // useEffect(() => {
-  //   audio.volume = isMuted ? 0 : volume / 100;
-  //   console.log("Volume set to:", audio.volume, "Muted:", isMuted);
-  // }, [volume, isMuted]);
-
   useEffect(() => {
     localStorage.setItem("equalizerValues", JSON.stringify(equalizerValues));
     updateEqualizer(equalizerValues);
   }, [equalizerValues]);
 
-  // useEffect(() => {
-  //   localStorage.setItem("volume", volume.toString());
-  // }, [volume]);
+
 
   useEffect(() => {
     localStorage.setItem("isMuted", JSON.stringify(isMuted));
@@ -146,10 +139,7 @@ export default function EqualizerPage() {
     setActivePreset("custom");
   };
 
-  const toggleMute = () => {
-    setIsMuted(!isMuted);
-    console.log("Mute toggled to:", !isMuted);
-  };
+
 
   const resetEqualizerSettings = () => {
     setEqualizerValues(presets.flat);
