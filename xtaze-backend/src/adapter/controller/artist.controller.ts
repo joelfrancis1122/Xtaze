@@ -26,10 +26,11 @@ export default class ArtistController {
         throw new AppError(response.message || "Login failed", 400); // Use message from use case
       }
       res.cookie("ArefreshToken", response.ArefreshToken, {
-        httpOnly: false, // for frontend access
-        secure: true,
-        sameSite: "none",
-        maxAge: 7 * 24 * 60 * 60 * 1000,
+        httpOnly: true, // Prevent JavaScript access
+        secure: true,   // Required for HTTPS
+        sameSite: "none", // For cross-origin
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+        path: "/",
       });
       res.status(200).json(response);
     } catch (error) {
@@ -41,7 +42,7 @@ export default class ArtistController {
   async refreshToken(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       console.log("refresh token triggereed ")
-      const { ArefreshToken } = req.body;
+      const { ArefreshToken } =req.cookies.ArefreshToken
 
       console.log(req.body, "ithan enik kitityees")
       if (!ArefreshToken) throw new AppError("Refresh token is required", 400);
@@ -50,10 +51,11 @@ export default class ArtistController {
 
       if (response.success && response.token && response.ArefreshToken) {
         res.cookie("ArefreshToken", response.ArefreshToken, {
-          httpOnly: false, // for frontend access
-          secure: true,
-          sameSite: "none",
-          maxAge: 7 * 24 * 60 * 60 * 1000,        
+          httpOnly: true, // Prevent JavaScript access
+          secure: true,   // Required for HTTPS
+          sameSite: "none", // For cross-origin
+          maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+          path: "/",      
         });
         res.status(200).json({
           success: true,

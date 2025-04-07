@@ -66,12 +66,15 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
             >
               Home
             </a>
+            {signupData && typeof signupData.premium === "string" && signupData.premium !== "Free" && (
+
             <a
               onClick={() => navigate("/explore")}
               className="text-white font-medium hover:text-gray-200 block transition-colors"
             >
               Explore
             </a>
+            )}
             <a
               onClick={() => navigate("/videos")}
               className="text-white font-medium hover:text-gray-200 block transition-colors"

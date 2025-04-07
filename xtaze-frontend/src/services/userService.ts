@@ -6,12 +6,7 @@ import { Playlist } from "../pages/User/types/IPlaylist";
 import { IBanner } from "../pages/User/types/IBanner";
 
 // Utility to get cookies
-const getCookie = (name: string): string | null => {
-  const value = `; ${document.cookie}`;
-  const parts = value.split(`; ${name}=`);
-  console.log("getcookie this is cookie",getCookie)
-  return parts.length === 2 ? parts.pop()?.split(";").shift() || null : null;
-};
+
 // Simplified Axios Interceptor for Token Refresh
 const addRefreshInterceptor = (apiInstance: any) => {
   apiInstance.interceptors.response.use(
@@ -141,7 +136,7 @@ export const loginUser = async (
 ): Promise<void> => {
   const data = await apiCall<{ token: string; user: any }>(userApi, "post", "/login", { email, password });
   console.log("Login response:", data);
-  console.log("Refresh token after login:", getCookie("refreshToken"));
+  // console.log("Refresh token after login:", getCookie("refreshToken"));
   localStorage.setItem("token", data.token);
   dispatch(saveSignupData(data.user));
 };

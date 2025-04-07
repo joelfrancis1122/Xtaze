@@ -2,27 +2,33 @@ import { useDispatch } from "react-redux";
 import { artistApi, userApi } from "../api/axios";
 import { saveArtistData } from "../redux/artistSlice";
 
-// Utility to get cookies
-const getCookie = (name: string): string | null => {
-  const value = `; ${document.cookie}`;
-  const parts = value.split(`; ${name}=`);
-  return parts.length === 2 ? parts.pop()?.split(";").shift() || null : null;
-};
-
 // Simplified Axios Interceptor for Token Refresh
 const addRefreshInterceptor = (apiInstance: any) => {
   apiInstance.interceptors.response.use(
-    (response: { data: any; status: number; headers: any }) => response,
+    (response: { data: any; status: number; headers: any }) => {
+      // Update token if returned in response
+      const newToken = response.data?.token || response.headers["authorization"]?.replace("Bearer ", "");
+      if (newToken) {
+        localStorage.setItem("artistToken", newToken); // Use artistToken specifically
+        console.log("Updated artist token in localStorage:", newToken);
+      }
+      return response;
+    },
     async (error: any) => {
       const originalRequest = error.config;
       if (error.response?.status === 401 && !originalRequest._retry) {
         originalRequest._retry = true;
-        console.log("Calling artist refresh token due to 401", { cookies: document.cookie });
-        const newToken = await refreshToken();
+        console.log("Calling artist refresh token due to 401");
+
+        // Trigger refresh without sending refreshToken (backend handles it)
+        const response = await artistApi.post("/refresh", {}, { withCredentials: true });
+        const newToken = response.data.token;
         if (!newToken) {
           console.error("Artist refresh token failed, clearing auth");
+          localStorage.removeItem("artistToken");
           throw new Error("Failed to refresh token");
         }
+
         originalRequest.headers["Authorization"] = `Bearer ${newToken}`;
         return apiInstance(originalRequest);
       }
@@ -31,35 +37,24 @@ const addRefreshInterceptor = (apiInstance: any) => {
   );
 };
 
-// Apply interceptor to artistApi and userApi
+// Apply interceptor to artistApi
 addRefreshInterceptor(artistApi);
-addRefreshInterceptor(userApi);
 
 // Refresh Token (specific to artist)
 export const refreshToken = async (): Promise<string | null> => {
   try {
-    const refreshTokenValue = getCookie("ArefreshToken");
-    console.log("Artist refresh token:", refreshTokenValue);
-    if (!refreshTokenValue) {
-      console.error("No artist refresh token found, redirecting to login");
-      localStorage.removeItem("ArefreshToken");
-      document.cookie = "artistRefreshToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-      window.location.href = "/login";
-      return null;
+    console.log("Attempting to refresh artist token...");
+    const response = await artistApi.post("/refresh", {}, { withCredentials: true });
+    const newToken = response.data.token;
+    if (newToken) {
+      localStorage.setItem("artistToken", newToken);
+      console.log("New artist token:", newToken);
+      return newToken;
     }
-
-    const response = await artistApi.post("/refresh", { ArefreshToken: refreshTokenValue }, { withCredentials: true });
-    console.log("Artist refresh response:", response.data);
-    const data = response.data as { success: boolean; token: string; message?: string };
-    if (!data.success) throw new Error(data.message || "Failed to refresh token");
-    localStorage.setItem("artistToken", data.token);
-    console.log("New artist token:", data.token);
-    return data.token;
+    return null;
   } catch (error) {
     console.error("Artist refresh error:", error);
-    // localStorage.removeItem("artistToken");
-    // document.cookie = "artistRefreshToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-    // window.location.href = "/login";
+    localStorage.removeItem("artistToken");
     return null;
   }
 };
@@ -99,7 +94,6 @@ export const loginArtist = async (
   );
   if (!data.success) throw new Error(data.message || "Failed to login artist");
   console.log("Login response:", data);
-  console.log("Refresh token after login:", getCookie("artistRefreshToken"));
   localStorage.setItem("artistToken", data.token);
   dispatch(saveArtistData(data.artist));
 };
@@ -222,6 +216,7 @@ export default {
   uploadProfileImage,
   updateArtistBio,
   updateArtistBanner,
+  refreshToken,
 };
 
 // Genre interface (for TypeScript)
