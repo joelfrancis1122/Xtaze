@@ -15,7 +15,7 @@ const app = express();
 const corsOptions: CorsOptions = {
   origin: ["https://xtaze.fun", "https://www.xtaze.fun", "http://localhost:5000"],
   credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS","PATCH"],
   allowedHeaders: ["Content-Type", "Authorization"],
 };
 
