@@ -18,6 +18,7 @@ router.post("/login", (req: Request, res: Response, next: NextFunction) => userC
 router.post("/google-login", (req: Request, res: Response, next: NextFunction) => userController.googleLogin(req, res, next));
 router.post("/uploadProfilepic", authenticateUser,upload.single("profileImage"),(req:Request,res:Response,next:NextFunction)=>userController.uploadProfilepic(req,res,next))
 router.put("/updateBio",authenticateUser,(req:Request,res:Response,next:NextFunction)=>userController.updateBio(req,res,next))
+
 router.post("/checkOut",authenticateUser, async (req: Request, res: Response, next: NextFunction) => {await userController.checkOut(req, res, next)});
 router.post("/toggle-like",authenticateUser,(req:Request,res:Response,next:NextFunction)=>userController.toggleLike(req,res,next))
 router.post("/getliked",authenticateUser,(req:Request,res:Response,next:NextFunction)=>userController.getliked(req,res,next))
