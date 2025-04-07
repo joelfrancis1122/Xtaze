@@ -9,23 +9,37 @@ import { IBanner } from "../pages/User/types/IBanner";
 const getCookie = (name: string): string | null => {
   const value = `; ${document.cookie}`;
   const parts = value.split(`; ${name}=`);
+  console.log("getcookie this is cookie",getCookie)
   return parts.length === 2 ? parts.pop()?.split(";").shift() || null : null;
 };
-
 // Simplified Axios Interceptor for Token Refresh
 const addRefreshInterceptor = (apiInstance: any) => {
   apiInstance.interceptors.response.use(
-    (response: { data: any; status: number; headers: any }) => response,
+    (response: { data: any; status: number; headers: any }) => {
+      // Update token if returned in response
+      const newToken = response.data?.token || response.headers["authorization"]?.replace("Bearer ", "");
+      if (newToken) {
+        localStorage.setItem("token", newToken);
+        console.log("Updated token in localStorage:", newToken);
+      }
+      return response;
+    },
     async (error: any) => {
       const originalRequest = error.config;
       if (error.response?.status === 401 && !originalRequest._retry) {
         originalRequest._retry = true;
         console.log("Calling refresh token due to 401", { cookies: document.cookie });
-        const newToken = await refreshToken();
+
+        // Trigger refresh without sending refreshToken (backend handles it)
+        const response = await userApi.post("/refresh", {}, { withCredentials: true });
+        const newToken = response.data.token;
         if (!newToken) {
           console.error("Refresh token failed, clearing auth");
+          localStorage.removeItem("token");
+          document.cookie = "refreshToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
           throw new Error("Failed to refresh token");
         }
+
         originalRequest.headers["Authorization"] = `Bearer ${newToken}`;
         return apiInstance(originalRequest);
       }
@@ -40,18 +54,14 @@ const addRefreshInterceptor = (apiInstance: any) => {
 // Refresh Token (for users)
 export const refreshToken = async (): Promise<string | null> => {
   try {
-    const refreshTokenValue = getCookie("refreshToken");
-    console.log("User refresh token:", refreshTokenValue);
-    if (!refreshTokenValue) throw new Error("No refresh token available");
-
-    const response = await userApi.post("/refresh", { refreshToken: refreshTokenValue }, { withCredentials: true });
-    console.log("Refresh response:", response.data);
-    const data = response.data as { success: boolean; token: string; message?: string };
-    if (!data.success) throw new Error(data.message || "Failed to refresh token");
-
-    localStorage.setItem("token", data.token);
-    console.log("New user token:", data.token);
-    return data.token;
+    const response = await userApi.post("/refresh", {}, { withCredentials: true });
+    const newToken = response.data.token;
+    if (newToken) {
+      localStorage.setItem("token", newToken);
+      console.log("New user token:", newToken);
+      return newToken;
+    }
+    return null;
   } catch (error) {
     console.error("Refresh error:", error);
     localStorage.removeItem("token");

@@ -139,24 +139,31 @@ export default class UserController {
 
   async refreshToken(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      console.log("refresh token triggereed ")
-      const { refreshToken } = req.body;
-      if (!refreshToken) throw new AppError("Refresh token is required", 400);
-
+      console.log("Refresh token triggered");
+      const refreshToken = req.cookies.refreshToken;
+      console.log("Refresh token from cookie:", refreshToken);
+  
+      if (!refreshToken) {
+        throw new AppError("No refresh token available in cookie", 401);
+      }
+  
       const response = await this._userUseCase.refresh(refreshToken);
-
+  
       if (response.success && response.token && response.refreshToken) {
-        // Only set refreshToken in cookie
+        // Update refresh token cookie with new value (httpOnly: true for security)
         res.cookie("refreshToken", response.refreshToken, {
-           httpOnly: false, 
-          secure: true,
-          sameSite: "none",
+          httpOnly: true, // Prevent JavaScript access
+          secure: true,   // Required for HTTPS
+          sameSite: "none", // For cross-origin
           maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+          path: "/",     // Ensure site-wide availability
         });
+  
+        // Return new access token in response
         res.status(200).json({
           success: true,
           message: response.message,
-          token: response.token,
+          token: response.token, // New access token for client
         });
       } else {
         res.status(401).json(response);
