@@ -42,13 +42,14 @@ export default class ArtistController {
   async refreshToken(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       console.log("refresh token triggereed ")
-      const { ArefreshToken } =req.cookies.ArefreshToken
+      const ArefreshToken  =req.cookies.ArefreshToken
 
-      console.log(req.body, "ithan enik kitityees")
-      if (!ArefreshToken) throw new AppError("Refresh token is required", 400);
-
+      console.log(req.body,req.cookies, "ithan enik kitityees")
+      if (!ArefreshToken) throw new AppError("Refresh token is required", 401);
+      console.log("1")
       const response = await this._artistnUseCase.refresh(ArefreshToken);
-
+      console.log("12")
+      
       if (response.success && response.token && response.ArefreshToken) {
         res.cookie("ArefreshToken", response.ArefreshToken, {
           httpOnly: true, // Prevent JavaScript access
@@ -57,6 +58,7 @@ export default class ArtistController {
           maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
           path: "/",      
         });
+        console.log("123")
         res.status(200).json({
           success: true,
           message: response.message,
