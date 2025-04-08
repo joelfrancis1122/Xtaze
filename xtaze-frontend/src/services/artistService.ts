@@ -252,16 +252,16 @@ export const fetchSongEarnings = async (artistId: string, token: string): Promis
     monthlyEarnings: song.monthlyPlays * 0.50,
   }));
 };
-// export default {
-//   loginArtist,
-//   fetchArtistTracks,
-//   fetchActiveGenres,
-//   uploadSong,
-//   uploadProfileImage,
-//   updateArtistBio,
-//   updateArtistBanner,
-//   refreshToken,
-// };
+export default {
+  loginArtist,
+  fetchArtistTracks,
+  fetchActiveGenres,
+  uploadSong,
+  uploadProfileImage,
+  updateArtistBio,
+  updateArtistBanner,
+  refreshToken,
+};
 
 // Genre interface (for TypeScript)
 export interface IGenre {
