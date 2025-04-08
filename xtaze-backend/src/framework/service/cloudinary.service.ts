@@ -1,7 +1,8 @@
 import cloudinary from "../../utils/cloudinaryConfig";
-import { parseBuffer } from "music-metadata";
 import { UploadApiResponse } from "cloudinary";
 import { v4 as uuidv4 } from "uuid";
+// Replace import with require
+const musicMetadata = require("music-metadata");
 
 export interface UploadSongResponse {
   secure_url: string;
@@ -15,8 +16,22 @@ export const uploadSongToCloud = async (file: Express.Multer.File): Promise<Uplo
   try {
     if (!file || !file.buffer) throw new Error("No file provided");
 
-    // Parse metadata from audio buffer
-    const metadata = await parseBuffer(file.buffer, file.mimetype || "audio/mpeg");
+    let metadata;
+    try {
+      // Use the required module
+      metadata = await musicMetadata.parseBuffer(file.buffer, file.mimetype || "audio/mpeg");
+    } catch (metadataError) {
+      console.error("❌ Metadata parsing error:", metadataError);
+      // Fallback metadata
+      metadata = {
+        common: {
+          title: file.originalname.replace(/\.[^/.]+$/, "") || "Unknown_Title",
+          artist: "Unknown_Artist",
+          album: "Unknown_Album",
+          genre: ["Unknown_Genre"]
+        }
+      };
+    }
 
     const songTitle = metadata.common.title || "Unknown_Title";
     const artist = metadata.common.artist
@@ -24,7 +39,7 @@ export const uploadSongToCloud = async (file: Express.Multer.File): Promise<Uplo
       : ["Unknown_Artist"];
     const album = metadata.common.album || "Unknown_Album";
     const genre = metadata.common.genre
-      ? metadata.common.genre.flatMap(g => g.split("/")).map(g => g.trim()).filter(Boolean)
+      ? metadata.common.genre.flatMap((g: string) => g.split("/")).map((g: string) => g.trim()).filter(Boolean)
       : ["Unknown_Genre"];
 
     const folderName = file.originalname
@@ -61,6 +76,7 @@ export const uploadSongToCloud = async (file: Express.Multer.File): Promise<Uplo
   }
 };
 
+// The rest of your code remains unchanged
 export const uploadImageToCloud = async (file: Express.Multer.File): Promise<UploadApiResponse> => {
   try {
     if (!file || !file.buffer) throw new Error("No file provided");
