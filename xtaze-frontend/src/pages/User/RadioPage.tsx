@@ -6,14 +6,14 @@ import { useNavigate } from "react-router-dom";
 import { Play, Pause, Plus, Download } from "lucide-react";
 import { getMyplaylist } from "../../services/userService";
 import { toast } from "sonner";
-import cd from "../../assets/cd.gif"
+import cd from "../../assets/cd.gif";
+
 interface RadioStation {
   stationuuid: string;
   name: string;
   url: string;
   favicon: string;
 }
-
 
 export default function RadioPage() {
   const [stations, setStations] = useState<RadioStation[]>([]);
@@ -32,27 +32,65 @@ export default function RadioPage() {
   const token = localStorage.getItem("token");
 
   useEffect(() => {
-    const fetchStationsAndPlaylists = async () => {
+    const fetchStationsAndPlaylists = async (retries = 3, delay = 2000) => {
       if (!token) {
         console.error("No token found. Please login.");
         setLoading(false);
         return;
       }
 
-      try {
-        const response = await fetch("https://de1.api.radio-browser.info/json/stations/bytag/chillout", {
-          headers: { "User-Agent": "MyRadioApp/1.0" },
-        });
-        const data = await response.json();
-        setStations(data.slice(0, 50));
+      for (let attempt = 1; attempt <= retries; attempt++) {
+        try {
+          setLoading(true);
+          // Simplified primary endpoint to test connectivity
+          let response = await fetch(
+            "https://de1.api.radio-browser.info/json/stations/search?language=english&limit=50",
+            {
+              headers: { "User-Agent": "MyRadioApp/1.0" },
+              signal: AbortSignal.timeout(10000), // 10-second timeout
+            }
+          );
+          if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+          let data = await response.json();
+          if (!Array.isArray(data) || data.length === 0) {
+            throw new Error("No stations found for the given criteria");
+          }
+          setStations(data);
 
-        const fetchedPlaylists = await getMyplaylist(userId);
-        setPlaylists(fetchedPlaylists);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-        toast.error("Failed to load stations or playlists");
-      } finally {
-        setLoading(false);
+          const fetchedPlaylists = await getMyplaylist(userId);
+          setPlaylists(fetchedPlaylists);
+          break; // Success, exit loop
+        } catch (error: any) {
+          console.error(`Attempt ${attempt} failed: ${error.message}`);
+          if (attempt === retries) {
+            // Fallback to basic English stations after retries
+            try {
+              const fallbackResponse = await fetch(
+                "https://de1.api.radio-browser.info/json/stations/bylanguage/english?limit=50",
+                {
+                  headers: { "User-Agent": "MyRadioApp/1.0" },
+                  signal: AbortSignal.timeout(10000),
+                }
+              );
+              if (!fallbackResponse.ok)
+                throw new Error(`Fallback HTTP error! status: ${fallbackResponse.status}`);
+              const fallbackData = await fallbackResponse.json();
+              if (!Array.isArray(fallbackData) || fallbackData.length === 0) {
+                throw new Error("No English stations found in fallback");
+              }
+              setStations(fallbackData);
+              const fetchedPlaylists = await getMyplaylist(userId);
+              setPlaylists(fetchedPlaylists);
+            } catch (fallbackError: any) {
+              console.error("Fallback failed:", fallbackError.message);
+              toast.error(`Failed to load stations or playlists: ${fallbackError.message}`);
+            }
+          } else {
+            await new Promise((resolve) => setTimeout(resolve, delay)); // Wait before retry
+          }
+        } finally {
+          setLoading(false);
+        }
       }
     };
 
@@ -84,22 +122,36 @@ export default function RadioPage() {
   }, [stations]);
 
   const handlePlayStation = (station: RadioStation) => {
+    if (!station.url || !station.url.startsWith("http")) {
+      toast.error("Invalid station URL");
+      return;
+    }
+
     if (currentStationUrl === station.url) {
       if (isPlaying) {
         audioRef.current.pause();
         setIsPlaying(false);
       } else {
-        audioRef.current.play();
-        setIsPlaying(true);
+        audioRef.current
+          .play()
+          .then(() => setIsPlaying(true))
+          .catch((e) => {
+            console.error("Playback error:", e);
+            toast.error("Failed to resume station");
+          });
       }
     } else {
       audioRef.current.src = station.url;
-      audioRef.current.play().catch((e) => {
-        console.error("Playback error:", e);
-        toast.error("Failed to play station");
-      });
-      setCurrentStationUrl(station.url);
-      setIsPlaying(true);
+      audioRef.current
+        .play()
+        .then(() => {
+          setCurrentStationUrl(station.url);
+          setIsPlaying(true);
+        })
+        .catch((e) => {
+          console.error("Playback error:", e);
+          toast.error("Failed to play station");
+        });
     }
   };
 
@@ -229,7 +281,7 @@ export default function RadioPage() {
   return (
     <div className="flex h-screen flex-col bg-black text-white">
       <div className="flex flex-1">
-      <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
+        <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
         {isSidebarOpen && (
           <div
             className="fixed inset-0 bg-black/50 z-20 md:hidden"
