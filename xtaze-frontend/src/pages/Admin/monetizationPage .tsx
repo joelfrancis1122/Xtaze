@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import { ChevronLeft, DollarSign, ChevronDown, ChevronUp } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
-import axios from "axios";
 import Sidebar from "./adminComponents/aside-side";
 import { toast } from "sonner";
+import { fetchMonetizationData, initiateArtistPayout } from "../../services/adminService";
 
 interface MusicMonetization {
   trackId: string;
@@ -14,7 +14,7 @@ interface MusicMonetization {
   totalRevenue: number;
   monthlyRevenue: number;
   lastUpdated: string;
-  paymentStatus: boolean; // Updated from "paid" to match ArtistData
+  paymentStatus: boolean;
 }
 
 interface ArtistData {
@@ -36,15 +36,13 @@ export default function AdminMusicMonetizationPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchMonetizationData = async () => {
+    const fetchMonetizationDataAsync = async () => {
       try {
         setLoading(true);
-        const response = await axios.get("http://localhost:3000/admin/music/monetization", {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-        });
-        console.log(response.data.data, "this is response");
+        const token = localStorage.getItem("token") || "";
+        const rawData = await fetchMonetizationData(token);
 
-        const groupedData = response.data.data.reduce((acc: { [key: string]: ArtistData }, song: MusicMonetization) => {
+        const groupedData = rawData.reduce((acc: { [key: string]: ArtistData }, song: MusicMonetization) => {
           if (!acc[song.artistName]) {
             acc[song.artistName] = {
               artistName: song.artistName,
@@ -53,7 +51,7 @@ export default function AdminMusicMonetizationPage() {
               totalRevenue: 0,
               monthlyRevenue: 0,
               songs: [],
-              paymentStatus: song.paymentStatus || false, // Use backend-provided status
+              paymentStatus: song.paymentStatus || false,
             };
           }
           acc[song.artistName].totalPlays += song.totalPlays;
@@ -66,15 +64,15 @@ export default function AdminMusicMonetizationPage() {
 
         setArtists(Object.values(groupedData));
         setError(null);
-      } catch (err) {
-        console.error(err);
+      } catch (err: any) {
+        toast.error(err.message || "Failed to load monetization data");
         setError("Failed to load monetization data");
       } finally {
         setLoading(false);
       }
     };
 
-    fetchMonetizationData();
+    fetchMonetizationDataAsync();
 
     // Handle success redirect
     const params = new URLSearchParams(location.search);
@@ -85,7 +83,7 @@ export default function AdminMusicMonetizationPage() {
           artist.artistName === artistName
             ? {
                 ...artist,
-                paymentStatus: true, // Update paymentStatus instead of paid
+                paymentStatus: true,
                 songs: artist.songs.map((song) => ({ ...song, paymentStatus: true })),
               }
             : artist
@@ -99,18 +97,13 @@ export default function AdminMusicMonetizationPage() {
 
   const handlePayArtist = async (artistName: string) => {
     try {
-      const response = await axios.post(
-        "http://localhost:3000/admin/artistPayout",
-        { artistName },
-        { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
-      );
-      if (response.data && response.data.data.sessionUrl) {
-        console.log(response.data.data.sessionUrl, "odi odi odi");
-        window.location.href = response.data.data.sessionUrl;
+      const token = localStorage.getItem("token") || "";
+      const sessionUrl = await initiateArtistPayout(artistName, token);
+      if (sessionUrl) {
+        window.location.href = sessionUrl;
       }
     } catch (err: any) {
-      console.error(err);
-      const errorMessage = err.response?.data?.message || "Failed to initiate payout";
+      const errorMessage = err.message || "Failed to initiate payout";
       toast.error(`Payout failed for ${artistName}: ${errorMessage}`);
     }
   };
@@ -213,7 +206,6 @@ export default function AdminMusicMonetizationPage() {
                         <span>Total Plays</span>
                         <span>Monthly Plays</span>
                         <span>Total Revenue</span>
-                        
                         <span>Monthly Revenue</span>
                       </div>
                       {artist.songs.map((song) => (

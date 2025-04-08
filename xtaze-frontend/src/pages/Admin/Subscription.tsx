@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { ChevronLeft, Plus, Edit, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
 import Sidebar from "./adminComponents/aside-side";
 import { toast } from "sonner";
+import { archiveSubscriptionPlan, createSubscriptionPlan, fetchSubscriptionPlans, updateSubscriptionPlan } from "../../services/adminService";
+
 
 interface StripeProduct {
   id: string;
@@ -41,39 +42,44 @@ export default function AdminSubscriptionPage() {
   const [editPlan, setEditPlan] = useState<SubscriptionPlan | null>(null);
 
   useEffect(() => {
-    const fetchPlans = async () => {
+    const fetchPlansAsync = async () => {
       try {
         setLoading(true);
-        const response = await axios.get("http://localhost:3000/admin/stripe/plans");
-        setPlans(response.data.data);
+        const token = localStorage.getItem("adminToken") || ""; // Adjust token key if different
+        const fetchedPlans = await fetchSubscriptionPlans(token);
+        setPlans(fetchedPlans);
         setError(null);
-      } catch (err) {
-        console.error(err);
+      } catch (err: any) {
+        toast.error(err.message || "Failed to load subscription plans");
         setError("Failed to load subscription plans");
       } finally {
         setLoading(false);
       }
     };
 
-    fetchPlans();
+    fetchPlansAsync();
   }, []);
 
   const handleCreatePlan = async () => {
     try {
       const unitAmount = parseFloat(newPlan.price);
-      const res = await axios.post("http://localhost:3000/admin/stripe/createProduct", {
-        name: newPlan.name,
-        description: newPlan.description,
-        price: unitAmount,
-        interval: newPlan.interval,
-      });
-      setPlans([...plans, res.data.data]);
+      if (isNaN(unitAmount)) throw new Error("Invalid price");
+      const token = localStorage.getItem("adminToken") || ""; // Adjust token key if different
+      const createdPlan = await createSubscriptionPlan(
+        {
+          name: newPlan.name,
+          description: newPlan.description,
+          price: unitAmount,
+          interval: newPlan.interval,
+        },
+        token
+      );
+      setPlans([...plans, createdPlan]);
       setNewPlan({ name: "", description: "", price: "", interval: "month" });
       setIsFormOpen(false);
       toast.success("Plan created successfully");
-    } catch (err) {
-      console.error(err);
-      setError("Failed to create plan");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to create plan");
     }
   };
 
@@ -87,34 +93,35 @@ export default function AdminSubscriptionPage() {
   const handleUpdatePlan = async () => {
     if (!editPlan) return;
     try {
-      const unitAmount = parseFloat(editPlan.price.unit_amount / 100 + ""); // Convert back to dollars
-      const res = await axios.put(`http://localhost:3000/admin/stripe/products/?productId=${editPlan.product.id}`, {
-        name: editPlan.product.name,
-        description: editPlan.product.description,
-        price: unitAmount,
-        interval: editPlan.price.recurring?.interval || "month",
-      });
-      setPlans(plans.map((plan) =>
-        plan.product.id === editPlan.product.id ? res.data.data : plan
-      ));
+      const unitAmount = parseFloat((editPlan.price.unit_amount / 100).toString());
+      if (isNaN(unitAmount)) throw new Error("Invalid price");
+      const token = localStorage.getItem("adminToken") || ""; // Adjust token key if different
+      const updatedPlan = await updateSubscriptionPlan(
+        editPlan.product.id,
+        {
+          name: editPlan.product.name,
+          description: editPlan.product.description || "",
+          price: unitAmount,
+          interval: editPlan.price.recurring?.interval || "month",
+        },
+        token
+      );
+      setPlans(plans.map((plan) => (plan.product.id === editPlan.product.id ? updatedPlan : plan)));
       setEditPlan(null);
       toast.success("Plan updated successfully");
-    } catch (err) {
-      console.error(err);
-      setError("Failed to update plan");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to update plan");
     }
   };
 
   const handleArchivePlan = async (productId: string) => {
     try {
-      const res = await axios.post(`http://localhost:3000/admin/stripe/products/delete?productId=${productId}`);
+      const token = localStorage.getItem("adminToken") || ""; // Adjust token key if different
+      await archiveSubscriptionPlan(productId, token);
       setPlans(plans.filter((plan) => plan.product.id !== productId));
-      if (res.status === 200) {
-        toast.success("Plan deleted successfully");
-      }
-    } catch (err) {
-      console.error(err);
-      setError("Failed to archive plan");
+      toast.success("Plan archived successfully");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to archive plan");
     }
   };
 
@@ -122,14 +129,21 @@ export default function AdminSubscriptionPage() {
     <div className="flex min-h-screen bg-black text-white">
       <Sidebar />
       <div className="flex-1 ml-64 py-7 px-6 pb-20">
-        <button onClick={() => navigate(-1)} className="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center hover:bg-gray-600 transition mb-4" title="Go back">
+        <button
+          onClick={() => navigate(-1)}
+          className="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center hover:bg-gray-600 transition mb-4"
+          title="Go back"
+        >
           <ChevronLeft className="h-5 w-5 text-gray-400" />
         </button>
 
         <div className="max-w-7xl mx-auto space-y-10">
           <div className="flex items-center justify-between">
             <h1 className="text-3xl font-bold">Subscription Plans</h1>
-            <button onClick={() => setIsFormOpen(!isFormOpen)} className="flex items-center gap-2 bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-md transition">
+            <button
+              onClick={() => setIsFormOpen(!isFormOpen)}
+              className="flex items-center gap-2 bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-md transition"
+            >
               <Plus className="h-5 w-5" /> Create Plan
             </button>
           </div>
@@ -138,16 +152,46 @@ export default function AdminSubscriptionPage() {
             <div className="bg-[#151515] p-6 rounded-xl shadow-lg border border-gray-900">
               <h2 className="text-xl font-semibold mb-4">New Subscription Plan</h2>
               <div className="space-y-4">
-                <input value={newPlan.name} onChange={(e) => setNewPlan({ ...newPlan, name: e.target.value })} placeholder="Plan Name" className="w-full bg-gray-800 text-white p-2 rounded-md border border-gray-700" />
-                <input value={newPlan.description} onChange={(e) => setNewPlan({ ...newPlan, description: e.target.value })} placeholder="Description" className="w-full bg-gray-800 text-white p-2 rounded-md border border-gray-700" />
-                <input type="number" value={newPlan.price} onChange={(e) => setNewPlan({ ...newPlan, price: e.target.value })} placeholder="Price (e.g., 10.00)" className="w-full bg-gray-800 text-white p-2 rounded-md border border-gray-700" />
-                <select value={newPlan.interval} onChange={(e) => setNewPlan({ ...newPlan, interval: e.target.value as "month" | "year" })} className="w-full bg-gray-800 text-white p-2 rounded-md border border-gray-700">
+                <input
+                  value={newPlan.name}
+                  onChange={(e) => setNewPlan({ ...newPlan, name: e.target.value })}
+                  placeholder="Plan Name"
+                  className="w-full bg-gray-800 text-white p-2 rounded-md border border-gray-700"
+                />
+                <input
+                  value={newPlan.description}
+                  onChange={(e) => setNewPlan({ ...newPlan, description: e.target.value })}
+                  placeholder="Description"
+                  className="w-full bg-gray-800 text-white p-2 rounded-md border border-gray-700"
+                />
+                <input
+                  type="number"
+                  value={newPlan.price}
+                  onChange={(e) => setNewPlan({ ...newPlan, price: e.target.value })}
+                  placeholder="Price (e.g., 10.00)"
+                  className="w-full bg-gray-800 text-white p-2 rounded-md border border-gray-700"
+                />
+                <select
+                  value={newPlan.interval}
+                  onChange={(e) => setNewPlan({ ...newPlan, interval: e.target.value as "month" | "year" })}
+                  className="w-full bg-gray-800 text-white p-2 rounded-md border border-gray-700"
+                >
                   <option value="month">Monthly</option>
                   <option value="year">Yearly</option>
                 </select>
                 <div className="flex gap-4">
-                  <button onClick={handleCreatePlan} className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-md transition">Save</button>
-                  <button onClick={() => setIsFormOpen(false)} className="bg-gray-900 hover:bg-gray-800 text-gray-400 px-4 py-2 rounded-md transition">Cancel</button>
+                  <button
+                    onClick={handleCreatePlan}
+                    className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-md transition"
+                  >
+                    Save
+                  </button>
+                  <button
+                    onClick={() => setIsFormOpen(false)}
+                    className="bg-gray-900 hover:bg-gray-800 text-gray-400 px-4 py-2 rounded-md transition"
+                  >
+                    Cancel
+                  </button>
                 </div>
               </div>
             </div>
@@ -159,34 +203,64 @@ export default function AdminSubscriptionPage() {
               <div className="space-y-4">
                 <input
                   value={editPlan.product.name}
-                  onChange={(e) => setEditPlan({ ...editPlan, product: { ...editPlan.product, name: e.target.value } })}
+                  onChange={(e) =>
+                    setEditPlan({ ...editPlan, product: { ...editPlan.product, name: e.target.value } })
+                  }
                   placeholder="Plan Name"
                   className="w-full bg-gray-800 text-white p-2 rounded-md border border-gray-700"
                 />
                 <input
                   value={editPlan.product.description || ""}
-                  onChange={(e) => setEditPlan({ ...editPlan, product: { ...editPlan.product, description: e.target.value } })}
+                  onChange={(e) =>
+                    setEditPlan({
+                      ...editPlan,
+                      product: { ...editPlan.product, description: e.target.value },
+                    })
+                  }
                   placeholder="Description"
                   className="w-full bg-gray-800 text-white p-2 rounded-md border border-gray-700"
                 />
                 <input
                   type="number"
                   value={editPlan.price.unit_amount / 100}
-                  onChange={(e) => setEditPlan({ ...editPlan, price: { ...editPlan.price, unit_amount: parseFloat(e.target.value) * 100 } })}
+                  onChange={(e) =>
+                    setEditPlan({
+                      ...editPlan,
+                      price: { ...editPlan.price, unit_amount: parseFloat(e.target.value) * 100 },
+                    })
+                  }
                   placeholder="Price (e.g., 10.00)"
                   className="w-full bg-gray-800 text-white p-2 rounded-md border border-gray-700"
                 />
                 <select
                   value={editPlan.price.recurring?.interval || "month"}
-                  onChange={(e) => setEditPlan({ ...editPlan, price: { ...editPlan.price, recurring: { interval: e.target.value as "month" | "year" } } })}
+                  onChange={(e) =>
+                    setEditPlan({
+                      ...editPlan,
+                      price: {
+                        ...editPlan.price,
+                        recurring: { interval: e.target.value as "month" | "year" },
+                      },
+                    })
+                  }
                   className="w-full bg-gray-800 text-white p-2 rounded-md border border-gray-700"
                 >
                   <option value="month">Monthly</option>
                   <option value="year">Yearly</option>
                 </select>
                 <div className="flex gap-4">
-                  <button onClick={handleUpdatePlan} className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-md transition">Update</button>
-                  <button onClick={() => setEditPlan(null)} className="bg-gray-900 hover:bg-gray-800 text-gray-400 px-4 py-2 rounded-md transition">Cancel</button>
+                  <button
+                    onClick={handleUpdatePlan}
+                    className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-md transition"
+                  >
+                    Update
+                  </button>
+                  <button
+                    onClick={() => setEditPlan(null)}
+                    className="bg-gray-900 hover:bg-gray-800 text-gray-400 px-4 py-2 rounded-md transition"
+                  >
+                    Cancel
+                  </button>
                 </div>
               </div>
             </div>
@@ -205,7 +279,10 @@ export default function AdminSubscriptionPage() {
                 <span className="text-right">Actions</span>
               </div>
               {plans.map((plan) => (
-                <div key={plan.product.id} className="grid grid-cols-[2fr_1fr_1fr_1fr] gap-4 px-6 py-4 hover:bg-[#212121] transition-all duration-200 items-center">
+                <div
+                  key={plan.product.id}
+                  className="grid grid-cols-[2fr_1fr_1fr_1fr] gap-4 px-6 py-4 hover:bg-[#212121] transition-all duration-200 items-center"
+                >
                   <span className="text-white truncate">{plan.product.name}</span>
                   <span className="text-gray-400">${(plan.price.unit_amount / 100).toFixed(2)}</span>
                   <span className="text-gray-400">{plan.price.recurring?.interval || "N/A"}</span>

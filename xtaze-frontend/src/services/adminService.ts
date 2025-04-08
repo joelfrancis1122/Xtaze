@@ -354,6 +354,43 @@ export const deleteCoupon = async (id: string, token?: string): Promise<void> =>
     throw new Error(error.response?.data?.message || "Failed to delete coupon");
   }
 };
+
+export const fetchMonetizationData = async (token?: string): Promise<MusicMonetization[]> => {
+  console.log("Fetching monetization data...");
+  try {
+    const data = await apiCall<{ data: MusicMonetization[] }>(
+      adminApi,
+      "get",
+      "/music/monetization",
+      undefined,
+      token
+    );
+    console.log("Fetched monetization data:", data.data);
+    return data.data || [];
+  } catch (error: any) {
+    console.error("Error fetching monetization data:", error);
+    throw new Error(error.response?.data?.message || "Failed to fetch monetization data");
+  }
+};
+
+// New function to initiate artist payout
+export const initiateArtistPayout = async (artistName: string, token?: string): Promise<string> => {
+  console.log("Initiating payout for artist:", artistName);
+  try {
+    const data = await apiCall<{ data: { sessionUrl: string } }>(
+      adminApi,
+      "post",
+      "/artistPayout",
+      { artistName },
+      token
+    );
+    console.log("Payout session URL:", data.data.sessionUrl);
+    return data.data.sessionUrl;
+  } catch (error: any) {
+    console.error("Error initiating payout:", error);
+    throw new Error(error.response?.data?.message || "Failed to initiate payout");
+  }
+};
 export interface Coupon {
   _id: string;
   code: string;
@@ -363,3 +400,128 @@ export interface Coupon {
   uses: number;
   status: string;
 }
+
+export interface MusicMonetization {
+  trackId: string;
+  trackName: string;
+  artistName: string;
+  totalPlays: number;
+  monthlyPlays: number;
+  totalRevenue: number;
+  monthlyRevenue: number;
+  lastUpdated: string;
+  paymentStatus: boolean;
+}
+
+export const fetchSubscriptionPlans = async (token?: string): Promise<SubscriptionPlan[]> => {
+  console.log("Fetching subscription plans...");
+  try {
+    const data = await apiCall<{ data: SubscriptionPlan[] }>(
+      adminApi,
+      "get",
+      "/stripe/plans",
+      undefined,
+      token
+    );
+    console.log("Fetched subscription plans:", data.data);
+    return data.data || [];
+  } catch (error: any) {
+    console.error("Error fetching subscription plans:", error);
+    throw new Error(error.response?.data?.message || "Failed to fetch subscription plans");
+  }
+};
+
+// New function to create a subscription plan
+export const createSubscriptionPlan = async (
+  planData: { name: string; description?: string; price: number; interval: "month" | "year" },
+  token?: string
+): Promise<SubscriptionPlan> => {
+  console.log("Creating subscription plan with:", planData);
+  try {
+    const unitAmount = Math.round(parseFloat(planData.price.toString()) * 100); // Convert dollars to cents
+    const data = await apiCall<{ data: SubscriptionPlan }>(
+      adminApi,
+      "post",
+      "/stripe/createProduct",
+      {
+        name: planData.name,
+        description: planData.description,
+        price: unitAmount,
+        interval: planData.interval,
+      },
+      token
+    );
+    console.log("Created subscription plan:", data.data);
+    return data.data;
+  } catch (error: any) {
+    console.error("Error creating subscription plan:", error);
+    throw new Error(error.response?.data?.message || "Failed to create subscription plan");
+  }
+};
+export interface SubscriptionPlan {
+  product: StripeProduct;
+  price: StripePrice;
+}
+export interface StripeProduct {
+  id: string;
+  name: string;
+  description?: string;
+  active: boolean;
+}
+
+// Define StripePrice interface
+export interface StripePrice {
+  id: string;
+  product: string;
+  unit_amount: number;
+  currency: string;
+  recurring?: { interval: "month" | "year" };
+  active: boolean;
+}
+
+// New function to update a subscription plan
+export const updateSubscriptionPlan = async (
+  productId: string,
+  planData: { name: string; description?: string; price: number; interval: "month" | "year" },
+  token?: string
+): Promise<SubscriptionPlan> => {
+  console.log("Updating subscription plan with:", { productId, planData });
+  try {
+    const unitAmount = Math.round(parseFloat(planData.price.toString()) * 100); // Convert dollars to cents
+    const data = await apiCall<{ data: SubscriptionPlan }>(
+      adminApi,
+      "put",
+      `/stripe/products/?productId=${productId}`,
+      {
+        name: planData.name,
+        description: planData.description,
+        price: unitAmount,
+        interval: planData.interval,
+      },
+      token
+    );
+    console.log("Updated subscription plan:", data.data);
+    return data.data;
+  } catch (error: any) {
+    console.error("Error updating subscription plan:", error);
+    throw new Error(error.response?.data?.message || "Failed to update subscription plan");
+  }
+};
+
+// New function to archive a subscription plan
+export const archiveSubscriptionPlan = async (productId: string, token?: string): Promise<void> => {
+  console.log("Archiving subscription plan with productId:", productId);
+  try {
+    await apiCall<{ status: number }>(
+      adminApi,
+      "post",
+      `/stripe/products/delete?productId=${productId}`,
+      undefined,
+      token
+    );
+    console.log("Subscription plan archived successfully");
+  } catch (error: any) {
+    console.error("Error archiving subscription plan:", error);
+    throw new Error(error.response?.data?.message || "Failed to archive subscription plan");
+  }
+};
