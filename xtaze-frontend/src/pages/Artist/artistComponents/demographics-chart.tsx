@@ -10,6 +10,8 @@ import {
   Pie,
   Cell,
   Legend,
+  XAxis,
+  YAxis,
 } from "recharts";
 import { RootState } from "../../../store/store";
 import { fetchArtistTracks, fetchUserDetails } from "../../../services/adminService";
@@ -82,10 +84,10 @@ export function DemographicsChart() {
 
   // Render Gender Pie Chart
   const renderGenderChart = () => (
-    <div className="w-full bg-gray-800 rounded-lg p-4 shadow-md border border-gray-700">
+    <div className="w-full h-full bg-gray-800 rounded-lg p-4 shadow-md border border-gray-700">
       <h3 className="text-lg font-semibold mb-2 text-white text-center">Gender Distribution</h3>
       {genderData.length > 0 ? (
-        <div className="h-[250px] w-full">
+        <div className="h-[400px] w-[full]">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
@@ -135,7 +137,7 @@ export function DemographicsChart() {
               data={ageData}
               margin={{ top: 20, right: 30, left: 0, bottom: 20 }}
             >
-              {/* <XAxis
+              <XAxis
                 dataKey="category"
                 stroke="#888888"
                 fontSize={12}
@@ -149,7 +151,7 @@ export function DemographicsChart() {
                 axisLine={false}
                 tickFormatter={(value: number) => `${Math.round(value)}%`}
                 domain={[0, 100]}
-              /> */}
+              />
               {/* Tooltip removed to disable hover effects */}
               <Legend />
               <Bar
@@ -185,7 +187,7 @@ export function DemographicsChart() {
               data={countryData}
               margin={{ top: 20, right: 30, left: 0, bottom: 20 }}
             >
-              {/* <XAxis
+              <XAxis
                 dataKey="category"
                 stroke="#888888"
                 fontSize={12}
@@ -199,7 +201,7 @@ export function DemographicsChart() {
                 axisLine={false}
                 tickFormatter={(value: number) => `${Math.round(value)}%`}
                 domain={[0, 100]}
-              /> */}
+              />
               {/* Tooltip removed to disable hover effects */}
               <Legend />
               <Bar

@@ -17,7 +17,6 @@ interface Song {
   title: string;
   fileUrl: string;
   playHistory?: PlayHistory[]; // ✅ Add play history
-  duration?: string;
 }
 
 export function TopSongsTable() {
@@ -85,7 +84,6 @@ export function TopSongsTable() {
           <th className="px-4 py-2 text-left text-sm font-semibold border-b">##</th>
           <th className="px-4 py-2 text-left text-sm font-semibold border-b">Title</th>
           <th className="px-4 py-2 text-center text-sm font-semibold border-b">Total Plays</th>
-          <th className="px-4 py-2 text-center text-sm font-semibold border-b">Duration</th>
         </tr>
       </thead>
       <TableBody className="space-y-4"> {/* Adds spacing between rows */}
@@ -105,7 +103,6 @@ export function TopSongsTable() {
           </TableCell>
           <TableCell className="font-medium py-4">{song.title}</TableCell>
           <TableCell className="py-4">{totalPlays.toLocaleString()}</TableCell>
-          <TableCell className="py-4">{song.duration || "N/A"}</TableCell>
         </TableRow>
       );
     })
