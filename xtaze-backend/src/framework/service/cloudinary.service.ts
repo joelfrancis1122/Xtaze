@@ -1,8 +1,8 @@
 import cloudinary from "../../utils/cloudinaryConfig";
 import * as mm from "music-metadata";
-import { Readable } from "stream";
+import { PassThrough } from "stream"; // Use PassThrough instead of Readable
 import { UploadApiResponse } from "cloudinary";
-import { v4 as uuidv4 } from "uuid"; // Import UUID for unique IDs
+import { v4 as uuidv4 } from "uuid";
 
 export interface UploadSongResponse {
   secure_url: string;
@@ -11,34 +11,30 @@ export interface UploadSongResponse {
   album: string;
   genre: string[];
 }
+
 export const uploadSongToCloud = async (file: Express.Multer.File): Promise<UploadSongResponse> => {
   try {
-    // buffer to stream for metadata extraction
-    const stream = new Readable();
-    stream.push(file.buffer);
-    stream.push(null);
+    if (!file || !file.buffer) throw new Error("No file provided");
 
-    const metadata = await mm.parseStream(stream, { mimeType: file.mimetype });
+    const stream = new PassThrough();
+    stream.end(file.buffer); // feed buffer into PassThrough stream
 
-    // Extract metadata 
-    console.log(metadata.common, "as pic undo")
+    const metadata = await mm.parseStream(stream, { mimeType: file.mimetype || "audio/mpeg" });
+
     const songTitle = metadata.common.title || "Unknown_Title";
-    const artist = metadata.common.artist ? [metadata.common.artist].flatMap(g => g.split("/")).map(g => g.trim()).filter(g => g.length > 0) : ["Unknown_Artist"];
+    const artist = metadata.common.artist
+      ? [metadata.common.artist].flatMap(a => a.split("/")).map(a => a.trim()).filter(Boolean)
+      : ["Unknown_Artist"];
     const album = metadata.common.album || "Unknown_Album";
-    const genre = metadata.common.genre ? metadata.common.genre.flatMap(g => g.split("/")).map(g => g.trim()).filter(g => g.length > 0) : ["Unknown_Genre"];
-    console.log("📀 Extracted Metadata:", { songTitle, artist, album, genre });
-
-
-
-
-    console.log("🚀 Uploading song to Cloudinary...");
+    const genre = metadata.common.genre
+      ? metadata.common.genre.flatMap(g => g.split("/")).map(g => g.trim()).filter(Boolean)
+      : ["Unknown_Genre"];
 
     const folderName = file.originalname
-      .replace(/\.[^/.]+$/, "") // Remove file extension
-      .replace(/[^a-zA-Z0-9_-]/g, "_") // Replace special characters with "_"
+      .replace(/\.[^/.]+$/, "")
+      .replace(/[^a-zA-Z0-9_-]/g, "_")
       .trim();
 
-    //  large chunk size (10MB) for speed
     const uploadedSong = await new Promise<UploadApiResponse>((resolve, reject) => {
       cloudinary.uploader.upload_stream(
         {
@@ -59,78 +55,77 @@ export const uploadSongToCloud = async (file: Express.Multer.File): Promise<Uplo
       title: songTitle,
       artist,
       album,
-      genre
+      genre,
     };
 
-  } catch (error) {
-    console.error("❌ Upload error:", error);
-    throw error;
+  } catch (error: any) {
+    console.error("❌ Song upload error:", error.message || error);
+    throw new Error("Song upload failed");
   }
 };
 
-
 export const uploadImageToCloud = async (file: Express.Multer.File): Promise<UploadApiResponse> => {
-  const folderName = file.originalname
-    .replace(/\.[^/.]+$/, "")
-    .replace(/[^a-zA-Z0-9_-]/g, "_")
-    .trim();
+  try {
+    if (!file || !file.buffer) throw new Error("No file provided");
 
-  console.log("Uploading image to folder:", folderName);
+    const folderName = file.originalname
+      .replace(/\.[^/.]+$/, "")
+      .replace(/[^a-zA-Z0-9_-]/g, "_")
+      .trim();
 
-  return new Promise((resolve, reject) => {
-    cloudinary.uploader.upload_stream(
-      {
-        resource_type: "image",
-        folder: `xtaze/music/${folderName}`,
-        public_id: "cover"
-      },
-      (error, result) => {
-        if (error) {
-          console.error("Image upload error:", error);
-          reject(error);
-        } else {
-          console.log("Image uploaded:", result);
-          resolve(result as UploadApiResponse);
+    return await new Promise((resolve, reject) => {
+      cloudinary.uploader.upload_stream(
+        {
+          resource_type: "image",
+          folder: `xtaze/music/${folderName}`,
+          public_id: "cover"
+        },
+        (error, result) => {
+          if (error) {
+            console.error("Image upload error:", error);
+            reject(error);
+          } else {
+            resolve(result as UploadApiResponse);
+          }
         }
-      }
-    ).end(file.buffer);
-  });
-}; 
-
-
-
-export const uploadProfileCloud = async (file: Express.Multer.File): Promise<UploadApiResponse> => {
-  const folderName = file.originalname
-    .replace(/\.[^/.]+$/, "") // Remove file extension
-    .replace(/[^a-zA-Z0-9_-]/g, "_") // Replace special characters with "_"
-    .trim();
-  const uniqueName = `${file.originalname.replace(/\.[^/.]+$/, "")}_${uuidv4()}`;
-
-  console.log("Uploading profile media to folder:", folderName);
-
-  // ✅ Determine resource type dynamically based on file MIME type
-  const resourceType = file.mimetype.startsWith("video") ? "video" : "image";
-
-  return new Promise((resolve, reject) => {
-    cloudinary.uploader.upload_stream(
-      {
-        resource_type: resourceType, // Dynamic resource type (image or video)
-        folder: "xtaze/profiles",
-        public_id: uniqueName,
-        unique_filename: true, // Ensure unique filenames
-        overwrite: true, // Overwrite if the same name exists
-      },
-      (error, result) => {
-        if (error) {
-          console.error("Profile media upload error:", error);
-          reject(error);
-        } else {
-          console.log("Profile media uploaded:", result);
-          resolve(result as UploadApiResponse);
-        }
-      }
-    ).end(file.buffer);
-  });
+      ).end(file.buffer);
+    });
+  } catch (error: any) {
+    console.error("❌ Image upload error:", error.message || error);
+    throw new Error("Image upload failed");
+  }
 };
 
+export const uploadProfileCloud = async (file: Express.Multer.File): Promise<UploadApiResponse> => {
+  try {
+    if (!file || !file.buffer) throw new Error("No file provided");
 
+    const originalNameWithoutExt = file.originalname.replace(/\.[^/.]+$/, "");
+    const uniqueName = `${originalNameWithoutExt}_${uuidv4()}`;
+
+    const resourceType = file.mimetype.startsWith("video") ? "video" : "image";
+
+    return await new Promise((resolve, reject) => {
+      cloudinary.uploader.upload_stream(
+        {
+          resource_type: resourceType,
+          folder: "xtaze/profiles",
+          public_id: uniqueName,
+          unique_filename: true,
+          overwrite: true,
+        },
+        (error, result) => {
+          if (error) {
+            console.error("Profile media upload error:", error);
+            reject(error);
+          } else {
+            resolve(result as UploadApiResponse);
+          }
+        }
+      ).end(file.buffer);
+    });
+  } catch (error: any) {
+    console.error("❌ Profile upload error:", error.message || error);
+    throw new Error("Profile upload failed");
+  }
+};
