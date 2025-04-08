@@ -4,17 +4,17 @@ import { useState, useEffect } from "react";
 import { Plus, Edit, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import Sidebar from "./adminComponents/aside-side";
-import axios from "axios";
 import { Button } from "../../components/ui/button";
+import { createCoupon, deleteCoupon, fetchCoupons, updateCoupon } from "../../services/adminService";
 
 interface Coupon {
-  _id: string; // Change to _id if backend uses this
+  _id: string;
   code: string;
   discountAmount: number;
   expires: string;
   maxUses: number;
   uses: number;
-  status:string;
+  status: string;
 }
 
 export default function AdminCouponPage() {
@@ -29,41 +29,38 @@ export default function AdminCouponPage() {
   });
   const [editingCoupon, setEditingCoupon] = useState<Coupon | null>(null);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
+
   useEffect(() => {
     const styles = `
-  body, * {
-    background-color: var(--background) !important; /* Dark background */
-  }
-`;
-    const styleSheet = document.createElement("style")
-    styleSheet.type = "text/css"
-    styleSheet.innerText = styles
-    document.head.appendChild(styleSheet)
+      body, * {
+        background-color: var(--background) !important; /* Dark background */
+      }
+    `;
+    const styleSheet = document.createElement("style");
+    styleSheet.type = "text/css";
+    styleSheet.innerText = styles;
+    document.head.appendChild(styleSheet);
 
     return () => {
-        document.head.removeChild(styleSheet) // Cleanup on unmount
-    }
-}, [])
-
+      document.head.removeChild(styleSheet); // Cleanup on unmount
+    };
+  }, []);
 
   useEffect(() => {
-    const fetchCoupons = async () => {
+    const fetchCouponsData = async () => {
       try {
-        const response = await axios.get("http://localhost:3000/admin/coupons", {
-          headers: { Authorization: `Bearer ${localStorage.getItem("adminToken") || ""}` },
-        });
-        console.log("Fetched coupons:", response.data); // Debug
-        setCoupons(response.data.data || []);
+        // const token = localStorage.getItem("adminToken") || "";
+        const fetchedCoupons = await fetchCoupons();
+        setCoupons(fetchedCoupons);
       } catch (error: any) {
-        toast.error(error.response?.data?.message || "Failed to fetch coupons");
+        toast.error(error.message || "Failed to fetch coupons");
       }
     };
-    fetchCoupons();
+    fetchCouponsData();
   }, []);
 
   const validateCoupon = (coupon: typeof newCoupon) => {
     const newErrors: { [key: string]: string } = {};
-
 
     if (!coupon.code) newErrors.code = "Code is required";
     if (coupon.discountAmount < 0) newErrors.discountAmount = "Discount must be 0 or more";
@@ -91,20 +88,15 @@ export default function AdminCouponPage() {
     }
 
     try {
-      const response = await axios.post(
-        "http://localhost:3000/admin/coupons",
-        { ...newCoupon, uses: 0 },
-        { headers: { Authorization: `Bearer ${localStorage.getItem("adminToken") || ""}` } }
-      );
-      console.log("Created coupon:", response.data); 
-      const createdCoupon = response.data.result;
-      setCoupons([...coupons, { ...createdCoupon, _id: createdCoupon._id }]); 
+      const token = localStorage.getItem("adminToken") || "";
+      const createdCoupon = await createCoupon(newCoupon, token);
+      setCoupons([...coupons, { ...createdCoupon, _id: createdCoupon._id }]);
       setNewCoupon({ code: "", discountAmount: 0, expires: "", maxUses: 0 });
       setIsCreateFormOpen(false);
       setErrors({});
       toast.success("Coupon created successfully!");
     } catch (error: any) {
-      toast.error(error.response?.data?.message || "Failed to create coupon");
+      toast.error(error.message || "Failed to create coupon");
     }
   };
 
@@ -127,12 +119,8 @@ export default function AdminCouponPage() {
     }
 
     try {
-      const response = await axios.put(
-        `http://localhost:3000/admin/coupons?id=${editingCoupon._id}`,
-        { ...newCoupon },
-        { headers: { Authorization: `Bearer ${localStorage.getItem("adminToken") || ""}` } }
-      );
-      const updatedCoupon = response.data.data;
+      const token = localStorage.getItem("adminToken") || "";
+      const updatedCoupon = await updateCoupon(editingCoupon._id, newCoupon, token);
       setCoupons(coupons.map((c) => (c._id === editingCoupon._id ? updatedCoupon : c)));
       setEditingCoupon(null);
       setNewCoupon({ code: "", discountAmount: 0, expires: "", maxUses: 0 });
@@ -140,7 +128,7 @@ export default function AdminCouponPage() {
       setErrors({});
       toast.success("Coupon updated successfully!");
     } catch (error: any) {
-      toast.error(error.response?.data?.message || "Failed to update coupon");
+      toast.error(error.message || "Failed to update coupon");
     }
   };
 
@@ -150,13 +138,12 @@ export default function AdminCouponPage() {
       return;
     }
     try {
-      await axios.delete(`http://localhost:3000/admin/coupons?id=${id}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("adminToken") || ""}` },
-      });
+      const token = localStorage.getItem("adminToken") || "";
+      await deleteCoupon(id, token);
       setCoupons(coupons.filter((c) => c._id !== id));
       toast.success("Coupon deleted successfully!");
     } catch (error: any) {
-      toast.error(error.response?.data?.message || "Failed to delete coupon");
+      toast.error(error.message || "Failed to delete coupon");
     }
   };
 
@@ -189,7 +176,6 @@ export default function AdminCouponPage() {
                   />
                   {errors.code && <p className="text-red-500 text-sm mt-1">{errors.code}</p>}
                 </div>
-             
                 <div>
                   <input
                     type="number"
@@ -373,4 +359,5 @@ export default function AdminCouponPage() {
       </div>
     </div>
   );
+
 }

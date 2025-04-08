@@ -246,6 +246,22 @@ export const fetchUserDetails = async (userIds: string[], token: string): Promis
     throw error;
   }
 };
+export const fetchCoupons = async (): Promise<any> => {
+  try {
+    const data = await apiCall<{ success: boolean; data: string[]; message?: string }>(
+      adminApi,
+      "get",
+      "/coupons",
+    );
+    console.log("Fetch user details response:", data);
+ 
+    return data.data;
+  } catch (error) {
+    console.error("Error fetching user details:", error);
+    throw error;
+  }
+};
+
 
 export const fetchSubscriptionHistory = async (token?: string): Promise<any> => {
   console.log("Fetching subscription history...");
@@ -264,3 +280,86 @@ export const fetchSubscriptionHistory = async (token?: string): Promise<any> => 
     throw new Error(error.message || "Failed to fetch subscription history");
   }
 };
+
+// export const fetchCoupons = async (token?: string): Promise<Coupon[]> => {
+//   console.log("Fetching coupons...");
+//   try {
+//     const data = await apiCall<{ data: Coupon[] }>(
+//       adminApi,
+//       "get",
+//       "/coupons",
+//       undefined,
+//       token
+//     );
+//     console.log("Fetched coupons:", data.data);
+//     return data.data || [];
+//   } catch (error: any) {
+//     console.error("Error fetching coupons:", error);
+//     throw new Error(error.response?.data?.message || "Failed to fetch coupons");
+//   }
+// };
+
+// New function to create a coupon
+export const createCoupon = async (couponData: { code: string; discountAmount: number; expires: string; maxUses: number }, token?: string): Promise<Coupon> => {
+  console.log("Creating coupon with:", couponData);
+  try {
+    const data = await apiCall<{ result: Coupon }>(
+      adminApi,
+      "post",
+      "/coupons",
+      { ...couponData, uses: 0 },
+      token
+    );
+    console.log("Created coupon:", data.result);
+    return data.result;
+  } catch (error: any) {
+    console.error("Error creating coupon:", error);
+    throw new Error(error.response?.data?.message || "Failed to create coupon");
+  }
+};
+
+// New function to update a coupon
+export const updateCoupon = async (id: string, couponData: { code: string; discountAmount: number; expires: string; maxUses: number }, token?: string): Promise<Coupon> => {
+  console.log("Updating coupon with:", { id, couponData });
+  try {
+    const data = await apiCall<{ data: Coupon }>(
+      adminApi,
+      "put",
+      `/coupons?id=${id}`,
+      couponData,
+      token
+    );
+    console.log("Updated coupon:", data.data);
+    return data.data;
+  } catch (error: any) {
+    console.error("Error updating coupon:", error);
+    throw new Error(error.response?.data?.message || "Failed to update coupon");
+  }
+};
+
+// New function to delete a coupon
+export const deleteCoupon = async (id: string, token?: string): Promise<void> => {
+  console.log("Deleting coupon with id:", id);
+  try {
+    await apiCall<{ success: boolean }>(
+      adminApi,
+      "delete",
+      `/coupons?id=${id}`,
+      undefined,
+      token
+    );
+    console.log("Coupon deleted successfully");
+  } catch (error: any) {
+    console.error("Error deleting coupon:", error);
+    throw new Error(error.response?.data?.message || "Failed to delete coupon");
+  }
+};
+export interface Coupon {
+  _id: string;
+  code: string;
+  discountAmount: number;
+  expires: string;
+  maxUses: number;
+  uses: number;
+  status: string;
+}
