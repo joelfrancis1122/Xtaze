@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { ChevronLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
 import { Card } from "../../components/ui/card"; // Adjust path
 import ArtistSidebar from "./artistComponents/artist-aside"; // Adjust path
 import { RootState } from "../../store/store";
@@ -9,6 +8,7 @@ import { useSelector } from "react-redux";
 import { Elements, CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
 import { toast } from "sonner";
+import { checkCardStatus, fetchSongEarnings, saveCard } from "../../services/artistService";
 
 // Load Stripe outside the component
 const stripePromise = loadStripe("pk_test_51QuvsvQV9aXBcHmZPYCW1A2NRrd5mrEffAOVJMFOlrYDOl9fmb028A85ZE9WfxKMdNgTTA5MYoG4ZwCUQzHVydZj00eBUQVOo9");
@@ -21,6 +21,7 @@ interface SongEarnings {
   totalEarnings: number;
   monthlyEarnings: number;
 }
+const token = localStorage.getItem("artistToken") || "";
 
 const CardInput = ({ artistId, onCardSaved }: { artistId: string; onCardSaved: () => void }) => {
   const stripe = useStripe();
@@ -44,12 +45,7 @@ const CardInput = ({ artistId, onCardSaved }: { artistId: string; onCardSaved: (
 
       if (error) throw new Error(error.message);
 
-      await axios.post(
-        "http://localhost:3000/artist/saveCard",
-        { artistId, paymentMethodId: paymentMethod?.id },
-        { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
-      );
-
+      await saveCard(artistId, paymentMethod!.id, token);
       onCardSaved(); // Update parent state
       toast.success("Card saved successfully!");
     } catch (err: any) {
@@ -79,36 +75,20 @@ export default function ArtistMonetizePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [hasCard, setHasCard] = useState(false);
-  const revenuePerPlay = 0.50;
   const user = useSelector((state: RootState) => state.artist.signupData);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-  
         // Fetch song earnings
-        const songResponse = await axios.get(`http://localhost:3000/artist/statsOfArtist?userId=${user?._id}`, {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-        });
-        const songData = songResponse.data.data.map((song: any) => ({
-          trackId: song.trackId,
-          trackName: song.trackName,
-          totalPlays: song.totalPlays,
-          monthlyPlays: song.monthlyPlays,
-          totalEarnings: song.totalPlays * revenuePerPlay,
-          monthlyEarnings: song.monthlyPlays * revenuePerPlay,
-        }));
+        if (!user) {
+          return
+        }
+        const songData = await fetchSongEarnings(user._id, token);
         setSongs(songData);
-  
-        // Check if card details exist
-        const cardResponse = await axios.get(`http://localhost:3000/artist/checkcard?userId=${user?._id}`, {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-        });
-        console.log(cardResponse, "gopi");
-        setHasCard(cardResponse.data.data.stripePaymentMethodId);
-  
-        setError(null);
+        const cardStatus = await checkCardStatus(user._id, token);
+        setHasCard(cardStatus);
       } catch (err) {
         console.error(err);
         setError("Failed to load song earnings");
@@ -116,9 +96,9 @@ export default function ArtistMonetizePage() {
         setLoading(false);
       }
     };
-  
+
     fetchData();
-  
+
     // Apply dark theme
     const styleSheet = document.createElement("style");
     styleSheet.type = "text/css";
@@ -128,14 +108,14 @@ export default function ArtistMonetizePage() {
       }
     `;
     document.head.appendChild(styleSheet);
-  
+
     return () => {
       if (styleSheet.parentNode) {
         document.head.removeChild(styleSheet);
       }
     };
   }, [user?._id]);
-  
+
 
   const handleCardSaved = () => {
     setHasCard(true);

@@ -208,16 +208,60 @@ export const updateArtistBio = async (artistId: string, bio: string, token: stri
   return data.user;
 };
 
-export default {
-  loginArtist,
-  fetchArtistTracks,
-  fetchActiveGenres,
-  uploadSong,
-  uploadProfileImage,
-  updateArtistBio,
-  updateArtistBanner,
-  refreshToken,
+export const checkCardStatus = async (artistId: string, token: string): Promise<boolean> => {
+  console.log("Checking card status with:", { artistId, token });
+  const data = await apiCall<{ data: { stripePaymentMethodId: string } }>(
+    artistApi,
+    "get",
+    `/checkcard?userId=${artistId}`,
+    undefined,
+    token
+  );
+  console.log("Card status response:", data);
+  return !!data.data.stripePaymentMethodId; // Returns true if stripePaymentMethodId exists
 };
+
+export const saveCard = async (artistId: string, paymentMethodId: string, token: string): Promise<void> => {
+  console.log("Saving card with:", { artistId, paymentMethodId, token });
+  const data = await apiCall<{ success: boolean; message?: string }>(
+    artistApi,
+    "post",
+    "/saveCard",
+    { artistId, paymentMethodId },
+    token
+  );
+  if (!data.success) throw new Error(data.message || "Failed to save card");
+};
+
+export const fetchSongEarnings = async (artistId: string, token: string): Promise<any[]> => {
+  console.log("Fetching song earnings with:", { artistId, token });
+  const data = await apiCall<{ data: any[] }>(
+    artistApi,
+    "get",
+    `/statsOfArtist?userId=${artistId}`,
+    undefined,
+    token
+  );
+  console.log("Song earnings response:", data.data);
+  return data.data.map((song: any) => ({
+    trackId: song.trackId,
+    trackName: song.trackName,
+    totalPlays: song.totalPlays,
+    monthlyPlays: song.monthlyPlays,
+    totalEarnings: song.totalPlays * 0.50, // Assuming revenuePerPlay = 0.50
+    monthlyEarnings: song.monthlyPlays * 0.50,
+  }));
+};
+// export default {
+//   loginArtist,
+//   fetchArtistTracks,
+//   fetchActiveGenres,
+//   uploadSong,
+//   uploadProfileImage,
+//   updateArtistBio,
+//   updateArtistBanner,
+//   refreshToken,
+// };
 
 // Genre interface (for TypeScript)
 export interface IGenre {
