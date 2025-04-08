@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import axios from "axios";
 import { Line, LineChart, ResponsiveContainer, Tooltip } from "recharts";
+import { fetchSubscriptionHistory } from "../../../services/adminService";
 
 interface Subscription {
   userId: string;
@@ -24,17 +24,18 @@ export function StatsChart() {
 
   // Fetch subscription history
   useEffect(() => {
-    const fetchSubscriptionHistory = async () => {
+    const fetchSubscriptionHistoryData = async () => {
       try {
-        const response = await axios.get("http://localhost:3000/admin/stripe/subscription-history");
-        console.log("Fetched Data:", response.data.data);
-        setHistory(response.data.data);
-      } catch (err) {
+        const token = localStorage.getItem("adminToken") || "";
+        const subscriptionHistory = await fetchSubscriptionHistory(token);
+        console.log("Fetched Data:", subscriptionHistory);
+        setHistory(subscriptionHistory);
+      } catch (err: any) {
         console.error("Error fetching subscriptions:", err);
       }
     };
 
-    fetchSubscriptionHistory();
+    fetchSubscriptionHistoryData();
   }, []);
 
   // Process chart data when history updates

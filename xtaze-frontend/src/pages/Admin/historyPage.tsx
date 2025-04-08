@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import { ChevronLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
 import Sidebar from "./adminComponents/aside-side";
 import ReactPaginate from "react-paginate";
+import { fetchSubscriptionHistory } from "../../services/adminService";
 
 interface SubscriptionHistory {
   userId: string;
@@ -23,12 +23,14 @@ export default function AdminSubscriptionHistoryPage() {
   const itemsPerPage = 5;
 
   useEffect(() => {
-    const fetchSubscriptionHistory = async () => {
+    const fetchSubscription = async () => {
       try {
         setLoading(true);
-        const response = await axios.get("http://localhost:3000/admin/stripe/subscription-history");
-        console.log(response.data.data  ,"asssssssss")
-        setHistory(response.data.data);
+        const token = localStorage.getItem("adminToken") || "";
+
+        const response = await fetchSubscriptionHistory(token);
+        console.log(response  ,"asssssssss")
+        setHistory(response);
         setError(null);
       } catch (err) {
         console.error(err);
@@ -38,7 +40,7 @@ export default function AdminSubscriptionHistoryPage() {
       }
     };
 
-    fetchSubscriptionHistory();
+    fetchSubscription();
   }, []);
 
   // Filter histories

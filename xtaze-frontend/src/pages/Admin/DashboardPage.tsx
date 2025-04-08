@@ -8,8 +8,7 @@ import { PopularTracks } from "./adminComponents/popular-tracks"
 import { PopularArtists } from "./adminComponents/popular-artists"
 import "../../styles/zashboard.css"
 import Sidebar from "./adminComponents/aside-side"
-import axios from "axios"
-import { fetchArtists } from "../../services/adminService"
+import { fetchArtists, fetchSubscriptionHistory } from "../../services/adminService"
 
 interface Subscription {
   email: string;
@@ -23,10 +22,11 @@ export default function Page() {
     const [totalRevenue, setTotalRevenue] = useState<number>(0);
 
     useEffect(() => {
-      const fetchSubscriptionHistory = async () => {
+      const fetchSubscription = async () => {
         try {
-          const response = await axios.get("http://localhost:3000/admin/stripe/subscription-history");
-          const subscriptions: Subscription[] = response.data.data;
+          const token = localStorage.getItem("adminToken") || "";
+          const response =await fetchSubscriptionHistory(token);
+          const subscriptions: Subscription[] = response;
           
           const validSubscriptions = subscriptions.filter(sub => sub.email && sub.planName);
           
@@ -51,7 +51,7 @@ export default function Page() {
         }
       };
 
-      fetchSubscriptionHistory();
+      fetchSubscription();
       fetchTotalArtists();
     }, []);
 

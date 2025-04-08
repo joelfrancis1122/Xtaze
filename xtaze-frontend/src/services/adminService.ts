@@ -144,6 +144,8 @@ export const fetchGenres = async (token: string): Promise<Genre[]> => {
   return data.data;
 };
 
+
+
 // Add a new genre
 export const addGenre = async (name: string, token: string): Promise<Genre> => {
   const data = await apiCall<{ data: Genre; message: string }>(
@@ -242,5 +244,23 @@ export const fetchUserDetails = async (userIds: string[], token: string): Promis
   } catch (error) {
     console.error("Error fetching user details:", error);
     throw error;
+  }
+};
+
+export const fetchSubscriptionHistory = async (token?: string): Promise<any> => {
+  console.log("Fetching subscription history...");
+  try {
+    const data = await apiCall<{ data: any}>(
+      adminApi,
+      "get",
+      "/stripe/subscription-history",
+      undefined,
+      token
+    );
+    console.log("Fetched subscription history:", data.data);
+    return data.data;
+  } catch (error: any) {
+    console.error("Error fetching subscription history:", error);
+    throw new Error(error.message || "Failed to fetch subscription history");
   }
 };
