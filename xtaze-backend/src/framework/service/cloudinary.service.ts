@@ -1,6 +1,5 @@
 import cloudinary from "../../utils/cloudinaryConfig";
-import * as mm from "music-metadata";
-import { PassThrough } from "stream"; // Use PassThrough instead of Readable
+import { parseBuffer } from "music-metadata";
 import { UploadApiResponse } from "cloudinary";
 import { v4 as uuidv4 } from "uuid";
 
@@ -16,10 +15,8 @@ export const uploadSongToCloud = async (file: Express.Multer.File): Promise<Uplo
   try {
     if (!file || !file.buffer) throw new Error("No file provided");
 
-    const stream = new PassThrough();
-    stream.end(file.buffer); // feed buffer into PassThrough stream
-
-    const metadata = await mm.parseStream(stream, { mimeType: file.mimetype || "audio/mpeg" });
+    // Parse metadata from audio buffer
+    const metadata = await parseBuffer(file.buffer, file.mimetype || "audio/mpeg");
 
     const songTitle = metadata.common.title || "Unknown_Title";
     const artist = metadata.common.artist
@@ -78,11 +75,11 @@ export const uploadImageToCloud = async (file: Express.Multer.File): Promise<Upl
         {
           resource_type: "image",
           folder: `xtaze/music/${folderName}`,
-          public_id: "cover"
+          public_id: "cover",
         },
         (error, result) => {
           if (error) {
-            console.error("Image upload error:", error);
+            console.error("❌ Image upload error:", error);
             reject(error);
           } else {
             resolve(result as UploadApiResponse);
@@ -116,7 +113,7 @@ export const uploadProfileCloud = async (file: Express.Multer.File): Promise<Upl
         },
         (error, result) => {
           if (error) {
-            console.error("Profile media upload error:", error);
+            console.error("❌ Profile upload error:", error);
             reject(error);
           } else {
             resolve(result as UploadApiResponse);
