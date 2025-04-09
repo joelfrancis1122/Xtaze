@@ -38,5 +38,6 @@ export default interface IuserUseCase{
     fetchGenreTracks(GenreName:string):Promise<ITrack[]|null> 
     becomeArtist(id:string): Promise<IUser|null>
     resetPaymentStatus(): Promise<void>
+    
 
 }

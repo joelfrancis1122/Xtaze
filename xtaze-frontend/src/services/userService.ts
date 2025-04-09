@@ -4,6 +4,7 @@ import { Track } from "../pages/User/types/ITrack";
 import { saveSignupData } from "../redux/userSlice";
 import { Playlist } from "../pages/User/types/IPlaylist";
 import { IBanner } from "../pages/User/types/IBanner";
+import { Artist } from "./adminService";
 
 // Utility to get cookies
 
@@ -458,5 +459,29 @@ export const verifyCoupon = async (code: string, token?: string): Promise<any> =
   } catch (error: any) {
     console.error("Coupon verification error:", error);
     throw new Error(error.response?.data?.message || "Failed to verify coupon");
+  }
+};
+export const fetchArtists = async (token: string): Promise<Artist[]> => {
+  console.log("Fetching artists with token:", token);
+  try {
+    const data = await apiCall<{ success: boolean; data: any[]; message?: string }>(
+      userApi,
+      "get",
+      "/listArtists",
+      undefined,
+      token
+    );
+    console.log("Fetch artists response:", data);
+    if (!data.success) throw new Error(data.message || "Failed to fetch artists");
+    return data.data.map((artist: any) => ({
+      id: artist._id,
+      name: artist.username,
+      role: artist.role,
+      image: artist.profilePic || "default-profile-image",
+      isActive: artist.isActive ? true : false,
+    }));
+  } catch (error) {
+    console.error("Fetch artists error:", error);
+    throw error;
   }
 };

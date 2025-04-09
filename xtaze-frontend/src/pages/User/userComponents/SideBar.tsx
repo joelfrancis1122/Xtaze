@@ -92,6 +92,14 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                 >
                   Liked Songs
                 </a>
+                
+                <a
+                  onClick={() => navigate("/artists")}
+                  className="text-gray-300 hover:text-white block transition-colors"
+                >
+                  Artists
+                </a>
+
                 <a
                   onClick={() => navigate("/radio")}
                   className="text-gray-300 hover:text-white block transition-colors"

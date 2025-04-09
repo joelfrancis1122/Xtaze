@@ -3,10 +3,13 @@ import UserController from "../../../adapter/controller/user.controller";
 import userDependencies from "../../dependencies/user.dependencies";
 import upload from "../../middlewares/uploadMiddleware";
 import { authenticateUser } from "../../middlewares/authMiddleware";
+import artistDependencies from "../../dependencies/artist.dependencies";
+import ArtistController from "../../../adapter/controller/artist.controller";
 
 const router = express.Router();
 
 const userController = new UserController(userDependencies)
+const artistController = new ArtistController(artistDependencies)
 
 router.post("/checkUsername", (req: Request, res: Response, next: NextFunction) => userController.checkUsername(req, res, next));
 router.post("/forgotPassword", (req: Request, res: Response, next: NextFunction) => userController.forgotPassword(req, res, next));
@@ -37,5 +40,6 @@ router.get("/fetchAllTrack",(req:Request,res:Response,next:NextFunction)=>userCo
 router.get("/fetchGenreTracks",(req:Request,res:Response,next:NextFunction)=>userController.fetchGenreTracks(req,res,next))
 
 router.put("/becomeArtist",(req:Request,res:Response,next:NextFunction)=>userController.becomeArtist(req,res,next))
+router.get("/listArtists",authenticateUser,(req:Request,res:Response,next:NextFunction)=>artistController.listArtists(req,res,next))
 
 export default router;

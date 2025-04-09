@@ -19,6 +19,7 @@ import EqualizerPage from "../pages/User/EqualizerPage";
 import RecentSongsPage from "../pages/User/RecentSongs";
 import ExplorePage from "../pages/User/ExplorePage";
 import GenrePage from "../pages/User/SongsByGenre";
+import ArtistPage from "../pages/User/ArtistsPage";
 
 export const UserRoutes = () => (
     <>
@@ -42,6 +43,7 @@ export const UserRoutes = () => (
     <Route path="/recentSongs" element={<RecentSongsPage />} />
     <Route path="/explore" element={<ExplorePage/>} />
     <Route path="/genre/:genre" element={<GenrePage/>} />
+    <Route path="/artists" element={<ArtistPage/>} />
 
     </>
 );
