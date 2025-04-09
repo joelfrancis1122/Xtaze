@@ -159,7 +159,7 @@ export default function MusicPlayer({
         }}
       />
       {/* Track Info */}
-      <div className="flex items-center w-full sm:w-auto relative z-10 mb-2 sm:mb-0">
+      <div className="flex items-center w-full sm:w-1/3 relative z-10 mb-2 sm:mb-0">
         <div
           className="relative w-12 h-12 flex-shrink-0 cursor-pointer"
           onClick={(e) => {
@@ -173,7 +173,7 @@ export default function MusicPlayer({
             className="w-full h-full object-cover rounded-md shadow-md"
           />
         </div>
-        <div className="ml-3 overflow-hidden flex-1">
+        <div className="ml-3 overflow-hidden text-ellipsis whitespace-nowrap max-w-[150px]">
           <p className="text-sm font-semibold text-white truncate">{currentTrack.title}</p>
           <p className="text-xs text-gray-400 truncate">
             {Array.isArray(currentTrack.artists) ? currentTrack.artists.join(", ") : currentTrack.artists}
@@ -181,7 +181,7 @@ export default function MusicPlayer({
         </div>
       </div>
       {/* Playback Controls */}
-      <div className="flex flex-col items-center gap-2 w-full sm:w-auto z-10">
+      <div className="flex flex-col items-center gap-2 w-full sm:w-auto z-10" style={{ minWidth: "400px" }}>
         <div className="flex items-center gap-4 justify-center">
           <button
             onClick={toggleShuffle}
