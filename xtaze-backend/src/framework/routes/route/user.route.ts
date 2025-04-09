@@ -41,5 +41,7 @@ router.get("/fetchGenreTracks",(req:Request,res:Response,next:NextFunction)=>use
 
 router.put("/becomeArtist",(req:Request,res:Response,next:NextFunction)=>userController.becomeArtist(req,res,next))
 router.get("/listArtists",authenticateUser,(req:Request,res:Response,next:NextFunction)=>artistController.listArtists(req,res,next))
+router.get("/getAllTracksArtist",authenticateUser,(req:Request,res:Response,next:NextFunction)=>artistController.getAllTracksArtist(req,res,next))
+router.get("/username",authenticateUser,(req:Request,res:Response,next:NextFunction)=>userController.username(req,res,next))
 
 export default router;

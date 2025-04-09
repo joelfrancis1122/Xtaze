@@ -541,5 +541,17 @@ export default class UserController {
     }
  
 
-
+    async username(req: Request, res: Response, next: NextFunction): Promise<void> {
+      try {
+        const username  = req.query.userId
+        console.log(req.query,'ssssssa',username as string)
+  
+        const data = await this._userUseCase.getArtistByName(username as string);
+        console.log(data,"sasaasassa")
+        res.status(200).json({ data: data });
+      } catch (error: any) {
+        console.error("Error in getUsers controller:", error);
+        next(error);
+      }
+    }
 }

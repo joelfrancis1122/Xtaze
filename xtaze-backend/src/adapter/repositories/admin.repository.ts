@@ -42,6 +42,8 @@ export default class AdminRepository implements IAdminRepository {
   async getArtistById(id: string): Promise<IUser | null> {
     return await UserModel.findById(id);
   }
+
+  
 async StripefindByname(artistName: string): Promise<string | null> {
   const artist = await UserModel.findOne({ username: artistName });
   

@@ -33,5 +33,6 @@ export interface IUserRepository {
   fetchGenreTracks(GenreName:string): Promise<ITrack[] | null>
   becomeArtist(id:string):  Promise<IUser|null> 
   resetPaymentStatus(): Promise<void>
+  getArtistByName(username:string):  Promise<IUser|null> 
 
 }

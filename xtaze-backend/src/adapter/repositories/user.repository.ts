@@ -431,4 +431,16 @@ export default class UserRepository implements IUserRepository {
     }
   }
 
+
+
+    async getArtistByName(username: string): Promise<IUser | null> {
+      try {
+        console.log(username, "ith enth oi")
+        const admin = await UserModel.findOne({ username });
+        console.log(admin, "ith entha ")
+        return admin as unknown as IUser
+      } catch (error) {
+        throw error
+      }
+    }
 }

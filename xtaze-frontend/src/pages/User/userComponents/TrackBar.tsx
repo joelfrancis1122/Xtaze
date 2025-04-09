@@ -4,12 +4,7 @@ import { useState, useEffect } from "react";
 import { Play, Pause, SkipBack, SkipForward, Shuffle, Repeat, Volume2, Clock } from "lucide-react";
 import type { Track } from "../types/ITrack";
 import { useSelector, useDispatch } from "react-redux";
-import {
-  setIsPlaying,
-  setCurrentTime,
-  setDuration,
-  setVolume,
-} from "../../../redux/audioSlice";
+import { setIsPlaying, setCurrentTime, setDuration, setVolume } from "../../../redux/audioSlice";
 import { RootState } from "../../../store/store";
 
 interface MusicPlayerProps {
@@ -37,10 +32,7 @@ const updateRecentSongs = (track: Track) => {
   const trackId = track._id || track.fileUrl;
   const recentSongs = JSON.parse(localStorage.getItem("recentSongs") || "[]");
   const newEntry = { id: trackId, playedAt: new Date().toISOString() };
-  const updatedSongs = [
-    newEntry,
-    ...recentSongs.filter((s: any) => s.id !== trackId),
-  ].slice(0, 20);
+  const updatedSongs = [newEntry, ...recentSongs.filter((s: any) => s.id !== trackId)].slice(0, 20);
   localStorage.setItem("recentSongs", JSON.stringify(updatedSongs));
 };
 
@@ -154,26 +146,14 @@ export default function MusicPlayer({
     <div className="fixed bottom-0 left-0 right-0 bg-[#121212] py-3 px-4 flex flex-col sm:flex-row items-center justify-between z-50 border-t border-gray-800 shadow-lg">
       <div
         className="absolute top-0 left-0 right-0 h-1 bg-[#121212] filter blur-3xl"
-        style={{
-          backgroundImage: `linear-gradient(to bottom, rgba(18, 18, 18, 0.9), transparent)`,
-        }}
+        style={{ backgroundImage: `linear-gradient(to bottom, rgba(18, 18, 18, 0.9), transparent)` }}
       />
       {/* Track Info */}
-      <div className="flex items-center w-full sm:w-1/3 relative z-10 mb-2 sm:mb-0">
-        <div
-          className="relative w-12 h-12 flex-shrink-0 cursor-pointer"
-          onClick={(e) => {
-            e.stopPropagation();
-            toggleModal();
-          }}
-        >
-          <img
-            src={currentTrack.img || "/default-track.jpg"}
-            alt="Track Cover"
-            className="w-full h-full object-cover rounded-md shadow-md"
-          />
+      <div className="flex items-center w-full sm:w-1/4 min-w-0 relative z-10 mb-2 sm:mb-0">
+        <div className="relative w-12 h-12 flex-shrink-0 cursor-pointer" onClick={(e) => { e.stopPropagation(); toggleModal(); }}>
+          <img src={currentTrack.img || "/default-track.jpg"} alt="Track Cover" className="w-full h-full object-cover rounded-md shadow-md" />
         </div>
-        <div className="ml-3 overflow-hidden text-ellipsis whitespace-nowrap max-w-[150px]">
+        <div className="ml-3 overflow-hidden min-w-0">
           <p className="text-sm font-semibold text-white truncate">{currentTrack.title}</p>
           <p className="text-xs text-gray-400 truncate">
             {Array.isArray(currentTrack.artists) ? currentTrack.artists.join(", ") : currentTrack.artists}
@@ -181,7 +161,7 @@ export default function MusicPlayer({
         </div>
       </div>
       {/* Playback Controls */}
-      <div className="flex flex-col items-center gap-2 w-full sm:w-auto z-10" style={{ minWidth: "400px" }}>
+      <div className="flex flex-col items-center gap-2 w-full sm:w-96 z-10">
         <div className="flex items-center gap-4 justify-center">
           <button
             onClick={toggleShuffle}
@@ -222,7 +202,7 @@ export default function MusicPlayer({
             max={localDuration || 0}
             value={localCurrentTime || 0}
             step="0.02"
-            className="w-full sm:w-96 h-1 bg-gray-700 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:shadow-md"
+            className="w-full h-1 bg-gray-700 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:shadow-md"
             onChange={(e) => {
               const newTime = Number.parseFloat(e.target.value);
               audio.currentTime = newTime;
@@ -234,7 +214,7 @@ export default function MusicPlayer({
         </div>
       </div>
       {/* Volume Control and Sleep Timer */}
-      <div className="flex items-center gap-4 w-full sm:w-auto justify-end mt-2 sm:mt-0 z-10">
+      <div className="flex items-center gap-4 w-full sm:w-1/4 justify-end mt-2 sm:mt-0 z-10">
         <div className="relative">
           <button
             className="flex items-center gap-1 p-1 rounded-full hover:bg-[#242424] text-gray-300 transition-colors"
@@ -273,7 +253,7 @@ export default function MusicPlayer({
             max="1"
             step="0.1"
             value={localVolume}
-            className="w-24 sm:w-24 h-1 bg-gray-700 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:shadow-md"
+            className="w-24 h-1 bg-gray-700 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:shadow-md"
             onChange={(e) => handleVolumeChange(Number.parseFloat(e.target.value))}
           />
         </div>

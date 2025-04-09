@@ -278,6 +278,7 @@ export default class AdminController {
       next(error);
     }
   }
+
   async getMusicMonetization(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const monetizationData = await this._adminUseCase.getMusicMonetization();
@@ -300,11 +301,12 @@ export default class AdminController {
       next(error);
     }
   }
+
   async getUsersByIds(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { userIds } = req.body
       console.log(req.body,'ssssssa',userIds as string)
-      
+
       const data = await this._adminUseCase.getUsersByIds(userIds);
       console.log(data,"sasaasassa")
       res.status(200).json({ data: data });
@@ -313,5 +315,6 @@ export default class AdminController {
       next(error);
     }
   }
+
 }
 

@@ -485,3 +485,30 @@ export const fetchArtists = async (token: string): Promise<Artist[]> => {
     throw error;
   }
 };
+
+export const fetchArtistTracks = async (artistId: string, token: string): Promise<any[]> => {
+  console.log("Fetching artist tracks with:", { artistId, token });
+  const data = await apiCall<{ success: boolean; tracks: any[]; message?: string }>(
+    userApi,
+    "get",
+    `/getAllTracksArtist?userId=${artistId}`,
+    undefined,
+    token
+  );
+  if (!data.success) throw new Error(data.message || "Failed to fetch artist tracks");
+  return data.tracks;
+};
+export const fetchUserByUsername = async (username: string, token: string): Promise<any> => {
+  console.log("testing complete",username)
+  const data = await apiCall<{ success: boolean; tracks: any[]; data?: string }>(
+    userApi,
+    "get",
+    `/username?userId=${username}`,
+    undefined,
+    token
+  );
+  console.log(data)
+  // if (!data.success) throw new Error(data.message || "Failed to fetch artist tracks");
+  return data.data;
+};
+

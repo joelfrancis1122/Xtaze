@@ -228,4 +228,6 @@ export default class ArtistController {
       next(error);
     }
   }
+
+
 }

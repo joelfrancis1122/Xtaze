@@ -659,6 +659,12 @@ export default class UserUseCase {
     }
   }
 
+  async getArtistByName(username:string): Promise<IUser|null> {
 
+    const users = await this._userRepository.getArtistByName(username)
+    console.log(users, "this is what i got ")
+    return users
+
+  }
 }
 

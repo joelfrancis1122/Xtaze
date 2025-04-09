@@ -40,14 +40,8 @@ export default function LikedSongsPage() {
   const { currentTrack, isPlaying, isShuffled, isRepeating } = useSelector((state: RootState) => state.audio);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-  // Pass likedSongs to useAudioPlayback
-  const {
-    handlePlay: baseHandlePlay,
-    handleSkipBack,
-    handleSkipForward,
-    handleToggleShuffle,
-    handleToggleRepeat,
-  } = useAudioPlayback(likedSongs);
+  const { handlePlay: baseHandlePlay, handleSkipBack, handleSkipForward, handleToggleShuffle, handleToggleRepeat } =
+    useAudioPlayback(likedSongs);
 
   useEffect(() => {
     if (!audioContext) return;
@@ -121,22 +115,19 @@ export default function LikedSongsPage() {
     }
   }, [user, navigate]);
 
-  const handlePlay = (song: Track) => {
-    baseHandlePlay(song); // Use useAudioPlayback's handlePlay
-    dispatch(
-      setCurrentTrack({
-        _id: song._id,
-        title: song.title,
-        artists: song.artists,
-        fileUrl: song.fileUrl,
-        img: song.img,
-        album: song.album,
-        genre: song.genre,
-        listeners: song.listeners || [],
-        playHistory: song.playHistory || []
-      })
-    );
-    dispatch(setIsPlaying(true));
+  const handlePlay = (track: Track) => {
+    if (currentTrack?.fileUrl === track.fileUrl) {
+      if (isPlaying) {
+        audio.pause();
+        dispatch(setIsPlaying(false));
+      } else {
+        audio.play().then(() => dispatch(setIsPlaying(true))).catch((err) => console.error("Playback error:", err));
+      }
+    } else {
+      dispatch(setCurrentTrack(track));
+      audio.src = track.fileUrl;
+      audio.play().then(() => dispatch(setIsPlaying(true))).catch((err) => console.error("Playback error:", err));
+    }
   };
 
   const handlePlayFromModal = (track: Track) => {
@@ -178,13 +169,13 @@ export default function LikedSongsPage() {
 
   return (
     <div className="min-h-screen bg-black text-white flex">
-    <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
-        {isSidebarOpen && (
-          <div
-            className="fixed inset-0 bg-black/50 z-20 md:hidden"
-            onClick={() => setIsSidebarOpen(false)}
-          ></div>
-        )}
+      <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
+      {isSidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-20 md:hidden"
+          onClick={() => setIsSidebarOpen(false)}
+        ></div>
+      )}
       <main className="flex-1 ml-[240px] py-16 px-10 pb-24">
         <div className="max-w-7xl mx-auto space-y-10">
           <div className="flex items-center justify-between">
@@ -284,7 +275,7 @@ export default function LikedSongsPage() {
           <MusicPlayer
             currentTrack={currentTrack}
             isPlaying={isPlaying}
-            handlePlay={handlePlay}
+            handlePlay={baseHandlePlay}
             handleSkipBack={handleSkipBack}
             handleSkipForward={handleSkipForward}
             toggleShuffle={handleToggleShuffle}
