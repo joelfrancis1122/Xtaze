@@ -14,7 +14,6 @@ export default class UserRepository implements IUserRepository {
   async add(userData: IUser): Promise<IUser> {
     try {
       const user = await UserModel.create(userData)
-      console.log("workk avanee repo", user);
 
       return user as unknown as IUser
     } catch (error) {
@@ -23,12 +22,10 @@ export default class UserRepository implements IUserRepository {
   }
   async resetPaymentStatus(): Promise<void> {
     try {
-      console.log("111")
       const result = await UserModel.updateMany(
         {}, 
         { $set: { paymentStatus: false } } 
       );
-      console.log("222",result)
     } catch (error) {
       throw error
     }
@@ -40,7 +37,6 @@ export default class UserRepository implements IUserRepository {
         { $set: user }, // Update with new data
         { new: true, runValidators: true } // Return updated document & validate
       );
-      console.log(updatedUser, "change")
       return updatedUser as unknown as IUser
 
     } catch (error) {
@@ -145,9 +141,6 @@ export default class UserRepository implements IUserRepository {
 
   async getPlaylist(id: string, pageNum: number, limitNum: number, skip: number): Promise<{ tracks: ITrack[]; total: number } | null> {
     try {
-      console.log(id, "this is the playlist id");
-
-      // Find the playlist and get only the "tracks" field
       const playlist = await PlaylistModel.findById(id).select("tracks");
 
       if (!playlist || !playlist.tracks || playlist.tracks.length === 0) {
@@ -160,7 +153,6 @@ export default class UserRepository implements IUserRepository {
         .skip(skip)
         .limit(limitNum);
       const total = playlist.tracks.length;
-      console.log({ tracks, total }, "Response data");
       return { tracks, total }; // Return an array of track details
     } catch (error) {
       console.error("Error finding tracks for playlist:", error);
@@ -171,7 +163,6 @@ export default class UserRepository implements IUserRepository {
   async findByCreator(userId: string): Promise<IPlaylist[] | null> {
     try {
       const data = await PlaylistModel.find({ createdBy: userId }).lean();
-      console.log(data, "sa", userId)
       return data.map((playlist) => ({
         _id: playlist._id.toString(),
         title: playlist.title ?? "",
@@ -189,7 +180,6 @@ export default class UserRepository implements IUserRepository {
   }
   async deletePlaylist(id: string): Promise<IPlaylist | null> {
     try {
-      console.log("this is id,", id)
       return await PlaylistModel.findByIdAndDelete(id);
 
     } catch (error) {
@@ -199,7 +189,6 @@ export default class UserRepository implements IUserRepository {
   }
   async playlistName(id: string, playlistName: string): Promise<IPlaylist | null> {
     try {
-      console.log("this is id:", id);
 
       return await PlaylistModel.findByIdAndUpdate(
         id,
@@ -219,7 +208,6 @@ export default class UserRepository implements IUserRepository {
         { title: playlistName },
         { new: true, runValidators: true }
       ).lean();
-      console.log("amrutha pass")
       return updatedUser as IPlaylist | null;
     } catch (error) {
       console.log(error);
@@ -290,7 +278,6 @@ export default class UserRepository implements IUserRepository {
         { imageUrl: file },
         { new: true, runValidators: true }
       ).lean();
-      console.log()
       return data as IPlaylist | null;
     } catch (error) {
       console.log(error);
@@ -299,7 +286,6 @@ export default class UserRepository implements IUserRepository {
   }
   async updateUserSubscription(userId: string, planName: string): Promise<IUser | null> {
     try {
-      console.log("workedodi")
       const updatedUser = await UserModel.findByIdAndUpdate(
         userId,
         { premium: planName },

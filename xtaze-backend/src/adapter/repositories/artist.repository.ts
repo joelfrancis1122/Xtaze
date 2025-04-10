@@ -1,45 +1,43 @@
 import { ArtistMonetization, MusicMonetization } from "../../domain/entities/IMonetization";
 import { ITrack } from "../../domain/entities/ITrack";
 import IUser from "../../domain/entities/IUser";
+import { IVerificationRequest } from "../../domain/entities/IVeridicationRequest";
 import { IArtistRepository } from "../../domain/repositories/IArtistRepository";
 import { Track } from "../db/models/TrackModel";
 import UserModel from "../db/models/UserModel";
+import VerificationModel from "../db/models/VerificationRequestModel";
 
 export default class ArtistRepository implements IArtistRepository {
 
   async findByEmail(email: string): Promise<IUser> {
     try {
-      console.log(email, "ith enth oi")
       const artist = await UserModel.findOne({ email });
-      console.log(artist, "ith entha ")
       return artist as unknown as IUser
     } catch (error) {
       throw error
     }
   }
-  
-  
+
+
   async upload(track: ITrack): Promise<ITrack | null> {
-    console.log(track, "ithan last ")
     const newTrack = new Track(track)
-    console.log(newTrack, "ithan last final destination ")
     return await newTrack.save()
   }
   async updateTrackByArtist(track: ITrack, trackId: string): Promise<ITrack | null> {
     try {
       const updatedTrack = await Track.findByIdAndUpdate(
-        trackId, 
-        { $set: track }, 
-        { new: true, runValidators: true } 
+        trackId,
+        { $set: track },
+        { new: true, runValidators: true }
       );
-  
+
       return updatedTrack;
     } catch (error) {
       console.error("Error updating track:", error);
       return null;
     }
   }
-  
+
 
 
 
@@ -52,7 +50,6 @@ export default class ArtistRepository implements IArtistRepository {
 
   async getAllTracksByArtist(userId: string): Promise<ITrack[]> {
     try {
-      console.log("Fetching tracks for artist with userId:", userId);
 
       const artist = await UserModel.findById({ _id: userId });
       if (!artist) {
@@ -60,7 +57,6 @@ export default class ArtistRepository implements IArtistRepository {
       }
 
       const tracks = await Track.find({ artists: { $regex: new RegExp(`^${artist.username}$`, "i") } });
-      console.log("Tracks found:", tracks.length, artist.username);
       return tracks;
     } catch (error) {
       console.error("Error fetching tracks:", error);
@@ -71,32 +67,30 @@ export default class ArtistRepository implements IArtistRepository {
 
   async increment(trackId: string, id: string): Promise<ITrack | null> {
     try {
-      console.log("Fetching track with ID:", trackId);
-  
+
       const currentMonth = new Date().toISOString().slice(0, 7); //ith engana varum"2025-03"
-  
+
       const track = await Track.findById(trackId);
       if (!track) throw new Error("Track not found");
-  
+
       if (!track.listeners) {
         track.listeners = [];
       }
       if (!track.playHistory) {
         track.playHistory = [];
       }
-  
+
       const monthIndex = track.playHistory.findIndex((h) => h.month === currentMonth);
-  
+
       if (monthIndex === -1) {
         track.playHistory.push({ month: currentMonth, plays: 1 });
       } else {
         track.playHistory[monthIndex].plays += 1;
       }
-      
+
       const rrrr = await Track.updateOne({ _id: trackId }, { $addToSet: { listeners: id } });
-      console.log('tssss',rrrr)
       await track.save();
-  
+
       console.log("Updated track:", track);
       return track;
     } catch (error: any) {
@@ -111,7 +105,7 @@ export default class ArtistRepository implements IArtistRepository {
         { stripePaymentMethodId: paymentMethodId },
         { new: true } // Ensures the updated document is returned
       );
-  
+
       return updatedArtist ? { ...updatedArtist.toObject(), _id: updatedArtist._id.toString() } : null;
     } catch (error) {
       console.error(error);
@@ -134,31 +128,64 @@ export default class ArtistRepository implements IArtistRepository {
       return null; // Return null on error to keep it simple
     }
   }
+
+  async getVerificationStatus(artistId: string): Promise<IVerificationRequest | null> {
+    try {
+      const verification = await VerificationModel.findOne({ artistId }).exec();
+      return verification;
+    } catch (error) {
+      console.error("Error in VERIFICATION:", error);
+      return null;
+    }
+  }
+
+  async requestVerification(artistId: string, idProof: string): Promise<IVerificationRequest | null> {
+    try {
+      await VerificationModel.deleteOne({ artistId });
   
+      const verificationRequest: IVerificationRequest = {
+        artistId,
+        idProof,
+        status: "pending",
+        submittedAt: new Date(),
+        reviewedAt: null,
+        feedback: null,
+      };
+  
+      const newVerification = new VerificationModel(verificationRequest);
+      const savedVerification = await newVerification.save();
+  
+      return savedVerification;
+    } catch (error) {
+      console.error("Error in verificationRepository.requestVerification:", error);
+      throw new Error("Failed to save verification request");
+    }
+  }
+  
+
   async statsOfArtist(userId: string): Promise<ArtistMonetization[]> {
     try {
       const artist = await UserModel.findById(userId);
       if (!artist) {
         throw new Error("Artist not found");
       }
-      console.log(artist, "as");
-  
+
       const tracks = await Track.find({
         artists: { $regex: new RegExp(`^${artist.username}$`, "i") }
       });
-  
+
       const currentMonth = new Date().toISOString().slice(0, 7); // e.g., "2025-03"
-  
+
       const monetizationData: ArtistMonetization[] = tracks
         .map((track) => {
           const typedTrack = track as ITrack;
-  
+
           // ✅ Corrected total plays calculation
           const totalPlays = typedTrack.playHistory?.reduce((sum, h) => sum + h.plays, 0) || 0;
-  
+
           // Extract only the current month's plays
           const monthlyPlays = typedTrack.playHistory?.find((h) => h.month === currentMonth)?.plays || 0;
-  
+
           return {
             trackName: typedTrack.title,
             totalPlays, // ✅ Now correctly sums all months' plays
@@ -167,14 +194,14 @@ export default class ArtistRepository implements IArtistRepository {
           };
         })
         .sort((a, b) => b.totalPlays - a.totalPlays);
-  
+
       return monetizationData;
     } catch (error: any) {
       console.error("Error in statsOfArtist:", error);
       throw new Error(error.message || "Failed to fetch artist stats");
     }
   }
-  
+
 
 
 }

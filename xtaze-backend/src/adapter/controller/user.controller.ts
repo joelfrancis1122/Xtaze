@@ -193,7 +193,6 @@ export default class UserController {
   async forgotPassword(req: Request, res: Response, next: NextFunction) {
     try {
       const { email } = req.body;
-      console.log(email, "emil")
       if (!email) throw new AppError("Email is required", 400);
 
       const response = await this._userUseCase.forgotPassword(email);
@@ -208,8 +207,6 @@ export default class UserController {
     try {
       const { token, formData } = req.body;
       const newPassword = formData
-      console.log(token, "tok")
-      console.log(newPassword, "data")
       if (!token) throw new AppError("token is required", 400);
       const response = await this._userUseCase.resetPassword(token, newPassword);
       res.status(200).json(response);
@@ -226,7 +223,6 @@ export default class UserController {
       const { userId } = req.body;
       const file = req.file;
 
-      console.log("Profile pic upload:", { file, userId });
 
       if (!userId || !file) {
         throw new AppError("User ID and image are required", 400);
@@ -244,7 +240,6 @@ export default class UserController {
       const { userId } = req.body;
       const file = req.file;
 
-      console.log("Banner upload request:", { file, userId });
 
       if (!userId || !file) {
         throw new AppError("User ID and file are required", 400);
@@ -264,7 +259,6 @@ export default class UserController {
     try {
       const { userId, bio } = req.body;
 
-      console.log("Update bio request:", req.body);
 
       if (!userId || !bio) {
         throw new AppError("User ID and bio are required", 400);
@@ -284,7 +278,6 @@ export default class UserController {
       if (!userId || !priceId) {
         throw new AppError("User ID and Price ID are required", 400);
       }
-      console.log(code,"akhildas",req.body)
 
       const session = await this._userUseCase.execute(userId, priceId, code);
       res.status(200).json({ success: true, sessionId: session?.id });
@@ -298,7 +291,6 @@ export default class UserController {
       const { trackId } = req.body;
       const { userId } = req.query;
 
-      console.log("Toggle like request:", { query: req.query, body: req.body });
 
       if (!userId || !trackId) {
         throw new AppError("User ID and Track ID are required", 400);
@@ -317,7 +309,6 @@ export default class UserController {
       const { songIds } = req.body;
       const userId = req.query.userId as string;
 
-      console.log("Get liked songs:", songIds);
 
       if (!userId || !songIds || !Array.isArray(songIds)) {
         throw new AppError("Invalid request: User ID and songIds array are required", 400);
@@ -342,10 +333,7 @@ export default class UserController {
     const limitNum = parseInt(limit as string, 10);
     const skip = (pageNum - 1) * limitNum;
 
-    console.log(id, "Fetching tracks with pagination:", { pageNum, limitNum ,skip});
-      console.log("Get playlist:");
       const track = await this._userUseCase.getPlaylist(id as string,pageNum,limitNum,skip)
-      console.log(track,"this is track ma")
       res.json({ success: true ,data:track});
     } catch (error) {
       console.error("Error in getliked:", error);
@@ -357,9 +345,7 @@ export default class UserController {
   async createPlaylist(req: Request, res: Response, next: NextFunction) {
     try {
       const { userId, playlist } = req.body
-      console.log("12",userId,playlist,req.body)
       const newplaylist = await this._userUseCase.createPlaylist(userId, playlist)
-      console.log("1234",newplaylist)
       res.status(200).json({ success: true, data: newplaylist });
     } catch (error) {
       console.error("Error in getliked:", error);
@@ -371,7 +357,6 @@ export default class UserController {
     try {
       const { userId } = req.query
 
-      console.log(userId, "ith thanne", req.body, req.query)
 
       const playlist = await this._userUseCase.getAllPlaylist(userId as string)
       res.status(200).json({ success: true, data: playlist });
@@ -384,7 +369,6 @@ export default class UserController {
   async addToPlaylist(req: Request, res: Response, next: NextFunction) {
     try {
       const { userId, playlistId, trackId } = req.body
-      console.log("this s what it e")
       const playlist = await this._userUseCase.addToPlaylist(userId, playlistId, trackId)
       if(playlist==null){
         res.status(404).json({ success: false ,message:"Track Already Exist"});
@@ -398,7 +382,6 @@ export default class UserController {
   }
   async deletePlaylist(req: Request, res: Response, next: NextFunction) {
     try {
-      console.log(req.body,"delete,id")
       const {id} = req.body
       const updated = await this._userUseCase.deletePlaylist(id)
 
@@ -410,7 +393,6 @@ export default class UserController {
   }
   async updateNamePlaylist(req: Request, res: Response, next: NextFunction) {
     try {
-      console.log(req.body,"udpatename")
       const {id, playlistName} = req.body
       const updated = await this._userUseCase.updateNamePlaylist(id, playlistName)
 
@@ -430,7 +412,6 @@ export default class UserController {
         return; // Exit early if file is undefined
       }
       
-      console.log(req.body,req.file,"udpateProfilepage")
       const updated = await this._userUseCase.updateImagePlaylist(id, file)
 
       res.status(200).json({ updated,success: true });
@@ -445,7 +426,6 @@ export default class UserController {
   
   
           const allBanners = await this._userUseCase.getAllBanners()
-        console.log(allBanners,"odi odi odsssi")
           res.status(201).json({ message: "Banner added successfully", data: allBanners });
     
       } catch (error) {
@@ -460,7 +440,6 @@ export default class UserController {
         }
 
   
-          console.log("odi worked boyy",signature)
         // Pass raw body and signature to use case
         await this._userUseCase.confirmPayment(req.body, signature);
   
@@ -474,9 +453,7 @@ export default class UserController {
 
     async checkCouponStatus(): Promise<void> {
       try {
-        console.log("UserController: Starting coupon status check...");
         await this._userUseCase.checkAndUpdateCouponStatus();
-        console.log("UserController: Coupon status check completed");
       } catch (error: any) {
         console.error("UserController: Error during coupon status check:", error);
         throw error;
@@ -484,9 +461,7 @@ export default class UserController {
     }
     async resetPaymentStatus(): Promise<void> {
       try {
-        console.log("UserController: Starting coupon status check...");
         await this._userUseCase.resetPaymentStatus();
-        console.log("UserController: Coupon status check completed");
       } catch (error: any) {
         console.error("UserController: Error during coupon status check:", error);
         throw error;
@@ -517,9 +492,7 @@ export default class UserController {
     async fetchGenreTracks(req: Request, res: Response, next: NextFunction): Promise<void> {
       try {
         const {GenreName} = req.query
-        console.log(GenreName)
         const tracks = await this._userUseCase.fetchGenreTracks(GenreName as string);
-        console.log(tracks,"ssssssssssssssssssssssssssss")
         res.status(200).json({ data: tracks });
       } catch (error: any) {
         console.error("Error in fetchGenreTracks controller:", error);
@@ -532,7 +505,6 @@ export default class UserController {
         const {id} =  req.body
         
         const updated = await this._userUseCase.becomeArtist(id as string);
-        console.log(updated,"ssssssssssssssssssssssssssss")
         res.status(200).json({ data: updated });
       } catch (error: any) {
         console.error("Error in updated controller:", error);
@@ -544,10 +516,8 @@ export default class UserController {
     async username(req: Request, res: Response, next: NextFunction): Promise<void> {
       try {
         const username  = req.query.userId
-        console.log(req.query,'ssssssa',username as string)
   
         const data = await this._userUseCase.getArtistByName(username as string);
-        console.log(data,"sasaasassa")
         res.status(200).json({ data: data });
       } catch (error: any) {
         console.error("Error in getUsers controller:", error);

@@ -6,15 +6,14 @@ import { useNavigate } from "react-router-dom";
 import { RootState } from "../../store/store";
 import { toast } from "sonner";
 import Cropper, { Area } from "react-easy-crop";
-import { Camera } from "lucide-react";
+import { Camera, CheckCircle, Verified } from "lucide-react";
 import ProfilePage from "../../assets/profile6.jpeg";
 import ArtistSidebar from "./artistComponents/artist-aside";
 import { saveArtistData } from "../../redux/artistSlice";
 import { Button } from "../../components/ui/button";
 import { Card } from "../../components/ui/card";
-import artistService from "../../services/artistService"; // Adjust path as needed
+import artistService, { getVerificationStatus, requestVerification } from "../../services/artistService";
 
-// Define the Track type based on your expected API response
 interface Track {
   _id: string;
   title: string;
@@ -22,8 +21,14 @@ interface Track {
   listeners: string[];
 }
 
+interface VerificationStatus {
+  status: "pending" | "approved" | "rejected" | "unsubmitted" | "processing";
+  idProof?: string;
+  feedback?: string | null;
+}
+
 export default function ArtistProfile() {
-    const user = useSelector((state: RootState) => state.artist.signupData);
+  const user = useSelector((state: RootState) => state.artist.signupData);
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -37,7 +42,9 @@ export default function ArtistProfile() {
   const [showCropper, setShowCropper] = useState<"profile" | "cover" | null>(null);
   const [isEditingBio, setIsEditingBio] = useState(false);
   const [bioText, setBioText] = useState<string>(String(user?.bio || ""));
-  const [tracks, setTracks] = useState<Track[]>([]); // State to store fetched tracks
+  const [tracks, setTracks] = useState<Track[]>([]);
+  const [verification, setVerification] = useState<VerificationStatus>({ status: "unsubmitted" });
+  const [selectedFile, setSelectedFile] = useState<File | null>(null); // New state for file
 
   const token = localStorage.getItem("artistToken");
 
@@ -48,20 +55,24 @@ export default function ArtistProfile() {
       return;
     }
 
-    const fetchTracks = async () => {
+    const fetchData = async () => {
       if (!user?._id) return;
 
       try {
         const fetchedTracks = await artistService.fetchArtistTracks(user._id, token);
         setTracks(fetchedTracks);
-        console.log("fetcj auith ithan",fetchTracks)
+        console.log("Fetched tracks:", fetchedTracks);
+
+        const verificationData = await getVerificationStatus(user._id, token);
+        setVerification(verificationData || { status: "unsubmitted" });
       } catch (error: any) {
-        console.error("Error fetching tracks:", error);
+        console.error("Error fetching data:", error);
         setTracks([]);
+        toast.error("Failed to load profile data.");
       }
     };
 
-    fetchTracks();
+    fetchData();
   }, [navigate, user?._id, token]);
 
   const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>, type: "profile" | "cover") => {
@@ -140,7 +151,7 @@ export default function ArtistProfile() {
       toast.error("User ID or token not found.");
       return;
     }
-  
+
     try {
       if (field === "profileImage") {
         const updatedUser = await artistService.uploadProfileImage(user._id, mediaData, token);
@@ -157,6 +168,7 @@ export default function ArtistProfile() {
       toast.error(error.message || "Something went wrong. Please try again.");
     }
   };
+
   const handleBioSave = async () => {
     if (!bioText.trim()) {
       toast.error("Bio cannot be empty.");
@@ -179,6 +191,34 @@ export default function ArtistProfile() {
     }
   };
 
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+    }
+  };
+
+  const handleVerificationSubmit = async () => {
+    if (!selectedFile || !user?._id || !token) {
+      toast.error("Please select an ID proof file or check login status.");
+      return;
+    }
+  
+    setVerification({ status: "processing" });
+  
+    const formData = new FormData();
+    formData.append("idProof", selectedFile);
+  
+    try {
+      await requestVerification(user._id, formData, token);
+      setVerification({ status: "pending" }); // No idProof dependency
+      toast.success("Verification request submitted!");
+      setSelectedFile(null);
+    } catch (error: any) {
+      setVerification({ status: "unsubmitted" });
+      toast.error(error.message || "Failed to submit verification request.");
+    }
+  };
   return (
     <div className="min-h-screen bg-black text-white">
       {showCropper && (
@@ -277,7 +317,12 @@ export default function ArtistProfile() {
                 </div>
               </div>
               <div className="pt-20 px-6 pb-6">
-                <h2 className="text-xl font-semibold text-white">{user?.username}</h2>
+                <h2 className="text-xl font-semibold text-white flex items-center gap-2">
+                  {user?.username}
+                  {verification.status === "approved" && (
+                    <Verified size={30} className="text-blue-600" />
+                  )}
+                </h2>
                 <p className="text-white">{user?.email}</p>
                 <p className="text-white">{user?.gender || "Genre not specified"}</p>
               </div>
@@ -336,20 +381,46 @@ export default function ArtistProfile() {
               </div>
             </Card>
 
-            {/* Social Media & Stats */}
+            {/* Verification Process Section */}
             <Card className="p-6 bg-black border border-white">
-              <h2 className="text-lg font-semibold text-white mb-4">Connect & Stats</h2>
-              <div className="flex justify-between items-center">
-                <div className="flex gap-6">
-                  <a href="#" className="text-white">Twitter</a>
-                  <a href="#" className="text-white">Instagram</a>
-                  <a href="#" className="text-white">Spotify</a>
+              <h2 className="text-lg font-semibold text-white mb-4">Verification Process</h2>
+              {verification.status === "unsubmitted" || verification.status === "rejected" ? (
+                <div>
+                  <p className="text-white mb-4">
+                    Submit an ID proof to start the verification process. An admin will review your submission.
+                  </p>
+                  <label htmlFor="id-proof-upload" className="text-white">
+                    Upload ID Proof:
+                  </label>
+                  <div className="flex items-center gap-4 mt-2">
+                    <input
+                      type="file"
+                      id="id-proof-upload"
+                      accept="image/*,application/pdf"
+                      className="block w-full text-white bg-black border border-white rounded-md p-2"
+                      onChange={handleFileChange}
+                    />
+                    <Button
+                      className="bg-black text-white border border-white"
+                      onClick={handleVerificationSubmit}
+                      disabled={!selectedFile}
+                    >
+                      Submit
+                    </Button>
+                  </div>
+                  {verification.status === "rejected" && verification.feedback && (
+                    <p className="text-red-500 mt-2">Rejection Reason: {verification.feedback}</p>
+                  )}
                 </div>
-                <div className="text-white">
-                  <p>Fans: <span className="font-semibold">12.5K</span></p>
-                  <p>Total Streams: <span className="font-semibold">3.8M</span></p>
-                </div>
-              </div>
+              ) : verification.status === "processing" ? (
+                <p className="text-yellow-500">Processing your verification request...</p>
+              ) : verification.status === "pending" ? (
+                <p className="text-yellow-500">Your verification is under review...</p>
+              ) : verification.status === "approved" ? (
+                <p className="text-green-500 flex items-center gap-2">
+                  <CheckCircle size={20} /> You are a verified artist!
+                </p>
+              ) : null}
             </Card>
           </div>
         </main>

@@ -23,6 +23,7 @@ router.post("/genreCreate",authenticateAdmin,(req:Request,res:Response,next:Next
 router.put("/genreToggleBlockUnblock/:id", authenticateAdmin,(req: Request, res: Response, next: NextFunction) =>genreController.toggleBlockUnblockGenre(req, res, next));
 router.put("/genreUpdate/:id",authenticateAdmin,(req:Request,res:Response,next:NextFunction)=>genreController.editGenre(req,res,next))
 router.get("/listUsers",authenticateAdmin,(req:Request,res:Response,next:NextFunction)=>artistController.listArtists(req,res,next))
+router.get("/fetchAllArtistsVerification",authenticateAdmin,(req:Request,res:Response,next:NextFunction)=>adminController.fetchVerification(req,res,next))
 
 router.post("/login",(req:Request,res:Response,next:NextFunction)=>adminController.login(req,res,next))
 router.post("/banners", authenticateAdmin,upload.single("image"),(req:Request,res:Response,next:NextFunction)=>adminController.banners(req,res,next))
@@ -48,6 +49,7 @@ router.get("/stripe/subscription-history", (req: Request, res: Response, next: N
 router.get("/music/monetization", (req: Request, res: Response, next: NextFunction) => adminController.getMusicMonetization(req, res, next));
 router.post("/artistPayout", (req: Request, res: Response, next: NextFunction) => adminController.artistPayout(req, res, next));
 router.post("/getUsersByIds", (req: Request, res: Response, next: NextFunction) => adminController.getUsersByIds(req, res, next));
+router.put("/updateVerificationStatus", (req: Request, res: Response, next: NextFunction) => adminController.updateVerificationStatus(req, res, next));
 
 export default router;
 

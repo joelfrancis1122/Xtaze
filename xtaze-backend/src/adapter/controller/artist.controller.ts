@@ -77,13 +77,13 @@ export default class ArtistController {
     try {
       console.log("page");
       const listArtists = await this._artistnUseCase.listArtists();
-      console.log(listArtists, "othila");
 
       res.status(200).json({ success: true, message: "List Of Artists", data: listArtists });
     } catch (error) {
       next(error);
     }
   }
+
 
   async getAllTracksArtist(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
@@ -96,7 +96,6 @@ export default class ArtistController {
         tracks = await this._artistnUseCase.listArtistReleases(userId as string);
       }
 
-      console.log(tracks, "othila");
       res.status(200).json({ success: true, message: "List Of Artists", tracks });
     } catch (error) {
       next(error);
@@ -229,5 +228,42 @@ export default class ArtistController {
     }
   }
 
-
+  async getVerificationStatus(req: Request, res: Response,next: NextFunction):Promise<void>{
+    const { artistId } = req.query;
+    try {
+      const verificationStatus = await this._artistnUseCase.getVerificationStatus(artistId as string);
+      console.log(verificationStatus,"verification statuss")
+      res.status(200).json({ success: true, data: verificationStatus });
+    } catch (error: any) {
+      console.error("Error in getVerificationStatusController:", error);
+      res.status(500).json({ success: false, message: error.message || "Failed to fetch verification status" });
+    }
+  }
+  async requestVerification(req: Request, res: Response, next: NextFunction): Promise<void> {
+    const { artistId } = req.body;
+  
+    let imageFile: Express.Multer.File | undefined;
+  
+    if (req.files && !Array.isArray(req.files)) {
+      const imageFiles = req.files['idProof'];
+      imageFile = imageFiles?.[0];
+    }
+  console.log(imageFile,artistId,"joel")
+    try {
+      if (!artistId || !imageFile) {
+        throw new Error("Artist ID or image file is missing.");
+      }
+  
+      console.log("Artist ID:", artistId);
+      console.log("Image File:", imageFile);
+  
+      const verificationStatus = await this._artistnUseCase.requestVerification(artistId, imageFile);
+  
+      res.status(200).json({ success: true, message: "Verification request processed." });
+    } catch (error: any) {
+      console.error("Error in requestVerification:", error);
+      res.status(500).json({ success: false, message: error.message || "Failed to process verification request." });
+    }
+  }
+  
 }

@@ -1,34 +1,5 @@
-// import { Request, Response, NextFunction } from "express";
-// import jwt from "jsonwebtoken";
-// import dotenv from "dotenv";
-// dotenv.config();
 
-// const SECRET_KEY = process.env.JWT_SECRET || "kitila"
 
-// interface AuthenticatedRequest extends Request {
-//   user?: any;
-// }
-// export const authenticateUser = (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
-//   console.log("vannila")
-//   const token = req.headers.authorization?.split(" ")[1];
-//   console.log("vannil22a")
-// if (!token) {
-//   console.log("pani kitty")
-//   res.status(401).json({ success: false, message: "Unauthorized: No token provided" });
-//   return; 
-// }
-
-// try {
-//   const decoded = jwt.verify(token, SECRET_KEY);
-//   req.user = decoded; 
-//     next();
-//   } catch (error) {
-//     res.status(403).json({ success: false, message: "Forbidden: Invalid token" });
-//     return; 
-//   }
-// };
-
-// middleware/authMiddleware.ts
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
@@ -61,7 +32,6 @@ const authenticateToken = (req: AuthenticatedRequest, res: Response, next: NextF
   try {
     const decoded = jwt.verify(token, SECRET_KEY) as AuthenticatedRequest["user"];
     req.user = decoded;
-    console.log(decoded,"odi ayi")
     next();
   } catch (error) {
     console.log(error,"sasaaa")

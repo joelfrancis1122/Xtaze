@@ -1,6 +1,8 @@
 import { ArtistMonetization, MusicMonetization } from "../entities/IMonetization";
-import { ITrack } from "../entities/ITrack";
 import IUser from "../entities/IUser";
+import { ITrack } from "../entities/ITrack";
+import { IVerificationRequest } from "../entities/IVeridicationRequest";
+import { IVerificationStatusResponse } from "../entities/IVerificationStatusResponse ";
 
 export default interface IArtistUseCase {
     login(email: string, password: string): Promise<{ success: boolean; message: string; token?: string; ArefreshToken?: string; user?: IUser }>;
@@ -15,6 +17,8 @@ export default interface IArtistUseCase {
     statsOfArtist(userId: string): Promise<ArtistMonetization[]>
     saveCard(artistId: string, paymentMethodId: string): Promise<IUser | null>;
     checkcard(artistId: string): Promise<IUser | null>;
+    requestVerification(artistId:string,imageFile: Express.Multer.File): Promise<IVerificationStatusResponse|null>
+    getVerificationStatus(artistId:string): Promise<IVerificationStatusResponse|null>
 
 
 }

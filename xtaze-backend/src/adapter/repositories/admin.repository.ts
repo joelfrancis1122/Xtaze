@@ -2,82 +2,100 @@ import { IBanner } from "../../domain/entities/IBanner";
 import { ICoupon } from "../../domain/entities/ICoupon";
 import { MusicMonetization } from "../../domain/entities/IMonetization";
 import IUser from "../../domain/entities/IUser";
+import { IVerificationRequest } from "../../domain/entities/IVeridicationRequest";
 import { IAdminRepository } from "../../domain/repositories/IAdminRepository";
 import { uploadImageToCloud, uploadProfileCloud } from "../../framework/service/cloudinary.service";
 import BannerModel from "../db/models/BannerModel";
 import { CouponModel } from "../db/models/CouponModel";
 import { ITrack, Track } from "../db/models/TrackModel";
 import UserModel from "../db/models/UserModel";
+import VerificationModel from "../db/models/VerificationRequestModel";
 
 export default class AdminRepository implements IAdminRepository {
 
   async findByEmail(email: string): Promise<IUser | null> {
     try {
-      console.log(email, "ith enth oi")
       const admin = await UserModel.findOne({ email });
-      console.log(admin, "ith entha ")
       return admin as unknown as IUser
     } catch (error) {
       throw error
     }
   }
+  async updateVerificationStatus(status:string,feedback: string | null,id: string): Promise<IVerificationRequest | null> {
+    try {
+      const updatedVerification = await VerificationModel.findByIdAndUpdate(
+        id,
+        {
+          status,
+          feedback,
+          reviewedAt: new Date().toISOString(), 
+        },
+        { new: true } 
+      );
+
+      if (!updatedVerification) {
+        console.log(`Verification record with ID ${id} not found`);
+        return null;
+      }
+
+      return updatedVerification;
+    } catch (error) {
+      console.error("Error updating verification status:", error);
+      throw error;
+    }
+  }
+  
   async getUsersByIds(userIds: string[]): Promise<IUser[] | null> {
     try {
-      console.log(userIds, "console");
-  
+
       const users = await UserModel.find({ _id: { $in: userIds } });
-  
+
       const formattedUsers: IUser[] = users.map(user => ({
         ...user.toObject(),
-        _id: user._id.toString(), 
+        _id: user._id.toString(),
       }));
-  
+
       return formattedUsers;
     } catch (error) {
       throw error;
     }
   }
-  
+
 
   async getArtistById(id: string): Promise<IUser | null> {
     return await UserModel.findById(id);
   }
 
-  
-async StripefindByname(artistName: string): Promise<string | null> {
-  const artist = await UserModel.findOne({ username: artistName });
-  
-  if (!artist) return null; // Ensure artist exists before accessing properties
 
-  return artist.stripePaymentMethodId || null; // Return stripePaymentId or null if undefined
-}
+  async StripefindByname(artistName: string): Promise<string | null> {
+    const artist = await UserModel.findOne({ username: artistName });
+
+    if (!artist) return null; // Ensure artist exists before accessing properties
+
+    return artist.stripePaymentMethodId || null; // Return stripePaymentId or null if undefined
+  }
 
 
   async updateArtistStatus(id: string, status: boolean): Promise<IUser | null> {
-    console.log(status, "ss");
 
 
     return await UserModel.findByIdAndUpdate(id, { isActive: status }, { new: true });
 
   }
   async createBanner(title: string, description: string, action: string, isActive: boolean, createdBy: string, file: Express.Multer.File): Promise<IBanner | null> {
-    console.log(title, description, action, isActive, createdBy, file, "ss");
     const getBannerURl = await uploadProfileCloud(file);
     const url = getBannerURl.secure_url.toString()
-    console.log(getBannerURl, "saaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", url)
     const banner = new BannerModel({ title, description, imageUrl: url, action, createdBy, isActive })
 
     return await banner.save()
   }
   async findAll(): Promise<IBanner[] | null> {
-    console.log("odi");
     const data = await BannerModel.find()
 
     return data
   }
 
   async findBanner(id: string): Promise<IBanner | null> {
-    console.log("odi", id);
     const data = await BannerModel.findByIdAndDelete(id)
 
     return data
@@ -88,7 +106,6 @@ async StripefindByname(artistName: string): Promise<string | null> {
     try {
       const newCoupon = new CouponModel(couponData);
       const savedCoupon = await newCoupon.save();
-      console.log(savedCoupon, "odi odi odi odi")
       return savedCoupon;
     } catch (error: any) {
       if (error.code === 11000) {
@@ -140,8 +157,6 @@ async StripefindByname(artistName: string): Promise<string | null> {
 
   async findBannerforUpdate(id: string, title: string, description: string, action: string, isActive: boolean, file: Express.Multer.File): Promise<IBanner | null> {
     try {
-      console.log("Updating banner with ID:", id);
-
       let data = await uploadProfileCloud(file);
       let url = data.secure_url
       const updatedBanner = await BannerModel.findByIdAndUpdate(
@@ -155,7 +170,6 @@ async StripefindByname(artistName: string): Promise<string | null> {
         },
         { new: true }
       );
-      console.log(updatedBanner, "ethy ambuuu")
       if (!updatedBanner) {
         throw new Error("Banner not found or failed to update");
       }
@@ -172,6 +186,11 @@ async StripefindByname(artistName: string): Promise<string | null> {
     const coupon = await CouponModel.findOne({ code });
     return coupon ? coupon.toObject() as ICoupon : null;
   }
+  async fetchVerification(): Promise<IVerificationRequest | null> {
+    const verification = await VerificationModel.find();
+    console.log(verification, "this is what i want ")
+    return verification as unknown as IVerificationRequest
+  }
 
 
 
@@ -182,13 +201,13 @@ async StripefindByname(artistName: string): Promise<string | null> {
       // Fetch all artists
       const artists = await UserModel.find({ role: "artist" });
       const artistNames = artists.map((artist) => artist.username);
-      
+
       // Fetch tracks for these artists
       const tracks = await Track.find({ artists: { $in: artistNames } });
-  
+
       const revenuePerPlay = 0.50;
       const currentMonth = new Date().toISOString().slice(0, 7); // e.g., "2025-03"
-  
+
       const monetizationData: MusicMonetization[] = await Promise.all(
         tracks.map(async (track) => {
           const typedTrack = track as {
@@ -199,27 +218,27 @@ async StripefindByname(artistName: string): Promise<string | null> {
             playHistory?: { month: string; plays: number }[];
             createdAt?: Date;
           };
-  
+
           // Fetch the artist's details for this track
           const artist = await UserModel.findOne({ username: typedTrack.artists[0] });
-  
+
           const monthlyPlays = typedTrack.playHistory?.find((h) => h.month === currentMonth)?.plays || 0;
           const totalPlays = typedTrack.playHistory?.reduce((sum, h) => sum + h.plays, 0) || 0;
-  
+
           return {
             trackId: typedTrack._id.toString(),
             trackName: typedTrack.title,
             artistName: typedTrack.artists[0] || "Unknown Artist",
-            totalPlays, 
+            totalPlays,
             monthlyPlays,
-            paymentStatus: artist?.paymentStatus ?? false, 
-            totalRevenue: totalPlays * revenuePerPlay, 
-            monthlyRevenue: monthlyPlays * revenuePerPlay, 
+            paymentStatus: artist?.paymentStatus ?? false,
+            totalRevenue: totalPlays * revenuePerPlay,
+            monthlyRevenue: monthlyPlays * revenuePerPlay,
             lastUpdated: typedTrack.createdAt ? typedTrack.createdAt.toISOString() : "",
           };
         })
       );
-  
+
       return monetizationData.sort((a, b) => b.totalPlays - a.totalPlays);
     } catch (error: any) {
       console.error("Error in getMusicMonetization:", error);

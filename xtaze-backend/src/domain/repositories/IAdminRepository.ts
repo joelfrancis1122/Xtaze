@@ -4,6 +4,7 @@ import { ICoupon } from "../entities/ICoupon";
 import { MusicMonetization } from "../entities/IMonetization";
 import { ITrack } from "../entities/ITrack";
 import IUser from "../entities/IUser";
+import { IVerificationRequest } from "../entities/IVeridicationRequest";
 
 export interface IAdminRepository {
   findByEmail: (email: string) => Promise<IUser | null>;
@@ -22,4 +23,7 @@ export interface IAdminRepository {
   getMusicMonetization(): Promise<MusicMonetization[] | null>
   StripefindByname(artistName:string):Promise<string | null>;
   getUsersByIds(userIds:string[]):Promise<IUser[]|null>;
+  fetchVerification(): Promise<IVerificationRequest | null> 
+  updateVerificationStatus(status:string,feedback: string | null,id:string) :Promise<IVerificationRequest|null>
+
 }

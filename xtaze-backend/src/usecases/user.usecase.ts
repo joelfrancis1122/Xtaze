@@ -48,14 +48,12 @@ export default class UserUseCase {
 
   async registerUser(username: string, country: string, gender: string, year: number, phone: number, email: string, password: string): Promise<IUser> {
 
-    console.log("najjn vanneee vannee vanne ")
     const [existingUserByEmail] = await Promise.all([
       this._userRepository.findByEmail(email),
       // this._userRepository.findByPhone(phone)
     ]);
 
     if (existingUserByEmail) {
-      console.log("lml");
 
       throw new Error("User already exists with this email");
     }
@@ -65,13 +63,11 @@ export default class UserUseCase {
     // }
 
     const hashedPassword = await this._passwordService.hashPassword(password);
-    console.log(hashedPassword, "ith hahed an ee ");
 
     const user = { username, country, gender, year, phone, email, password: hashedPassword }
 
     const userData = await this._userRepository.add(user);
 
-    console.log(userData, "userdata anee ");
     return userData;
   }
 
@@ -80,7 +76,6 @@ export default class UserUseCase {
     const findEmail = await this._userRepository.findByEmail(email) //using the storage 
 
     if (findEmail) {
-      console.log("lml");
       return "403"
     }
     return this._otpService.sendOTP(email);
@@ -115,7 +110,6 @@ export default class UserUseCase {
       // Verify JWT token
       const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { userId: string };
       if (!decoded) {
-        console.log("token is wrong")
       }
       // Find user
       const user = await this._userRepository.findById(decoded.userId);
@@ -128,7 +122,6 @@ export default class UserUseCase {
 
       // Update user's password
       user.password = hashedPassword;
-      console.log(user, "sudpated yser ")
       await this._userRepository.updatePassword(user);
 
       return {
@@ -142,7 +135,6 @@ export default class UserUseCase {
 
 
   async verifyOTP(otp: string): Promise<{ success: boolean; message: string }> {
-    console.log("email ila ennn ariya otp enda", otp)
     const isStore = await this._otpService.isEmpty()
     if (isStore) {
       return { success: false, message: "This Otp is expired click the resend button" };
@@ -166,13 +158,11 @@ export default class UserUseCase {
     if (!isPasswordValid) throw new Error("Invalid credentials!");
     console.log("JWT_SECRET at login:", process.env.JWT_SECRET);
 
-    console.log("ith unda");
     const token = jwt.sign(
       { userId: user._id, email: user.email, role: "user" },
       process.env.JWT_SECRET!,
       { expiresIn: "15m" } // Short-lived access token
     );
-    console.log("ith unda refresh all jwt");
     const refreshToken = jwt.sign(
       { userId: user._id },
       process.env.JWT_REFRESH_SECRET!,
@@ -234,7 +224,6 @@ export default class UserUseCase {
 
   async refresh(refreshToken: string): Promise<{ success: boolean; message: string; token?: string; refreshToken?: string }> {
     try {
-      console.log("yeaah ithil varunind");
       const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET!) as { userId: string };
       const user = await this._userRepository.findById(decoded.userId);
       if (!user) return { success: false, message: "User not found" };
@@ -382,7 +371,6 @@ export default class UserUseCase {
     try {
       const playlist = await this._userRepository.findByCreator(userId);
 
-      console.log(playlist, "this s the playlist")
       if (!playlist) {
         return null;
       }
@@ -397,7 +385,6 @@ export default class UserUseCase {
     try {
       const playlist = await this._userRepository.getPlaylist(id, pageNum, limitNum, skip);
 
-      console.log(playlist, "this s the playlistodi odi ")
       if (!playlist) {
         return null;
       }
@@ -662,7 +649,6 @@ export default class UserUseCase {
   async getArtistByName(username:string): Promise<IUser|null> {
 
     const users = await this._userRepository.getArtistByName(username)
-    console.log(users, "this is what i got ")
     return users
 
   }

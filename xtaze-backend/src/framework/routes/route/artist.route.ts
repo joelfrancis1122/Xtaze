@@ -26,6 +26,8 @@ router.get("/checkcard",(req:Request,res:Response,next:NextFunction)=>artistCont
 router.post("/saveCard",(req:Request,res:Response,next:NextFunction)=>artistController.saveCard(req,res,next))
 
 router.put("/updateTrackByArtist",authenticateArtist,upload.fields([{ name: "fileUrl", maxCount: 1 }, { name: "img", maxCount: 1 }]),(req:Request,res:Response,next:NextFunction)=>artistController.updateTrackByArtist(req,res,next))
+router.get("/getVerificationStatus",authenticateArtist,(req:Request,res:Response,next:NextFunction)=>artistController.getVerificationStatus(req,res,next))
+router.post("/requestVerification",authenticateArtist,upload.fields([{ name: "idProof", maxCount: 1 }, { name: "img", maxCount: 1 }]),(req:Request,res:Response,next:NextFunction)=>artistController.requestVerification(req,res,next))
 
 
 

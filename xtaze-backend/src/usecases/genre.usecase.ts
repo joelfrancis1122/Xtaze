@@ -25,20 +25,17 @@ export class GenreUseCase {
     const dupe = await this._genreRepository.findDupe(name);
 
     if (dupe) {
-        console.log("❌ Genre already exists:", name);
         return { success: false, message: "Genre exists, try another name!" };
     }
 
     const data = await this._genreRepository.createGenre(name);
 
-    console.log("✅ Genre created:", data);
     return { success: true, message: "Genre created successfully!", genre: data ?? undefined };
 }
 
 
 
   async toggleBlockUnblockGenre(id: string): Promise<IGenre | null> {
-    console.log("genre comming to the toggle")
     const genre = await this._genreRepository.getGenreById(id);
     if (!genre) {
       throw new Error("Genre not found");
@@ -46,13 +43,11 @@ export class GenreUseCase {
 
     // const newStatus = genre.isBlocked==true ? false : true;
     const newStatus = !genre.isBlocked;
-    console.log(newStatus, "povunu");
     return await this._genreRepository.updateGenreStatus(id, newStatus);
   }
 
 
   async editGenre(id: string, name: string): Promise<{ success: boolean, message: string, genre?: IGenre }> {
-    console.log("Editing Genre:", id)
     const dupe = await this._genreRepository.findDupe(name)
     if (dupe) {
       return { success: false, message: "Genre exisists try another name!" }

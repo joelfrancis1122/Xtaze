@@ -9,6 +9,7 @@ import AdminMusicMonetizationPage from "../pages/Admin/monetizationPage ";
 import AdminSubscriptionHistoryPage from "../pages/Admin/historyPage";
 import AdminPayoutSuccessPage from "../pages/Admin/AdminSuccess";
 import AdminPayoutCancelPage from "../pages/Admin/AdminCancelPage";
+import AdminAnalytics from "../pages/Admin/AdminAnalytics";
 
 export const AdminRoutes = () => (
     <>
@@ -22,6 +23,7 @@ export const AdminRoutes = () => (
     <Route path="/admin/history" element={<AdminSubscriptionHistoryPage />} />
     <Route path="/admin/payoutSuccess" element={<AdminPayoutSuccessPage />} />
     <Route path="/admin/payoutCancel" element={<AdminPayoutCancelPage />} />
+    <Route path="/admin/analytics" element={<AdminAnalytics />} />
 
 
 

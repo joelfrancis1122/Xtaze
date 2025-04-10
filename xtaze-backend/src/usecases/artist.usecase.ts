@@ -5,9 +5,11 @@ import dotenv from "dotenv";
 import IUser from "../domain/entities/IUser";
 import { IArtistRepository } from "../domain/repositories/IArtistRepository";
 import { ITrack } from "../domain/entities/ITrack";
-import { uploadImageToCloud, uploadSongToCloud } from "../framework/service/cloudinary.service";
+import { uploadIdproofCloud, uploadImageToCloud, uploadSongToCloud } from "../framework/service/cloudinary.service";
 import { IUserRepository } from "../domain/repositories/IUserRepository";
 import { ArtistMonetization, MusicMonetization } from "../domain/entities/IMonetization";
+import { IVerificationRequest } from "../domain/entities/IVeridicationRequest";
+import { IVerificationStatusResponse } from "../domain/entities/IVerificationStatusResponse ";
 dotenv.config();
 
 interface useCaseDependencies {
@@ -54,7 +56,6 @@ export default class ArtistUseCase {
       process.env.JWT_SECRET!,
       { expiresIn: "30M" } // Short-lived access token
     );
-    console.log("ith unda refresh all jwts");
     const ArefreshToken = jwt.sign(
       { userId: artist._id },
       process.env.JWT_REFRESH_SECRET!,
@@ -101,7 +102,6 @@ export default class ArtistUseCase {
 
   async trackUpload(songName: string, artist: string[], genre: string[], album: string, songFile: Express.Multer.File, imageFile: Express.Multer.File): Promise<ITrack | null> {
     const data = { title: songName, artists: artist, genre: genre, album, fileUrl: songFile, img: imageFile }
-    console.log(data, "ith oru cheriya ");
     const songUpload = await uploadSongToCloud(songFile);
     const imageUpload = await uploadImageToCloud(imageFile);
     const newTrack: ITrack = {
@@ -168,23 +168,42 @@ export default class ArtistUseCase {
   async checkcard(artistId: string): Promise<IUser | null> {
 
     return await this._artistRepository.checkcard(artistId);
-
-
   }
 
-  // async toggleBlockUnblockArtist(id: string): Promise<IUser | null> {
-  //   console.log("Artist coming to the toggle");
-  //   const artist = await this._artistRepository.getArtistById(id);
-  //   console.log("kittiyo",artist)
-  //   if (!artist) {
-  //     throw new Error("Artist not found");
-  //   }
+  
 
-  //   const newStatus = !artist.isActive;
-  //   console.log(newStatus, "new status");
 
-  //   return await this._artistRepository.updateArtistStatus(id, newStatus);
-  // }
 
+  async getVerificationStatus(artistId: string): Promise<IVerificationStatusResponse | null> {
+
+    const verification = await this._artistRepository.getVerificationStatus(artistId);
+    if (!verification) {
+      return { status: "unsubmitted" };
+    }
+  
+    return {
+      status: verification.status,
+      idProof: verification.idProof,
+      feedback: verification.feedback,
+    
+    };
+  }
+  
+  async requestVerification(artistId:string,imageFile: Express.Multer.File): Promise<IVerificationStatusResponse | null> {
+    const imageUpload = imageFile ? await uploadIdproofCloud(imageFile) : null;
+    if(!imageUpload) return null
+    let image = imageUpload.secure_url
+    const verification = await this._artistRepository.requestVerification(artistId,image as string);
+    if (!verification) {
+      return { status: "unsubmitted" };
+    }
+  
+    return {
+      status: verification.status,
+      idProof: verification.idProof,
+      feedback: verification.feedback,
+    
+    };
+  }
 
 }

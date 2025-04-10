@@ -13,6 +13,7 @@ import { ITrack } from "../domain/entities/ITrack";
 import { MusicMonetization } from "../domain/entities/IMonetization";
 import UserModel from "../adapter/db/models/UserModel";
 import { Track } from "../adapter/db/models/TrackModel";
+import { IVerificationRequest } from "../domain/entities/IVeridicationRequest";
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2023-08-16" });
 
 dotenv.config();
@@ -66,12 +67,10 @@ export default class AdminUseCase {
   async toggleBlockUnblockArtist(id: string): Promise<IUser | null> {
     console.log("Artist coming to the toggle");
     const artist = await this._adminRepository.getArtistById(id);
-    console.log("kittiyo", artist)
     if (!artist) {
       throw new Error("Artist not found");
     }
     const newStatus = !artist.isActive;
-    console.log(newStatus, "new status");
 
     return await this._adminRepository.updateArtistStatus(id, newStatus);
   }
@@ -186,8 +185,6 @@ export default class AdminUseCase {
     try {
       const products = await this.stripe.products.list({ limit: 100, active: true });
       const prices = await this.stripe.prices.list({ limit: 100 });
-      console.log(products, "ssssssssssssss");
-      console.log(prices, "ooo");
       const plans = products.data
         .map((product) => {
           const price = prices.data.find((p) => p.product === product.id && p.active);
@@ -332,16 +329,25 @@ export default class AdminUseCase {
   async getMusicMonetization(): Promise<MusicMonetization[] | null> {
 
     const tracks = await this._adminRepository.getMusicMonetization()
-    console.log(tracks, "this is what i got ")
     return tracks
 
   }
   async getUsersByIds(userIds:string[]): Promise<IUser[]|null> {
 
     const users = await this._adminRepository.getUsersByIds(userIds)
-    console.log(users, "this is what i got ")
     return users
 
+  }
+  async updateVerificationStatus(status:string,feedback: string | null,id:string) :Promise<IVerificationRequest|null> {
+
+    const updated = await this._adminRepository.updateVerificationStatus(status,feedback,id)
+    return updated
+
+  }
+
+  async fetchVerification(): Promise<IVerificationRequest | null> {
+
+    return await this._adminRepository.fetchVerification();
   }
 
   async artistPayout(artistName: string): Promise<{ success: boolean; sessionUrl: string }> {

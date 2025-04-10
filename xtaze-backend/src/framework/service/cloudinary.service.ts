@@ -142,3 +142,36 @@ export const uploadProfileCloud = async (file: Express.Multer.File): Promise<Upl
     throw new Error("Profile upload failed");
   }
 };
+export const uploadIdproofCloud = async (file: Express.Multer.File): Promise<UploadApiResponse> => {
+  try {
+    if (!file || !file.buffer) throw new Error("No file provided");
+
+    const originalNameWithoutExt = file.originalname.replace(/\.[^/.]+$/, "");
+    const uniqueName = `${originalNameWithoutExt}_${uuidv4()}`;
+
+    const resourceType = file.mimetype.startsWith("video") ? "video" : "image";
+
+    return await new Promise((resolve, reject) => {
+      cloudinary.uploader.upload_stream(
+        {
+          resource_type: resourceType,
+          folder: "xtaze/idProof",
+          public_id: uniqueName,
+          unique_filename: true,
+          overwrite: true,
+        },
+        (error, result) => {
+          if (error) {
+            console.error("❌ Idproof upload error:", error);
+            reject(error);
+          } else {
+            resolve(result as UploadApiResponse);
+          }
+        }
+      ).end(file.buffer);
+    });
+  } catch (error: any) {
+    console.error("❌ Idproof upload error:", error.message || error);
+    throw new Error("Idproof upload failed");
+  }
+};

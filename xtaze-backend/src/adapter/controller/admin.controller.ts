@@ -282,7 +282,7 @@ export default class AdminController {
   async getMusicMonetization(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const monetizationData = await this._adminUseCase.getMusicMonetization();
-      console.log(monetizationData,"joellll")
+      console.log(monetizationData, "joellll")
       res.status(200).json({ data: monetizationData });
     } catch (error: any) {
       console.error("Error in getMusicMonetization controller:", error);
@@ -294,7 +294,7 @@ export default class AdminController {
     try {
       const { artistName } = req.body
       const data = await this._adminUseCase.artistPayout(artistName);
-      console.log(data,"sasaasassa")
+      console.log(data, "sasaasassa")
       res.status(200).json({ data: data });
     } catch (error: any) {
       console.error("Error in payout controller:", error);
@@ -305,16 +305,39 @@ export default class AdminController {
   async getUsersByIds(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { userIds } = req.body
-      console.log(req.body,'ssssssa',userIds as string)
+      console.log(req.body, 'ssssssa', userIds as string)
 
       const data = await this._adminUseCase.getUsersByIds(userIds);
-      console.log(data,"sasaasassa")
+      console.log(data, "sasaasassa")
       res.status(200).json({ data: data });
     } catch (error: any) {
       console.error("Error in getUsers controller:", error);
       next(error);
     }
   }
+
+
+  async fetchVerification(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const verification = await this._adminUseCase.fetchVerification();
+      res.status(200).json({ success: true, message: "List Of verification", data: verification });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async updateVerificationStatus(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const {status,feedback} = req.body
+      const id = req.query.id
+
+      const update = await this._adminUseCase.updateVerificationStatus(status as string,feedback as string,id as string);
+      res.status(200).json({ success: true, message: "List Of verification", data: update });
+    } catch (error) {
+      next(error);
+    }
+  }
+
 
 }
 

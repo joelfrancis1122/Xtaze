@@ -3,6 +3,7 @@ import { saveAdminData } from "../redux/adminSlice";
 import { adminApi, artistApi } from "../api/axios";
 import { IBanner } from "../pages/User/types/IBanner";
 
+
 // Generic API Call Helper
 const apiCall = async <T>(
   instance: any,
@@ -194,7 +195,7 @@ export const createBanner = async (
   formData.append("action", banner.action);
   formData.append("isActive", String(banner.isActive));
   formData.append("createdBy", banner.createdBy);
-console.log(formData,"visvajith")
+  console.log(formData, "visvajith")
   const data = await apiCall<{ data: IBanner }>(adminApi, "post", "/banners", formData, token);
   return data.data;
 };
@@ -211,7 +212,7 @@ export const updateBanner = async (
   formData.append("action", banner.action);
   formData.append("isActive", String(banner.isActive));
 
-  console.log(formData,"odi avaindah comming ",banner.title,banner.description,banner.isActive)
+  console.log(formData, "odi avaindah comming ", banner.title, banner.description, banner.isActive)
   const data = await apiCall<{ data: IBanner }>(adminApi, "put", `/banners/${id}`, formData, token);
   return data.data;
 };
@@ -223,10 +224,12 @@ export const deleteBanner = async (id: string, token: string): Promise<void> => 
 
 export interface ListenerUser {
   _id: string;
-  gender: string; 
-  year:number
-  age: number; 
-  country: string; 
+  gender: string;
+  username:string;
+  email:string;
+  year: number
+  age: number;
+  country: string;
 }
 
 export const fetchUserDetails = async (userIds: string[], token: string): Promise<ListenerUser[]> => {
@@ -239,7 +242,7 @@ export const fetchUserDetails = async (userIds: string[], token: string): Promis
       token
     );
     console.log("Fetch user details response:", data);
- 
+
     return data.data;
   } catch (error) {
     console.error("Error fetching user details:", error);
@@ -254,7 +257,7 @@ export const fetchCoupons = async (): Promise<any> => {
       "/coupons",
     );
     console.log("Fetch user details response:", data);
- 
+
     return data.data;
   } catch (error) {
     console.error("Error fetching user details:", error);
@@ -266,7 +269,7 @@ export const fetchCoupons = async (): Promise<any> => {
 export const fetchSubscriptionHistory = async (token?: string): Promise<any> => {
   console.log("Fetching subscription history...");
   try {
-    const data = await apiCall<{ data: any}>(
+    const data = await apiCall<{ data: any }>(
       adminApi,
       "get",
       "/stripe/subscription-history",
@@ -508,7 +511,6 @@ export const updateSubscriptionPlan = async (
   }
 };
 
-// New function to archive a subscription plan
 export const archiveSubscriptionPlan = async (productId: string, token?: string): Promise<void> => {
   console.log("Archiving subscription plan with productId:", productId);
   try {
@@ -523,5 +525,46 @@ export const archiveSubscriptionPlan = async (productId: string, token?: string)
   } catch (error: any) {
     console.error("Error archiving subscription plan:", error);
     throw new Error(error.response?.data?.message || "Failed to archive subscription plan");
+  }
+};
+export const fetchAllArtistsVerification = async (token:string): Promise<any> => {
+  try {
+    const response = await apiCall<{ data: any }>(
+      adminApi,
+      "get",
+      `/fetchAllArtistsVerification`,
+      undefined,
+      token
+    );
+    console.log(response,"ossss")
+    return response.data
+  } catch (error: any) {
+    console.error("Error archiving verification plan:", error);
+    throw new Error(error.response?.data?.message || "Failed to archive subscription plan");
+  }
+};
+
+
+
+// Update verification status
+export const updateVerificationStatus = async (
+  status: "approved" | "rejected" | "pending" | "unsubmitted",
+  feedback: string | null,
+  id: string,
+  token: string
+): Promise<any> => {
+  try {
+    console.log("Service called with:", { status, feedback, id, token });
+    const response = await apiCall(
+      adminApi,
+      "put",
+      `/updateVerificationStatus?id=${id}`,
+      { status, feedback },
+      token
+    );
+    return response;
+  } catch (error) {
+    console.error("Error in updateVerificationStatus service:", error);
+    throw error;
   }
 };

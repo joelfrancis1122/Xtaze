@@ -233,6 +233,56 @@ export const saveCard = async (artistId: string, paymentMethodId: string, token:
   if (!data.success) throw new Error(data.message || "Failed to save card");
 };
 
+
+
+interface VerificationStatus {
+  status: "pending" | "approved" | "rejected" | "unsubmitted";
+  idProof?: string;
+  feedback?: string | null;
+}
+export const getVerificationStatus = async (
+  artistId: string,
+  token: string
+): Promise<VerificationStatus> => {
+  console.log("Fetching verification status for:", { artistId, token });
+  try {
+    const response = await apiCall<{ success: boolean; data: VerificationStatus }>(
+      artistApi,
+      "get",
+      `/getVerificationStatus?artistId=${artistId}`,
+      token
+    );
+    console.log(response, "verification on proces what ?")
+    return response.data;
+  } catch (error: any) {
+    console.error("Error fetching verification status:", error);
+    return { status: "unsubmitted" }; // Fallback if no record exists
+  }
+};
+
+export const requestVerification = async (
+  artistId: string,
+  formData: FormData,
+  token: string
+): Promise<{ idProof: string }> => {
+  formData.append("artistId", artistId);
+
+  const data = await apiCall<{ success: boolean; idProof?: string; message?: string }>(
+    artistApi,
+    "post",
+    "/requestVerification",
+    formData,
+    token
+  );
+
+  if (!data.success || !data.idProof) {
+    throw new Error(data.message || "Failed to submit verification request");
+  }
+
+  return { idProof: data.idProof };
+};
+
+
 export const fetchSongEarnings = async (artistId: string, token: string): Promise<any[]> => {
   console.log("Fetching song earnings with:", { artistId, token });
   const data = await apiCall<{ data: any[] }>(
@@ -252,6 +302,8 @@ export const fetchSongEarnings = async (artistId: string, token: string): Promis
     monthlyEarnings: song.monthlyPlays * 0.50,
   }));
 };
+
+
 export default {
   loginArtist,
   fetchArtistTracks,
