@@ -5,11 +5,14 @@ import upload from "../../middlewares/uploadMiddleware";
 import { authenticateUser } from "../../middlewares/authMiddleware";
 import artistDependencies from "../../dependencies/artist.dependencies";
 import ArtistController from "../../../adapter/controller/artist.controller";
+import adminDependencies from "../../dependencies/admin.dependencies";
+import AdminController from "../../../adapter/controller/admin.controller";
 
 const router = express.Router();
 
 const userController = new UserController(userDependencies)
 const artistController = new ArtistController(artistDependencies)
+const adminController = new AdminController(adminDependencies)
 
 router.post("/checkUsername", (req: Request, res: Response, next: NextFunction) => userController.checkUsername(req, res, next));
 router.post("/forgotPassword", (req: Request, res: Response, next: NextFunction) => userController.forgotPassword(req, res, next));
@@ -43,5 +46,6 @@ router.put("/becomeArtist",(req:Request,res:Response,next:NextFunction)=>userCon
 router.get("/listArtists",authenticateUser,(req:Request,res:Response,next:NextFunction)=>artistController.listArtists(req,res,next))
 router.get("/getAllTracksArtist",authenticateUser,(req:Request,res:Response,next:NextFunction)=>artistController.getAllTracksArtist(req,res,next))
 router.get("/username",authenticateUser,(req:Request,res:Response,next:NextFunction)=>userController.username(req,res,next))
+router.get("/fetchAllArtistsVerification",authenticateUser,(req:Request,res:Response,next:NextFunction)=>adminController.fetchVerification(req,res,next))
 
 export default router;

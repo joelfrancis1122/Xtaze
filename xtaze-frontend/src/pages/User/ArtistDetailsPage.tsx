@@ -8,13 +8,12 @@ import MusicPlayer from "./userComponents/TrackBar";
 import PreviewModal from "./PreviewPage";
 import { useParams } from "react-router-dom";
 import { fetchArtistTracks, fetchUserByUsername, toggleLike, getMyplaylist, addTrackToPlaylist } from "../../services/userService";
-import { Play, Pause, Plus, Heart, Download, ListMusic } from "lucide-react";
+import { Play, Pause, Plus, Heart, Download, ListMusic, BadgeCheck } from "lucide-react";
 import { toast } from "sonner";
 import { audio } from "../../utils/audio";
 import { Track } from "./types/ITrack";
 import { useAudioPlayback } from "./userComponents/audioPlayback";
-
-
+import { fetchAllArtistsVerification } from "../../services/userService";
 
 interface Artist {
   id: string;
@@ -24,6 +23,7 @@ interface Artist {
   banner: string | null;
   isActive: boolean;
   bio?: string;
+  verificationStatus: "pending" | "approved" | "rejected" | "unsubmitted";
 }
 
 const isVideo = (url: string) => {
@@ -54,7 +54,6 @@ export default function ArtistDetailsPage() {
   };
 
   const { currentTrack, isPlaying, isShuffled, isRepeating } = useSelector((state: RootState) => state.audio);
-
   const user = useSelector((state: RootState) => state.user.signupData);
   const dispatch = useDispatch();
 
@@ -69,10 +68,14 @@ export default function ArtistDetailsPage() {
         setLoading(true);
         const token = localStorage.getItem("token") || "";
         const fetchedTracks = await fetchArtistTracks(artistId, token);
-        console.log("fetchedTracks:", fetchedTracks);
+        
         if (fetchedTracks.length > 0) {
           const artistUsername = fetchedTracks[0].artists[0];
           const userResponse = await fetchUserByUsername(artistUsername, token);
+          const verificationRecords = await fetchAllArtistsVerification(artistId);
+          const verificationRecord = verificationRecords.find((record: { artistId: string; }) => record.artistId === artistId);
+          const verificationStatus = verificationRecord ? verificationRecord.status : "unsubmitted";
+          
           const artistData: Artist = {
             id: artistId,
             name: userResponse.username || artistUsername,
@@ -81,11 +84,13 @@ export default function ArtistDetailsPage() {
             banner: userResponse.banner || "/default-banner.jpg",
             isActive: userResponse.isActive || true,
             bio: userResponse.bio || "",
+            verificationStatus,
           };
+  
           setArtist(artistData);
           setTracks(fetchedTracks);
           setError(null);
-
+  
           if (user?._id) {
             const fetchedPlaylists = await getMyplaylist(user._id);
             setPlaylists(fetchedPlaylists);
@@ -112,6 +117,7 @@ export default function ArtistDetailsPage() {
   const totalListeners = tracks.reduce((sum, track) => sum + (track.listeners?.length || 0), 0);
 
   const handlePlay = (track: Track) => {
+    
     if (currentTrack?.fileUrl === track.fileUrl) {
       if (isPlaying) {
         audio.pause();
@@ -260,31 +266,41 @@ export default function ArtistDetailsPage() {
                       alt={artist.name}
                       className="w-32 h-32 object-cover rounded-full border-2 border-white"
                     />
-                  <div className="ml-6">
-  <h2
-    className="text-4xl font-bold text-white"
-    style={{ textShadow: '2px 2px 6px rgba(0, 0, 0, 0.8)' }}
-  >
-    {artist.name}
-  </h2>
-  {artist.bio && (
-    <p
-      className="text-gray-300 mt-2"
-      style={{ textShadow: '1px 1px 4px rgba(0, 0, 0, 0.8)' }}
-    >
-      {artist.bio}
-    </p>
-  )}
-  {totalListeners > 0 && (
-    <p
-      className="text-gray-300"
-      style={{ textShadow: '1px 1px 4px rgba(0, 0, 0, 0.8)' }}
-    >
-      Listeners: {totalListeners}
-    </p>
-  )}
-</div>
+                    <div className="ml-6">
+                      <div className="flex items-center">
+                        <h2
+                          className="text-4xl font-bold text-white"
+                          style={{ textShadow: '2px 2px 6px rgba(0, 0, 0, 0.8)' }}
+                        >
+                          {artist.name}
+                        </h2>
+                        {artist.verificationStatus === "approved" && (
+                        
+<BadgeCheck
+  size={30}
+  className="ml-2 text-blue-600 fill-blue-600 stroke-white"
+  strokeWidth={1.5}
+/>
 
+                        )}
+                      </div>
+                      {artist.bio && (
+                        <p
+                          className="text-gray-300 mt-2"
+                          style={{ textShadow: '1px 1px 4px rgba(0, 0, 0, 0.8)' }}
+                        >
+                          {artist.bio}
+                        </p>
+                      )}
+                      {totalListeners > 0 && (
+                        <p
+                          className="text-gray-300"
+                          style={{ textShadow: '1px 1px 4px rgba(0, 0, 0, 0.8)' }}
+                        >
+                          Listeners: {totalListeners}
+                        </p>
+                      )}
+                    </div>
                   </div>
                 </div>
 
@@ -394,28 +410,28 @@ export default function ArtistDetailsPage() {
         </main>
       </div>
       {currentTrack && (
-          <MusicPlayer
-            currentTrack={currentTrack}
-            isPlaying={isPlaying}
-            handlePlay={baseHandlePlay}
-            handleSkipBack={handleSkipBack}
-            handleSkipForward={handleSkipForward}
-            toggleShuffle={handleToggleShuffle}
-            toggleRepeat={handleToggleRepeat}
-            isShuffled={isShuffled}
-            isRepeating={isRepeating}
-            audio={audio}
-            toggleModal={toggleModal}
-          />
-        )}
-        {currentTrack && (
-          <PreviewModal
-            track={currentTrack}
-            isOpen={isModalOpen}
-            toggleModal={toggleModal}
-            onPlayTrack={handlePlayFromModal}
-          />
-        )}
+        <MusicPlayer
+          currentTrack={currentTrack}
+          isPlaying={isPlaying}
+          handlePlay={baseHandlePlay}
+          handleSkipBack={handleSkipBack}
+          handleSkipForward={handleSkipForward}
+          toggleShuffle={handleToggleShuffle}
+          toggleRepeat={handleToggleRepeat}
+          isShuffled={isShuffled}
+          isRepeating={isRepeating}
+          audio={audio}
+          toggleModal={toggleModal}
+        />
+      )}
+      {currentTrack && (
+        <PreviewModal
+          track={currentTrack}
+          isOpen={isModalOpen}
+          toggleModal={toggleModal}
+          onPlayTrack={handlePlayFromModal}
+        />
+      )}
     </div>
   );
 }

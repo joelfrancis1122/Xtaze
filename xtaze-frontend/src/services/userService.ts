@@ -512,3 +512,19 @@ export const fetchUserByUsername = async (username: string, token: string): Prom
   return data.data;
 };
 
+export const fetchAllArtistsVerification = async (token:string): Promise<any> => {
+  try {
+    const response = await apiCall<{ data: any }>(
+      userApi,
+      "get",
+      `/fetchAllArtistsVerification`,
+      undefined,
+      token
+    );
+    console.log(response,"ossss")
+    return response.data
+  } catch (error: any) {
+    console.error("Error archiving verification plan:", error);
+    throw new Error(error.response?.data?.message || "Failed to archive subscription plan");
+  }
+};
