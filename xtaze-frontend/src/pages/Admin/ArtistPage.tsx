@@ -5,7 +5,7 @@ import { Button } from "../../components/ui/button";
 import { Card } from "../../components/ui/card";
 import { Table, TableHead, TableRow, TableCell, TableBody } from "../../components/ui/table";
 import { Ban, CheckCircle } from "lucide-react";
-import profileImg from "../../assets/profile5.jpeg";
+import profileImg from "../../assets/profile4.jpeg";
 import Sidebar from "./adminComponents/aside-side";
 import { motion } from "framer-motion";
 import { fetchArtists, toggleBlockArtist, Artist } from "../../services/adminService"; // Adjust path
@@ -64,7 +64,7 @@ export default function ArtistList() {
           <Table className="w-full">
             <TableHead>
               <TableRow>
-                <TableCell className="text-left p-4 min-w-[200px]">Artist</TableCell>
+                <TableCell className="text-left p-4 min-w-[200px]">Client</TableCell>
                 <TableCell className="text-left p-4 min-w-[150px]">Role</TableCell>
                 <TableCell className="text-left p-4 min-w-[150px]">Status</TableCell>
                 <TableCell className="text-left p-4 min-w-[200px]">Actions</TableCell>
@@ -75,7 +75,7 @@ export default function ArtistList() {
                 <TableRow key={artist.id} className="border-b">
                   <TableCell className="flex items-center gap-4 p-4">
                     <img
-                      src={artist.image ? artist.image : profileImg}
+                      src={artist.image||profileImg}
                       alt={artist.name}
                       width={50}
                       height={50}

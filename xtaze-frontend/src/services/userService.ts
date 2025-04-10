@@ -477,7 +477,7 @@ export const fetchArtists = async (token: string): Promise<Artist[]> => {
       id: artist._id,
       name: artist.username,
       role: artist.role,
-      image: artist.profilePic || "default-profile-image",
+      image: artist.profilePic,
       isActive: artist.isActive ? true : false,
     }));
   } catch (error) {
