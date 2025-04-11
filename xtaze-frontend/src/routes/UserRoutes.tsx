@@ -21,31 +21,37 @@ import ExplorePage from "../pages/User/ExplorePage";
 import GenrePage from "../pages/User/SongsByGenre";
 import ArtistPage from "../pages/User/ArtistsPage";
 import ArtistDetailsPage from "../pages/User/ArtistDetailsPage";
+import UserPrivateRoute from "../pages/User/UserPrivateRoute";
+import Home from "../pages/User/HomePage";
 
 export const UserRoutes = () => (
     <>
-    <Route path="/" element={<Login />} />
-    <Route path="/signup" element={<Signup />} />
-    <Route path="/otp" element={<OTPVerification />} />
-    <Route path="/plans" element={<SubscriptionPlans />} />
-    <Route path="/profile" element={<ProfilePage />} />
-    <Route path="/success" element={<SuccessPage />} />
-    <Route path="/cancel" element={<CancelPage />} />
-    <Route path="/playlist/:userId" element={<PlaylistsPage />} />
-    <Route path="/playlist/:userId/:id" element={<PlaylistPageView />} />
-    <Route path="/likedsongs" element={<LikedSongsPage />} />
-    <Route path="/uploadTrack" element={<UploadMusicPage />} />
-    <Route path="/rough" element={<WavyBackgroundDemo />} />
-    <Route path="/forgot-password" element={<ForgotPassword />} />
-    <Route path="/reset-password" element={<ResetPassword />} />
-    <Route path="/videos" element={<YoutubeMusic />} />
-    <Route path="/radio" element={<RadioPage />} />
-    <Route path="/equalizer" element={<EqualizerPage />} />
-    <Route path="/recentSongs" element={<RecentSongsPage />} />
-    <Route path="/explore" element={<ExplorePage/>} />
-    <Route path="/genre/:genre" element={<GenrePage/>} />
-    <Route path="/artists" element={<ArtistPage/>} />
-    <Route path="/artists/:artistId" element={<ArtistDetailsPage/>} />
+        <Route path="/" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
+        <Route path="/otp" element={<OTPVerification />} />
+
+        <Route element={<UserPrivateRoute />}>
+            <Route path="/home" element={<Home />} />
+            <Route path="/plans" element={<SubscriptionPlans />} />
+            <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/success" element={<SuccessPage />} />
+            <Route path="/cancel" element={<CancelPage />} />
+            <Route path="/playlist/:userId" element={<PlaylistsPage />} />
+            <Route path="/playlist/:userId/:id" element={<PlaylistPageView />} />
+            <Route path="/likedsongs" element={<LikedSongsPage />} />
+            <Route path="/uploadTrack" element={<UploadMusicPage />} />
+            <Route path="/rough" element={<WavyBackgroundDemo />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/videos" element={<YoutubeMusic />} />
+            <Route path="/radio" element={<RadioPage />} />
+            <Route path="/equalizer" element={<EqualizerPage />} />
+            <Route path="/recentSongs" element={<RecentSongsPage />} />
+            <Route path="/explore" element={<ExplorePage />} />
+            <Route path="/genre/:genre" element={<GenrePage />} />
+            <Route path="/artists" element={<ArtistPage />} />
+            <Route path="/artists/:artistId" element={<ArtistDetailsPage />} />
+        </Route>
 
     </>
 );

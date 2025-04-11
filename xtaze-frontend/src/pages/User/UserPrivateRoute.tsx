@@ -8,7 +8,6 @@ const PrivateRoute = () => {
   const dispatch = useDispatch()
   const role = useSelector((state: RootState) => state.user.signupData?.role);
   const user = useSelector((state: RootState) => state.user.signupData);
-  // console.log("private")
   if (!token || role !== "user" || !user?.isActive) {
     dispatch(clearSignupData())
     console.log("clear ayi poi")
