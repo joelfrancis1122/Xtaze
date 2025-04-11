@@ -29,6 +29,8 @@ export const UserRoutes = () => (
         <Route path="/" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/otp" element={<OTPVerification />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
 
         <Route element={<UserPrivateRoute />}>
             <Route path="/home" element={<Home />} />
@@ -41,8 +43,6 @@ export const UserRoutes = () => (
             <Route path="/likedsongs" element={<LikedSongsPage />} />
             <Route path="/uploadTrack" element={<UploadMusicPage />} />
             <Route path="/rough" element={<WavyBackgroundDemo />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/videos" element={<YoutubeMusic />} />
             <Route path="/radio" element={<RadioPage />} />
             <Route path="/equalizer" element={<EqualizerPage />} />
