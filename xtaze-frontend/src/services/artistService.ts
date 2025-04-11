@@ -1,15 +1,15 @@
 import { useDispatch } from "react-redux";
 import { artistApi, userApi } from "../api/axios";
 import { saveArtistData } from "../redux/artistSlice";
+import { IGenre } from "../pages/User/types/IGenre";
+import { VerificationStatus } from "../pages/User/types/IverficationStatus";
 
-// Simplified Axios Interceptor for Token Refresh
 const addRefreshInterceptor = (apiInstance: any) => {
   apiInstance.interceptors.response.use(
     (response: { data: any; status: number; headers: any }) => {
-      // Update token if returned in response
       const newToken = response.data?.token || response.headers["authorization"]?.replace("Bearer ", "");
       if (newToken) {
-        localStorage.setItem("artistToken", newToken); // Use artistToken specifically
+        localStorage.setItem("artistToken", newToken);
         console.log("Updated artist token in localStorage:", newToken);
       }
       return response;
@@ -20,7 +20,6 @@ const addRefreshInterceptor = (apiInstance: any) => {
         originalRequest._retry = true;
         console.log("Calling artist refresh token due to 401");
 
-        // Trigger refresh without sending refreshToken (backend handles it)
         const response = await artistApi.post("/refresh", {}, { withCredentials: true });
         const newToken = response.data.token;
         if (!newToken) {
@@ -80,12 +79,7 @@ const apiCall = async <T>(
   }
 };
 
-// Artist Login
-export const loginArtist = async (
-  email: string,
-  password: string,
-  dispatch: ReturnType<typeof useDispatch>
-): Promise<void> => {
+export const loginArtist = async (email: string,password: string,dispatch: ReturnType<typeof useDispatch>): Promise<void> => {
   const data = await apiCall<{ success: boolean; token: string; artist: any; message?: string }>(
     artistApi,
     "post",
@@ -98,7 +92,6 @@ export const loginArtist = async (
   dispatch(saveArtistData(data.artist));
 };
 
-// Fetch Artist Tracks
 export const fetchArtistTracks = async (artistId: string, token: string): Promise<any[]> => {
   console.log("Fetching artist tracks with:", { artistId, token });
   const data = await apiCall<{ success: boolean; tracks: any[]; message?: string }>(
@@ -112,7 +105,6 @@ export const fetchArtistTracks = async (artistId: string, token: string): Promis
   return data.tracks;
 };
 
-// Fetch Active Genres
 export const fetchActiveGenres = async (artistId: string, token: string): Promise<{ artist: any; genres: IGenre[] }> => {
   console.log("Fetching active genres with:", { artistId, token });
   const data = await apiCall<{ success: boolean; data: IGenre[]; artist: any; message?: string }>(
@@ -126,7 +118,6 @@ export const fetchActiveGenres = async (artistId: string, token: string): Promis
   return { genres: data.data, artist: data.artist };
 };
 
-// Upload Song
 export const uploadSong = async (
   songData: {
     songName: string;
@@ -158,7 +149,7 @@ export const uploadSong = async (
   return data;
 };
 
-// Upload Profile Image
+
 export const uploadProfileImage = async (artistId: string, base64Image: string, token: string): Promise<any> => {
   const blob = await (await fetch(base64Image)).blob();
   const formData = new FormData();
@@ -176,7 +167,6 @@ export const uploadProfileImage = async (artistId: string, base64Image: string, 
   return data.user;
 };
 
-// Update Artist Banner
 export const updateArtistBanner = async (artistId: string, base64Banner: string, token: string): Promise<any> => {
   const blob = await (await fetch(base64Banner)).blob();
   const formData = new FormData();
@@ -194,7 +184,6 @@ export const updateArtistBanner = async (artistId: string, base64Banner: string,
   return data.user;
 };
 
-// Update Artist Bio
 export const updateArtistBio = async (artistId: string, bio: string, token: string): Promise<any> => {
   console.log("Updating artist bio with:", { artistId, token });
   const data = await apiCall<{ success: boolean; user?: any; message?: string }>(
@@ -218,7 +207,7 @@ export const checkCardStatus = async (artistId: string, token: string): Promise<
     token
   );
   console.log("Card status response:", data);
-  return !!data.data.stripePaymentMethodId; // Returns true if stripePaymentMethodId exists
+  return !!data.data.stripePaymentMethodId; 
 };
 
 export const saveCard = async (artistId: string, paymentMethodId: string, token: string): Promise<void> => {
@@ -235,15 +224,9 @@ export const saveCard = async (artistId: string, paymentMethodId: string, token:
 
 
 
-interface VerificationStatus {
-  status: "pending" | "approved" | "rejected" | "unsubmitted";
-  idProof?: string;
-  feedback?: string | null;
-}
-export const getVerificationStatus = async (
-  artistId: string,
-  token: string
-): Promise<VerificationStatus> => {
+
+
+export const getVerificationStatus = async (artistId: string,token: string): Promise<VerificationStatus> => {
   console.log("Fetching verification status for:", { artistId, token });
   try {
     const response = await apiCall<{ success: boolean; data: VerificationStatus }>(
@@ -256,15 +239,11 @@ export const getVerificationStatus = async (
     return response.data;
   } catch (error: any) {
     console.error("Error fetching verification status:", error);
-    return { status: "unsubmitted" }; // Fallback if no record exists
+    return { status: "unsubmitted" }; // if no record exists
   }
 };
 
-export const requestVerification = async (
-  artistId: string,
-  formData: FormData,
-  token: string
-): Promise<{ idProof: string }> => {
+export const requestVerification = async (artistId: string,formData: FormData,token: string): Promise<{ idProof: string }> => {
   formData.append("artistId", artistId);
 
   const data = await apiCall<{ success: boolean; idProof?: string; message?: string }>(
@@ -281,6 +260,7 @@ export const requestVerification = async (
 
   return { idProof: data.idProof };
 };
+
 
 
 export const fetchSongEarnings = async (artistId: string, token: string): Promise<any[]> => {
@@ -315,11 +295,3 @@ export default {
   refreshToken,
 };
 
-// Genre interface (for TypeScript)
-export interface IGenre {
-  _id: string;
-  name: string;
-  isBlocked: boolean;
-  createdAt: string;
-  __v: number;
-}

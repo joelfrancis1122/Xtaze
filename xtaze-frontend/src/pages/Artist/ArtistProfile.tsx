@@ -7,7 +7,7 @@ import { RootState } from "../../store/store";
 import { toast } from "sonner";
 import Cropper, { Area } from "react-easy-crop";
 import { Camera, CheckCircle, Verified } from "lucide-react";
-import ProfilePage from "../../assets/profile6.jpeg";
+import ProfilePage from "../../assets/profile4.jpeg";
 import ArtistSidebar from "./artistComponents/artist-aside";
 import { saveArtistData } from "../../redux/artistSlice";
 import { Button } from "../../components/ui/button";

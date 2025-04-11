@@ -8,7 +8,8 @@ import { Ban, CheckCircle } from "lucide-react";
 import profileImg from "../../assets/profile4.jpeg";
 import Sidebar from "./adminComponents/aside-side";
 import { motion } from "framer-motion";
-import { fetchArtists, toggleBlockArtist, Artist } from "../../services/adminService"; // Adjust path
+import { fetchArtists, toggleBlockArtist,  } from "../../services/adminService"; // Adjust path
+import { Artist } from "../User/types/IArtist";
 
 export default function ArtistList() {
   const [artists, setArtists] = useState<Artist[]>([]);

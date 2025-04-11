@@ -4,7 +4,7 @@ import { Crown, MoreHorizontal } from "lucide-react";
 import { useSelector } from "react-redux";
 import { RootState } from "../../../store/store";
 import { useNavigate } from "react-router-dom";
-import ProfileP from "../../../assets/profile6.jpeg";
+import ProfileP from "../../../assets/profile4.jpeg";
 import { Menu } from "lucide-react";
 
 interface SidebarProps {

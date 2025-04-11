@@ -11,6 +11,7 @@ import { Camera, Power, Search } from "lucide-react";
 import Sidebar from "./userComponents/SideBar";
 import { becomeArtist, uploadProfileImage } from "../../services/userService"; // Import the new service
 import { UserSignupData } from "./types/IUser";
+import profileImg from "../../assets/profile4.jpeg";
 
 export default function Home() {
   const user = useSelector((state: RootState) => state.user.signupData) as UserSignupData | null;
@@ -187,7 +188,7 @@ export default function Home() {
               <div className="relative w-24 h-24 group">
                 <div className="absolute inset-0.5 bg-red-500 opacity-50 rounded-full blur-md z-0"></div>
                 <img
-                  src={(croppedImage as string) ?? user?.profilePic}
+                  src={(croppedImage as string) ?? user?.profilePic ?? profileImg}
                   alt="Profile"
                   className="w-24 h-24 rounded-full object-cover relative z-10"
                 />

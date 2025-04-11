@@ -87,7 +87,6 @@ export default class UserController {
 
       if (response.success && response.token && response.refreshToken) {
         console.log(response.token, "emt vannilessssssss");
-        // Only set refreshToken in cookie
         res.cookie("refreshToken", response.refreshToken, {
           httpOnly: true, // Prevent JavaScript access
           secure: true,   // Required for HTTPS

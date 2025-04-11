@@ -2,9 +2,15 @@ import { useDispatch } from "react-redux";
 import { saveAdminData } from "../redux/adminSlice";
 import { adminApi, artistApi } from "../api/axios";
 import { IBanner } from "../pages/User/types/IBanner";
+import { Artist } from "../pages/User/types/IArtist";
+import { IGenre } from "../pages/User/types/IGenre";
+import { Track } from "../pages/User/types/ITrack";
+import { UserSignupData } from "../pages/User/types/IUser";
+import { Coupon } from "../pages/User/types/ICoupon";
+import {  SubscriptionPlan } from "../pages/User/types/IStripe";
+import { MusicMonetization } from "../pages/User/types/IMonetization";
 
 
-// Generic API Call Helper
 const apiCall = async <T>(
   instance: any,
   method: "get" | "post" | "put" | "delete" | "patch",
@@ -28,39 +34,8 @@ const apiCall = async <T>(
   }
 };
 
-export interface Song {
-  playHistory: any;
-  _id: string;
-  title: string;
-  fileUrl: string;
-  listeners: string[];
-  duration?: string;
-}
-// Define Artist interface
-export interface Artist {
-  id: string;
-  name: string;
-  role: string;
-  image: string;
-  isActive: boolean;
-}
 
-// Define Genre interface
-export interface Genre {
-  _id: string;
-  name: string;
-  isBlocked: boolean;
-}
-
-// Define Banner interface (aligned with backend schema)
-
-
-// Login with email and password for admin
-export const loginAdmin = async (
-  email: string,
-  password: string,
-  dispatch: ReturnType<typeof useDispatch>
-): Promise<void> => {
+export const loginAdmin = async (email: string,password: string,dispatch: ReturnType<typeof useDispatch>): Promise<void> => {
   const data = await apiCall<{ success: boolean; token: string; admin: any; message?: string }>(
     adminApi,
     "post",
@@ -73,7 +48,6 @@ export const loginAdmin = async (
   dispatch(saveAdminData(data.admin));
 };
 
-// Fetch all artists
 export const fetchArtists = async (token: string): Promise<Artist[]> => {
   console.log("Fetching artists with token:", token);
   try {
@@ -100,9 +74,9 @@ export const fetchArtists = async (token: string): Promise<Artist[]> => {
 };
 
 
-export const fetchArtistTracks = async (userId: string, token: string): Promise<Song[]> => {
+export const fetchArtistTracks = async (userId: string, token: string): Promise<Track[]> => {
   try {
-    const data = await apiCall<{ success: boolean; tracks?: Song[]; message?: string }>(
+    const data = await apiCall<{ success: boolean; tracks?: Track[]; message?: string }>(
       artistApi,
       "get",
       `/getAllTracksArtist?userId=${userId}`,
@@ -120,12 +94,7 @@ export const fetchArtistTracks = async (userId: string, token: string): Promise<
   }
 };
 
-// Toggle block/unblock artist
-export const toggleBlockArtist = async (
-  id: string,
-  currentStatus: boolean,
-  token: string
-): Promise<boolean> => {
+export const toggleBlockArtist = async (id: string,currentStatus: boolean,token: string): Promise<boolean> => {
   const newStatus = !currentStatus;
   const data = await apiCall<{ success: boolean; message?: string }>(
     adminApi,
@@ -139,17 +108,15 @@ export const toggleBlockArtist = async (
   return newStatus;
 };
 
-// Fetch all genres
-export const fetchGenres = async (token: string): Promise<Genre[]> => {
-  const data = await apiCall<{ data: Genre[] }>(adminApi, "get", "/genreList", undefined, token);
+export const fetchGenres = async (token: string): Promise<IGenre[]> => {
+  const data = await apiCall<{ data: IGenre[] }>(adminApi, "get", "/genreList", undefined, token);
   return data.data;
 };
 
 
 
-// Add a new genre
-export const addGenre = async (name: string, token: string): Promise<Genre> => {
-  const data = await apiCall<{ data: Genre; message: string }>(
+export const addGenre = async (name: string, token: string): Promise<IGenre> => {
+  const data = await apiCall<{ data: IGenre; message: string }>(
     adminApi,
     "post",
     "/genreCreate",
@@ -159,12 +126,10 @@ export const addGenre = async (name: string, token: string): Promise<Genre> => {
   return data.data;
 };
 
-// Toggle block/unblock genre
 export const toggleBlockGenre = async (id: string, token: string): Promise<void> => {
   await apiCall<{ success: boolean }>(adminApi, "put", `/genreToggleBlockUnblock/${id}`, {}, token);
 };
 
-// Update a genre
 export const updateGenre = async (id: string, name: string, token: string): Promise<{ success: boolean; message: string }> => {
   const data = await apiCall<{ data: { success: boolean; message: string } }>(
     adminApi,
@@ -176,9 +141,6 @@ export const updateGenre = async (id: string, name: string, token: string): Prom
   return data.data;
 };
 
-// Banner CRUD Operations
-
-// Fetch all banners
 export const fetchBanners = async (token: string): Promise<IBanner[]> => {
   const data = await apiCall<{ data: IBanner[] }>(adminApi, "get", "/banners/all", undefined, token);
   return data.data;
@@ -222,19 +184,9 @@ export const deleteBanner = async (id: string, token: string): Promise<void> => 
 
 };
 
-export interface ListenerUser {
-  _id: string;
-  gender: string;
-  username:string;
-  email:string;
-  year: number
-  age: number;
-  country: string;
-}
-
-export const fetchUserDetails = async (userIds: string[], token: string): Promise<ListenerUser[]> => {
+export const fetchUserDetails = async (userIds: string[], token: string): Promise<UserSignupData[]> => {
   try {
-    const data = await apiCall<{ success: boolean; data: ListenerUser[]; message?: string }>(
+    const data = await apiCall<{ success: boolean; data: UserSignupData[]; message?: string }>(
       adminApi,
       "post",
       "/getUsersByIds",
@@ -284,25 +236,8 @@ export const fetchSubscriptionHistory = async (token?: string): Promise<any> => 
   }
 };
 
-// export const fetchCoupons = async (token?: string): Promise<Coupon[]> => {
-//   console.log("Fetching coupons...");
-//   try {
-//     const data = await apiCall<{ data: Coupon[] }>(
-//       adminApi,
-//       "get",
-//       "/coupons",
-//       undefined,
-//       token
-//     );
-//     console.log("Fetched coupons:", data.data);
-//     return data.data || [];
-//   } catch (error: any) {
-//     console.error("Error fetching coupons:", error);
-//     throw new Error(error.response?.data?.message || "Failed to fetch coupons");
-//   }
-// };
 
-// New function to create a coupon
+
 export const createCoupon = async (couponData: { code: string; discountAmount: number; expires: string; maxUses: number }, token?: string): Promise<Coupon> => {
   console.log("Creating coupon with:", couponData);
   try {
@@ -321,7 +256,6 @@ export const createCoupon = async (couponData: { code: string; discountAmount: n
   }
 };
 
-// New function to update a coupon
 export const updateCoupon = async (id: string, couponData: { code: string; discountAmount: number; expires: string; maxUses: number }, token?: string): Promise<Coupon> => {
   console.log("Updating coupon with:", { id, couponData });
   try {
@@ -340,7 +274,6 @@ export const updateCoupon = async (id: string, couponData: { code: string; disco
   }
 };
 
-// New function to delete a coupon
 export const deleteCoupon = async (id: string, token?: string): Promise<void> => {
   console.log("Deleting coupon with id:", id);
   try {
@@ -376,7 +309,6 @@ export const fetchMonetizationData = async (token?: string): Promise<MusicMoneti
   }
 };
 
-// New function to initiate artist payout
 export const initiateArtistPayout = async (artistName: string, token?: string): Promise<string> => {
   console.log("Initiating payout for artist:", artistName);
   try {
@@ -394,27 +326,8 @@ export const initiateArtistPayout = async (artistName: string, token?: string): 
     throw new Error(error.response?.data?.message || "Failed to initiate payout");
   }
 };
-export interface Coupon {
-  _id: string;
-  code: string;
-  discountAmount: number;
-  expires: string;
-  maxUses: number;
-  uses: number;
-  status: string;
-}
 
-export interface MusicMonetization {
-  trackId: string;
-  trackName: string;
-  artistName: string;
-  totalPlays: number;
-  monthlyPlays: number;
-  totalRevenue: number;
-  monthlyRevenue: number;
-  lastUpdated: string;
-  paymentStatus: boolean;
-}
+
 
 export const fetchSubscriptionPlans = async (token?: string): Promise<SubscriptionPlan[]> => {
   console.log("Fetching subscription plans...");
@@ -434,7 +347,6 @@ export const fetchSubscriptionPlans = async (token?: string): Promise<Subscripti
   }
 };
 
-// New function to create a subscription plan
 export const createSubscriptionPlan = async (
   planData: { name: string; description?: string; price: number; interval: "month" | "year" },
   token?: string
@@ -461,28 +373,7 @@ export const createSubscriptionPlan = async (
     throw new Error(error.response?.data?.message || "Failed to create subscription plan");
   }
 };
-export interface SubscriptionPlan {
-  product: StripeProduct;
-  price: StripePrice;
-}
-export interface StripeProduct {
-  id: string;
-  name: string;
-  description?: string;
-  active: boolean;
-}
 
-// Define StripePrice interface
-export interface StripePrice {
-  id: string;
-  product: string;
-  unit_amount: number;
-  currency: string;
-  recurring?: { interval: "month" | "year" };
-  active: boolean;
-}
-
-// New function to update a subscription plan
 export const updateSubscriptionPlan = async (
   productId: string,
   planData: { name: string; description?: string; price: number; interval: "month" | "year" },
