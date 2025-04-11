@@ -1,5 +1,6 @@
 
-import { ListenerUser } from "../services/adminService";
+import { ListenerUser } from "../pages/User/types/IListenerUser";
+import {  } from "../services/adminService";
 
 // Define the structure for chart data
 interface ChartData {
