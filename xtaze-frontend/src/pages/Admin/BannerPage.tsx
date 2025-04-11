@@ -28,21 +28,7 @@ export default function AdminBannerManagement() {
   const [editingFile, setEditingFile] = useState<File | null>(null);
 
   // Check if user is admin
-  useEffect(() => {
-    const styles = `
-  body, * {
-    background-color: var(--background) !important; /* Dark background */
-  }
-`;
-    const styleSheet = document.createElement("style")
-    styleSheet.type = "text/css"
-    styleSheet.innerText = styles
-    document.head.appendChild(styleSheet)
 
-    return () => {
-        document.head.removeChild(styleSheet) // Cleanup on unmount
-    }
-}, [])
   // Fetch banners
   useEffect(() => {
     const loadBanners = async () => {
@@ -137,7 +123,7 @@ export default function AdminBannerManagement() {
         <h1 className="text-3xl font-bold mb-6">Banner Management</h1>
 
         {/* Create Banner Form */}
-        <form onSubmit={handleCreate} className="mb-8 bg-gray-900 p-6 rounded-lg border border-gray-700">
+        <form onSubmit={handleCreate} className="mb-8 bg-black-900 p-6 rounded-lg border border-gray-700">
           <h2 className="text-xl font-semibold mb-4">Add New Banner</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <input
@@ -174,14 +160,14 @@ export default function AdminBannerManagement() {
           </div>
           <button
             type="submit"
-            className="mt-4 bg-blue-600 hover:bg-blue-700 text-white p-2 rounded flex items-center gap-2"
+            className="mt-4 bg-gray-800 hover:bg-black-700 text-white p-2 rounded flex items-center gap-2"
           >
             <Plus size={20} /> Add Banner
           </button>
         </form>
 
         {/* Banner List */}
-        <div className="bg-gray-900 p-6 rounded-lg border border-gray-700">
+        <div className="bg-black-900 p-6 rounded-lg border border-gray-700">
           <h2 className="text-xl font-semibold mb-4">Existing Banners</h2>
           {loading ? (
             <p>Loading...</p>

@@ -29,7 +29,7 @@ export default function AdminSubscriptionHistoryPage() {
         const token = localStorage.getItem("adminToken") || "";
 
         const response = await fetchSubscriptionHistory(token);
-        console.log(response  ,"asssssssss")
+        console.log(response, "asssssssss")
         setHistory(response);
         setError(null);
       } catch (err) {
@@ -126,13 +126,18 @@ export default function AdminSubscriptionHistoryPage() {
                     pageRangeDisplayed={5}
                     onPageChange={handleSubscriptionPageChange}
                     containerClassName={"flex gap-2"}
-                    pageClassName={"bg-gray-700 text-white px-3 py-1 rounded-md hover:bg-gray-600"}
-                    activeClassName={"bg-gray-600"}
-                    previousClassName={"bg-gray-700 text-white px-3 py-1 rounded-md hover:bg-gray-600"}
-                    nextClassName={"bg-gray-700 text-white px-3 py-1 rounded-md hover:bg-gray-600"}
-                    breakClassName={"text-gray-400 px-3 py-1"}
+                    pageClassName={"rounded-md overflow-hidden"} // wrap for layout only
+                    pageLinkClassName={"block px-3 py-1 bg-gray-700 text-white hover:bg-gray-600"} // clickable area
+                    activeLinkClassName={"bg-gray-600"} // override when active
+                    previousClassName={"rounded-md overflow-hidden"}
+                    previousLinkClassName={"block px-3 py-1 bg-gray-700 text-white hover:bg-gray-600"}
+                    nextClassName={"rounded-md overflow-hidden"}
+                    nextLinkClassName={"block px-3 py-1 bg-gray-700 text-white hover:bg-gray-600"}
+                    breakClassName={"text-gray-400"}
+                    breakLinkClassName={"px-3 py-1 block"}
                     disabledClassName={"opacity-50 cursor-not-allowed"}
                   />
+
                 </div>
               </>
             ) : (

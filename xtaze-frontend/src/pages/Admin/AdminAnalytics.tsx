@@ -43,21 +43,24 @@ export default function AdminAnalytics() {
                 const userDetails = await fetchUserDetails(artistIds, token);
                 console.log("User details:", userDetails);
 
-                const mergedData = verificationData.map((verification: any) => {
-                    const user = userDetails.find((u) => u._id === verification.artistId);
-                    return {
-                        _id: verification._id,
-                        artistId: verification.artistId,
-                        username: user?.username || "Unknown",
-                        email: user?.email || "N/A",
-                        verification: {
-                            status: verification.status,
-                            idProof: verification.idProof,
-                            feedback: verification.feedback,
-                        },
-                    };
+                const mergedData = verificationData
+                .sort((a: any, b: any) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime())
+                .map((verification: any) => {
+                  const user = userDetails.find((u) => u._id === verification.artistId);
+                  return {
+                    _id: verification._id,
+                    artistId: verification.artistId,
+                    username: user?.username || "Unknown",
+                    email: user?.email || "N/A",
+                    verification: {
+                      status: verification.status,
+                      idProof: verification.idProof,
+                      feedback: verification.feedback,
+                      updatedAt: verification.updatedAt, // optional, if you want to show this too
+                    },
+                  };
                 });
-
+              
                 setArtists(mergedData);
             } catch (error) {
                 console.error("Error fetching data:", error);
