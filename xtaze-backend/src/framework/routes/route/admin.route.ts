@@ -17,6 +17,7 @@ const adminController = new AdminController(adminDependencies)
 const artistController = new ArtistController(artistDependencies)
 const userController = new UserController(userDependencies)
 
+router.post("/login",(req:Request,res:Response,next:NextFunction)=>adminController.login(req,res,next))
 
 router.get("/genreList",authenticateAdmin,(req:Request,res:Response,next:NextFunction)=>genreController.listGenre(req,res,next))
 router.post("/genreCreate",authenticateAdmin,(req:Request,res:Response,next:NextFunction)=>genreController.createGenre(req,res,next))
@@ -25,7 +26,6 @@ router.put("/genreUpdate/:id",authenticateAdmin,(req:Request,res:Response,next:N
 router.get("/listUsers",authenticateAdmin,(req:Request,res:Response,next:NextFunction)=>artistController.listArtists(req,res,next))
 router.get("/fetchAllArtistsVerification",authenticateAdmin,(req:Request,res:Response,next:NextFunction)=>adminController.fetchVerification(req,res,next))
 
-router.post("/login",(req:Request,res:Response,next:NextFunction)=>adminController.login(req,res,next))
 router.post("/banners", authenticateAdmin,upload.single("image"),(req:Request,res:Response,next:NextFunction)=>adminController.banners(req,res,next))
 router.get("/banners/all", authenticateAdmin,(req:Request,res:Response,next:NextFunction)=>adminController.allBanners(req,res,next))
 router.delete("/banners/:id",(req:Request,res:Response,next:NextFunction)=>adminController.deleteBanner(req,res,next))

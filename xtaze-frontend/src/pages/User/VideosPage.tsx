@@ -1,11 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import Sidebar from "./userComponents/SideBar";
-import { Plus } from "lucide-react";
-import { getMyplaylist } from "../../services/userService";
 import { toast } from "sonner";
 
 const API_KEY = import.meta.env.VITE_YOUTUBE_API;
@@ -43,9 +40,7 @@ export default function VideoPage() {
   const [loading, setLoading] = useState(true);
   const [dropdownVideoId, setDropdownVideoId] = useState<string | null>(null);
   const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
-  const navigate = useNavigate();
 
-  const userId = "mockUserId"; // Replace with useSelector
   const token = localStorage.getItem("token");
 
   useEffect(() => {
@@ -177,8 +172,6 @@ export default function VideoPage() {
           }))
         );
 
-         await getMyplaylist(userId);
-        // setPlaylists(fetchedPlaylists);
       } catch (error) {
         console.error("Error fetching data:", error);
         toast.error("Failed to load videos or playlists");
@@ -188,7 +181,7 @@ export default function VideoPage() {
     };
 
     fetchAllVideosAndPlaylists();
-  }, [userId, token]);
+  }, [token]);
 
   
 
@@ -243,7 +236,7 @@ export default function VideoPage() {
                         setDropdownVideoId(dropdownVideoId === video.id ? null : video.id);
                       }}
                     >
-                      <Plus size={16} />
+                      {/* <Plus size={16} /> */}
                     </button>
                     {dropdownVideoId === video.id && (
                       <div className="absolute left-0 mt-2 w-48 bg-[#242424] rounded-md shadow-lg z-20">
@@ -261,12 +254,12 @@ export default function VideoPage() {
                           ) : (
                             <li className="px-4 py-2 text-gray-400">No playlists available</li>
                           )} */}
-                          <li
+                          {/* <li
                             className="px-4 py-2 hover:bg-[#333333] cursor-pointer text-white border-t border-gray-700"
                             onClick={() => navigate(`/playlists/${userId}`)}
                           >
                             Create New Playlist
-                          </li>
+                          </li> */}
                         </ul>
                       </div>
                     )}

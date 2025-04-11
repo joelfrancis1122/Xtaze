@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import IArtistUseCase from "../../domain/usecase/IArtistUseCase";
 import AppError from "../../utils/AppError";
+import { HttpStatus } from "../../domain/constants/httpStatus";
 
 interface Dependencies {
   artistUseCase: IArtistUseCase;
@@ -23,7 +24,7 @@ export default class ArtistController {
       const response = await this._artistnUseCase.login(email, password);
 
       if (!response.success) {
-        throw new AppError(response.message || "Login failed", 400); // Use message from use case
+        throw new AppError(response.message || "Login failed", HttpStatus.BAD_REQUEST); // Use message from use case
       }
       res.cookie("ArefreshToken", response.ArefreshToken, {
         httpOnly: true, // Prevent JavaScript access
@@ -32,7 +33,7 @@ export default class ArtistController {
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
         path: "/",
       });
-      res.status(200).json(response);
+      res.status(HttpStatus.OK).json(response);
     } catch (error) {
       next(error);
     }
@@ -45,7 +46,7 @@ export default class ArtistController {
       const ArefreshToken  =req.cookies.ArefreshToken
 
       console.log(req.body,req.cookies, "ithan enik kitityees")
-      if (!ArefreshToken) throw new AppError("Refresh token is required", 401);
+      if (!ArefreshToken) throw new AppError("Refresh token is required",HttpStatus.UNAUTHORIZED);
       console.log("1")
       const response = await this._artistnUseCase.refresh(ArefreshToken);
       console.log("12")
@@ -59,13 +60,13 @@ export default class ArtistController {
           path: "/",      
         });
         console.log("123")
-        res.status(200).json({
+        res.status(HttpStatus.OK).json({
           success: true,
           message: response.message,
           token: response.token,
         });
       } else {
-        res.status(401).json(response);
+        res.status(HttpStatus.UNAUTHORIZED).json(response);
       }
     } catch (error) {
       console.error("Refresh Token Error:", error);
@@ -78,7 +79,7 @@ export default class ArtistController {
       console.log("page");
       const listArtists = await this._artistnUseCase.listArtists();
 
-      res.status(200).json({ success: true, message: "List Of Artists", data: listArtists });
+      res.status(HttpStatus.OK).json({ success: true, message: "List Of Artists", data: listArtists });
     } catch (error) {
       next(error);
     }
@@ -96,7 +97,7 @@ export default class ArtistController {
         tracks = await this._artistnUseCase.listArtistReleases(userId as string);
       }
 
-      res.status(200).json({ success: true, message: "List Of Artists", tracks });
+      res.status(HttpStatus.OK).json({ success: true, message: "List Of Artists", tracks });
     } catch (error) {
       next(error);
     }
@@ -107,7 +108,7 @@ export default class ArtistController {
       const { title, artists, genre, album } = req.body;
   
       if (!TrackId) {
-         res.status(400).json({ success: false, message: "Track ID is required" });
+         res.status(HttpStatus.BAD_REQUEST).json({ success: false, message: "Track ID is required" });
       }
   
       const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
@@ -136,7 +137,7 @@ export default class ArtistController {
         imageFile
       );
   
-      res.status(200).json({ success: true, message: "Track updated successfully", track: updatedTrack });
+      res.status(HttpStatus.OK).json({ success: true, message: "Track updated successfully", track: updatedTrack });
   
     } catch (error) {
       next(error);
@@ -151,7 +152,7 @@ export default class ArtistController {
       const track = await this._artistnUseCase.increment(trackId as string,id as string);
 
       console.log(req.body);
-      res.status(200).json({ success: true, message: "List Of Artists" });
+      res.status(HttpStatus.OK).json({ success: true, message: "List Of Artists" });
     } catch (error) {
       next(error);
     }
@@ -163,7 +164,7 @@ export default class ArtistController {
     try {
       // Validate that files exist
       if (!req.files || !("file" in req.files) || !("image" in req.files)) {
-        throw new AppError("Both song and image must be uploaded", 400);
+        throw new AppError("Both song and image must be uploaded", HttpStatus.BAD_REQUEST);
       }
 
       // Extract request data
@@ -177,7 +178,7 @@ export default class ArtistController {
 
       const track = await this._artistnUseCase.trackUpload(songName, artistArray, genreArray, album, songFile, imageFile);
       console.log("set ayo")
-      res.status(201).json({
+      res.status(HttpStatus.CREATED).json({
         message: "Track uploaded successfully!",
         track,
       });
@@ -193,10 +194,10 @@ export default class ArtistController {
       console.log(req.query, "sasas")
       const data = await this._artistnUseCase.statsOfArtist(userId as string);
       console.log(data, "dassss")
-      res.status(200).json({ data: data });
+      res.status(HttpStatus.OK).json({ data: data });
     } catch (error: any) {
       console.error("Error in getSongImprovements controller:", error);
-      res.status(500).json({ message: error.message || "Internal server error" });
+      res.status(HttpStatus.NOT_FOUND).json({ message: error.message || "Internal server error" });
       next(error);
     }
   }
@@ -206,10 +207,10 @@ export default class ArtistController {
       console.log(req.query, req.body, "ssssss")
       const data = await this._artistnUseCase.saveCard(artistId,paymentMethodId);
       console.log(data,"kilivayil")
-      res.status(200).json({ success:true});
+      res.status(HttpStatus.OK).json({ success:true});
     } catch (error: any) {
       console.error("Error in getSongImprovements controller:", error);
-      res.status(500).json({ message: error.message || "Internal server error" });
+      res.status(HttpStatus.NOT_FOUND).json({ message: error.message || "Internal server error" });
       next(error);
     }
   }
@@ -220,10 +221,10 @@ export default class ArtistController {
       // console.log(req.query,"sasas")
       const data = await this._artistnUseCase.checkcard(userId as string);
       console.log(data,"dassssssss")
-      res.status(200).json({ data: data });
+      res.status(HttpStatus.OK).json({ data: data });
     } catch (error: any) {
       console.error("Error in getSongImprovements controller:", error);
-      res.status(500).json({ message: error.message || "Internal server error" });
+      res.status(HttpStatus.NOT_FOUND).json({ message: error.message || "Internal server error" });
       next(error);
     }
   }
@@ -233,10 +234,10 @@ export default class ArtistController {
     try {
       const verificationStatus = await this._artistnUseCase.getVerificationStatus(artistId as string);
       console.log(verificationStatus,"verification statuss")
-      res.status(200).json({ success: true, data: verificationStatus });
+      res.status(HttpStatus.OK).json({ success: true, data: verificationStatus });
     } catch (error: any) {
       console.error("Error in getVerificationStatusController:", error);
-      res.status(500).json({ success: false, message: error.message || "Failed to fetch verification status" });
+      res.status(HttpStatus.NOT_FOUND).json({ success: false, message: error.message || "Failed to fetch verification status" });
     }
   }
   async requestVerification(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -259,10 +260,10 @@ export default class ArtistController {
   
       const verificationStatus = await this._artistnUseCase.requestVerification(artistId, imageFile);
   
-      res.status(200).json({ success: true, message: "Verification request processed." });
+      res.status(HttpStatus.OK).json({ success: true, message: "Verification request processed." });
     } catch (error: any) {
       console.error("Error in requestVerification:", error);
-      res.status(500).json({ success: false, message: error.message || "Failed to process verification request." });
+      res.status(HttpStatus.NOT_FOUND).json({ success: false, message: error.message || "Failed to process verification request." });
     }
   }
   

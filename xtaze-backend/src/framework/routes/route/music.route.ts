@@ -10,7 +10,6 @@ const router = express.Router();
 const deezerRepository = new DeezerRepository();
 const fetchDeezerSongsUseCase = new FetchDeezerSongsUseCase(deezerRepository);
 const deezerController = new DeezerController(fetchDeezerSongsUseCase);
-
 // Route
 router.get("/deezer", (req, res) => deezerController.getDeezerSongs(req, res));
 

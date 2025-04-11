@@ -29,10 +29,4 @@ router.put("/updateTrackByArtist",authenticateArtist,upload.fields([{ name: "fil
 router.get("/getVerificationStatus",authenticateArtist,(req:Request,res:Response,next:NextFunction)=>artistController.getVerificationStatus(req,res,next))
 router.post("/requestVerification",authenticateArtist,upload.fields([{ name: "idProof", maxCount: 1 }, { name: "img", maxCount: 1 }]),(req:Request,res:Response,next:NextFunction)=>artistController.requestVerification(req,res,next))
 
-
-
-
-// router.get("/listUsers",authenticateArtist,(req:Request,res:Response,next:NextFunction)=>artistController.listArtists(req,res,next))
-// router.get("/toggleBlock/:id:",(req:Request,res:Response,next:NextFunction)=>artistController.toggleblockArtist(req,res,next))
-// router.post("/upload",upload.any(),(req:Request,res:Response,next:NextFunction)=>artistController.uploadTracks(req,res,next))
 export default router;

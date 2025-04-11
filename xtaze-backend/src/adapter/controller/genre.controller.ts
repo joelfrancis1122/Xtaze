@@ -2,6 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import IGenreUseCase from "../../domain/usecase/IGenreUseCase";
 import IuserUseCase from "../../domain/usecase/IUserUseCase";
 import AppError from "../../utils/AppError";
+import { HttpStatus } from "../../domain/constants/httpStatus";
 
 
 interface Dependencies {
@@ -22,7 +23,7 @@ export default class GenreController {
   async listGenre(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const listGenre = await this._genreUseCase.listGenre();
-      res.status(200).json({ success: true, message: "List Of Genre", data: listGenre });
+      res.status(HttpStatus.OK).json({ success: true, message: "List Of Genre", data: listGenre });
     } catch (error) {
       next(error);
     }
@@ -40,7 +41,7 @@ export default class GenreController {
         artist = await this._userUseCase.getUpdatedArtist(artistId);
       }
 
-      res.status(200).json({
+      res.status(HttpStatus.OK).json({
         success: true,
         message: "List of Active Genres",
         data: listActiveGenres,
@@ -60,11 +61,11 @@ export default class GenreController {
       const genre = await this._genreUseCase.createGenre(name);
       if (!genre.success) {
         console.log("⚠️ Genre already exists, throwing error.");
-        throw new AppError(genre.message || "Failed to create genre", 400); // Use message from use case
+        throw new AppError(genre.message || "Failed to create genre", HttpStatus.BAD_REQUEST); // Use message from use case
       }
 
       console.log("✅ Genre successfully created:", genre.genre);
-      res.status(201).json({ success: true, message: genre.message, data: genre.genre });
+      res.status(HttpStatus.CREATED).json({ success: true, message: genre.message, data: genre.genre });
     } catch (error) {
       console.error("❌ Error in createGenre:", error);
       next(error);
@@ -77,7 +78,7 @@ export default class GenreController {
       console.log("id kitty ", id);
 
       const updatedGenre = await this._genreUseCase.toggleBlockUnblockGenre(id);
-      res.status(200).json({ success: true, message: "Genre status updated", data: updatedGenre });
+      res.status(HttpStatus.OK).json({ success: true, message: "Genre status updated", data: updatedGenre });
     } catch (error) {
       next(error);
     }
@@ -92,10 +93,10 @@ export default class GenreController {
       console.log(id, "this is the edit id");
 
       if (typeof editedGenre === "string") {
-        throw new AppError(editedGenre, 400); // Use message from use case
+        throw new AppError(editedGenre, HttpStatus.BAD_REQUEST); // Use message from use case
       }
 
-      res.status(200).json({ success: true, message: "Genre status updated", data: editedGenre });
+      res.status(HttpStatus.OK).json({ success: true, message: "Genre status updated", data: editedGenre });
     } catch (error) {
       console.log(error);
       next(error); 

@@ -2,6 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import IAdminUseCase from "../../domain/usecase/IAdminUseCase";
 import AppError from "../../utils/AppError";
 import { IBanner } from "../../domain/entities/IBanner";
+import { HttpStatus } from "../../domain/constants/httpStatus";
 
 interface Dependencies {
   adminUseCase: IAdminUseCase;
@@ -23,10 +24,10 @@ export default class AdminController {
 
       const response = await this._adminUseCase.login(email, password);
       if (!response.success) {
-        throw new AppError(response.message || "Login failed", 400);
+        throw new AppError(response.message || "Login failed", HttpStatus.BAD_REQUEST);
       }
 
-      res.status(200).json(response);
+      res.status(HttpStatus.OK).json(response);
     } catch (error) {
       next(error);
     }
@@ -39,7 +40,7 @@ export default class AdminController {
       console.log("Request Body:", req.body, "File:", req.file);
 
       if (!file) {
-        throw new AppError("Banner image is required", 400);
+        throw new AppError("Banner image is required", HttpStatus.BAD_REQUEST);
       }
 
       const response = await this._adminUseCase.addBanner(
@@ -52,10 +53,10 @@ export default class AdminController {
       );
 
       if (!response) {
-        throw new AppError("Failed to add banner", 400);
+        throw new AppError("Failed to add banner", HttpStatus.BAD_REQUEST);
       }
 
-      res.status(201).json({ message: "Banner added successfully", data: response });
+      res.status(HttpStatus.CREATED).json({ message: "Banner added successfully", data: response });
 
     } catch (error) {
       next(error);
@@ -67,7 +68,7 @@ export default class AdminController {
 
 
       const allBanners = await this._adminUseCase.getAllBanners()
-      res.status(201).json({ message: "Banner added successfully", data: allBanners });
+      res.status(HttpStatus.CREATED).json({ message: "Banner added successfully", data: allBanners });
 
     } catch (error) {
       next(error);
@@ -79,7 +80,7 @@ export default class AdminController {
       console.log(req.body, req.params, "goit ogit ogit")
       const { id } = req.params
       const deletedBanner = await this._adminUseCase.deleteBanner(id)
-      res.status(201).json({ message: "Banner added successfully", data: deletedBanner });
+      res.status(HttpStatus.CREATED).json({ message: "Banner added successfully", data: deletedBanner });
 
     } catch (error) {
       next(error);
@@ -100,7 +101,7 @@ export default class AdminController {
       // Call the use case with the file, now guaranteed to be present
       const updated = await this._adminUseCase.updateBanner(id, title, description, action, isActive, file);
 
-      res.status(201).json({ message: "Banner updated successfully", data: updated });
+      res.status(HttpStatus.CREATED).json({ message: "Banner updated successfully", data: updated });
 
     } catch (error) {
       next(error);
@@ -114,16 +115,16 @@ export default class AdminController {
     try {
       const { id } = req.params;
       if (!id) {
-        throw new AppError("Artist ID is required", 400);
+        throw new AppError("Artist ID is required", HttpStatus.BAD_REQUEST);
       }
 
       console.log("id kitty ", id);
       const updatedStatus = await this._adminUseCase.toggleBlockUnblockArtist(id);
       if (!updatedStatus) {
-        throw new AppError("Artist not found or status update failed", 404); // Adjust based on use case response
+        throw new AppError("Artist not found or status update failed", HttpStatus.NOT_FOUND); // Adjust based on use case response
       }
 
-      res.status(200).json({ success: true, message: "Genre status updated", data: updatedStatus });
+      res.status(HttpStatus.OK).json({ success: true, message: "Genre status updated", data: updatedStatus });
     } catch (error) {
       next(error);
     }
@@ -134,11 +135,11 @@ export default class AdminController {
 
       console.log(req.body, "admin stripe ")
       if (!name || !price || !interval) {
-        throw new AppError("Name, price, and interval are required", 400);
+        throw new AppError("Name, price, and interval are required", HttpStatus.BAD_REQUEST);
       }
 
       const plan = await this._adminUseCase.createPlan(name, description, price, interval);
-      res.status(201).json({ success: true, data: plan });
+      res.status(HttpStatus.CREATED).json({ success: true, data: plan });
     } catch (error) {
       next(error);
     }
@@ -147,7 +148,7 @@ export default class AdminController {
   async getPlans(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const plans = await this._adminUseCase.getPlans();
-      res.status(200).json({ success: true, data: plans });
+      res.status(HttpStatus.OK).json({ success: true, data: plans });
     } catch (error) {
       next(error);
     }
@@ -158,12 +159,12 @@ export default class AdminController {
       const productId = req.query.productId;
 
       if (!productId) {
-        throw new AppError("Product ID is required", 400);
+        throw new AppError("Product ID is required", HttpStatus.BAD_REQUEST);
       }
 
       const archivedProduct = await this._adminUseCase.archivePlan(productId as string);
       console.log("set ayo")
-      res.status(200).json({ success: true, data: archivedProduct });
+      res.status(HttpStatus.OK).json({ success: true, data: archivedProduct });
     } catch (error) {
       next(error);
     }
@@ -174,11 +175,11 @@ export default class AdminController {
       const { name, description, price, interval } = req.body;
       console.log(req.body, req.params)
       if (!productId || !name || !price || !interval) {
-        throw new AppError("Product ID, name, price, and interval are required", 400);
+        throw new AppError("Product ID, name, price, and interval are required", HttpStatus.BAD_REQUEST);
       }
 
       const updatedPlan = await this._adminUseCase.updatePlan(productId as string, name, description, price, interval);
-      res.status(200).json({ success: true, data: updatedPlan });
+      res.status(HttpStatus.OK).json({ success: true, data: updatedPlan });
     } catch (error) {
       next(error);
     }
@@ -191,7 +192,7 @@ export default class AdminController {
 
       const result = await this._adminUseCase.getCoupons()
       console.log(result, "ododododo")
-      res.status(201).json({ success: true, data: result });
+      res.status(HttpStatus.CREATED).json({ success: true, data: result });
     } catch (error) {
       next(error)
     }
@@ -214,10 +215,10 @@ export default class AdminController {
       );
 
       if (!result) {
-        res.status(400).json({ success: false, message: "Failed to create coupon" });
+        res.status(HttpStatus.BAD_REQUEST).json({ success: false, message: "Failed to create coupon" });
       }
 
-      res.status(201).json({
+      res.status(HttpStatus.CREATED).json({
         success: true,
         result,
       });
@@ -233,10 +234,10 @@ export default class AdminController {
 
       const deletedCoupon = await this._adminUseCase.deleteCoupon(couponId as string)
       if (!deletedCoupon) {
-        res.status(400).json({ success: false, message: "Failed to delete coupon" });
+        res.status(HttpStatus.BAD_REQUEST).json({ success: false, message: "Failed to delete coupon" });
       }
 
-      res.status(200).json({
+      res.status(HttpStatus.OK).json({
         success: true,
       });
     } catch (error) {
@@ -260,7 +261,7 @@ export default class AdminController {
 
       const updatedCoupon = await this._adminUseCase.updateCoupon(couponId as string, updateData);
 
-      res.status(200).json({
+      res.status(HttpStatus.OK).json({
         success: true,
         data: updatedCoupon,
       });
@@ -273,7 +274,7 @@ export default class AdminController {
     try {
       const { code } = req.body;
       const coupon = await this._adminUseCase.verifyCoupon(code);
-      res.status(200).json({ success: true, data: coupon });
+      res.status(HttpStatus.OK).json({ success: true, data: coupon });
     } catch (error: any) {
       next(error);
     }
@@ -283,7 +284,7 @@ export default class AdminController {
     try {
       const monetizationData = await this._adminUseCase.getMusicMonetization();
       console.log(monetizationData, "joellll")
-      res.status(200).json({ data: monetizationData });
+      res.status(HttpStatus.OK).json({ data: monetizationData });
     } catch (error: any) {
       console.error("Error in getMusicMonetization controller:", error);
       next(error);
@@ -295,7 +296,7 @@ export default class AdminController {
       const { artistName } = req.body
       const data = await this._adminUseCase.artistPayout(artistName);
       console.log(data, "sasaasassa")
-      res.status(200).json({ data: data });
+      res.status(HttpStatus.OK).json({ data: data });
     } catch (error: any) {
       console.error("Error in payout controller:", error);
       next(error);
@@ -309,7 +310,7 @@ export default class AdminController {
 
       const data = await this._adminUseCase.getUsersByIds(userIds);
       console.log(data, "sasaasassa")
-      res.status(200).json({ data: data });
+      res.status(HttpStatus.OK).json({ data: data });
     } catch (error: any) {
       console.error("Error in getUsers controller:", error);
       next(error);
@@ -320,7 +321,7 @@ export default class AdminController {
   async fetchVerification(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const verification = await this._adminUseCase.fetchVerification();
-      res.status(200).json({ success: true, message: "List Of verification", data: verification });
+      res.status(HttpStatus.OK).json({ success: true, message: "List Of verification", data: verification });
     } catch (error) {
       next(error);
     }
@@ -332,7 +333,7 @@ export default class AdminController {
       const id = req.query.id
 
       const update = await this._adminUseCase.updateVerificationStatus(status as string,feedback as string,id as string);
-      res.status(200).json({ success: true, message: "List Of verification", data: update });
+      res.status(HttpStatus.OK).json({ success: true, message: "List Of verification", data: update });
     } catch (error) {
       next(error);
     }

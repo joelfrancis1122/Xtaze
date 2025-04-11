@@ -3,6 +3,7 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
+import { HttpStatus } from "../../domain/constants/httpStatus";
 
 dotenv.config();
 
@@ -26,7 +27,7 @@ const authenticateToken = (req: AuthenticatedRequest, res: Response, next: NextF
   console.log("Checking token:", token);
 
   if (!token) {
-    throw new AppError("Unauthorized: No token provided", 401);
+    throw new AppError("Unauthorized: No token provided", HttpStatus.UNAUTHORIZED);
   }
 
   try {
@@ -35,7 +36,7 @@ const authenticateToken = (req: AuthenticatedRequest, res: Response, next: NextF
     next();
   } catch (error) {
     console.log(error,"sasaaa")
-    throw new AppError("Forbidden: Invalid token", 401);
+    throw new AppError("Forbidden: Invalid token", HttpStatus.UNAUTHORIZED);
   }
 };
 
@@ -44,7 +45,7 @@ export const authenticateUser = (req: AuthenticatedRequest, res: Response, next:
   try {
     authenticateToken(req, res, () => {
       if (req.user?.role !== "user") {
-        throw new AppError("Forbidden: User role required", 403);
+        throw new AppError("Forbidden: User role required", HttpStatus.FORBIDDEN);
       }
       next();
     });
@@ -57,7 +58,7 @@ export const authenticateArtist = (req: AuthenticatedRequest, res: Response, nex
   try {
     authenticateToken(req, res, () => {
       if (req.user?.role !== "artist") {
-        throw new AppError("Forbidden: Artist role required", 403);
+        throw new AppError("Forbidden: Artist role required", HttpStatus.FORBIDDEN);
       }
       next();
     });
@@ -70,7 +71,7 @@ export const authenticateAdmin = (req: AuthenticatedRequest, res: Response, next
   try {
     authenticateToken(req, res, () => {
       if (req.user?.role !== "admin") {
-        throw new AppError("Forbidden: Admin role required", 403);
+        throw new AppError("Forbidden: Admin role required", HttpStatus.FORBIDDEN);
       }
       next();
     });

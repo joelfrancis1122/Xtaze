@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { FetchDeezerSongsUseCase } from "../../usecases/deezer.usecase";
 import UserRepository from "../repositories/user.repository";
+import { HttpStatus } from "../../domain/constants/httpStatus";
 const userRepository = new UserRepository();
 export class DeezerController {
   private fetchDeezerSongsUseCase: FetchDeezerSongsUseCase;
@@ -20,13 +21,13 @@ export class DeezerController {
       }
   
       if (songs.length === 0) {
-        res.status(404).json({ error: "No songs found with previews" });
+        res.status(HttpStatus.NOT_FOUND).json({ error: "No songs found with previews" });
       } else {
         res.json({ songs,user:userData });
       }
     } catch (error: any) {
       console.error("Error fetching Deezer songs:", error.message);
-      res.status(500).json({ error: "Failed to fetch songs from Deezer", details: error.message });
+      res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ error: "Failed to fetch songs from Deezer", details: error.message });
     }
   }
 }

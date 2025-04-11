@@ -33,14 +33,14 @@ export default class UserUseCase {
   private _passwordService: IPasswordService // space for painting brush 
   private _otpService: IOtpService; // space for another tool
   private _emailService: IEmailService;
-  private stripe: Stripe;
+  private _stripe: Stripe;
 
   constructor(dependencies: useCaseDependencies) { // boss giving the toys here 
     this._userRepository = dependencies.repository.userRepository // got the storage box 
     this._passwordService = dependencies.service.PasswordService // got the paint brush 
     this._otpService = dependencies.service.OtpService;
     this._emailService = dependencies.service.EmailService;
-    this.stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+    this._stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
       apiVersion: "2023-08-16",
     });
   }
@@ -468,8 +468,8 @@ export default class UserUseCase {
       }
 
       // Retrieve price and product
-      const price = await this.stripe.prices.retrieve(priceId);
-      const product = await this.stripe.products.retrieve(price.product as string);
+      const price = await this._stripe.prices.retrieve(priceId);
+      const product = await this._stripe.products.retrieve(price.product as string);
       const planName = product.name;
 
       // Base session configuration
@@ -507,7 +507,7 @@ export default class UserUseCase {
           throw new Error("You've already used this coupon. Try a different one");
         }
 
-        const stripeCoupon = await this.stripe.coupons.create({
+        const stripeCoupon = await this._stripe.coupons.create({
           percent_off: coupon.discountAmount,
           duration: "once",
           name: `Coupon_${couponCode}`,
@@ -516,7 +516,7 @@ export default class UserUseCase {
         sessionConfig.discounts = [{ coupon: stripeCoupon.id }];
       }
 
-      const session = await this.stripe.checkout.sessions.create(sessionConfig);
+      const session = await this._stripe.checkout.sessions.create(sessionConfig);
       return session;
     } catch (error: any) {
       console.error("Error in UserUseCase.execute:", error);
@@ -530,7 +530,7 @@ export default class UserUseCase {
     try {
       const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET as string;
 
-      const event = this.stripe.webhooks.constructEvent(rawBody, signature, webhookSecret);
+      const event = this._stripe.webhooks.constructEvent(rawBody, signature, webhookSecret);
 
       if (event.type === "checkout.session.completed") {
         const session = event.data.object as Stripe.Checkout.Session;
@@ -604,7 +604,7 @@ export default class UserUseCase {
   async getSubscriptionHistoryFromStripe(): Promise<SubscriptionHistory[]> {
     try {
       // Fetch recent checkout sessions from Stripe
-      const sessions = await this.stripe.checkout.sessions.list({
+      const sessions = await this._stripe.checkout.sessions.list({
         limit: 50, // Max 100, adjust as needed
         expand: ["data.customer"], // Expand customer for email
       });

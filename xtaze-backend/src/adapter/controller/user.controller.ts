@@ -3,6 +3,7 @@ import IuserUseCase from "../../domain/usecase/IUserUseCase";
 import { Track } from "../db/models/TrackModel";
 import UserModel from "../db/models/UserModel";
 import AppError from "../../utils/AppError";
+import { HttpStatus } from "../../domain/constants/httpStatus";
 
 
 interface Dependencies {
@@ -23,17 +24,17 @@ export default class UserController {
   async sendOTP(req: Request, res: Response, next: NextFunction) {
     try {
       const { email } = req.body;
-      if (!email) throw new AppError("Email is required", 400);
+      if (!email) throw new AppError("Email is required", HttpStatus.BAD_REQUEST);
 
       console.log(req.body, "Request body");
       const result = await this._userUseCase.sendOTP(email);
       console.log(result, "Result");
 
-      if (Number(result) === 403) {
-        throw new AppError("Email address already exists", 403);
+      if (Number(result) === HttpStatus.FORBIDDEN) {
+        throw new AppError("Email address already exists", HttpStatus.FORBIDDEN);
       }
 
-      res.status(200).json({ success: true, message: "OTP sent successfully!", result });
+      res.status(HttpStatus.OK).json({ success: true, message: "OTP sent successfully!", result });
     } catch (error) {
       next(error);
     }
@@ -42,16 +43,16 @@ export default class UserController {
   async verifyOTP(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { otp } = req.body;
-      if (!otp) throw new AppError("OTP is required", 400);
+      if (!otp) throw new AppError("OTP is required", HttpStatus.BAD_REQUEST);
 
       console.log("Body received in controller:", req.body);
       const response = await this._userUseCase.verifyOTP(otp);
 
       if (!response.success) {
-        res.status(400).json(response);
+        res.status(HttpStatus.BAD_REQUEST).json(response);
         return;
       }
-      res.status(200).json(response);
+      res.status(HttpStatus.OK).json(response);
     } catch (error) {
       next(error);
     }
@@ -61,14 +62,14 @@ export default class UserController {
     try {
       const { username, country, gender, year, phone, email, password } = req.body;
       if (!username || !email || !password) {
-        throw new AppError("Username, email, and password are required", 400);
+        throw new AppError("Username, email, and password are required", HttpStatus.BAD_REQUEST);
       }
 
       console.log(req.body, "Register body");
       const user = await this._userUseCase.registerUser(username, country, gender, year, phone, email, password);
       console.log("User registered:", user);
 
-      res.status(201).json({ success: true, message: "User registered successfully", data: user });
+      res.status(HttpStatus.CREATED).json({ success: true, message: "User registered successfully", data: user });
     } catch (error) {
       next(error);
     }
@@ -78,7 +79,7 @@ export default class UserController {
   async loginUser(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { email, password } = req.body;
-      if (!email || !password) throw new AppError("Email and password are required", 400);
+      if (!email || !password) throw new AppError("Email and password are required", HttpStatus.BAD_REQUEST);
 
       console.log("Login body:", req.body);
       const response = await this._userUseCase.login(email, password);
@@ -94,14 +95,14 @@ export default class UserController {
           maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
           path: "/", // 7 days
         });
-        res.status(200).json({
+        res.status(HttpStatus.OK).json({
           success: true,
           message: response.message,
           token: response.token, // Return access token in response
           user: response.user,
         });
       } else {
-        res.status(400).json(response);
+        res.status(HttpStatus.BAD_REQUEST).json(response);
       }
     } catch (error) {
       next(error);
@@ -111,7 +112,7 @@ export default class UserController {
   async googleLogin(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { token } = req.body;
-      if (!token) throw new AppError("Google token is required", 400);
+      if (!token) throw new AppError("Google token is required", HttpStatus.BAD_REQUEST);
 
       const response = await this._userUseCase.googleLogin(token);
 
@@ -124,14 +125,14 @@ export default class UserController {
           maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
           path: "/",
         });
-        res.status(200).json({
+        res.status(HttpStatus.OK).json({
           success: true,
           message: response.message,
           token: response.token, // Return access token in response
           user: response.user,
         });
       } else {
-        res.status(400).json(response);
+        res.status(HttpStatus.BAD_REQUEST).json(response);
       }
     } catch (error) {
       console.error("Error with Google signup:", error);
@@ -146,7 +147,7 @@ export default class UserController {
       console.log("Refresh token from cookie:", refreshToken);
   
       if (!refreshToken) {
-        throw new AppError("No refresh token available in cookie", 401);
+        throw new AppError("No refresh token available in cookie", HttpStatus.UNAUTHORIZED);
       }
   
       const response = await this._userUseCase.refresh(refreshToken);
@@ -162,13 +163,13 @@ export default class UserController {
         });
   
         // Return new access token in response
-        res.status(200).json({
+        res.status(HttpStatus.OK).json({
           success: true,
           message: response.message,
           token: response.token, // New access token for client
         });
       } else {
-        res.status(401).json(response);
+        res.status(HttpStatus.UNAUTHORIZED).json(response);
       }
     } catch (error) {
       console.error("Refresh Token Error:", error);
@@ -179,12 +180,12 @@ export default class UserController {
   async checkUsername(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { userName } = req.body;
-      if (!userName) throw new AppError("Username is required", 400);
+      if (!userName) throw new AppError("Username is required", HttpStatus.BAD_REQUEST);
 
       const available = await this._userUseCase.checkUnique(userName);
       console.log("Checking username:", userName, "Available:", available);
 
-      res.status(200).json({ available });
+      res.status(HttpStatus.OK).json({ available });
     } catch (error) {
       next(error);
     }
@@ -193,10 +194,10 @@ export default class UserController {
   async forgotPassword(req: Request, res: Response, next: NextFunction) {
     try {
       const { email } = req.body;
-      if (!email) throw new AppError("Email is required", 400);
+      if (!email) throw new AppError("Email is required", HttpStatus.BAD_REQUEST);
 
       const response = await this._userUseCase.forgotPassword(email);
-      res.status(200).json(response);
+      res.status(HttpStatus.OK).json(response);
     } catch (error) {
       next(error);
     }
@@ -207,11 +208,11 @@ export default class UserController {
     try {
       const { token, formData } = req.body;
       const newPassword = formData
-      if (!token) throw new AppError("token is required", 400);
+      if (!token) throw new AppError("token is required", HttpStatus.BAD_REQUEST);
       const response = await this._userUseCase.resetPassword(token, newPassword);
-      res.status(200).json(response);
+      res.status(HttpStatus.OK).json(response);
       // const response = await this._userUseCase.forgotPassword(email);
-      // res.status(200).json(response);
+      // res.status(HttpStatus.OK).json(response);
     } catch (error) {
       next(error);
     }
@@ -225,11 +226,11 @@ export default class UserController {
 
 
       if (!userId || !file) {
-        throw new AppError("User ID and image are required", 400);
+        throw new AppError("User ID and image are required", HttpStatus.BAD_REQUEST);
       }
 
       const result = await this._userUseCase.uploadProfile(userId, file);
-      res.status(result.success ? 200 : 400).json(result);
+      res.status(result.success ? HttpStatus.OK : HttpStatus.BAD_REQUEST).json(result);
     } catch (error) {
       next(error);
     }
@@ -242,13 +243,13 @@ export default class UserController {
 
 
       if (!userId || !file) {
-        throw new AppError("User ID and file are required", 400);
+        throw new AppError("User ID and file are required", HttpStatus.BAD_REQUEST);
       }
 
       const isVideo = file.mimetype.startsWith("video/");
       const result = await this._userUseCase.uploadBanner(userId, file, isVideo);
 
-      res.status(result.success ? 200 : 400).json(result);
+      res.status(result.success ? HttpStatus.OK : HttpStatus.BAD_REQUEST).json(result);
     } catch (error) {
       console.error("Error in uploadBanner:", error);
       next(error);
@@ -261,11 +262,11 @@ export default class UserController {
 
 
       if (!userId || !bio) {
-        throw new AppError("User ID and bio are required", 400);
+        throw new AppError("User ID and bio are required", HttpStatus.BAD_REQUEST);
       }
 
       const result = await this._userUseCase.updateBio(userId, bio);
-      res.status(result.success ? 200 : 400).json(result);
+      res.status(result.success ? HttpStatus.OK : HttpStatus.BAD_REQUEST).json(result);
     } catch (error) {
       next(error);
     }
@@ -276,11 +277,11 @@ export default class UserController {
       const { userId, priceId, code } = req.body;
 
       if (!userId || !priceId) {
-        throw new AppError("User ID and Price ID are required", 400);
+        throw new AppError("User ID and Price ID are required", HttpStatus.BAD_REQUEST);
       }
 
       const session = await this._userUseCase.execute(userId, priceId, code);
-      res.status(200).json({ success: true, sessionId: session?.id });
+      res.status(HttpStatus.OK).json({ success: true, sessionId: session?.id });
     } catch (error) {
       next(error);
     }
@@ -293,11 +294,11 @@ export default class UserController {
 
 
       if (!userId || !trackId) {
-        throw new AppError("User ID and Track ID are required", 400);
+        throw new AppError("User ID and Track ID are required", HttpStatus.BAD_REQUEST);
       }
 
       const user = await this._userUseCase.addToLiked(userId as string, trackId);
-      res.status(200).json({ success: true, user });
+      res.status(HttpStatus.OK).json({ success: true, user });
     } catch (error) {
       console.error("Error in toggleLike:", error);
       next(error);
@@ -311,12 +312,12 @@ export default class UserController {
 
 
       if (!userId || !songIds || !Array.isArray(songIds)) {
-        throw new AppError("Invalid request: User ID and songIds array are required", 400);
+        throw new AppError("Invalid request: User ID and songIds array are required", HttpStatus.BAD_REQUEST);
       }
 
       const user = await UserModel.findById(userId);
       if (!user) {
-        throw new AppError("User not found", 404);
+        throw new AppError("User not found", HttpStatus.NOT_FOUND);
       }
 
       const tracks = await Track.find({ _id: { $in: songIds } });
@@ -346,7 +347,7 @@ export default class UserController {
     try {
       const { userId, playlist } = req.body
       const newplaylist = await this._userUseCase.createPlaylist(userId, playlist)
-      res.status(200).json({ success: true, data: newplaylist });
+      res.status(HttpStatus.OK).json({ success: true, data: newplaylist });
     } catch (error) {
       console.error("Error in getliked:", error);
       next(error);
@@ -359,7 +360,7 @@ export default class UserController {
 
 
       const playlist = await this._userUseCase.getAllPlaylist(userId as string)
-      res.status(200).json({ success: true, data: playlist });
+      res.status(HttpStatus.OK).json({ success: true, data: playlist });
     } catch (error) {
       console.error("Error in getliked:", error);
       next(error);
@@ -371,10 +372,10 @@ export default class UserController {
       const { userId, playlistId, trackId } = req.body
       const playlist = await this._userUseCase.addToPlaylist(userId, playlistId, trackId)
       if(playlist==null){
-        res.status(404).json({ success: false ,message:"Track Already Exist"});
+        res.status(HttpStatus.NOT_FOUND).json({ success: false ,message:"Track Already Exist"});
 
       }
-      res.status(200).json({ success: true });
+      res.status(HttpStatus.OK).json({ success: true });
     } catch (error) {
       console.error("Error in getliked:", error);
       next(error);
@@ -385,7 +386,7 @@ export default class UserController {
       const {id} = req.body
       const updated = await this._userUseCase.deletePlaylist(id)
 
-      res.status(200).json({ success: true });
+      res.status(HttpStatus.OK).json({ success: true });
     } catch (error) {
       console.error("Error in getliked:", error);
       next(error);
@@ -396,7 +397,7 @@ export default class UserController {
       const {id, playlistName} = req.body
       const updated = await this._userUseCase.updateNamePlaylist(id, playlistName)
 
-      res.status(200).json({ success: true });
+      res.status(HttpStatus.OK).json({ success: true });
     } catch (error) {
       console.error("Error in getliked:", error);
       next(error);
@@ -414,7 +415,7 @@ export default class UserController {
       
       const updated = await this._userUseCase.updateImagePlaylist(id, file)
 
-      res.status(200).json({ updated,success: true });
+      res.status(HttpStatus.OK).json({ updated,success: true });
     } catch (error) {
       console.error("Error in getliked:", error);
       next(error);
@@ -426,7 +427,7 @@ export default class UserController {
   
   
           const allBanners = await this._userUseCase.getAllBanners()
-          res.status(201).json({ message: "Banner added successfully", data: allBanners });
+          res.status(HttpStatus.CREATED).json({ message: "Banner added successfully", data: allBanners });
     
       } catch (error) {
         next(error);
@@ -454,7 +455,7 @@ export default class UserController {
     async getSubscriptionHistory(req: Request, res: Response, next: NextFunction): Promise<void> {
       try {
         const history = await this._userUseCase.getSubscriptionHistoryFromStripe();
-        res.status(200).json({ data: history });
+        res.status(HttpStatus.OK).json({ data: history });
       } catch (error: any) {
         console.error("Error in getSubscriptionHistory controller:", error);
         next(error); 
@@ -472,17 +473,17 @@ export default class UserController {
         // Pass raw body and signature to use  case
         await this._userUseCase.confirmPayment(req.body, signature);
   
-        res.status(200).json({ received: true });
+        res.status(HttpStatus.OK).json({ received: true });
       } catch (error: any) {
         console.error("Webhook error:", error);
-        res.status(400).send(`Webhook Error: ${error.message}`);
+        res.status(HttpStatus.BAD_REQUEST).send(`Webhook Error: ${error.message}`);
         next(error); 
       }
     }
     async fetchAllTrack(req: Request, res: Response, next: NextFunction): Promise<void> {
       try {
         const tracks = await this._userUseCase.getAllTracks();
-        res.status(200).json({ data: tracks });
+        res.status(HttpStatus.OK).json({ data: tracks });
       } catch (error: any) {
         console.error("Error in getSubscriptionHistory controller:", error);
         next(error);
@@ -493,7 +494,7 @@ export default class UserController {
       try {
         const {GenreName} = req.query
         const tracks = await this._userUseCase.fetchGenreTracks(GenreName as string);
-        res.status(200).json({ data: tracks });
+        res.status(HttpStatus.OK).json({ data: tracks });
       } catch (error: any) {
         console.error("Error in fetchGenreTracks controller:", error);
         next(error); 
@@ -505,7 +506,7 @@ export default class UserController {
         const {id} =  req.body
         
         const updated = await this._userUseCase.becomeArtist(id as string);
-        res.status(200).json({ data: updated });
+        res.status(HttpStatus.OK).json({ data: updated });
       } catch (error: any) {
         console.error("Error in updated controller:", error);
         next(error); 
@@ -518,7 +519,7 @@ export default class UserController {
         const username  = req.query.userId
   
         const data = await this._userUseCase.getArtistByName(username as string);
-        res.status(200).json({ data: data });
+        res.status(HttpStatus.OK).json({ data: data });
       } catch (error: any) {
         console.error("Error in getUsers controller:", error);
         next(error);
