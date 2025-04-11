@@ -5,10 +5,10 @@ import { IBanner } from "../pages/User/types/IBanner";
 import { Artist } from "../pages/User/types/IArtist";
 import { IGenre } from "../pages/User/types/IGenre";
 import { Track } from "../pages/User/types/ITrack";
-import { UserSignupData } from "../pages/User/types/IUser";
 import { Coupon } from "../pages/User/types/ICoupon";
 import {  SubscriptionPlan } from "../pages/User/types/IStripe";
 import { MusicMonetization } from "../pages/User/types/IMonetization";
+import { ListenerUser } from "../pages/User/types/IListenerUser";
 
 
 const apiCall = async <T>(
@@ -184,9 +184,9 @@ export const deleteBanner = async (id: string, token: string): Promise<void> => 
 
 };
 
-export const fetchUserDetails = async (userIds: string[], token: string): Promise<UserSignupData[]> => {
+export const fetchUserDetails = async (userIds: string[], token: string): Promise<ListenerUser[]> => {
   try {
-    const data = await apiCall<{ success: boolean; data: UserSignupData[]; message?: string }>(
+    const data = await apiCall<{ success: boolean; data: ListenerUser[]; message?: string }>(
       adminApi,
       "post",
       "/getUsersByIds",

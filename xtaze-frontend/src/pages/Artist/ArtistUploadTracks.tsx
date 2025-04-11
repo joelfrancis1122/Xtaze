@@ -9,7 +9,8 @@ import { cn } from "../../../lib/utils";
 import { RootState } from "../../store/store";
 import { useDispatch, useSelector } from "react-redux";
 import { saveArtistData } from "../../redux/artistSlice";
-import artistService, { IGenre } from "../../services/artistService";
+import artistService from "../../services/artistService";
+import { IGenre } from "../User/types/IGenre";
 
 const UploadMusicPage = () => {
   const artist = useSelector((state: RootState) => state.artist.signupData);

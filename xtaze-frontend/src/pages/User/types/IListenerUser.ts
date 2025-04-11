@@ -4,6 +4,5 @@ export interface ListenerUser {
   username:string;
   email:string;
   year: number
-  age: number;
   country: string;
 }
