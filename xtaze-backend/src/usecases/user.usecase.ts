@@ -17,7 +17,6 @@ import { SubscriptionHistory } from '../domain/entities/ISubscriptionHistory';
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2023-08-16" });
 dotenv.config();
 
-dotenv.config();
 interface useCaseDependencies {
   repository: {
     userRepository: IUserRepository
@@ -529,7 +528,8 @@ export default class UserUseCase {
 
   async confirmPayment(rawBody: Buffer, signature: string): Promise<void> {
     try {
-      const webhookSecret = "whsec_FcgdilLPqYodrGbfaDLfygnA9ZD3nMlv"; // Your CLI secret
+      const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET as string;
+
       const event = this.stripe.webhooks.constructEvent(rawBody, signature, webhookSecret);
 
       if (event.type === "checkout.session.completed") {
