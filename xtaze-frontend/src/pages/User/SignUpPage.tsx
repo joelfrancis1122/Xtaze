@@ -11,7 +11,7 @@ import { useDispatch } from "react-redux";
 import { saveSignupData } from "../../redux/userSlice";
 import { motion } from "framer-motion";
 import debounce from "lodash/debounce";
-import { checkUsername, sendOtp } from "../../services/userService"; // Import service functions
+import { checkUsername, sendOtp } from "../../services/userService";
 
 const Signup = () => {
   const dispatch = useDispatch();
@@ -38,8 +38,8 @@ const Signup = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [usernameStatus, setUsernameStatus] = useState<"idle" | "checking" | "unique" | "taken">("idle");
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
+  const [isLoading, setIsLoading] = useState(false); // New loading state
 
-  // Debounced function to check username availability
   const checkUsernameAvailability = useCallback(
     debounce(async (username: string) => {
       if (!username.trim()) {
@@ -53,10 +53,10 @@ const Signup = () => {
         setUsernameStatus(isAvailable ? "unique" : "taken");
       } catch (error: any) {
         console.error("Error checking username:", error);
-        setUsernameStatus("taken"); // Default to taken on error for safety
+        setUsernameStatus("taken");
         toast.error(error.message || "Error checking username availability", { position: "top-right" });
       }
-    }, 500), // 500ms debounce delay
+    }, 500),
     []
   );
 
@@ -107,15 +107,17 @@ const Signup = () => {
     }
 
     setIsButtonDisabled(true);
-    setTimeout(() => setIsButtonDisabled(false), 10000);
-
+    setIsLoading(true); // Start loading
     try {
-      await sendOtp(formData.email); // Use sendOtp from service
+      await sendOtp(formData.email);
       toast.success("OTP sent successfully!", { position: "top-right" });
       dispatch(saveSignupData(formData));
       navigate("/otp", { state: { otpSent: true } });
     } catch (error: any) {
       toast.error(error.response.data.message || "Error sending OTP", { position: "top-right" });
+    } finally {
+      setIsLoading(false); // Stop loading
+      setIsButtonDisabled(false); // Re-enable button
     }
   };
 
@@ -132,7 +134,6 @@ const Signup = () => {
         </p>
 
         <form className="my-8" onSubmit={handleSubmit}>
-          {/* Username */}
           <LabelInputContainer className="mb-4">
             <Label htmlFor="username">Username</Label>
             <div className="relative flex items-center w-full">
@@ -175,7 +176,6 @@ const Signup = () => {
             </div>
           </LabelInputContainer>
 
-          {/* Country, Gender & DOB */}
           <div className="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-2 mb-4">
             <LabelInputContainer>
               <Label htmlFor="country">Country</Label>
@@ -227,7 +227,6 @@ const Signup = () => {
             </LabelInputContainer>
           </div>
 
-          {/* Phone */}
           <LabelInputContainer className="mb-4">
             <Label htmlFor="phone">Phone</Label>
             <Input
@@ -243,7 +242,6 @@ const Signup = () => {
             />
           </LabelInputContainer>
 
-          {/* Email */}
           <LabelInputContainer className="mb-4">
             <Label htmlFor="email">Email Address</Label>
             <Input
@@ -257,7 +255,6 @@ const Signup = () => {
             />
           </LabelInputContainer>
 
-          {/* Password & Confirm Password */}
           <LabelInputContainer className="mb-6 relative">
             <Label htmlFor="password">Password</Label>
             <div className="relative">
@@ -302,20 +299,21 @@ const Signup = () => {
             </div>
           </LabelInputContainer>
 
-          {/* Submit Button */}
           <button
-            className="bg-gradient-to-br relative group/btn from-black dark:from-zinc-900 dark:to-zinc-900 to-neutral-600 block dark:bg-zinc-800 w-full text-white rounded-md h-10 font-medium shadow-[0px_1px_0px_0px_#ffffff40_inset,0px_-1px_0px_0px_#ffffff40_inset] dark:shadow-[0px_1px_0px_0px_var(--zinc-800)_inset,0px_-1px_0px_0px_var(--zinc-800)_inset]"
+            className="bg-gradient-to-br relative group/btn from-black dark:from-zinc-900 dark:to-zinc-900 to-neutral-600  dark:bg-zinc-800 w-full text-white rounded-md h-10 font-medium shadow-[0px_1px_0px_0px_#ffffff40_inset,0px_-1px_0px_0px_#ffffff40_inset] dark:shadow-[0px_1px_0px_0px_var(--zinc-800)_inset,0px_-1px_0px_0px_var(--zinc-800)_inset] flex items-center justify-center"
             type="submit"
-            disabled={isButtonDisabled}
+            disabled={isButtonDisabled || isLoading}
           >
-            Sign Up →
+            {isLoading ? (
+              <span className="animate-spin h-5 w-5 border-2 border-t-transparent border-white rounded-full"></span>
+            ) : (
+              "Sign Up →"
+            )}
             <BottomGradient />
           </button>
 
-          {/* Divider */}
           <div className="bg-gradient-to-r from-transparent via-neutral-300 dark:via-neutral-700 to-transparent my-8 h-[1px] w-full" />
 
-          {/* Link to login page */}
           <div className="mt-4 text-center">
             <p className="text-neutral-600 dark:text-neutral-300">
               Already have an account?{" "}
@@ -330,7 +328,6 @@ const Signup = () => {
   );
 };
 
-/* Helper Components */
 const BottomGradient = () => (
   <>
     <span className="group-hover/btn:opacity-100 block transition duration-500 opacity-0 absolute h-px w-full -bottom-px inset-x-0 bg-gradient-to-r from-transparent via-red-500 to-transparent" />
