@@ -309,6 +309,7 @@ const Signup = () => {
             ) : (
               "Sign Up →"
             )}
+            
             <BottomGradient />
           </button>
 
