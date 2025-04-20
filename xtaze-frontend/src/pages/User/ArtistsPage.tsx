@@ -41,7 +41,7 @@ export default function ArtistPage() {
     const loadArtists = async () => {
       try {
         setLoading(true);
-        const token = localStorage.getItem("token") || ""; // Adjust token key if different
+        const token = localStorage.getItem("token") || ""; 
         const allArtists = await fetchArtists(token);
         const artistList = allArtists.filter((artist: Artist) => artist.role === "artist");
         setArtists(artistList);

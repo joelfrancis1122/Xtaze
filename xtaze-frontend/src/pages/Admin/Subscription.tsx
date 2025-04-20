@@ -5,7 +5,6 @@ import Sidebar from "./adminComponents/aside-side";
 import { toast } from "sonner";
 import { archiveSubscriptionPlan, createSubscriptionPlan, fetchSubscriptionPlans, updateSubscriptionPlan } from "../../services/adminService";
 
-
 interface StripeProduct {
   id: string;
   name: string;
@@ -36,7 +35,7 @@ export default function AdminSubscriptionPage() {
   const [newPlan, setNewPlan] = useState({
     name: "",
     description: "",
-    price: "",
+    price: "", // Stores dollars as string
     interval: "month" as "month" | "year",
   });
   const [editPlan, setEditPlan] = useState<SubscriptionPlan | null>(null);
@@ -45,7 +44,7 @@ export default function AdminSubscriptionPage() {
     const fetchPlansAsync = async () => {
       try {
         setLoading(true);
-        const token = localStorage.getItem("adminToken") || ""; // Adjust token key if different
+        const token = localStorage.getItem("adminToken") || "";
         const fetchedPlans = await fetchSubscriptionPlans(token);
         setPlans(fetchedPlans);
         setError(null);
@@ -62,18 +61,19 @@ export default function AdminSubscriptionPage() {
 
   const handleCreatePlan = async () => {
     try {
-      const unitAmount = parseFloat(newPlan.price);
-      if (isNaN(unitAmount)) throw new Error("Invalid price");
-      const token = localStorage.getItem("adminToken") || ""; // Adjust token key if different
+      const unitAmount = parseFloat(newPlan.price) * 100; // Convert dollars to cents
+      if (isNaN(unitAmount) || unitAmount <= 0) throw new Error("Invalid price");
+      const token = localStorage.getItem("adminToken") || "";
       const createdPlan = await createSubscriptionPlan(
         {
           name: newPlan.name,
           description: newPlan.description,
-          price: unitAmount,
+          price: unitAmount / 10000, // Send cents / 10000 to API
           interval: newPlan.interval,
         },
         token
       );
+      console.log("Created plan response:", createdPlan); // Debug log
       setPlans([...plans, createdPlan]);
       setNewPlan({ name: "", description: "", price: "", interval: "month" });
       setIsFormOpen(false);
@@ -93,19 +93,20 @@ export default function AdminSubscriptionPage() {
   const handleUpdatePlan = async () => {
     if (!editPlan) return;
     try {
-      const unitAmount = parseFloat((editPlan.price.unit_amount / 100).toString());
-      if (isNaN(unitAmount)) throw new Error("Invalid price");
-      const token = localStorage.getItem("adminToken") || ""; // Adjust token key if different
+      const unitAmount = editPlan.price.unit_amount; // Cents
+      if (isNaN(unitAmount) || unitAmount <= 0) throw new Error("Invalid price");
+      const token = localStorage.getItem("adminToken") || "";
       const updatedPlan = await updateSubscriptionPlan(
         editPlan.product.id,
         {
           name: editPlan.product.name,
           description: editPlan.product.description || "",
-          price: unitAmount,
+          price: unitAmount / 10000, // Send cents / 10000 to API
           interval: editPlan.price.recurring?.interval || "month",
         },
         token
       );
+      console.log("Updated plan response:", updatedPlan); // Debug log
       setPlans(plans.map((plan) => (plan.product.id === editPlan.product.id ? updatedPlan : plan)));
       setEditPlan(null);
       toast.success("Plan updated successfully");
@@ -116,7 +117,7 @@ export default function AdminSubscriptionPage() {
 
   const handleArchivePlan = async (productId: string) => {
     try {
-      const token = localStorage.getItem("adminToken") || ""; // Adjust token key if different
+      const token = localStorage.getItem("adminToken") || "";
       await archiveSubscriptionPlan(productId, token);
       setPlans(plans.filter((plan) => plan.product.id !== productId));
       toast.success("Plan archived successfully");
@@ -166,8 +167,13 @@ export default function AdminSubscriptionPage() {
                 />
                 <input
                   type="number"
+                  step="0.01"
+                  min="0"
                   value={newPlan.price}
-                  onChange={(e) => setNewPlan({ ...newPlan, price: e.target.value })}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setNewPlan({ ...newPlan, price: value });
+                  }}
                   placeholder="Price (e.g., 10.00)"
                   className="w-full bg-gray-800 text-white p-2 rounded-md border border-gray-700"
                 />
@@ -222,13 +228,21 @@ export default function AdminSubscriptionPage() {
                 />
                 <input
                   type="number"
-                  value={editPlan.price.unit_amount / 100}
-                  onChange={(e) =>
-                    setEditPlan({
-                      ...editPlan,
-                      price: { ...editPlan.price, unit_amount: parseFloat(e.target.value) * 100 },
-                    })
-                  }
+                  step="0.01"
+                  min="0"
+                  value={(editPlan.price.unit_amount / 100).toFixed(2)} // Display dollars
+                  onChange={(e) => {
+                    const value = parseFloat(e.target.value);
+                    if (!isNaN(value) && value >= 0) {
+                      setEditPlan({
+                        ...editPlan,
+                        price: {
+                          ...editPlan.price,
+                          unit_amount: Math.round(value * 100), // Store as cents
+                        },
+                      });
+                    }
+                  }}
                   placeholder="Price (e.g., 10.00)"
                   className="w-full bg-gray-800 text-white p-2 rounded-md border border-gray-700"
                 />
