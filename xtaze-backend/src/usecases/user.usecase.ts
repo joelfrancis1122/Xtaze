@@ -322,6 +322,22 @@ export default class UserUseCase {
     }
 
   }
+  async usernameUpdate(userId: string, username: string): Promise<IUser | null> {
+    try {
+      const updated = await this._userRepository.usernameUpdate(userId, username);
+  
+      if (!updated) {
+        return null;
+      }
+  
+      return updated;
+  
+    } catch (error) {
+      console.error("Error during profile upload:", error);
+      return null; 
+    }
+  }
+  
   async addToLiked(userId: string, trackId: string): Promise<IUser | null> {
     try {
       const user = await this._userRepository.addToLiked(userId, trackId);
@@ -449,7 +465,7 @@ export default class UserUseCase {
   async resetPaymentStatus(): Promise<void> {
     try {
       await this._userRepository.resetPaymentStatus();
-  
+
     } catch (error) {
       console.error("Error during reset:", error);
       throw new Error("An error occurred while reset.");
@@ -646,7 +662,7 @@ export default class UserUseCase {
     }
   }
 
-  async getArtistByName(username:string): Promise<IUser|null> {
+  async getArtistByName(username: string): Promise<IUser | null> {
 
     const users = await this._userRepository.getArtistByName(username)
     return users

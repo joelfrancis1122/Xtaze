@@ -34,5 +34,6 @@ export interface IUserRepository {
   becomeArtist(id:string):  Promise<IUser|null> 
   resetPaymentStatus(): Promise<void>
   getArtistByName(username:string):  Promise<IUser|null> 
+  usernameUpdate(userId:string,username:string): Promise<IUser|null>
 
 }

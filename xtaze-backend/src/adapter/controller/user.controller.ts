@@ -524,4 +524,18 @@ export default class UserController {
         next(error);
       }
     }
+    async usernameUpdate(req: Request, res: Response, next: NextFunction): Promise<void> {
+      try {
+        const userId  = req.query.id
+        const username = req.body.username
+        console.log(userId,req.body,"joes")
+  
+        const data = await this._userUseCase.usernameUpdate(userId as string,username);
+        console.log("remene",data)
+        res.status(HttpStatus.OK).json({ data: data });
+      } catch (error: any) {
+        console.error("Error in getUsers controller:", error);
+        next(error);
+      }
+    }
 }

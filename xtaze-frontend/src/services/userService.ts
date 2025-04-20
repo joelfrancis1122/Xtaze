@@ -5,6 +5,7 @@ import { saveSignupData } from "../redux/userSlice";
 import { Playlist } from "../pages/User/types/IPlaylist";
 import { IBanner } from "../pages/User/types/IBanner";
 import { Artist } from "../pages/User/types/IArtist";
+import { UserSignupData } from "../pages/User/types/IUser";
 
 const addRefreshInterceptor = (apiInstance: any) => {
   apiInstance.interceptors.response.use(
@@ -473,5 +474,21 @@ export const fetchAllArtistsVerification = async (token:string): Promise<any> =>
   } catch (error: any) {
     console.error("Error archiving verification plan:", error);
     throw new Error(error.response?.data?.message || "Failed to archive subscription plan");
+  }
+};
+export const updateUsername = async (id: string, name: string, token: string): Promise<UserSignupData> => {
+  try {
+    const response = await apiCall<{ data: UserSignupData }>(
+      userApi,
+      "put",
+      `/usersName?id=${id}`,
+      { username: name },
+      token
+    );
+    console.log("Update username response:", response);
+    return response.data;
+  } catch (error: any) {
+    console.error("Error updating username:", error);
+    throw new Error(error.response?.data?.message || "Failed to update username");
   }
 };
