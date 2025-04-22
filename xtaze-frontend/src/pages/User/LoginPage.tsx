@@ -146,7 +146,7 @@ const Login = () => {
             <div id="googleLoginButton"></div>
             <div className="bg-zinc-900 border border-blue-500 rounded-md p-3 text-center transition-all duration-200 hover:scale-[1.02]">
               <p className="text-neutral-300 text-sm">
-                Demo for HR: <span className="text-blue-400 font-semibold">demo@example.com</span> / <span className="text-blue-400 font-semibold">Demo123!</span>
+                Demo email and pass: <span className="text-blue-400 font-semibold">demo@gmail.com</span> / <span className="text-blue-400 font-semibold">asd!</span>
               </p>
             </div>
           </div>
