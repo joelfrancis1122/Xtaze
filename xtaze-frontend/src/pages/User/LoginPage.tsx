@@ -1,4 +1,4 @@
-"use client";
+
 
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -71,8 +71,7 @@ const Login = () => {
       toast.success("User Login success!", { position: "top-right" });
       navigate("/home");
     } catch (error: any) {
-      console.log("odii")
-      toast.warning(error.response.data.message, { position: "top-right" });
+      toast.warning(error.response?.data?.message || "Login failed", { position: "top-right" });
     }
   };
 
@@ -145,6 +144,11 @@ const Login = () => {
 
           <div className="flex flex-col space-y-4">
             <div id="googleLoginButton"></div>
+            <div className="bg-zinc-900 border border-blue-500 rounded-md p-3 text-center transition-all duration-200 hover:scale-[1.02]">
+              <p className="text-neutral-300 text-sm">
+                Demo for HR: <span className="text-blue-400 font-semibold">demo@example.com</span> / <span className="text-blue-400 font-semibold">Demo123!</span>
+              </p>
+            </div>
           </div>
 
           <div className="mt-4 text-center">
