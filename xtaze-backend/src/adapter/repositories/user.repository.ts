@@ -141,7 +141,7 @@ export default class UserRepository implements IUserRepository {
     const updatedArtist = await UserModel.findOne({ _id: artistId });
     return updatedArtist as unknown as IUser
   }
-
+ 
   async findByUsername(username: string): Promise<IUser | null> {
     return await UserModel.findOne({ username: { $regex: `^${username}$`, $options: "i" } });
 
