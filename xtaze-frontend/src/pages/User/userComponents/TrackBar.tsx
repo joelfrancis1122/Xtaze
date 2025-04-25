@@ -1,4 +1,3 @@
-"use client";
 
 import { useState, useEffect } from "react";
 import { Play, Pause, SkipBack, SkipForward, Shuffle, Repeat, Volume2, Clock } from "lucide-react";
@@ -143,19 +142,19 @@ export default function MusicPlayer({
   if (!currentTrack) return null;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-[#121212] py-3 px-4 flex flex-col sm:flex-row items-center justify-between z-50 border-t border-gray-800 shadow-lg">
+    <div className="fixed bottom-0 left-0 right-0 bg-[#121212] py-2 sm:py-3 px-4 flex flex-col sm:flex-row items-center justify-between z-50 border-t border-gray-800 shadow-lg">
       <div
         className="absolute top-0 left-0 right-0 h-1 bg-[#121212] filter blur-3xl"
         style={{ backgroundImage: `linear-gradient(to bottom, rgba(18, 18, 18, 0.9), transparent)` }}
       />
       {/* Track Info */}
       <div className="flex items-center w-full sm:w-1/4 min-w-0 relative z-10 mb-2 sm:mb-0">
-        <div className="relative w-12 h-12 flex-shrink-0 cursor-pointer" onClick={(e) => { e.stopPropagation(); toggleModal(); }}>
+        <div className="relative w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0 cursor-pointer" onClick={(e) => { e.stopPropagation(); toggleModal(); }}>
           <img src={currentTrack.img || "/default-track.jpg"} alt="Track Cover" className="w-full h-full object-cover rounded-md shadow-md" />
         </div>
         <div className="ml-3 overflow-hidden min-w-0">
-          <p className="text-sm font-semibold text-white truncate">{currentTrack.title}</p>
-          <p className="text-xs text-gray-400 truncate">
+          <p className="text-xs sm:text-sm font-semibold text-white truncate">{currentTrack.title}</p>
+          <p className="text-[11px] sm:text-xs text-gray-400 truncate">
             {Array.isArray(currentTrack.artists) ? currentTrack.artists.join(", ") : currentTrack.artists}
           </p>
         </div>
@@ -214,7 +213,7 @@ export default function MusicPlayer({
         </div>
       </div>
       {/* Volume Control and Sleep Timer */}
-      <div className="flex items-center gap-4 w-full sm:w-1/4 justify-end mt-2 sm:mt-0 z-10">
+      <div className="hidden sm:flex items-center gap-4 w-full sm:w-1/4 justify-end mt-2 sm:mt-0 z-10">
         <div className="relative">
           <button
             className="flex items-center gap-1 p-1 rounded-full hover:bg-[#242424] text-gray-300 transition-colors"
