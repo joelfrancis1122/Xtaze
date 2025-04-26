@@ -144,13 +144,13 @@ export default class UserController {
       console.log("Refresh token triggered");
       const refreshToken = req.cookies.refreshToken;
       console.log("Refresh token from cookie:", refreshToken);
-  
+
       if (!refreshToken) {
         throw new AppError("No refresh token available in cookie", HttpStatus.UNAUTHORIZED);
       }
-  
+
       const response = await this._userUseCase.refresh(refreshToken);
-  
+
       if (response.success && response.token && response.refreshToken) {
         // Update refresh token cookie with new value (httpOnly: true for security)
         res.cookie("refreshToken", response.refreshToken, {
@@ -160,7 +160,7 @@ export default class UserController {
           maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
           path: "/",     // Ensure site-wide availabilit
         });
-  
+
         // Return new access token in response
         res.status(HttpStatus.OK).json({
           success: true,
@@ -304,37 +304,31 @@ export default class UserController {
     }
   }
 
+
+
+
   async getliked(req: Request, res: Response, next: NextFunction) {
     try {
-      const { songIds } = req.body;
+      const { songIds } = req.body
+      console.log(songIds,"songssssss")
       const userId = req.query.userId as string;
-
-
-      if (!userId || !songIds || !Array.isArray(songIds)) {
-        throw new AppError("Invalid request: User ID and songIds array are required", HttpStatus.BAD_REQUEST);
-      }
-
-      const user = await UserModel.findById(userId);
-      if (!user) {
-        throw new AppError("User not found", HttpStatus.NOT_FOUND);
-      }
-
-      const tracks = await Track.find({ _id: { $in: songIds } });
+      const tracks = await this._userUseCase.getliked(songIds as string, userId as string)
       res.json({ success: true, tracks });
-    } catch (error) {
-      console.error("Error in getliked:", error);
-      next(error);
+
+    } catch (err) {
+      next(err)
     }
   }
+
   async getTracksInPlaylist(req: Request, res: Response, next: NextFunction) {
     try {
-      const { id, page = "1", limit  } = req.query;
-    const pageNum = parseInt(page as string, 10);
-    const limitNum = parseInt(limit as string, 10);
-    const skip = (pageNum - 1) * limitNum;
+      const { id, page = "1", limit } = req.query;
+      const pageNum = parseInt(page as string, 10);
+      const limitNum = parseInt(limit as string, 10);
+      const skip = (pageNum - 1) * limitNum;
 
-      const track = await this._userUseCase.getPlaylist(id as string,pageNum,limitNum,skip)
-      res.json({ success: true ,data:track});
+      const track = await this._userUseCase.getPlaylist(id as string, pageNum, limitNum, skip)
+      res.json({ success: true, data: track });
     } catch (error) {
       console.error("Error in getliked:", error);
       next(error);
@@ -352,7 +346,7 @@ export default class UserController {
       next(error);
     }
   }
-  
+
   async getPlaylist(req: Request, res: Response, next: NextFunction) {
     try {
       const { userId } = req.query
@@ -370,8 +364,8 @@ export default class UserController {
     try {
       const { userId, playlistId, trackId } = req.body
       const playlist = await this._userUseCase.addToPlaylist(userId, playlistId, trackId)
-      if(playlist==null){
-        res.status(HttpStatus.NOT_FOUND).json({ success: false ,message:"Track Already Exist"});
+      if (playlist == null) {
+        res.status(HttpStatus.NOT_FOUND).json({ success: false, message: "Track Already Exist" });
 
       }
       res.status(HttpStatus.OK).json({ success: true });
@@ -382,7 +376,7 @@ export default class UserController {
   }
   async deletePlaylist(req: Request, res: Response, next: NextFunction) {
     try {
-      const {id} = req.body
+      const { id } = req.body
       const updated = await this._userUseCase.deletePlaylist(id)
 
       res.status(HttpStatus.OK).json({ success: true });
@@ -393,7 +387,7 @@ export default class UserController {
   }
   async updateNamePlaylist(req: Request, res: Response, next: NextFunction) {
     try {
-      const {id, playlistName} = req.body
+      const { id, playlistName } = req.body
       const updated = await this._userUseCase.updateNamePlaylist(id, playlistName)
 
       res.status(HttpStatus.OK).json({ success: true });
@@ -405,137 +399,137 @@ export default class UserController {
 
   async updateImagePlaylist(req: Request, res: Response, next: NextFunction) {
     try {
-      const{id} = req.body
+      const { id } = req.body
       const file = req.file
       if (!file) {
         console.error("No file provided for update.");
-        return; // Exit early if file is undefined
+        return; 
       }
-      
+
       const updated = await this._userUseCase.updateImagePlaylist(id, file)
 
-      res.status(HttpStatus.OK).json({ updated,success: true });
+      res.status(HttpStatus.OK).json({ updated, success: true });
     } catch (error) {
       console.error("Error in getliked:", error);
       next(error);
     }
   }
 
-    async allBanners(req: Request, res: Response, next: NextFunction): Promise<void> {
-      try {
-  
-  
-          const allBanners = await this._userUseCase.getAllBanners()
-          res.status(HttpStatus.CREATED).json({ message: "Banner added successfully", data: allBanners });
-    
-      } catch (error) {
-        next(error);
-      }
-    }
-  
+  async allBanners(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
 
-    async checkCouponStatus(): Promise<void> {
-      try {
-        await this._userUseCase.checkAndUpdateCouponStatus();
-      } catch (error: any) {
-        console.error("UserController: Error during coupon status check:", error);
-        throw error;
-      }
-    }
-    async resetPaymentStatus(): Promise<void> {
-      try {
-        await this._userUseCase.resetPaymentStatus();
-      } catch (error: any) {
-        console.error("UserController: Error during coupon status check:", error);
-        throw error;
-      }
-    }
 
-    async getSubscriptionHistory(req: Request, res: Response, next: NextFunction): Promise<void> {
-      try {
-        const history = await this._userUseCase.getSubscriptionHistoryFromStripe();
-        res.status(HttpStatus.OK).json({ data: history });
-      } catch (error: any) {
-        console.error("Error in getSubscriptionHistory controller:", error);
-        next(error); 
-      }
-    }
+      const allBanners = await this._userUseCase.getAllBanners()
+      res.status(HttpStatus.CREATED).json({ message: "Banner added successfully", data: allBanners });
 
-    async handleWebhook(req: Request, res: Response, next: NextFunction): Promise<void> {
-      try {
-        const signature = req.headers["stripe-signature"] as string;
-        if (!signature) {
-          throw new Error("Missing Stripe signature");
-        }
+    } catch (error) {
+      next(error);
+    }
+  }
 
-  
-        // Pass raw body and signature to use  case
-        await this._userUseCase.confirmPayment(req.body, signature);
-  
-        res.status(HttpStatus.OK).json({ received: true });
-      } catch (error: any) {
-        console.error("Webhook error:", error);
-        res.status(HttpStatus.BAD_REQUEST).send(`Webhook Error: ${error.message}`);
-        next(error); 
-      }
-    }
-    async fetchAllTrack(req: Request, res: Response, next: NextFunction): Promise<void> {
-      try {
-        const tracks = await this._userUseCase.getAllTracks();
-        res.status(HttpStatus.OK).json({ data: tracks });
-      } catch (error: any) {
-        console.error("Error in getSubscriptionHistory controller:", error);
-        next(error);
-      }
-    }
 
-    async fetchGenreTracks(req: Request, res: Response, next: NextFunction): Promise<void> {
-      try {
-        const {GenreName} = req.query
-        const tracks = await this._userUseCase.fetchGenreTracks(GenreName as string);
-        res.status(HttpStatus.OK).json({ data: tracks });
-      } catch (error: any) {
-        console.error("Error in fetchGenreTracks controller:", error);
-        next(error); 
-      }
+  async checkCouponStatus(): Promise<void> {
+    try {
+      await this._userUseCase.checkAndUpdateCouponStatus();
+    } catch (error: any) {
+      console.error("UserController: Error during coupon status check:", error);
+      throw error;
     }
+  }
+  async resetPaymentStatus(): Promise<void> {
+    try {
+      await this._userUseCase.resetPaymentStatus();
+    } catch (error: any) {
+      console.error("UserController: Error during coupon status check:", error);
+      throw error;
+    }
+  }
 
-    async becomeArtist(req: Request, res: Response, next: NextFunction): Promise<void> {
-      try {
-        const {id} =  req.body
-        
-        const updated = await this._userUseCase.becomeArtist(id as string);
-        res.status(HttpStatus.OK).json({ data: updated });
-      } catch (error: any) {
-        console.error("Error in updated controller:", error);
-        next(error); 
-      }
+  async getSubscriptionHistory(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const history = await this._userUseCase.getSubscriptionHistoryFromStripe();
+      res.status(HttpStatus.OK).json({ data: history });
+    } catch (error: any) {
+      console.error("Error in getSubscriptionHistory controller:", error);
+      next(error);
     }
- 
+  }
 
-    async username(req: Request, res: Response, next: NextFunction): Promise<void> {
-      try {
-        const username  = req.query.userId
-  
-        const data = await this._userUseCase.getArtistByName(username as string);
-        res.status(HttpStatus.OK).json({ data: data });
-      } catch (error: any) {
-        console.error("Error in getUsers controller:", error);
-        next(error);
+  async handleWebhook(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const signature = req.headers["stripe-signature"] as string;
+      if (!signature) {
+        throw new Error("Missing Stripe signature");
       }
+
+
+      // Pass raw body and signature to use case
+      await this._userUseCase.confirmPayment(req.body, signature);
+
+      res.status(HttpStatus.OK).json({ received: true });
+    } catch (error: any) {
+      console.error("Webhook error:", error);
+      res.status(HttpStatus.BAD_REQUEST).send(`Webhook Error: ${error.message}`);
+      next(error);
     }
-    async usernameUpdate(req: Request, res: Response, next: NextFunction): Promise<void> {
-      try {
-        const userId  = req.query.id
-        const username = req.body.username
-        console.log(userId,req.body,"joes")
-  
-        const data = await this._userUseCase.usernameUpdate(userId as string,username);
-        console.log("remene",data)
-        res.status(HttpStatus.OK).json({ data: data });
-      } catch (error: any) {
-        console.error("Error in getUsers controller:", error);
-        next(error);
-      }
+  }
+  async fetchAllTrack(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const tracks = await this._userUseCase.getAllTracks();
+      res.status(HttpStatus.OK).json({ data: tracks });
+    } catch (error: any) {
+      console.error("Error in getSubscriptionHistory controller:", error);
+      next(error);
     }
+  }
+
+  async fetchGenreTracks(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { GenreName } = req.query
+      const tracks = await this._userUseCase.fetchGenreTracks(GenreName as string);
+      res.status(HttpStatus.OK).json({ data: tracks });
+    } catch (error: any) {
+      console.error("Error in fetchGenreTracks controller:", error);
+      next(error);
+    }
+  }
+
+  async becomeArtist(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { id } = req.body
+
+      const updated = await this._userUseCase.becomeArtist(id as string);
+      res.status(HttpStatus.OK).json({ data: updated });
+    } catch (error: any) {
+      console.error("Error in updated controller:", error);
+      next(error);
+    }
+  }
+
+
+  async username(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const username = req.query.userId
+
+      const data = await this._userUseCase.getArtistByName(username as string);
+      res.status(HttpStatus.OK).json({ data: data });
+    } catch (error: any) {
+      console.error("Error in getUsers controller:", error);
+      next(error);
+    }
+  }
+  async usernameUpdate(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const userId = req.query.id
+      const username = req.body.username
+      console.log(userId, req.body, "joes")
+
+      const data = await this._userUseCase.usernameUpdate(userId as string, username);
+      console.log("remene", data)
+      res.status(HttpStatus.OK).json({ data: data });
+    } catch (error: any) {
+      console.error("Error in getUsers controller:", error);
+      next(error);
+    }
+  }
 }

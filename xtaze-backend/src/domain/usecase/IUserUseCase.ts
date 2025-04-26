@@ -40,6 +40,7 @@ export default interface IuserUseCase{
     resetPaymentStatus(): Promise<void>
     getArtistByName(username:string): Promise<IUser|null>
     usernameUpdate(userId:string,username:string): Promise<IUser|null>
+    getliked(songIds:string,userId:string): Promise<ITrack[]|null>
     
 
 }

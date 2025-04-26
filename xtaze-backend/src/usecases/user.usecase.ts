@@ -337,6 +337,19 @@ export default class UserUseCase {
       return null; 
     }
   }
+
+
+async getliked(songIds:string,userId:string): Promise<ITrack[]|null>{
+  try{
+    const liked  = await this._userRepository.getliked(songIds,userId)
+  return liked
+  }catch(error){
+    console.log(error)
+    return null
+  }
+}
+
+
   
   async addToLiked(userId: string, trackId: string): Promise<IUser | null> {
     try {

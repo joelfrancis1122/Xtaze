@@ -23,8 +23,8 @@ export default class UserRepository implements IUserRepository {
   async resetPaymentStatus(): Promise<void> {
     try {
       const result = await UserModel.updateMany(
-        {}, 
-        { $set: { paymentStatus: false } } 
+        {},
+        { $set: { paymentStatus: false } }
       );
     } catch (error) {
       throw error
@@ -97,7 +97,7 @@ export default class UserRepository implements IUserRepository {
         { new: true, runValidators: true }
       ).lean();
 
-      console.log(updatedUser,"ASSSSSSSSSSs")
+      console.log(updatedUser, "ASSSSSSSSSSs")
       return updatedUser as IUser | null;
     } catch (error) {
       console.log(error);
@@ -141,11 +141,26 @@ export default class UserRepository implements IUserRepository {
     const updatedArtist = await UserModel.findOne({ _id: artistId });
     return updatedArtist as unknown as IUser
   }
- 
+
   async findByUsername(username: string): Promise<IUser | null> {
     return await UserModel.findOne({ username: { $regex: `^${username}$`, $options: "i" } });
 
 
+  }
+
+
+
+  async getliked(songIds: string, userId: string) {
+    try {
+
+      const user = await UserModel.findById(userId);
+      console.log("aaaaaaaaaaaaaa")
+      const tracks = await Track.find({ _id: { $in: songIds } });
+      return tracks
+    } catch (error) {
+      console.error("Error in getliked:", error);
+      return null
+    }
   }
 
   async findById(userId: string): Promise<IUser | null> {
@@ -413,14 +428,14 @@ export default class UserRepository implements IUserRepository {
         { $set: { role: "artist" } },
         { new: true } // Return the updated document
       );
-  
+
       return updatedUser as unknown as IUser
     } catch (error: any) {
       throw new Error(error.message || "Failed to update user role");
     }
   }
-  
-  
+
+
 
 
   async fetchGenreTracks(GenreName: string): Promise<ITrack[] | null> {
@@ -437,14 +452,14 @@ export default class UserRepository implements IUserRepository {
 
 
 
-    async getArtistByName(username: string): Promise<IUser | null> {
-      try {
-        console.log(username, "ith enth oi")
-        const admin = await UserModel.findOne({ username });
-        console.log(admin, "ith entha ")
-        return admin as unknown as IUser
-      } catch (error) {
-        throw error
-      }
+  async getArtistByName(username: string): Promise<IUser | null> {
+    try {
+      console.log(username, "ith enth oi")
+      const admin = await UserModel.findOne({ username });
+      console.log(admin, "ith entha ")
+      return admin as unknown as IUser
+    } catch (error) {
+      throw error
     }
+  }
 }
