@@ -91,7 +91,7 @@ export default function ArtistMonetizePage() {
         setHasCard(cardStatus);
       } catch (err) {
         console.error(err);
-        // setError("Failed to load song earnings");
+        setError("no data awailable");
       } finally {
         setLoading(false);
       }
@@ -204,7 +204,7 @@ export default function ArtistMonetizePage() {
             </Card>
           ) : (
             <Card className="mt-6 p-8 text-center">
-              <p className="text-gray-400 text-lg">No song data available.</p>
+              <p className="text-gray-400 text-lg">No data available.</p>
             </Card>
           )}
         </main>
