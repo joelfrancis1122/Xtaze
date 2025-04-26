@@ -91,7 +91,7 @@ export default function ArtistMonetizePage() {
         setHasCard(cardStatus);
       } catch (err) {
         console.error(err);
-        setError("Failed to load song earnings");
+        // setError("Failed to load song earnings");
       } finally {
         setLoading(false);
       }

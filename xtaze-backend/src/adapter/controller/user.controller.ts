@@ -1,7 +1,5 @@
 import { NextFunction, Request, Response } from "express";
 import IuserUseCase from "../../domain/usecase/IUserUseCase";
-import { Track } from "../db/models/TrackModel";
-import UserModel from "../db/models/UserModel";
 import AppError from "../../utils/AppError";
 import { HttpStatus } from "../../domain/constants/httpStatus";
 
@@ -310,7 +308,7 @@ export default class UserController {
   async getliked(req: Request, res: Response, next: NextFunction) {
     try {
       const { songIds } = req.body
-      console.log(songIds,"songssssss")
+      console.log(songIds, "songssssss")
       const userId = req.query.userId as string;
       const tracks = await this._userUseCase.getliked(songIds as string, userId as string)
       res.json({ success: true, tracks });
@@ -403,7 +401,7 @@ export default class UserController {
       const file = req.file
       if (!file) {
         console.error("No file provided for update.");
-        return; 
+        return;
       }
 
       const updated = await this._userUseCase.updateImagePlaylist(id, file)

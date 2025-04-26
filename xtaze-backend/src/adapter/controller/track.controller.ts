@@ -63,7 +63,7 @@ export const getAllTracks = async (req: Request, res: Response, next: NextFuncti
     if (!tracks || tracks.length === 0) {
       throw new AppError("No tracks found", HttpStatus.NOT_FOUND); 
     }
-console.log("2222")
+    console.log("2222")
     res.status(HttpStatus.OK).json({
       success: true,
       message: "Tracks and user data fetched successfully",
