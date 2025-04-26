@@ -99,7 +99,7 @@ export default class UserUseCase {
 
     await this._emailService.sendEmail(email, "Password Reset", token);
 
-    return { success: true, message: "Reset link sent successfully" };  // ✅ Add return statement
+    return { success: true, message: "Reset link sent successfully" };  
   }
 
   async resetPassword(token: string, password: string): Promise<{ success: boolean; message: string }> {

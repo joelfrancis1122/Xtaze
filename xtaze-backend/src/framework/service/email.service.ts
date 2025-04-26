@@ -20,7 +20,7 @@ export default class EmailService implements IEmailService {
   async sendEmail(email: string, subject: string, token: string): Promise<void> {
     const baseUrl = process.env.URL 
     const resetLink = `${baseUrl}/reset-password?token=${token}`;
-  
+    console.log(resetLink)
     await this.transporter.sendMail({
       from: process.env.SMTP_EMAIL,
       to: email,
