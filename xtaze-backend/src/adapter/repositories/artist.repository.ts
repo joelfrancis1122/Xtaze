@@ -18,6 +18,21 @@ export default class ArtistRepository implements IArtistRepository {
     }
   }
 
+  async usernameUpdate(userId: string, username: string): Promise<IUser | null> {
+    try {
+      const updatedUser = await UserModel.findByIdAndUpdate(
+        userId,
+        { username: username },
+        { new: true, runValidators: true }
+      ).lean();
+
+      console.log(updatedUser, "ASSSSSSSSSSs")
+      return updatedUser as IUser | null;
+    } catch (error) {
+      console.log(error);
+      return null;
+    }
+  }
 
   async upload(track: ITrack): Promise<ITrack | null> {
     const newTrack = new Track(track)

@@ -2,7 +2,7 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { persistReducer } from "redux-persist";
 import storage from "redux-persist/lib/storage";
 
-interface ArtistState {
+ export interface ArtistState {
   signupData: {
     _id:string;
     username: string;

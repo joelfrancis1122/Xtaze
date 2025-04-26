@@ -19,6 +19,7 @@ export default interface IArtistUseCase {
     checkcard(artistId: string): Promise<IUser | null>;
     requestVerification(artistId:string,imageFile: Express.Multer.File): Promise<IVerificationStatusResponse|null>
     getVerificationStatus(artistId:string): Promise<IVerificationStatusResponse|null>
+    usernameUpdate(userId:string,username:string): Promise<IUser|null>
 
 
 }

@@ -3,6 +3,7 @@ import { artistApi, userApi } from "../api/axios";
 import { saveArtistData } from "../redux/artistSlice";
 import { IGenre } from "../pages/User/types/IGenre";
 import { VerificationStatus } from "../pages/User/types/IverficationStatus";
+import { ArtistS } from "../pages/User/types/IArtist";
 
 const addRefreshInterceptor = (apiInstance: any) => {
   apiInstance.interceptors.response.use(
@@ -283,7 +284,26 @@ export const fetchSongEarnings = async (artistId: string, token: string): Promis
   }));
 };
 
-
+export const updateArtistUsername = async (
+  id: string, 
+  name: string, 
+  token: string
+): Promise<ArtistS> => {  // <- returning Artist, not ArtistState
+  try {
+    const response = await apiCall<{ data: ArtistS }>(
+      userApi,
+      "put",
+      `/usersName?id=${id}`,
+      { username: name },
+      token
+    );
+    console.log("Update username response:", response);
+    return response.data;
+  } catch (error: any) {
+    console.error("Error updating username:", error);
+    throw new Error(error.response?.data?.message || "Failed to update username");
+  }
+};
 export default {
   loginArtist,
   fetchArtistTracks,

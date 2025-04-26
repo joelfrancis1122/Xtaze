@@ -15,5 +15,6 @@ export interface IArtistRepository {
   checkcard(artistId: string): Promise<IUser | null>;
   getVerificationStatus(artistId: string): Promise<IVerificationRequest | null>;
   requestVerification(artistId: string, imageFile: string): Promise<IVerificationRequest| null>
+  usernameUpdate(userId:string,username:string): Promise<IUser|null>
 
 }

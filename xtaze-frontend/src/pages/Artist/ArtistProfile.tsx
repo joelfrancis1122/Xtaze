@@ -1,4 +1,3 @@
-
 import { useEffect, useState, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -11,7 +10,7 @@ import ArtistSidebar from "./artistComponents/artist-aside";
 import { saveArtistData } from "../../redux/artistSlice";
 import { Button } from "../../components/ui/button";
 import { Card } from "../../components/ui/card";
-import artistService, { getVerificationStatus, requestVerification } from "../../services/artistService";
+import artistService, { getVerificationStatus, requestVerification, updateArtistUsername } from "../../services/artistService";
 
 interface Track {
   _id: string;
@@ -41,9 +40,11 @@ export default function ArtistProfile() {
   const [showCropper, setShowCropper] = useState<"profile" | "cover" | null>(null);
   const [isEditingBio, setIsEditingBio] = useState(false);
   const [bioText, setBioText] = useState<string>(String(user?.bio || ""));
+  const [isEditingUsername, setIsEditingUsername] = useState(false);
+  const [usernameText, setUsernameText] = useState<string>(user?.username || "");
   const [tracks, setTracks] = useState<Track[]>([]);
   const [verification, setVerification] = useState<VerificationStatus>({ status: "unsubmitted" });
-  const [selectedFile, setSelectedFile] = useState<File | null>(null); // New state for file
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   const token = localStorage.getItem("artistToken");
 
@@ -73,6 +74,11 @@ export default function ArtistProfile() {
 
     fetchData();
   }, [navigate, user?._id, token]);
+
+  useEffect(() => {
+    setUsernameText(user?.username || "");
+    setBioText(String(user?.bio || ""));
+  }, [user?.username, user?.bio]);
 
   const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>, type: "profile" | "cover") => {
     const file = event.target.files?.[0];
@@ -190,6 +196,32 @@ export default function ArtistProfile() {
     }
   };
 
+  const handleUsernameSave = async () => {
+    if (!usernameText.trim()) {
+      toast.error("Username cannot be empty.");
+      return;
+    }
+    if (usernameText.length < 3) {
+      toast.error("Username must be at least 3 characters long.");
+      return;
+    }
+
+    if (!user?._id || !token) {
+      toast.error("User ID or token not found.");
+      return;
+    }
+
+    try {
+      const updatedUser = await updateArtistUsername(user._id, usernameText, token);
+      dispatch(saveArtistData(updatedUser));
+      setIsEditingUsername(false);
+      toast.success("Username updated successfully!");
+    } catch (error: any) {
+      console.error("Error updating username:", error);
+      toast.error(error.message || "Something went wrong. Please try again.");
+    }
+  };
+
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -202,15 +234,15 @@ export default function ArtistProfile() {
       toast.error("Please select an ID proof file or check login status.");
       return;
     }
-  
+
     setVerification({ status: "processing" });
-  
+
     const formData = new FormData();
     formData.append("idProof", selectedFile);
-  
+
     try {
       await requestVerification(user._id, formData, token);
-      setVerification({ status: "pending" }); // No idProof dependency
+      setVerification({ status: "pending" });
       toast.success("Verification request submitted!");
       setSelectedFile(null);
     } catch (error: any) {
@@ -218,6 +250,7 @@ export default function ArtistProfile() {
       toast.error(error.message || "Failed to submit verification request.");
     }
   };
+
   return (
     <div className="min-h-screen bg-black text-white">
       {showCropper && (
@@ -316,12 +349,50 @@ export default function ArtistProfile() {
                 </div>
               </div>
               <div className="pt-20 px-6 pb-6">
-                <h2 className="text-xl font-semibold text-white flex items-center gap-2">
-                  {user?.username}
-                  {verification.status === "approved" && (
-                    <Verified size={30} className="text-blue-600" />
-                  )}
-                </h2>
+                {isEditingUsername ? (
+                  <div className="flex flex-col gap-2">
+                    <input
+                      value={usernameText}
+                      onChange={(e) => setUsernameText(e.target.value)}
+                      className="text-xl font-semibold text-white bg-black border border-white rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-white"
+                      placeholder="Enter your username"
+                      maxLength={50}
+                    />
+                    <div className="flex gap-2">
+                      <Button
+                        className="bg-black text-white border border-white"
+                        onClick={() => {
+                          setIsEditingUsername(false);
+                          setUsernameText(user?.username || "");
+                        }}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        className="bg-black text-white border border-white"
+                        onClick={handleUsernameSave}
+                      >
+                        Save
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-xl font-semibold text-white flex items-center gap-2">
+                      {user?.username}
+                      {verification.status === "approved" && (
+                        <Verified size={30} className="text-blue-600" />
+                      )}
+                    </h2>
+                    <Button
+                      className="bg-black text-white border border-white text-sm py-1 px-2"
+                      onClick={() => setIsEditingUsername(true)}
+                      disabled={isEditingBio}
+                    >
+                      Edit
+                    </Button>
+                  </div>
+                )}
                 <p className="text-white">{user?.email}</p>
                 <p className="text-white">{user?.gender || "Genre not specified"}</p>
               </div>
@@ -356,6 +427,7 @@ export default function ArtistProfile() {
                   <Button
                     className="mt-4 bg-black text-white border border-white"
                     onClick={() => setIsEditingBio(true)}
+                    disabled={isEditingUsername}
                   >
                     Edit Bio
                   </Button>
