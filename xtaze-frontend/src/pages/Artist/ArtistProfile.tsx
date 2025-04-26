@@ -354,9 +354,17 @@ export default function ArtistProfile() {
                     <input
                       value={usernameText}
                       onChange={(e) => setUsernameText(e.target.value)}
-                      className="text-xl font-semibold text-white bg-black border border-white rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-white"
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") handleUsernameSave();
+                        if (e.key === "Escape") {
+                          setIsEditingUsername(false);
+                          setUsernameText(user?.username || "");
+                        }
+                      }}
+                      className="text-xl font-semibold text-white bg-black border border-white rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-white w-fit"
                       placeholder="Enter your username"
                       maxLength={50}
+                      autoFocus
                     />
                     <div className="flex gap-2">
                       <Button
@@ -377,20 +385,14 @@ export default function ArtistProfile() {
                     </div>
                   </div>
                 ) : (
-                  <div className="flex items-center gap-2">
-                    <h2 className="text-xl font-semibold text-white flex items-center gap-2">
-                      {user?.username}
-                      {verification.status === "approved" && (
-                        <Verified size={30} className="text-blue-600" />
-                      )}
-                    </h2>
-                    <Button
-                      className="bg-black text-white border border-white text-sm py-1 px-2"
-                      onClick={() => setIsEditingUsername(true)}
-                      disabled={isEditingBio}
-                    >
-                      Edit
-                    </Button>
+                  <div
+                    className="flex items-center gap-2 hover:underline cursor-pointer"
+                    onClick={() => !isEditingBio && setIsEditingUsername(true)}
+                  >
+                    <h2 className="text-xl font-semibold text-white">{user?.username}</h2>
+                    {verification.status === "approved" && (
+                      <Verified size={30} className="text-blue-600" />
+                    )}
                   </div>
                 )}
                 <p className="text-white">{user?.email}</p>
