@@ -444,7 +444,7 @@ export const fetchArtistTracks = async (artistId: string, token: string): Promis
     undefined,
     token
   );
-  if (!data.success) throw new Error(data.message || "Failed to fetch artist tracks");
+  // if (!data.success) throw new Error(data.message || "Failed to fetch artist tracks");
   return data.tracks;
 };
 export const fetchUserByUsername = async (username: string, token: string): Promise<any> => {
@@ -473,7 +473,7 @@ export const fetchAllArtistsVerification = async (token:string): Promise<any> =>
     return response.data
   } catch (error: any) {
     console.error("Error archiving verification plan:", error);
-    throw new Error(error.response?.data?.message || "Failed to archive subscription plan");
+    throw new Error(error.response?.data?.message);
   }
 };
 export const updateUsername = async (id: string, name: string, token: string): Promise<UserSignupData> => {

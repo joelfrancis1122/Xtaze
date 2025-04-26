@@ -43,21 +43,21 @@ export default class ArtistController {
   async refreshToken(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       console.log("refresh token triggereed ")
-      const ArefreshToken  =req.cookies.ArefreshToken
+      const ArefreshToken = req.cookies.ArefreshToken
 
-      console.log(req.body,req.cookies, "ithan enik kitityees")
-      if (!ArefreshToken) throw new AppError("Refresh token is required",HttpStatus.UNAUTHORIZED);
+      console.log(req.body, req.cookies, "ithan enik kitityees")
+      if (!ArefreshToken) throw new AppError("Refresh token is required", HttpStatus.UNAUTHORIZED);
       console.log("1")
       const response = await this._artistnUseCase.refresh(ArefreshToken);
       console.log("12")
-      
+
       if (response.success && response.token && response.ArefreshToken) {
         res.cookie("ArefreshToken", response.ArefreshToken, {
           httpOnly: true, // Prevent JavaScript access
           secure: true,   // Required for HTTPS
           sameSite: "none", // For cross-origin
           maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-          path: "/",      
+          path: "/",
         });
         console.log("123")
         res.status(HttpStatus.OK).json({
@@ -96,7 +96,7 @@ export default class ArtistController {
       if (userId) {
         tracks = await this._artistnUseCase.listArtistReleases(userId as string);
       }
-
+      console.log("odi", tracks)
       res.status(HttpStatus.OK).json({ success: true, message: "List Of Artists", tracks });
     } catch (error) {
       next(error);
@@ -106,21 +106,21 @@ export default class ArtistController {
     try {
       const { TrackId } = req.query;
       const { title, artists, genre, album } = req.body;
-  
+
       if (!TrackId) {
-         res.status(HttpStatus.BAD_REQUEST).json({ success: false, message: "Track ID is required" });
+        res.status(HttpStatus.BAD_REQUEST).json({ success: false, message: "Track ID is required" });
       }
-  
+
       const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
       const songFile = files?.['fileUrl']?.[0];
       const imageFile = files?.['img']?.[0];
-  
+
       const genreArray = genre ? genre.split(",").map((g: string) => g.trim()) : [];
       const artistArray = artists ? artists.split(",").map((g: string) => g.trim()) : [];
-  
+
       console.log({ songFile, imageFile }, "Processed Files");
-  
-      console.log("joel1",TrackId as string,
+
+      console.log("joel1", TrackId as string,
         title,
         artistArray,
         genreArray,
@@ -136,20 +136,20 @@ export default class ArtistController {
         songFile,
         imageFile
       );
-  
+
       res.status(HttpStatus.OK).json({ success: true, message: "Track updated successfully", track: updatedTrack });
-  
+
     } catch (error) {
       next(error);
     }
   }
-  
+
 
   async incrementListeners(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      console.log("increment",req.body);
-      const { trackId ,id} = req.body;
-      const track = await this._artistnUseCase.increment(trackId as string,id as string);
+      console.log("increment", req.body);
+      const { trackId, id } = req.body;
+      const track = await this._artistnUseCase.increment(trackId as string, id as string);
 
       console.log(req.body);
       res.status(HttpStatus.OK).json({ success: true, message: "List Of Artists" });
@@ -171,7 +171,7 @@ export default class ArtistController {
       const { songName, artist, genre, album } = req.body;
       const songFile = (req.files as { [fieldname: string]: Express.Multer.File[] }).file[0];
       const imageFile = (req.files as { [fieldname: string]: Express.Multer.File[] }).image[0];
-      
+
       console.log(songFile, imageFile, "Extracted files");
       const genreArray = genre ? genre.split(",").map((g: string) => g.trim()) : [];
       const artistArray = artist ? artist.split(",").map((g: string) => g.trim()) : [];
@@ -187,7 +187,7 @@ export default class ArtistController {
       next(error); // Pass error to middleware
     }
   }
-  
+
   async statsOfArtist(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { userId } = req.query
@@ -205,22 +205,22 @@ export default class ArtistController {
     try {
       const { artistId, paymentMethodId } = req.body
       console.log(req.query, req.body, "ssssss")
-      const data = await this._artistnUseCase.saveCard(artistId,paymentMethodId);
-      console.log(data,"kilivayil")
-      res.status(HttpStatus.OK).json({ success:true});
+      const data = await this._artistnUseCase.saveCard(artistId, paymentMethodId);
+      console.log(data, "kilivayil")
+      res.status(HttpStatus.OK).json({ success: true });
     } catch (error: any) {
       console.error("Error in getSongImprovements controller:", error);
       res.status(HttpStatus.NOT_FOUND).json({ message: error.message || "Internal server error" });
       next(error);
     }
   }
-  
+
   async checkcard(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { userId } = req.query
       // console.log(req.query,"sasas")
       const data = await this._artistnUseCase.checkcard(userId as string);
-      console.log(data,"dassssssss")
+      console.log(data, "dassssssss")
       res.status(HttpStatus.OK).json({ data: data });
     } catch (error: any) {
       console.error("Error in getSongImprovements controller:", error);
@@ -244,11 +244,11 @@ export default class ArtistController {
     }
   }
 
-  async getVerificationStatus(req: Request, res: Response,next: NextFunction):Promise<void>{
+  async getVerificationStatus(req: Request, res: Response, next: NextFunction): Promise<void> {
     const { artistId } = req.query;
     try {
       const verificationStatus = await this._artistnUseCase.getVerificationStatus(artistId as string);
-      console.log(verificationStatus,"verification statuss")
+      console.log(verificationStatus, "verification statuss")
       res.status(HttpStatus.OK).json({ success: true, data: verificationStatus });
     } catch (error: any) {
       console.error("Error in getVerificationStatusController:", error);
@@ -257,29 +257,29 @@ export default class ArtistController {
   }
   async requestVerification(req: Request, res: Response, next: NextFunction): Promise<void> {
     const { artistId } = req.body;
-  
+
     let imageFile: Express.Multer.File | undefined;
-  
+
     if (req.files && !Array.isArray(req.files)) {
       const imageFiles = req.files['idProof'];
       imageFile = imageFiles?.[0];
     }
-  console.log(imageFile,artistId,"joel")
+    console.log(imageFile, artistId, "joel")
     try {
       if (!artistId || !imageFile) {
         throw new Error("Artist ID or image file is missing.");
       }
-  
+
       console.log("Artist ID:", artistId);
       console.log("Image File:", imageFile);
-  
+
       const verificationStatus = await this._artistnUseCase.requestVerification(artistId, imageFile);
-  
+
       res.status(HttpStatus.OK).json({ success: true, message: "Verification request processed." });
     } catch (error: any) {
       console.error("Error in requestVerification:", error);
       res.status(HttpStatus.NOT_FOUND).json({ success: false, message: error.message || "Failed to process verification request." });
     }
   }
-  
+
 }

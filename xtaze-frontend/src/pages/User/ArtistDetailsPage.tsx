@@ -29,7 +29,7 @@ interface Artist {
 const isVideo = (url: string) => {
   const videoExtensions = [".mp4", ".webm", ".ogg"];
   return videoExtensions.some((ext) => url.toLowerCase().endsWith(ext));
-};
+};  
 
 export default function ArtistDetailsPage() {
   const { artistId } = useParams<{ artistId: string }>();
@@ -72,13 +72,15 @@ export default function ArtistDetailsPage() {
         if (fetchedTracks.length > 0) {
           const artistUsername = fetchedTracks[0].artists[0];
           const userResponse = await fetchUserByUsername(artistUsername, token);
+          console.log("response ",userResponse)
           const verificationRecords = await fetchAllArtistsVerification(artistId);
           const verificationRecord = verificationRecords.find((record: { artistId: string; }) => record.artistId === artistId);
           const verificationStatus = verificationRecord ? verificationRecord.status : "unsubmitted";
+          console.log(verificationStatus,"assssssss")
           
           const artistData: Artist = {
             id: artistId,
-            name: userResponse.username || artistUsername,
+            name: artistUsername,
             role: "artist",
             profilePic: userResponse.profilePic || "/default-image.png",
             banner: userResponse.banner || "/default-banner.jpg",
@@ -87,7 +89,9 @@ export default function ArtistDetailsPage() {
             verificationStatus,
           };
   
+          console.log('111')
           setArtist(artistData);
+          console.log('111')
           setTracks(fetchedTracks);
           setError(null);
   
@@ -99,6 +103,7 @@ export default function ArtistDetailsPage() {
           setError("No tracks found for this artist");
         }
       } catch (err: any) {
+        console.log(err,"ssssss")
         setError("Failed to load artist details or tracks");
       } finally {
         setLoading(false);
