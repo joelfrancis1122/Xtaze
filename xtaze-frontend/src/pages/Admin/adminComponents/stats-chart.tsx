@@ -1,4 +1,4 @@
-"use client";
+"";
 
 import { useEffect, useState } from "react";
 import { Line, LineChart, ResponsiveContainer, Tooltip } from "recharts";

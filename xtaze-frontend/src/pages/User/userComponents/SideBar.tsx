@@ -1,4 +1,3 @@
-"use client";
 
 import { Crown, MoreHorizontal } from "lucide-react";
 import { useSelector } from "react-redux";

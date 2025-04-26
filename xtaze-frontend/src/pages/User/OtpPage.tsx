@@ -1,4 +1,3 @@
-"use client";
 import { useState, useRef, type KeyboardEvent } from "react";
 import { Input } from "../../components/ui/input";
 import { useSelector } from "react-redux";

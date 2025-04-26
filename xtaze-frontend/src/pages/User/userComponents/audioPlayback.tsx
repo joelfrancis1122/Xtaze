@@ -1,4 +1,3 @@
-"use client";
 
 import { useEffect, useRef } from "react"; // Add useRef
 import { useDispatch, useSelector } from "react-redux";

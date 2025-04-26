@@ -1,4 +1,3 @@
-"use client";
 import React, { useEffect, useState, useCallback } from "react";
 import { toast } from "sonner";
 import { Label } from "../../components/ui/label";
