@@ -37,7 +37,7 @@ const Signup = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [usernameStatus, setUsernameStatus] = useState<"idle" | "checking" | "unique" | "taken">("idle");
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
-  const [isLoading, setIsLoading] = useState(false); // New loading state
+  const [isLoading, setIsLoading] = useState(false);
 
   const checkUsernameAvailability = useCallback(
     debounce(async (username: string) => {
@@ -106,7 +106,7 @@ const Signup = () => {
     }
 
     setIsButtonDisabled(true);
-    setIsLoading(true); // Start loading
+    setIsLoading(true);
     try {
       await sendOtp(formData.email);
       toast.success("OTP sent successfully!", { position: "top-right" });
