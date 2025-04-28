@@ -44,7 +44,7 @@
     "redux": "^5.0.1",
     "redux-persist": "^6.0.0",
     "simplex-noise": "^4.0.3",
-    "sonner": "^1.7.2",
+    "sonner": "^1.7.4",
     "stripe": "^17.7.0",
     "tailwind": "^2.3.1",
     "tailwind-merge": "^2.6.0",

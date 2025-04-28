@@ -14,7 +14,6 @@ import { audio } from "../../utils/audio";
 import { Track } from "./types/ITrack";
 import { useAudioPlayback } from "./userComponents/audioPlayback";
 import { fetchAllArtistsVerification } from "../../services/userService";
-
 interface Artist {
   id: string;
   name: string;
@@ -29,7 +28,7 @@ interface Artist {
 const isVideo = (url: string) => {
   const videoExtensions = [".mp4", ".webm", ".ogg"];
   return videoExtensions.some((ext) => url.toLowerCase().endsWith(ext));
-};  
+};
 
 export default function ArtistDetailsPage() {
   const { artistId } = useParams<{ artistId: string }>();
@@ -52,7 +51,6 @@ export default function ArtistDetailsPage() {
   const handlePlayFromModal = (track: Track) => {
     handlePlay(track);
   };
-
   const { currentTrack, isPlaying, isShuffled, isRepeating } = useSelector((state: RootState) => state.audio);
   const user = useSelector((state: RootState) => state.user.signupData);
   const dispatch = useDispatch();
@@ -68,16 +66,16 @@ export default function ArtistDetailsPage() {
         setLoading(true);
         const token = localStorage.getItem("token") || "";
         const fetchedTracks = await fetchArtistTracks(artistId, token);
-        
+
         if (fetchedTracks.length > 0) {
           const artistUsername = fetchedTracks[0].artists[0];
           const userResponse = await fetchUserByUsername(artistUsername, token);
-          console.log("response ",userResponse)
+          console.log("response ", userResponse)
           const verificationRecords = await fetchAllArtistsVerification(artistId);
           const verificationRecord = verificationRecords.find((record: { artistId: string; }) => record.artistId === artistId);
           const verificationStatus = verificationRecord ? verificationRecord.status : "unsubmitted";
-          console.log(verificationStatus,"assssssss")
-          
+          console.log(verificationStatus, "assssssss")
+
           const artistData: Artist = {
             id: artistId,
             name: artistUsername,
@@ -88,13 +86,13 @@ export default function ArtistDetailsPage() {
             bio: userResponse.bio || "",
             verificationStatus,
           };
-  
+
           console.log('111')
           setArtist(artistData);
           console.log('111')
           setTracks(fetchedTracks);
           setError(null);
-  
+
           if (user?._id) {
             const fetchedPlaylists = await getMyplaylist(user._id);
             setPlaylists(fetchedPlaylists);
@@ -103,7 +101,7 @@ export default function ArtistDetailsPage() {
           setError("No tracks found for this artist");
         }
       } catch (err: any) {
-        console.log(err,"ssssss")
+        console.log(err, "ssssss")
         setError("Failed to load artist details or tracks");
       } finally {
         setLoading(false);
@@ -122,7 +120,7 @@ export default function ArtistDetailsPage() {
   const totalListeners = tracks.reduce((sum, track) => sum + (track.listeners?.length || 0), 0);
 
   const handlePlay = (track: Track) => {
-    
+
     if (currentTrack?.fileUrl === track.fileUrl) {
       if (isPlaying) {
         audio.pause();
@@ -280,12 +278,12 @@ export default function ArtistDetailsPage() {
                           {artist.name}
                         </h2>
                         {artist.verificationStatus === "approved" && (
-                        
-<BadgeCheck
-  size={30}
-  className="ml-2 text-blue-600 fill-blue-600 stroke-white"
-  strokeWidth={1.5}
-/>
+
+                          <BadgeCheck
+                            size={30}
+                            className="ml-2 text-blue-600 fill-blue-600 stroke-white"
+                            strokeWidth={1.5}
+                          />
 
                         )}
                       </div>

@@ -198,11 +198,9 @@ export default class AdminRepository implements IAdminRepository {
 
   async getMusicMonetization(): Promise<MusicMonetization[]> {
     try {
-      // Fetch all artists
       const artists = await UserModel.find({ role: "artist" });
       const artistNames = artists.map((artist) => artist.username);
 
-      // Fetch tracks for these artists
       const tracks = await Track.find({ artists: { $in: artistNames } });
 
       const revenuePerPlay = 0.50;
