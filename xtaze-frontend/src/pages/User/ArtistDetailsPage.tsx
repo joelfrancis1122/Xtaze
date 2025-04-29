@@ -55,6 +55,7 @@ export default function ArtistDetailsPage() {
   const user = useSelector((state: RootState) => state.user.signupData);
   const dispatch = useDispatch();
 
+
   useEffect(() => {
     const loadArtistDetails = async () => {
       if (!artistId) {
@@ -110,6 +111,7 @@ export default function ArtistDetailsPage() {
     loadArtistDetails();
   }, [artistId, user?._id]);
 
+
   useEffect(() => {
     if (user?.likedSongs) {
       console.log("user.likedSongs:", user.likedSongs);
@@ -117,6 +119,7 @@ export default function ArtistDetailsPage() {
     }
   }, [user?.likedSongs]);
 
+  
   const totalListeners = tracks.reduce((sum, track) => sum + (track.listeners?.length || 0), 0);
 
   const handlePlay = (track: Track) => {
