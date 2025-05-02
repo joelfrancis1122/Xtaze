@@ -111,6 +111,7 @@ export default function ArtistDetailsPage() {
     loadArtistDetails();
   }, [artistId, user?._id]);
 
+  
   useEffect(() => {
     if (user?.likedSongs) {
       console.log("user.likedSongs:", user.likedSongs);
