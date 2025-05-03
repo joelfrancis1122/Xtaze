@@ -93,7 +93,6 @@ export default function ArtistDetailsPage() {
           console.log('111')
           setTracks(fetchedTracks);
           setError(null);
-
           if (user?._id) {
             const fetchedPlaylists = await getMyplaylist(user._id);
             setPlaylists(fetchedPlaylists);
