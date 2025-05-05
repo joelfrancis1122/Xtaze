@@ -100,6 +100,7 @@ export default function ArtistDetailsPage() {
         } else {
           setError("No tracks found for this artist");
         }
+        
       } catch (err: any) {
         console.log(err, "ssssss")
         setError("Failed to load artist details or tracks");
