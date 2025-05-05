@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
-import { ChevronDown } from "lucide-react";
-import { Button } from "../../components/ui/button";
+
 import { Card } from "../../components/ui/card";
 import { MetricsCard } from "../Admin/adminComponents/metrics-card";
 import { DemographicsChart } from "./artistComponents/demographics-chart";
@@ -100,10 +99,7 @@ const ArtistDashboard = () => {
               <h1 className="text-2xl font-bold">Artist Dashboard</h1>
               <div className="text-sm text-muted-foreground">Last 30 days overview</div>
             </div>
-            <Button variant="outline" className="gap-2">
-              This Month
-              <ChevronDown className="h-4 w-4" />
-            </Button>
+           
           </div>
           <div className="grid gap-4 md:grid-cols-3">
             <MetricsCard title="Most Listened Song" value={mostListenedSong} />
