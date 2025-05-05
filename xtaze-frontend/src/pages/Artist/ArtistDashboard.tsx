@@ -72,21 +72,21 @@ const ArtistDashboard = () => {
     fetchMetrics();
   }, [user?._id]);
 
-  useEffect(() => {
-    const styles = `
-      body, * {
-        background-color: var(--background) !important; /* Dark background */
-      }
-    `;
-    const styleSheet = document.createElement("style");
-    styleSheet.type = "text/css";
-    styleSheet.innerText = styles;
-    document.head.appendChild(styleSheet);
+  // useEffect(() => {
+  //   const styles = `
+  //     body, * {
+  //       background-color: var(--background) !important; /* Dark background */
+  //     }
+  //   `;
+  //   const styleSheet = document.createElement("style");
+  //   styleSheet.type = "text/css";
+  //   styleSheet.innerText = styles;
+  //   document.head.appendChild(styleSheet);
 
-    return () => {
-      document.head.removeChild(styleSheet); // Cleanup on unmount
-    };
-  }, []);
+  //   return () => {
+  //     document.head.removeChild(styleSheet); // Cleanup on unmount
+  //   };
+  // }, []);
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -116,7 +116,7 @@ const ArtistDashboard = () => {
             <MonthlyListenersChart />
           </Card>
           <div className="mt-6 grid gap-6 md:grid-cols-2">
-            <Card className="p-6">
+            <Card className="p-6 ">
               <DemographicsChart />
             </Card>
             <Card className="p-6">

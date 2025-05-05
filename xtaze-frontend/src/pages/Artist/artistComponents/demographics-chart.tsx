@@ -83,7 +83,7 @@ export function DemographicsChart() {
 
   // Render Gender Pie Chart
   const renderGenderChart = () => (
-    <div className="w-full h-full bg-gray-800 rounded-lg p-4 shadow-md border border-gray-700">
+    <div className="w-full h-full bg-black rounded-lg p-4 shadow-md border border-black">
       <h3 className="text-lg font-semibold mb-2 text-white text-center">Gender Distribution</h3>
       {genderData.length > 0 ? (
         <div className="h-[400px] w-[full]">
@@ -120,14 +120,14 @@ export function DemographicsChart() {
           </ResponsiveContainer>
         </div>
       ) : (
-        <p className="text-gray-400 text-center">No gender data available</p>
+        <p className="text-black text-center">No gender data available</p>
       )}
     </div>
   );
 
   // Render Age Bar Chart
   const renderAgeChart = () => (
-    <div className="w-full bg-gray-800 rounded-lg p-4 shadow-md border border-gray-700">
+    <div className="w-full bg-black rounded-lg p-4 shadow-md border border-black">
       <h3 className="text-lg font-semibold mb-2 text-white text-center">Age Distribution</h3>
       {ageData.length > 0 ? (
         <div className="h-[250px] w-full">
@@ -170,14 +170,14 @@ export function DemographicsChart() {
           </ResponsiveContainer>
         </div>
       ) : (
-        <p className="text-gray-400 text-center">No age data available</p>
+        <p className="text-black text-center">No age data available</p>
       )}
     </div>
   );
 
   // Render Country Bar Chart
   const renderCountryChart = () => (
-    <div className="w-full bg-gray-800 rounded-lg p-4 shadow-md border border-gray-700">
+    <div className="w-full bg-black rounded-lg p-4 shadow-md border border-black">
       <h3 className="text-lg font-semibold mb-2 text-white text-center">Country Distribution</h3>
       {countryData.length > 0 ? (
         <div className="h-[250px] w-full">
@@ -226,7 +226,7 @@ export function DemographicsChart() {
   );
 
   return (
-    <div className="w-full p-6 bg-gray-900 rounded-lg shadow-lg">
+    <div className="w-full p-6 bg-black rounded-lg shadow-lg">
       <h2 className="text-2xl font-bold mb-6 text-white text-center">Listener Demographics</h2>
       <div className="flex flex-col gap-8">
         {renderGenderChart()}
