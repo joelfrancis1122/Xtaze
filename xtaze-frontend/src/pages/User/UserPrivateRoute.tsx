@@ -17,6 +17,7 @@ const PrivateRoute = () => {
     return <Navigate to="/" replace />;
   }
   return <Outlet />;
+
 };
 
 export default PrivateRoute;
