@@ -412,6 +412,7 @@ export const verifyCoupon = async (code: string, token?: string): Promise<any> =
 };
 export const fetchArtists = async (token: string): Promise<Artist[]> => {
   console.log("Fetching artists with token:", token);
+  
   try {
     const data = await apiCall<{ success: boolean; data: any[]; message?: string }>(
       userApi,

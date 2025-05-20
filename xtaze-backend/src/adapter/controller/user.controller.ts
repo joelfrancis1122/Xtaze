@@ -86,11 +86,11 @@ export default class UserController {
       if (response.success && response.token && response.refreshToken) {
         console.log(response.token, "emt vannilessssssss");
         res.cookie("refreshToken", response.refreshToken, {
-          httpOnly: true, // Prevent JavaScript access
-          secure: true,   // Required for HTTPS
-          sameSite: "none", // For cross-origin
-          maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-          path: "/", // 7 days
+          httpOnly: true, 
+          secure: true,   
+          sameSite: "none", 
+          maxAge: 7 * 24 * 60 * 60 * 1000, 
+          path: "/", 
         });
         res.status(HttpStatus.OK).json({
           success: true,
