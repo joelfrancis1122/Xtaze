@@ -4,18 +4,18 @@ interface ErrorResponse {
   success: boolean;
   message: string;
   statusCode?: number;
-  error?: any;
+  error?: unknown;
 }
 
-const errorMiddleware = (err: any, req: Request, res: Response, next: NextFunction) => {
-  console.error("middleware called :", err,err.message);
+const errorMiddleware = (err: unknown, req: Request, res: Response, next: NextFunction) => {
+  console.error("middleware called :", err, (err as Error).message);
 
-  const statusCode = err.statusCode || 500;
+  const statusCode = (err as any).statusCode || 500;
 
   const response: ErrorResponse = {
     success: false,
-    message: err.message || "Internal Server Error",
-    error: process.env.NODE_ENV === "development" ? err : undefined, // Send error stack only in development
+    message: (err as Error).message || "Internal Server Error",
+    error: process.env.NODE_ENV === "development" ? err : undefined, // Include error details only in development
   };
 
   res.status(statusCode).json(response);

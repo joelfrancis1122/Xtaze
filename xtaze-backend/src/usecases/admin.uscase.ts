@@ -147,8 +147,8 @@ export default class AdminUseCase {
         throw new Error("Coupon not found");
       }
       return updatedCoupon;
-    } catch (error: any) {
-      throw new Error(error.message || "Failed to update coupon");
+    } catch (error: unknown) {
+      throw new Error((error as Error).message || "Failed to update coupon");
     }
   }
 
@@ -176,7 +176,7 @@ export default class AdminUseCase {
       });
 
       return { product, price: priceObj };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error in UserUseCase.createPlan:", error);
       throw new AppError("Failed to create subscription plan", 500);
     }
@@ -193,7 +193,7 @@ export default class AdminUseCase {
         .filter((plan): plan is { product: Stripe.Product; price: Stripe.Price } => !!plan.price);
 
       return plans;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error in UserUseCase.getPlans:", error);
       throw new AppError("Failed to fetch subscription plans", 500);
     }
@@ -255,7 +255,7 @@ export default class AdminUseCase {
       return { product, price: activePrice! };
     } catch (error: any) {
       console.error("Error in UserUseCase.updatePlan:", error);
-      if (error.type === "StripeInvalidRequestError" && error.code === "resource_missing") {
+      if (error.type === "StripeInvalidRequestError" && error.code === "resource_missing") { 
         throw new AppError("Product not found", 404);
       }
       throw new AppError("Failed to update subscription plan", 500);
@@ -304,7 +304,7 @@ export default class AdminUseCase {
     try {
       const savedCoupon = await this._adminRepository.createCoupon(couponData);
       return savedCoupon;
-    } catch (error: any) {
+    } catch (error: unknown) {
       throw error;
     }
   }
@@ -398,9 +398,9 @@ export default class AdminUseCase {
 
       console.log(`Checkout Session created for ${artistName}, URL: ${session.url}`);
       return { success: true, sessionUrl: session.url! }; // Return URL for redirect
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error in artistPayout:", error);
-      throw new Error(error.message || "Failed to create payout session");
+      throw new Error((error as Error).message || "Failed to create payout session");
     }
   }
 }

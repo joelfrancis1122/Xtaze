@@ -195,9 +195,9 @@ export default class ArtistController {
       const data = await this._artistnUseCase.statsOfArtist(userId as string);
       console.log(data, "dassss")
       res.status(HttpStatus.OK).json({ data: data });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error in getSongImprovements controller:", error);
-      res.status(HttpStatus.NOT_FOUND).json({ message: error.message || "Internal server error" });
+      res.status(HttpStatus.NOT_FOUND).json({ message: (error as Error).message || "Internal server error" });
       next(error);
     }
   }
@@ -208,9 +208,9 @@ export default class ArtistController {
       const data = await this._artistnUseCase.saveCard(artistId, paymentMethodId);
       console.log(data, "kilivayil")
       res.status(HttpStatus.OK).json({ success: true });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error in getSongImprovements controller:", error);
-      res.status(HttpStatus.NOT_FOUND).json({ message: error.message || "Internal server error" });
+      res.status(HttpStatus.NOT_FOUND).json({ message: (error as Error).message || "Internal server error" });
       next(error);
     }
   }
@@ -222,9 +222,9 @@ export default class ArtistController {
       const data = await this._artistnUseCase.checkcard(userId as string);
       console.log(data, "dassssssss")
       res.status(HttpStatus.OK).json({ data: data });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error in getSongImprovements controller:", error);
-      res.status(HttpStatus.NOT_FOUND).json({ message: error.message || "Internal server error" });
+      res.status(HttpStatus.NOT_FOUND).json({ message: (error as Error).message || "Internal server error" });
       next(error);
     }
   }
@@ -238,7 +238,7 @@ export default class ArtistController {
       const data = await this._artistnUseCase.usernameUpdate(userId as string, username);
       console.log("remene", data)
       res.status(HttpStatus.OK).json({ data: data });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error in getUsers controller:", error);
       next(error);
     }
@@ -250,9 +250,9 @@ export default class ArtistController {
       const verificationStatus = await this._artistnUseCase.getVerificationStatus(artistId as string);
       console.log(verificationStatus, "verification statuss")
       res.status(HttpStatus.OK).json({ success: true, data: verificationStatus });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error in getVerificationStatusController:", error);
-      res.status(HttpStatus.NOT_FOUND).json({ success: false, message: error.message || "Failed to fetch verification status" });
+      res.status(HttpStatus.NOT_FOUND).json({ message: (error as Error).message || "failed to fetch verification status" });
     }
   }
   async requestVerification(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -276,9 +276,9 @@ export default class ArtistController {
       const verificationStatus = await this._artistnUseCase.requestVerification(artistId, imageFile);
 
       res.status(HttpStatus.OK).json({ success: true, message: "Verification request processed." });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error in requestVerification:", error);
-      res.status(HttpStatus.NOT_FOUND).json({ success: false, message: error.message || "Failed to process verification request." });
+      res.status(HttpStatus.NOT_FOUND).json({ success: false, message: (error as Error).message || "Failed to process verification request." });
     }
   }
 

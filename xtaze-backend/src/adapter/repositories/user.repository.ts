@@ -66,8 +66,8 @@ export default class UserRepository implements IUserRepository {
     try {
       const coupons = await CouponModel.find();
       return coupons
-    } catch (error: any) {
-      throw new Error("Failed to save coupon: " + error.message);
+    } catch (error: unknown) {
+      throw new Error("Failed to save coupon: " + (error as Error).message);
     }
   }
 
@@ -396,8 +396,8 @@ export default class UserRepository implements IUserRepository {
         throw new Error(`Coupon with code ${code} not found`);
       }
       return updatedCoupon.toObject() as ICoupon;
-    } catch (error: any) {
-      throw new Error(error.message || "Failed to update coupon");
+    } catch (error: unknown) {
+      throw new Error((error as Error).message || "Failed to update coupon");
     }
   }
   async checkCouponisUsed(code: string, userId: string): Promise<boolean> {
@@ -408,8 +408,8 @@ export default class UserRepository implements IUserRepository {
       }
       const usedUsers = coupon.users ?? [];
       return usedUsers.includes(userId);
-    } catch (error: any) {
-      throw new Error(error.message || "Failed to check coupon usage");
+    } catch (error: unknown) {
+      throw new Error((error as Error).message || "Failed to check coupon usage");
     }
   }
   async getAllTracks(): Promise<ITrack[] | null> {
@@ -417,8 +417,8 @@ export default class UserRepository implements IUserRepository {
 
       const track = await Track.find();
       return track
-    } catch (error: any) {
-      throw new Error(error.message || "Failed to check coupon usage");
+    } catch (error: unknown) {
+      throw new Error((error as Error).message || "Failed to check coupon usage");
     }
   }
   async becomeArtist(id: string): Promise<IUser | null> {
@@ -430,8 +430,8 @@ export default class UserRepository implements IUserRepository {
       );
 
       return updatedUser as unknown as IUser
-    } catch (error: any) {
-      throw new Error(error.message || "Failed to update user role");
+    } catch (error: unknown) {
+      throw new Error((error as Error).message || "Failed to update user role");
     }
   }
 
@@ -445,8 +445,8 @@ export default class UserRepository implements IUserRepository {
         genre: { $regex: new RegExp(`^${GenreName}$`, "i") }
       });
       return tracks;
-    } catch (error: any) {
-      throw new Error(error.message || "Failed to fetch tracks by genre");
+    } catch (error: unknown) {
+      throw new Error((error as Error).message || "Failed to fetch tracks by genre");
     }
   }
 

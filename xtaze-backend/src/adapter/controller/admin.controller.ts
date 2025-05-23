@@ -265,7 +265,7 @@ export default class AdminController {
         success: true,
         data: updatedCoupon,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       next(error);
     }
   }
@@ -275,7 +275,7 @@ export default class AdminController {
       const { code } = req.body;
       const coupon = await this._adminUseCase.verifyCoupon(code);
       res.status(HttpStatus.OK).json({ success: true, data: coupon });
-    } catch (error: any) {
+    } catch (error: unknown) {
       next(error);
     }
   }
@@ -285,7 +285,7 @@ export default class AdminController {
       const monetizationData = await this._adminUseCase.getMusicMonetization();
       console.log(monetizationData, "joellll")
       res.status(HttpStatus.OK).json({ data: monetizationData });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error in getMusicMonetization controller:", error);
       next(error);
     }
@@ -297,7 +297,7 @@ export default class AdminController {
       const data = await this._adminUseCase.artistPayout(artistName);
       console.log(data, "sasaasassa")
       res.status(HttpStatus.OK).json({ data: data });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error in payout controller:", error);
       next(error);
     }
@@ -311,7 +311,7 @@ export default class AdminController {
       const data = await this._adminUseCase.getUsersByIds(userIds);
       console.log(data, "sasaasassa")
       res.status(HttpStatus.OK).json({ data: data });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error in getUsers controller:", error);
       next(error);
     }

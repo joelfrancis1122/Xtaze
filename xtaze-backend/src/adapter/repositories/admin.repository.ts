@@ -107,11 +107,11 @@ export default class AdminRepository implements IAdminRepository {
       const newCoupon = new CouponModel(couponData);
       const savedCoupon = await newCoupon.save();
       return savedCoupon;
-    } catch (error: any) {
-      if (error.code === 11000) {
+    } catch (error: unknown) {
+      if ((error as any).code === 11000) {  
         throw new Error(`Coupon code '${couponData.code}' already exists`);
       }
-      throw new Error("Failed to save coupon: " + error.message);
+      throw new Error("Failed to save coupon: " + (error as Error).message);
     }
   }
 
@@ -119,8 +119,8 @@ export default class AdminRepository implements IAdminRepository {
     try {
       const coupons = await CouponModel.find();
       return coupons
-    } catch (error: any) {
-      throw new Error("Failed to save coupon: " + error.message);
+    } catch (error: unknown) {
+      throw new Error("Failed to save coupon: " + (error as Error).message);
     }
   }
 
@@ -128,8 +128,8 @@ export default class AdminRepository implements IAdminRepository {
     try {
       const coupons = await CouponModel.findByIdAndDelete(couponId);
       return coupons
-    } catch (error: any) {
-      throw new Error("Failed to save coupon: " + error.message);
+    } catch (error: unknown) {
+      throw new Error("Failed to save coupon: " + (error as Error).message);
     }
   }
 
@@ -147,11 +147,11 @@ export default class AdminRepository implements IAdminRepository {
         throw new Error(`Coupon with ID ${couponId} not found`);
       }
       return updatedCoupon.toObject() as ICoupon;
-    } catch (error: any) {
-      if (error.code === 11000) {
+    } catch (error: unknown) {
+      if ((error as any).code === 11000) {
         throw new Error(`Coupon code already exists`);
       }
-      throw new Error(error.message || "Failed to update coupon");
+      throw new Error((error as Error).message || "Failed to update coupon");
     }
   }
 
@@ -238,9 +238,9 @@ export default class AdminRepository implements IAdminRepository {
       );
 
       return monetizationData.sort((a, b) => b.totalPlays - a.totalPlays);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error in getMusicMonetization:", error);
-      throw new Error(error.message || "Failed to fetch music monetization data");
+      throw new Error((error as Error).message || "Failed to fetch music monetization data");
     }
   }
 }

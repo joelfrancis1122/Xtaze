@@ -108,7 +108,7 @@ export default class ArtistRepository implements IArtistRepository {
 
       console.log("Updated track:", track);
       return track;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error updating track listeners:", error);
       throw new Error("Failed to update track listeners");
     }
@@ -211,9 +211,9 @@ export default class ArtistRepository implements IArtistRepository {
         .sort((a, b) => b.totalPlays - a.totalPlays);
 
       return monetizationData;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error in statsOfArtist:", error);
-      throw new Error(error.message || "Failed to fetch artist stats");
+      throw new Error((error as Error).message || "Failed to fetch artist stats");
     }
   }
 

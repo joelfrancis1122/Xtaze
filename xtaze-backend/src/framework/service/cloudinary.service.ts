@@ -70,8 +70,8 @@ export const uploadSongToCloud = async (file: Express.Multer.File): Promise<Uplo
       genre,
     };
 
-  } catch (error: any) {
-    console.error("❌ Song upload error:", error.message || error);
+  } catch (error: unknown) {
+    console.error("❌ Song upload error:", (error as Error).message || error);
     throw new Error("Song upload failed");
   }
 };
@@ -103,8 +103,8 @@ export const uploadImageToCloud = async (file: Express.Multer.File): Promise<Upl
         }
       ).end(file.buffer);
     });
-  } catch (error: any) {
-    console.error("❌ Image upload error:", error.message || error);
+  } catch (error: unknown) {
+    console.error("❌ Image upload error:", (error as Error).message || error);
     throw new Error("Image upload failed");
   }
 };
@@ -137,8 +137,8 @@ export const uploadProfileCloud = async (file: Express.Multer.File): Promise<Upl
         }
       ).end(file.buffer);
     });
-  } catch (error: any) {
-    console.error("❌ Profile upload error:", error.message || error);
+  } catch (error: unknown) {
+    console.error("❌ Profile upload error:", (error as Error).message || error);
     throw new Error("Profile upload failed");
   }
 };
@@ -170,8 +170,8 @@ export const uploadIdproofCloud = async (file: Express.Multer.File): Promise<Upl
         }
       ).end(file.buffer);
     });
-  } catch (error: any) {
-    console.error("❌ Idproof upload error:", error.message || error);
+  } catch (error: unknown) {
+    console.error("❌ Idproof upload error:", (error as Error).message || error);
     throw new Error("Idproof upload failed");
   }
 };

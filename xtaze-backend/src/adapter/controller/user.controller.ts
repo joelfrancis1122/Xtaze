@@ -429,7 +429,7 @@ export default class UserController {
   async checkCouponStatus(): Promise<void> {
     try {
       await this._userUseCase.checkAndUpdateCouponStatus();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("UserController: Error during coupon status check:", error);
       throw error;
     }
@@ -437,7 +437,7 @@ export default class UserController {
   async resetPaymentStatus(): Promise<void> {
     try {
       await this._userUseCase.resetPaymentStatus();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("UserController: Error during coupon status check:", error);
       throw error;
     }
@@ -447,7 +447,7 @@ export default class UserController {
     try {
       const history = await this._userUseCase.getSubscriptionHistoryFromStripe();
       res.status(HttpStatus.OK).json({ data: history });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error in getSubscriptionHistory controller:", error);
       next(error);
     }
@@ -465,9 +465,9 @@ export default class UserController {
       await this._userUseCase.confirmPayment(req.body, signature);
 
       res.status(HttpStatus.OK).json({ received: true });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Webhook error:", error);
-      res.status(HttpStatus.BAD_REQUEST).send(`Webhook Error: ${error.message}`);
+      res.status(HttpStatus.BAD_REQUEST).send(`Webhook Error: ${(error as Error).message}`);
       next(error);
     }
   }
@@ -475,7 +475,7 @@ export default class UserController {
     try {
       const tracks = await this._userUseCase.getAllTracks();
       res.status(HttpStatus.OK).json({ data: tracks });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error in getSubscriptionHistory controller:", error);
       next(error);
     }
@@ -486,7 +486,7 @@ export default class UserController {
       const { GenreName } = req.query
       const tracks = await this._userUseCase.fetchGenreTracks(GenreName as string);
       res.status(HttpStatus.OK).json({ data: tracks });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error in fetchGenreTracks controller:", error);
       next(error);
     }
@@ -498,7 +498,7 @@ export default class UserController {
 
       const updated = await this._userUseCase.becomeArtist(id as string);
       res.status(HttpStatus.OK).json({ data: updated });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error in updated controller:", error);
       next(error);
     }
@@ -511,7 +511,7 @@ export default class UserController {
 
       const data = await this._userUseCase.getArtistByName(username as string);
       res.status(HttpStatus.OK).json({ data: data });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error in getUsers controller:", error);
       next(error);
     }
@@ -525,7 +525,7 @@ export default class UserController {
       const data = await this._userUseCase.usernameUpdate(userId as string, username);
       console.log("remene", data)
       res.status(HttpStatus.OK).json({ data: data });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error in getUsers controller:", error);
       next(error);
     }

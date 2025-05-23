@@ -25,9 +25,9 @@ export class DeezerController {
       } else {
         res.json({ songs,user:userData });
       }
-    } catch (error: any) {
-      console.error("Error fetching Deezer songs:", error.message);
-      res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ error: "Failed to fetch songs from Deezer", details: error.message });
+    } catch (error: unknown) {
+      console.error("Error fetching Deezer songs:", (error as Error).message);
+      res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ error: "Failed to fetch songs from Deezer", details: (error as Error).message });
     }
   }
 }
