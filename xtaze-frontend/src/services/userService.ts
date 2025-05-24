@@ -461,6 +461,8 @@ export const fetchUserByUsername = async (username: string, token: string): Prom
   return data.data;
 };
 
+
+
 export const fetchAllArtistsVerification = async (token:string): Promise<any> => {
   try {
     const response = await apiCall<{ data: any }>(
