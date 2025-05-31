@@ -472,6 +472,7 @@ export const fetchAllArtistsVerification = async (token:string): Promise<any> =>
       undefined,
       token
     );
+    
     console.log(response,"ossss")
     return response.data
   } catch (error: any) {
