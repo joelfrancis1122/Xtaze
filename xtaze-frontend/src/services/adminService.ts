@@ -9,6 +9,7 @@ import { Coupon } from "../pages/User/types/ICoupon";
 import {  SubscriptionPlan } from "../pages/User/types/IStripe";
 import { MusicMonetization } from "../pages/User/types/IMonetization";
 import { ListenerUser } from "../pages/User/types/IListenerUser";
+import { HTTP_METHODS } from "../constants/httpMethods";
 
 
 const apiCall = async <T>(
@@ -38,7 +39,7 @@ const apiCall = async <T>(
 export const loginAdmin = async (email: string,password: string,dispatch: ReturnType<typeof useDispatch>): Promise<void> => {
   const data = await apiCall<{ success: boolean; token: string; admin: any; message?: string }>(
     adminApi,
-    "post",
+    HTTP_METHODS.POST,
     "/login",
     { email, password }
   );
@@ -53,7 +54,7 @@ export const fetchArtists = async (token: string): Promise<Artist[]> => {
   try {
     const data = await apiCall<{ success: boolean; data: any[]; message?: string }>(
       adminApi,
-      "get",
+      HTTP_METHODS.GET,
       "/listUsers",
       undefined,
       token
@@ -78,7 +79,7 @@ export const fetchArtistTracks = async (userId: string, token: string): Promise<
   try {
     const data = await apiCall<{ success: boolean; tracks?: Track[]; message?: string }>(
       artistApi,
-      "get",
+      HTTP_METHODS.GET,
       `/getAllTracksArtist?userId=${userId}`,
       undefined,
       token
@@ -98,7 +99,7 @@ export const toggleBlockArtist = async (id: string,currentStatus: boolean,token:
   const newStatus = !currentStatus;
   const data = await apiCall<{ success: boolean; message?: string }>(
     adminApi,
-    "patch",
+    HTTP_METHODS.PATCH,
     `/toggleBlock/${id}`,
     { status: newStatus },
     token
@@ -118,7 +119,7 @@ export const fetchGenres = async (token: string): Promise<IGenre[]> => {
 export const addGenre = async (name: string, token: string): Promise<IGenre> => {
   const data = await apiCall<{ data: IGenre; message: string }>(
     adminApi,
-    "post",
+    HTTP_METHODS.POST,
     "/genreCreate",
     { name },
     token
@@ -127,13 +128,13 @@ export const addGenre = async (name: string, token: string): Promise<IGenre> => 
 };
 
 export const toggleBlockGenre = async (id: string, token: string): Promise<void> => {
-  await apiCall<{ success: boolean }>(adminApi, "put", `/genreToggleBlockUnblock/${id}`, {}, token);
+  await apiCall<{ success: boolean }>(adminApi, HTTP_METHODS.PUT, `/genreToggleBlockUnblock/${id}`, {}, token);
 };
 
 export const updateGenre = async (id: string, name: string, token: string): Promise<{ success: boolean; message: string }> => {
   const data = await apiCall<{ data: { success: boolean; message: string } }>(
     adminApi,
-    "put",
+    HTTP_METHODS.PUT,
     `/genreUpdate/${id}`,
     { name },
     token
@@ -142,7 +143,7 @@ export const updateGenre = async (id: string, name: string, token: string): Prom
 };
 
 export const fetchBanners = async (token: string): Promise<IBanner[]> => {
-  const data = await apiCall<{ data: IBanner[] }>(adminApi, "get", "/banners/all", undefined, token);
+  const data = await apiCall<{ data: IBanner[] }>(adminApi, HTTP_METHODS.GET, "/banners/all", undefined, token);
   return data.data;
 };
 
@@ -158,7 +159,7 @@ export const createBanner = async (
   formData.append("isActive", String(banner.isActive));
   formData.append("createdBy", banner.createdBy);
   console.log(formData, "visvajith")
-  const data = await apiCall<{ data: IBanner }>(adminApi, "post", "/banners", formData, token);
+  const data = await apiCall<{ data: IBanner }>(adminApi, HTTP_METHODS.POST, "/banners", formData, token);
   return data.data;
 };
 
@@ -188,7 +189,7 @@ export const fetchUserDetails = async (userIds: string[], token: string): Promis
   try {
     const data = await apiCall<{ success: boolean; data: ListenerUser[]; message?: string }>(
       adminApi,
-      "post",
+      HTTP_METHODS.POST,
       "/getUsersByIds",
       { userIds },
       token
@@ -205,7 +206,7 @@ export const fetchCoupons = async (): Promise<any> => {
   try {
     const data = await apiCall<{ success: boolean; data: string[]; message?: string }>(
       adminApi,
-      "get",
+      HTTP_METHODS.GET,
       "/coupons",
     );
     console.log("Fetch user details response:", data);
@@ -223,7 +224,7 @@ export const fetchSubscriptionHistory = async (token?: string): Promise<any> => 
   try {
     const data = await apiCall<{ data: any }>(
       adminApi,
-      "get",
+      HTTP_METHODS.GET,
       "/stripe/subscription-history",
       undefined,
       token
@@ -243,7 +244,7 @@ export const createCoupon = async (couponData: { code: string; discountAmount: n
   try {
     const data = await apiCall<{ result: Coupon }>(
       adminApi,
-      "post",
+      HTTP_METHODS.POST,
       "/coupons",
       { ...couponData, uses: 0 },
       token
@@ -261,7 +262,7 @@ export const updateCoupon = async (id: string, couponData: { code: string; disco
   try {
     const data = await apiCall<{ data: Coupon }>(
       adminApi,
-      "put",
+      HTTP_METHODS.PUT,
       `/coupons?id=${id}`,
       couponData,
       token
@@ -279,7 +280,7 @@ export const deleteCoupon = async (id: string, token?: string): Promise<void> =>
   try {
     await apiCall<{ success: boolean }>(
       adminApi,
-      "delete",
+      HTTP_METHODS.DELETE,
       `/coupons?id=${id}`,
       undefined,
       token
@@ -296,7 +297,7 @@ export const fetchMonetizationData = async (token?: string): Promise<MusicMoneti
   try {
     const data = await apiCall<{ data: MusicMonetization[] }>(
       adminApi,
-      "get",
+      HTTP_METHODS.GET,
       "/music/monetization",
       undefined,
       token
@@ -314,7 +315,7 @@ export const initiateArtistPayout = async (artistName: string, token?: string): 
   try {
     const data = await apiCall<{ data: { sessionUrl: string } }>(
       adminApi,
-      "post",
+      HTTP_METHODS.POST,
       "/artistPayout",
       { artistName },
       token

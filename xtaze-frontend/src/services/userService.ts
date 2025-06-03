@@ -6,6 +6,7 @@ import { Playlist } from "../pages/User/types/IPlaylist";
 import { IBanner } from "../pages/User/types/IBanner";
 import { Artist } from "../pages/User/types/IArtist";
 import { UserSignupData } from "../pages/User/types/IUser";
+import { HTTP_METHODS } from "../constants/httpMethods";
 
 const addRefreshInterceptor = (apiInstance: any) => {
   apiInstance.interceptors.response.use(
@@ -87,19 +88,19 @@ const apiCall = async <T>(
 
 // Check Username Availability
 export const checkUsername = async (username: string): Promise<boolean> => {
-  const data = await apiCall<{ available: boolean }>(userApi, "post", "/checkUsername", { userName: username });
+  const data = await apiCall<{ available: boolean }>(userApi, HTTP_METHODS.POST, "/checkUsername", { userName: username });
   return data.available;
 };
 
 // Send OTP
 export const sendOtp = async (email: string): Promise<void> => {
-  const data = await apiCall<{ success: boolean; message?: string }>(userApi, "post", "/send-otp", { email });
+  const data = await apiCall<{ success: boolean; message?: string }>(userApi, HTTP_METHODS.POST, "/send-otp", { email });
   if (!data.success) throw new Error(data.message || "Failed to send OTP");
 };
 
 // Verify OTP
 export const verifyOtp = async (otp: string): Promise<void> => {
-  const data = await apiCall<{ success: boolean; message?: string }>(userApi, "post", "/verify-otp", { otp });
+  const data = await apiCall<{ success: boolean; message?: string }>(userApi, HTTP_METHODS.POST, "/verify-otp", { otp });
   if (!data.success) throw new Error(data.message || "Failed to verify OTP");
 };
 
@@ -107,7 +108,7 @@ export const verifyOtp = async (otp: string): Promise<void> => {
 export const registerUser = async (signupData: {username: string;country: string;gender: string;year: string;phone: string;email: string;password?: string;confirmPassword?: string;}): Promise<void> => {
   const data = await apiCall<{ success: boolean; token?: string; user?: any; message?: string }>(
     userApi,
-    "post",
+    HTTP_METHODS.POST,
     "/register",
     signupData
   );
@@ -116,7 +117,7 @@ export const registerUser = async (signupData: {username: string;country: string
 };
 
 export const loginUser = async (email: string,password: string,dispatch: ReturnType<typeof useDispatch>): Promise<void> => {
-  const data = await apiCall<{ token: string; user: any }>(userApi, "post", "/login", { email, password });
+  const data = await apiCall<{ token: string; user: any }>(userApi, HTTP_METHODS.POST, "/login", { email, password });
   console.log("Login response:", data);
   localStorage.setItem("token", data.token);
   dispatch(saveSignupData(data.user));
@@ -125,7 +126,7 @@ export const loginUser = async (email: string,password: string,dispatch: ReturnT
 export const googleLogin = async (idToken: string,dispatch: ReturnType<typeof useDispatch>): Promise<void> => {
   const data = await apiCall<{ success: boolean; token: string; user: any; message?: string }>(
     userApi,
-    "post",
+    HTTP_METHODS.POST,
     "/google-login",
     { token: idToken }
   );
@@ -143,7 +144,7 @@ export const fetchTracks = async (userId: string,token: string,isPremium: string
   const instance = isPremium !== "Free" ? providerApi : deezerApi;
   const url = isPremium !== "Free" ? `/getAllTracks?userId=${userId}` : `/songs/deezer?userId=${userId}`;
   console.log("Fetching tracks with:", { url, token, isPremium });
-  const data = await apiCall<{ tracks?: any[]; songs?: any[]; user?: any }>(instance, "get", url, undefined, token);
+  const data = await apiCall<{ tracks?: any[]; songs?: any[]; user?: any }>(instance,  HTTP_METHODS.GET, url, undefined, token);
   const tracks = (isPremium !== "Free" ? data.tracks : data.songs)?.map((track: any) => ({
     _id: track._id || track.fileUrl,
     title: track.title,
@@ -165,7 +166,7 @@ export const fetchTracks = async (userId: string,token: string,isPremium: string
 export const fetchAllTrack = async (): Promise<Track[]> => {
   const data = await apiCall<{ success: boolean; data: Track[] }>(
     userApi,
-    "get",
+    HTTP_METHODS.GET,
     `/fetchAllTrack`,
   );
   console.log(data, "liliiiii")
@@ -176,7 +177,7 @@ export const fetchGenreTracks = async (genre: string): Promise<Track[]> => {
   console.log(genre, "alhildas")
   const data = await apiCall<{ success: boolean; data: Track[] }>(
     userApi,
-    "get",
+    HTTP_METHODS.GET,
     `/fetchGenreTracks?GenreName=${genre}`,
   );
   console.log(data, "ambu")
@@ -187,7 +188,7 @@ export const fetchGenreTracks = async (genre: string): Promise<Track[]> => {
 export const fetchLikedSongs = async (userId: string, token: string, songIds: string[]): Promise<Track[]> => {
   const data = await apiCall<{ success: boolean; tracks: Track[] }>(
     userApi,
-    "post",
+    HTTP_METHODS.POST,
     `/getliked?userId=${userId}`,
     { songIds },
     token
@@ -198,14 +199,14 @@ export const fetchLikedSongs = async (userId: string, token: string, songIds: st
 
 export const incrementListeners = async (trackId: string, token: string,id:string): Promise<void> => {
   console.log("Incrementing listeners:", { trackId, token,id });
-  const data = await apiCall<{ success: boolean }>(artistApi, "post", "/incrementListeners", { trackId,id }, token);
+  const data = await apiCall<{ success: boolean }>(artistApi, HTTP_METHODS.POST, "/incrementListeners", { trackId,id }, token);
   if (!data.success) throw new Error("Failed to increment listeners");
 };
 
 export const toggleLike = async (userId: string, trackId: string, token: string): Promise<any> => {
   const data = await apiCall<{ success: boolean; user?: any }>(
     userApi,
-    "post",
+    HTTP_METHODS.POST,
     `/toggle-like?userId=${userId}`,
     { trackId },
     token
@@ -219,7 +220,7 @@ export const uploadProfileImage = async (userId: string, base64Image: string, to
   const formData = new FormData();
   formData.append("profileImage", blob, "cropped-image.jpg");
   formData.append("userId", userId);
-  const data = await apiCall<{ success: boolean; user?: any }>(userApi, "post", "/uploadProfilepic", formData, token);
+  const data = await apiCall<{ success: boolean; user?: any }>(userApi, HTTP_METHODS.POST, "/uploadProfilepic", formData, token);
   if (!data.success || !data.user) throw new Error("Failed to upload profile picture");
   return data.user;
 };
@@ -227,7 +228,7 @@ export const uploadProfileImage = async (userId: string, base64Image: string, to
 export const forgotPassword = async (email: string): Promise<void> => {
   const data = await apiCall<{ success: boolean; message?: string }>(
     userApi,
-    "post",
+    HTTP_METHODS.POST,
     "/forgotPassword",
     { email }
   );
@@ -236,7 +237,7 @@ export const forgotPassword = async (email: string): Promise<void> => {
 export const resetPassword = async (token: string, formData: string): Promise<void> => {
   const data = await apiCall<{ success: boolean; message?: string }>(
     userApi,
-    "post",
+    HTTP_METHODS.POST,
     "/resetPassword",
     { token, formData }
   );
@@ -246,7 +247,7 @@ export const resetPassword = async (token: string, formData: string): Promise<vo
 export const createPlaylists = async (userId: string, playlistData: Partial<Playlist>): Promise<Playlist> => {
   const data = await apiCall<{ success: boolean; data: Playlist; message?: string }>(
     userApi,
-    "post",
+    HTTP_METHODS.POST,
     "/createPlaylist",
     { userId, playlist: playlistData }
   );
@@ -258,7 +259,7 @@ export const getMyplaylist = async (userId: string): Promise<Playlist[]> => {
   console.log(userId, "odi odi o ds");
   const data = await apiCall<{ success: boolean; message?: string; data: Playlist[] }>(
     userApi,
-    "get",
+    HTTP_METHODS.GET,
     `/getPlaylist?userId=${userId}`
   );
   if (!data.success) throw new Error(data.message || "Failed to get all playlists");
@@ -271,7 +272,7 @@ export const fetchPlaylistTracks = async (id: string, page: number = 1, limit: n
   console.log(id, "Fetching tracks with pagination", { page, limit });
   const data = await apiCall<{ success: boolean; message?: string; data: { tracks: Track[]; total: number } }>(
     userApi,
-    "get",
+    HTTP_METHODS.GET,
     `/getTracksInPlaylist?id=${id}&page=${page}&limit=${limit}`,
 
   );
@@ -282,7 +283,7 @@ export const fetchPlaylistTracks = async (id: string, page: number = 1, limit: n
 export const fetchBanners = async (): Promise<IBanner[]> => {
   const data = await apiCall<{ success: boolean; message?: string; data: IBanner[] }>(
     userApi,
-    "get",
+    HTTP_METHODS.GET,
     `/banners`
   );
   console.log(data, "ithan sanam");
@@ -294,7 +295,7 @@ export const fetchBanners = async (): Promise<IBanner[]> => {
 export const addTrackToPlaylist = async (userId: string,playlistId: string,trackId: string,token: string): Promise<void> => {
   const data = await apiCall<{ success: boolean; message?: string }>(
     userApi,
-    "post",
+    HTTP_METHODS.POST,
     "/addToPlaylist",
     { userId, playlistId, trackId },
     token
@@ -305,7 +306,7 @@ export const addTrackToPlaylist = async (userId: string,playlistId: string,track
 export const deletePlaylist = async (id: string,): Promise<void> => {
   const data = await apiCall<{ success: boolean; message?: string }>(
     userApi,
-    "post",
+    HTTP_METHODS.POST,
     "/deletePlaylist",
     { id },
   );
@@ -316,7 +317,7 @@ export const deletePlaylist = async (id: string,): Promise<void> => {
 export const updatePlaylistName = async (id: string, playlistName: string): Promise<void> => {
   const data = await apiCall<{ success: boolean; message?: string }>(
     userApi,
-    "put",
+    HTTP_METHODS.PUT,
     "/updateNamePlaylist",
     { id, playlistName },
   );
@@ -326,7 +327,7 @@ export const updatePlaylistName = async (id: string, playlistName: string): Prom
 export const becomeArtist = async (id: string,): Promise<void> => {
   const data = await apiCall<{ success: boolean; message?: string, data:any }>(
     userApi,
-    "put",
+    HTTP_METHODS.PUT,
     "/becomeArtist",
     { id},
   );
@@ -340,7 +341,7 @@ export const updatePlaylistImage = async (id: string, file: File): Promise<any> 
 
   const data = await apiCall<{ success: boolean; updated?: string; message?: string }>(
     userApi,
-    "put",
+    HTTP_METHODS.PUT,
     "/updateImagePlaylist",
     formData,
   );
@@ -353,7 +354,7 @@ export const updatePlaylistImage = async (id: string, file: File): Promise<any> 
 export const initiateCheckout = async (userId: string,priceId: string,code: string): Promise<string> => {
   const data = await apiCall<{ sessionId: string }>(
     userApi,
-    "post",
+    HTTP_METHODS.POST,
     "/checkOut",
     { userId, priceId, code }
   );
@@ -364,7 +365,7 @@ export const initiateCheckout = async (userId: string,priceId: string,code: stri
 export const fetchPlans = async (): Promise<string> => {
   const data = await apiCall<{ sessionId: string }>(
     adminApi,
-    "get",
+    HTTP_METHODS.GET,
     "/stripe/plans",
   );
   console.log("Checkout response:", data);
@@ -374,8 +375,8 @@ export const fetchPlans = async (): Promise<string> => {
 export const fetchPricingPlans = async (): Promise<any[]> => {
   try {
     const data = await apiCall<{ data: any[] }>(
-      adminApi, 
-      "get",
+      adminApi,
+      HTTP_METHODS.GET,
       "/stripe/plans",
       undefined,
     );
@@ -398,7 +399,7 @@ export const verifyCoupon = async (code: string, token?: string): Promise<any> =
   try {
     const data = await apiCall<{ data: any }>(
       adminApi,
-      "post",
+      HTTP_METHODS.POST,
       "/coupons/verify",
       { code },
       token
@@ -416,7 +417,7 @@ export const fetchArtists = async (token: string): Promise<Artist[]> => {
   try {
     const data = await apiCall<{ success: boolean; data: any[]; message?: string }>(
       userApi,
-      "get",
+      HTTP_METHODS.GET,
       "/listArtists",
       undefined,
       token
@@ -440,7 +441,7 @@ export const fetchArtistTracks = async (artistId: string, token: string): Promis
   console.log("Fetching artist tracks with:", { artistId, token });
   const data = await apiCall<{ success: boolean; tracks: any[]; message?: string }>(
     userApi,
-    "get",
+    HTTP_METHODS.GET,
     `/getAllTracksArtist?userId=${artistId}`,
     undefined,
     token
@@ -452,7 +453,7 @@ export const fetchUserByUsername = async (username: string, token: string): Prom
   console.log("testing complete",username)
   const data = await apiCall<{ success: boolean; tracks: any[]; data?: string }>(
     userApi,
-    "get",
+    HTTP_METHODS.GET,
     `/username?userId=${username}`,
     undefined,
     token
@@ -466,7 +467,7 @@ export const fetchAllArtistsVerification = async (token:string): Promise<any> =>
   try {
     const response = await apiCall<{ data: any }>(
       userApi,
-      "get",
+      HTTP_METHODS.GET,
       `/fetchAllArtistsVerification`,
       undefined,
       token
@@ -482,7 +483,7 @@ export const updateUsername = async (id: string, name: string, token: string): P
   try {
     const response = await apiCall<{ data: UserSignupData }>(
       userApi,
-      "put",
+      HTTP_METHODS.PUT,
       `/usersName?id=${id}`,
       { username: name },
       token

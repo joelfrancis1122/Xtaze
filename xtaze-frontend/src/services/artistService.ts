@@ -4,6 +4,7 @@ import { saveArtistData } from "../redux/artistSlice";
 import { IGenre } from "../pages/User/types/IGenre";
 import { VerificationStatus } from "../pages/User/types/IverficationStatus";
 import { ArtistS } from "../pages/User/types/IArtist";
+import { HTTP_METHODS } from "../constants/httpMethods";
 
 const addRefreshInterceptor = (apiInstance: any) => {
   apiInstance.interceptors.response.use(
@@ -83,7 +84,7 @@ const apiCall = async <T>(
 export const loginArtist = async (email: string,password: string,dispatch: ReturnType<typeof useDispatch>): Promise<void> => {
   const data = await apiCall<{ success: boolean; token: string; artist: any; message?: string }>(
     artistApi,
-    "post",
+    HTTP_METHODS.POST,
     "/login",
     { email, password }
   );
@@ -97,7 +98,7 @@ export const fetchArtistTracks = async (artistId: string, token: string): Promis
   console.log("Fetching artist tracks with:", { artistId, token });
   const data = await apiCall<{ success: boolean; tracks: any[]; message?: string }>(
     artistApi,
-    "get",
+    HTTP_METHODS.GET,
     `/getAllTracksArtist?userId=${artistId}`,
     undefined,
     token
@@ -110,7 +111,7 @@ export const fetchActiveGenres = async (artistId: string, token: string): Promis
   console.log("Fetching active genres with:", { artistId, token });
   const data = await apiCall<{ success: boolean; data: IGenre[]; artist: any; message?: string }>(
     artistApi,
-    "get",
+    HTTP_METHODS.GET,
     `/listActiveGenres?artistId=${artistId}`,
     undefined,
     token
@@ -141,7 +142,7 @@ export const uploadSong = async (
 
   const data = await apiCall<{ success: boolean; message?: string }>(
     artistApi,
-    "post",
+    HTTP_METHODS.POST,
     "/upload",
     formData,
     token
@@ -159,7 +160,7 @@ export const uploadProfileImage = async (artistId: string, base64Image: string, 
 
   const data = await apiCall<{ success: boolean; user?: any; message?: string }>(
     userApi,
-    "post",
+    HTTP_METHODS.POST,
     "/uploadProfilepic",
     formData,
     token
@@ -176,7 +177,7 @@ export const updateArtistBanner = async (artistId: string, base64Banner: string,
 
   const data = await apiCall<{ success: boolean; user?: any; message?: string }>(
     userApi,
-    "post",
+    HTTP_METHODS.POST,
     "/updateBanner",
     formData,
     token
@@ -189,7 +190,7 @@ export const updateArtistBio = async (artistId: string, bio: string, token: stri
   console.log("Updating artist bio with:", { artistId, token });
   const data = await apiCall<{ success: boolean; user?: any; message?: string }>(
     userApi,
-    "put",
+    HTTP_METHODS.PUT,
     "/updateBio",
     { userId: artistId, bio },
     token
@@ -202,7 +203,7 @@ export const checkCardStatus = async (artistId: string, token: string): Promise<
   console.log("Checking card status with:", { artistId, token });
   const data = await apiCall<{ data: { stripePaymentMethodId: string } }>(
     artistApi,
-    "get",
+    HTTP_METHODS.GET,
     `/checkcard?userId=${artistId}`,
     undefined,
     token
@@ -215,7 +216,7 @@ export const saveCard = async (artistId: string, paymentMethodId: string, token:
   console.log("Saving card with:", { artistId, paymentMethodId, token });
   const data = await apiCall<{ success: boolean; message?: string }>(
     artistApi,
-    "post",
+    HTTP_METHODS.POST,
     "/saveCard",
     { artistId, paymentMethodId },
     token
