@@ -23,6 +23,7 @@ import ArtistPage from "../pages/User/ArtistsPage";
 import ArtistDetailsPage from "../pages/User/ArtistDetailsPage";
 import UserPrivateRoute from "../pages/User/UserPrivateRoute";
 import Home from "../pages/User/HomePage";
+import { USER_ROUTE_PREFIX } from "../constants/routeConstants";
 
 export const UserRoutes = () => (
     <>
@@ -33,24 +34,24 @@ export const UserRoutes = () => (
         <Route path="/reset-password" element={<ResetPassword />} />
 
         <Route element={<UserPrivateRoute />}>
-            <Route path="/home" element={<Home />} />
-            <Route path="/plans" element={<SubscriptionPlans />} />
-            <Route path="/profile" element={<ProfilePage />} />
-            <Route path="/success" element={<SuccessPage />} />
-            <Route path="/cancel" element={<CancelPage />} />
-            <Route path="/playlist/:userId" element={<PlaylistsPage />} />
-            <Route path="/playlist/:userId/:id" element={<PlaylistPageView />} />
-            <Route path="/likedsongs" element={<LikedSongsPage />} />
-            <Route path="/uploadTrack" element={<UploadMusicPage />} />
-            <Route path="/rough" element={<WavyBackgroundDemo />} />
-            <Route path="/videos" element={<YoutubeMusic />} />
-            <Route path="/radio" element={<RadioPage />} />
-            <Route path="/equalizer" element={<EqualizerPage />} />
-            <Route path="/recentSongs" element={<RecentSongsPage />} />
-            <Route path="/explore" element={<ExplorePage />} />
-            <Route path="/genre/:genre" element={<GenrePage />} />
-            <Route path="/artists" element={<ArtistPage />} />
-            <Route path="/artists/:artistId" element={<ArtistDetailsPage />} />
+            <Route path={`${USER_ROUTE_PREFIX}/home`} element={<Home />} />
+            <Route path={`${USER_ROUTE_PREFIX}/plans`} element={<SubscriptionPlans />} />
+            <Route path={`${USER_ROUTE_PREFIX}/profile`} element={<ProfilePage />} />
+            <Route path={`${USER_ROUTE_PREFIX}/success`} element={<SuccessPage />} />
+            <Route path={`${USER_ROUTE_PREFIX}/cancel`} element={<CancelPage />} />
+            <Route path={`${USER_ROUTE_PREFIX}/playlist/:userId`} element={<PlaylistsPage />} />
+            <Route path={`${USER_ROUTE_PREFIX}/playlist/:userId/:id`} element={<PlaylistPageView />} />
+            <Route path={`${USER_ROUTE_PREFIX}/likedsongs`} element={<LikedSongsPage />} />
+            <Route path={`${USER_ROUTE_PREFIX}/uploadTrack`} element={<UploadMusicPage />} />
+            <Route path={`${USER_ROUTE_PREFIX}/rough`} element={<WavyBackgroundDemo />} />
+            <Route path={`${USER_ROUTE_PREFIX}/videos`} element={<YoutubeMusic />} />
+            <Route path={`${USER_ROUTE_PREFIX}/radio`} element={<RadioPage />} />
+            <Route path={`${USER_ROUTE_PREFIX}/equalizer`} element={<EqualizerPage />} />
+            <Route path={`${USER_ROUTE_PREFIX}/recentSongs`} element={<RecentSongsPage />} />
+            <Route path={`${USER_ROUTE_PREFIX}/explore`} element={<ExplorePage />} />
+            <Route path={`${USER_ROUTE_PREFIX}/genre/:genre`} element={<GenrePage />} />
+            <Route path={`${USER_ROUTE_PREFIX}/artists`} element={<ArtistPage />} />
+            <Route path={`${USER_ROUTE_PREFIX}/artists/:artistId`} element={<ArtistDetailsPage />} />
         </Route>
 
     </>

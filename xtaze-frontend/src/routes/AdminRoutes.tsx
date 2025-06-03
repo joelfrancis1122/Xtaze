@@ -12,23 +12,23 @@ import AdminPayoutCancelPage from "../pages/Admin/AdminCancelPage";
 import AdminAnalytics from "../pages/Admin/AdminAnalytics";
 import AdminProtectedRoute from "../pages/Admin/AdminPrivateRoute";
 import AdminDashboard from "../pages/Admin/DashboardPage";
+import { ADMIN_ROUTE_PREFIX } from "../constants/routeConstants";
 
 export const AdminRoutes = () => (
     <>
         <Route path="/admin" element={<AdminLogin />} />
         <Route element={<AdminProtectedRoute />}>
-            <Route path="/admin/dashboard" element={<AdminDashboard />} />
-
-            <Route path="/admin/genre" element={<GenreManagement />} />
-            <Route path="/admin/artists" element={<ArtistList />} />
-            <Route path="/admin/banner" element={<AdminBannerManagement />} />
-            <Route path="/admin/coupons" element={<AdminCouponPage />} />
-            <Route path="/admin/subscriptions" element={<AdminSubscriptionPage />} />
-            <Route path="/admin/monetization" element={<AdminMusicMonetizationPage />} />
-            <Route path="/admin/history" element={<AdminSubscriptionHistoryPage />} />
-            <Route path="/admin/payoutSuccess" element={<AdminPayoutSuccessPage />} />
-            <Route path="/admin/payoutCancel" element={<AdminPayoutCancelPage />} />
-            <Route path="/admin/analytics" element={<AdminAnalytics />} />
+            <Route path={`${ADMIN_ROUTE_PREFIX}/dashboard`} element={<AdminDashboard />} />
+            <Route path={`${ADMIN_ROUTE_PREFIX}/genre`} element={<GenreManagement />} />
+            <Route path={`${ADMIN_ROUTE_PREFIX}/artists`} element={<ArtistList />} />
+            <Route path={`${ADMIN_ROUTE_PREFIX}/banner`} element={<AdminBannerManagement />} />
+            <Route path={`${ADMIN_ROUTE_PREFIX}/coupons`} element={<AdminCouponPage />} />
+            <Route path={`${ADMIN_ROUTE_PREFIX}/subscriptions`} element={<AdminSubscriptionPage />} />
+            <Route path={`${ADMIN_ROUTE_PREFIX}/monetization`} element={<AdminMusicMonetizationPage />} />
+            <Route path={`${ADMIN_ROUTE_PREFIX}/history`} element={<AdminSubscriptionHistoryPage />} />
+            <Route path={`${ADMIN_ROUTE_PREFIX}/payoutSuccess`} element={<AdminPayoutSuccessPage />} />
+            <Route path={`${ADMIN_ROUTE_PREFIX}/payoutCancel`} element={<AdminPayoutCancelPage />} />
+            <Route path={`${ADMIN_ROUTE_PREFIX}/analytics`} element={<AdminAnalytics />} />
 
         </Route>
 

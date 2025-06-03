@@ -6,17 +6,18 @@ import { ArtistSongUpdatePage } from "../pages/Artist/ArtistTrackUpdate";
 import ArtistProtectRoute from "../pages/Artist/ArtistPrivateRoute";
 import ArtistDashboard from "../pages/Artist/ArtistDashboard";
 import ArtistUploadTracks from "../pages/Artist/ArtistUploadTracks";
+import { ARTIST_ROUTE_PREFIX } from "../constants/routeConstants";
 
 export const ArtistRoutes = () => (
     <>
 
-        <Route path="/artist" element={<ArtistLogin />} />
+        <Route path={`${ARTIST_ROUTE_PREFIX}`} element={<ArtistLogin />} />
         <Route element={<ArtistProtectRoute />}>
-            <Route path="/artist/releases" element={<ArtistUploadTracks />} />
-            <Route path="/artist/dashboard" element={<ArtistDashboard />} />
-            <Route path="/artist/profile" element={<ArtistProfile />} />
-            <Route path="/artist/monetization" element={<ArtistSongImprovementsPage />} />
-            <Route path="/artist/analytics" element={<ArtistSongUpdatePage />} />
+            <Route path={`${ARTIST_ROUTE_PREFIX}/releases`} element={<ArtistUploadTracks />} />
+            <Route path={`${ARTIST_ROUTE_PREFIX}/dashboard`} element={<ArtistDashboard />} />
+            <Route path={`${ARTIST_ROUTE_PREFIX}/profile`} element={<ArtistProfile />} />
+            <Route path={`${ARTIST_ROUTE_PREFIX}/monetization`} element={<ArtistSongImprovementsPage />} />
+            <Route path={`${ARTIST_ROUTE_PREFIX}/analytics`} element={<ArtistSongUpdatePage />} />
         </Route>
     </>
 );
