@@ -39,21 +39,21 @@ export default function AdminAnalytics() {
                     return;
                 }
 
-                const artistIds = verificationData.map((item: any) => item.artistId);
+                const artistIds = verificationData.map((item: { artistId: any; }) => item.artistId);
                 const userDetails = await fetchUserDetails(artistIds, token);
                 console.log("User details:", userDetails);
 
                 const mergedData = verificationData
-                .sort((a: any, b: any) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime())
-                .map((verification: any) => {
-                  const user = userDetails.find((u) => u._id === verification.artistId);
-                  return {
-                    _id: verification._id,
-                    artistId: verification.artistId,
-                    username: user?.username || "Unknown",
-                    email: user?.email || "N/A",
-                    verification: {
-                      status: verification.status,
+                    .sort((a: { submittedAt: string | number | Date; }, b: { submittedAt: string | number | Date; }) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime())
+                    .map((verification: { artistId: string; _id: any; status: any; idProof: any; feedback: any; updatedAt: any }) => {
+                        const user = userDetails.find((u) => u._id === verification.artistId);
+                        return {
+                            _id: verification._id,
+                            artistId: verification.artistId,
+                            username: user?.username || "Unknown",
+                            email: user?.email || "N/A",
+                            verification: {
+                                status: verification.status,
                       idProof: verification.idProof,
                       feedback: verification.feedback,
                       updatedAt: verification.updatedAt, // optional, if you want to show this too

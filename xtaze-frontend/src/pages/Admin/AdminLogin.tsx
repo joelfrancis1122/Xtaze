@@ -40,6 +40,7 @@ const AdminLogin = () => {
       toast.success("Admin Login success!", { position: "top-right" });
       navigate("/admin/dashboard");
     } catch (error: any) {
+      console.error("Admin login error:", error);
       toast.error(error.response.data.message || "Admin login failed", { position: "top-right" });
     }
   };

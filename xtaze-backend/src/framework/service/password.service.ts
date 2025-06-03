@@ -13,7 +13,6 @@ export default class PasswordService {
   }
   async comparePassword(password: string, hashedPassword: string): Promise<boolean> {
     const jovi=await bcrypt.compare(password, hashedPassword);
-    console.log(jovi,"jojkkj");
     
     return jovi
   }

@@ -472,7 +472,6 @@ export const fetchAllArtistsVerification = async (token:string): Promise<any> =>
       token
     );
     
-    console.log(response,"ossss")
     return response.data
   } catch (error: any) {
     console.error("Error archiving verification plan:", error);

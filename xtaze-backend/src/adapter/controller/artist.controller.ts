@@ -20,7 +20,6 @@ export default class ArtistController {
   async login(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { email, password } = req.body;
-      console.log("email", req.body);
       const response = await this._artistnUseCase.login(email, password);
 
       if (!response.success) {
@@ -42,14 +41,10 @@ export default class ArtistController {
 
   async refreshToken(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      console.log("refresh token triggereed ")
       const ArefreshToken = req.cookies.ArefreshToken
 
-      console.log(req.body, req.cookies, "ithan enik kitityees")
       if (!ArefreshToken) throw new AppError("Refresh token is required", HttpStatus.UNAUTHORIZED);
-      console.log("1")
       const response = await this._artistnUseCase.refresh(ArefreshToken);
-      console.log("12")
 
       if (response.success && response.token && response.ArefreshToken) {
         res.cookie("ArefreshToken", response.ArefreshToken, {
@@ -59,7 +54,6 @@ export default class ArtistController {
           maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
           path: "/",
         });
-        console.log("123")
         res.status(HttpStatus.OK).json({
           success: true,
           message: response.message,
@@ -76,7 +70,6 @@ export default class ArtistController {
 
   async listArtists(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      console.log("page");
       const listArtists = await this._artistnUseCase.listArtists();
 
       res.status(HttpStatus.OK).json({ success: true, message: "List Of Artists", data: listArtists });
@@ -88,15 +81,12 @@ export default class ArtistController {
 
   async getAllTracksArtist(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      console.log("artist release ");
       const { userId } = req.query;
-      console.log(req.query);
 
       let tracks = null;
       if (userId) {
         tracks = await this._artistnUseCase.listArtistReleases(userId as string);
       }
-      console.log("odi", tracks)
       res.status(HttpStatus.OK).json({ success: true, message: "List Of Artists", tracks });
     } catch (error) {
       next(error);
@@ -120,7 +110,7 @@ export default class ArtistController {
 
       console.log({ songFile, imageFile }, "Processed Files");
 
-      console.log("joel1", TrackId as string,
+      console.log("trac", TrackId as string,
         title,
         artistArray,
         genreArray,
@@ -177,7 +167,6 @@ export default class ArtistController {
       const artistArray = artist ? artist.split(",").map((g: string) => g.trim()) : [];
 
       const track = await this._artistnUseCase.trackUpload(songName, artistArray, genreArray, album, songFile, imageFile);
-      console.log("set ayo")
       res.status(HttpStatus.CREATED).json({
         message: "Track uploaded successfully!",
         track,
@@ -191,9 +180,7 @@ export default class ArtistController {
   async statsOfArtist(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { userId } = req.query
-      console.log(req.query, "sasas")
       const data = await this._artistnUseCase.statsOfArtist(userId as string);
-      console.log(data, "dassss")
       res.status(HttpStatus.OK).json({ data: data });
     } catch (error: unknown) {
       console.error("Error in getSongImprovements controller:", error);
@@ -204,9 +191,7 @@ export default class ArtistController {
   async saveCard(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { artistId, paymentMethodId } = req.body
-      console.log(req.query, req.body, "ssssss")
       const data = await this._artistnUseCase.saveCard(artistId, paymentMethodId);
-      console.log(data, "kilivayil")
       res.status(HttpStatus.OK).json({ success: true });
     } catch (error: unknown) {
       console.error("Error in getSongImprovements controller:", error);
@@ -218,9 +203,7 @@ export default class ArtistController {
   async checkcard(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { userId } = req.query
-      // console.log(req.query,"sasas")
       const data = await this._artistnUseCase.checkcard(userId as string);
-      console.log(data, "dassssssss")
       res.status(HttpStatus.OK).json({ data: data });
     } catch (error: unknown) {
       console.error("Error in getSongImprovements controller:", error);
@@ -233,10 +216,8 @@ export default class ArtistController {
     try {
       const userId = req.query.id
       const username = req.body.username
-      console.log(userId, req.body, "joes")
 
       const data = await this._artistnUseCase.usernameUpdate(userId as string, username);
-      console.log("remene", data)
       res.status(HttpStatus.OK).json({ data: data });
     } catch (error: unknown) {
       console.error("Error in getUsers controller:", error);
@@ -264,7 +245,6 @@ export default class ArtistController {
       const imageFiles = req.files['idProof'];
       imageFile = imageFiles?.[0];
     }
-    console.log(imageFile, artistId, "joel")
     try {
       if (!artistId || !imageFile) {
         throw new Error("Artist ID or image file is missing.");

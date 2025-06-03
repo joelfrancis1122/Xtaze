@@ -12,7 +12,8 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
         let mouseX = useMotionValue(0);
         let mouseY = useMotionValue(0);
 
-        function handleMouseMove({ currentTarget, clientX, clientY }: any) {
+        function handleMouseMove({ currentTarget, clientX, clientY }: React.MouseEvent) {
+            if (!currentTarget) return;
             let { left, top } = currentTarget.getBoundingClientRect();
 
             mouseX.set(clientX - left);

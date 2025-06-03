@@ -14,7 +14,6 @@ export class DeezerController {
     try {
       const songs = await this.fetchDeezerSongsUseCase.execute();
       const userId = req.query.userId as string;
-      console.log(userId,"odi")
       let userData = null; 
       if (userId) {
         userData = await userRepository.getUserUpdated(userId); 

@@ -71,7 +71,7 @@ export const aggregateDemographics = (users: ListenerUser[]): {
     countryCounts[country] = (countryCounts[country] || 0) + 1;
   });
 
-  // Group smaller countries into "Other" if there are too many
+  // Group smaller countries into "Other" if there are too
   const countryEntries = Object.entries(countryCounts).sort((a, b) => b[1] - a[1]);
   const topCountries = countryEntries.slice(0, 3); // Top 3 countries
   const otherCount = countryEntries.slice(3).reduce((sum, [_, count]) => sum + count, 0);

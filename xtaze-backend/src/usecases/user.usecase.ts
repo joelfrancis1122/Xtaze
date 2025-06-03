@@ -547,7 +547,7 @@ async getliked(songIds:string,userId:string): Promise<ITrack[]|null>{
 
       const session = await this._stripe.checkout.sessions.create(sessionConfig);
       return session;
-    } catch (error: any) {
+    } catch (error) {    
       console.error("Error in UserUseCase.execute:", error);
       throw error;
     }
@@ -592,7 +592,7 @@ async getliked(songIds:string,userId:string): Promise<ITrack[]|null>{
 
         console.log(`Payment confirmed for user ${userId} with plan ${planName}`);
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error in UserUseCase.confirmPayment:", error);
       throw error;
     }
@@ -614,7 +614,7 @@ async getliked(songIds:string,userId:string): Promise<ITrack[]|null>{
           }
         }
       console.log("Coupon status check completed");
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error in checkAndUpdateCouponStatus:", error);
       throw error;
     }
@@ -669,7 +669,7 @@ async getliked(songIds:string,userId:string): Promise<ITrack[]|null>{
 
       // Sort by purchase date descending (most recent first)
       return history.sort((a, b) => new Date(b.purchaseDate).getTime() - new Date(a.purchaseDate).getTime());
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error in getSubscriptionHistoryFromStripe:", error);
       throw error;
     }

@@ -34,7 +34,6 @@ export default class GenreController {
       const listActiveGenres = await this._genreUseCase.listActiveGenres();
       const artistId = req.query.artistId as string;
 
-      console.log(artistId, req.query, "Artist ID received");
 
       let artist = null;
       if (artistId) {
@@ -56,7 +55,6 @@ export default class GenreController {
     try {
       const { name } = req.body;
 
-      console.log("📌 Incoming request to create genre:", name);
 
       const genre = await this._genreUseCase.createGenre(name);
       if (!genre.success) {
@@ -64,7 +62,6 @@ export default class GenreController {
         throw new AppError(genre.message || "Failed to create genre", HttpStatus.BAD_REQUEST); // Use message from use case
       }
 
-      console.log("✅ Genre successfully created:", genre.genre);
       res.status(HttpStatus.CREATED).json({ success: true, message: genre.message, data: genre.genre });
     } catch (error) {
       console.error("❌ Error in createGenre:", error);
@@ -75,7 +72,6 @@ export default class GenreController {
   async toggleBlockUnblockGenre(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { id } = req.params;
-      console.log("id kitty ", id);
 
       const updatedGenre = await this._genreUseCase.toggleBlockUnblockGenre(id);
       res.status(HttpStatus.OK).json({ success: true, message: "Genre status updated", data: updatedGenre });
@@ -90,7 +86,6 @@ export default class GenreController {
       const { name } = req.body;
 
       const editedGenre = await this._genreUseCase.editGenre(id, name);
-      console.log(id, "this is the edit id");
 
       if (typeof editedGenre === "string") {
         throw new AppError(editedGenre, HttpStatus.BAD_REQUEST); // Use message from use case

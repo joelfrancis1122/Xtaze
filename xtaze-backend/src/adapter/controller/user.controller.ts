@@ -24,9 +24,7 @@ export default class UserController {
       const { email } = req.body;
       if (!email) throw new AppError("Email is required", HttpStatus.BAD_REQUEST);
 
-      console.log(req.body, "Request body");
       const result = await this._userUseCase.sendOTP(email);
-      console.log(result, "Result");
 
       if (Number(result) === HttpStatus.FORBIDDEN) {
         throw new AppError("Email address already exists", HttpStatus.FORBIDDEN);

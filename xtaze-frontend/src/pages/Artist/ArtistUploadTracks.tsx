@@ -69,7 +69,6 @@ const UploadMusicPage = () => {
         song: null,
       });
     } catch (error: any) {
-        console.log("but hwyy")
       toast.error(error.message || "Error uploading song. Please try again.");
       console.error("Error uploading song:", error);
     } finally {

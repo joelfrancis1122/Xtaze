@@ -35,7 +35,6 @@ const authenticateToken = (req: AuthenticatedRequest, res: Response, next: NextF
     req.user = decoded;
     next();
   } catch (error) {
-    console.log(error,"sasaaa")
     throw new AppError("Forbidden: Invalid token", HttpStatus.UNAUTHORIZED);
   }
 };

@@ -36,7 +36,6 @@ export default class ArtistUseCase {
 
   async login(email: string, password: string): Promise<{ success: boolean; message: string; token?: string; ArefreshToken?: string; artist?: IUser }> {
     const artist = await this._artistRepository.findByEmail(email);
-    console.log("thisi is admin broo", artist)
     if (!artist) {
       return { success: false, message: "User not found!" };
     }

@@ -154,7 +154,6 @@ export default class UserRepository implements IUserRepository {
     try {
 
       const user = await UserModel.findById(userId);
-      console.log("aaaaaaaaaaaaaa")
       const tracks = await Track.find({ _id: { $in: songIds } });
       return tracks
     } catch (error) {
@@ -249,7 +248,6 @@ export default class UserRepository implements IUserRepository {
   }
   async createPlaylist(userId: string, newPlaylist: IPlaylist): Promise<IPlaylist | null> {
     try {
-      console.log(newPlaylist, "ithe an odi");
 
       const playlist = new PlaylistModel({
         title: newPlaylist.title,
@@ -285,14 +283,12 @@ export default class UserRepository implements IUserRepository {
       }
 
       playlist.tracks = playlist.tracks || [];
-      console.log("111")
       // Add the track to the playlist if it's not already present
       if (!playlist.tracks.includes(trackid)) {
         playlist.tracks.push(trackid);
       } else {
         return null
       }
-      console.log("333")
 
       // Save the updated playlist
       const updatedPlaylist = await playlist.save();
@@ -370,7 +366,6 @@ export default class UserRepository implements IUserRepository {
     }
   }
   async findAll(): Promise<IBanner[] | null> {
-    console.log("odi");
     const data = await BannerModel.find({ isActive: true })
 
     return data
@@ -440,7 +435,6 @@ export default class UserRepository implements IUserRepository {
 
   async fetchGenreTracks(GenreName: string): Promise<ITrack[] | null> {
     try {
-      console.log(GenreName, "asasa  ")
       const tracks = await Track.find({
         genre: { $regex: new RegExp(`^${GenreName}$`, "i") }
       });
@@ -454,9 +448,7 @@ export default class UserRepository implements IUserRepository {
 
   async getArtistByName(username: string): Promise<IUser | null> {
     try {
-      console.log(username, "ith enth oi")
       const admin = await UserModel.findOne({ username });
-      console.log(admin, "ith entha ")
       return admin as unknown as IUser
     } catch (error) {
       throw error

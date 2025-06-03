@@ -88,9 +88,7 @@ export default function ArtistDetailsPage() {
             verificationStatus,
           };
 
-          console.log('111')
           setArtist(artistData);
-          console.log('111')
           setTracks(fetchedTracks);
           setError(null);
           if (user?._id) {
@@ -102,7 +100,6 @@ export default function ArtistDetailsPage() {
         }
         
       } catch (err: any) {
-        console.log(err, "ssssss")
         setError("Failed to load artist details or tracks");
       } finally {
         setLoading(false);

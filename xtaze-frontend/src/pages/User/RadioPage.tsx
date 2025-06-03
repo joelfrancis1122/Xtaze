@@ -58,11 +58,11 @@ export default function RadioPage() {
 
           const fetchedPlaylists = await getMyplaylist(userId);
           setPlaylists(fetchedPlaylists);
-          break; // Success, exit loop
+          break; 
         } catch (error: any) {
           console.error(`Attempt ${attempt} failed: ${error.message}`);
           if (attempt === retries) {
-            // Fallback to basic English stations after retries
+            toast.error(`Failed to load stations or playlists: ${error.message}`);
             try {
               const fallbackResponse = await fetch(
                 "https://de1.api.radio-browser.info/json/stations/bylanguage/english?limit=50",

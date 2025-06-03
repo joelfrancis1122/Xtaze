@@ -77,7 +77,6 @@ export default class AdminController {
 
   async deleteBanner(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      console.log(req.body, req.params, "goit ogit ogit")
       const { id } = req.params
       const deletedBanner = await this._adminUseCase.deleteBanner(id)
       res.status(HttpStatus.CREATED).json({ message: "Banner added successfully", data: deletedBanner });
@@ -89,13 +88,11 @@ export default class AdminController {
 
   async updateBanner(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      console.log(req.body, req.params, "goit ogit akhildas", req.file);
       const { id } = req.params;
       const { title, description, action, isActive } = req.body;
 
       const file = req.file;
       if (!file) {
-        console.log(console.log("sassaa"))
         return
       }
       // Call the use case with the file, now guaranteed to be present
@@ -118,7 +115,6 @@ export default class AdminController {
         throw new AppError("Artist ID is required", HttpStatus.BAD_REQUEST);
       }
 
-      console.log("id kitty ", id);
       const updatedStatus = await this._adminUseCase.toggleBlockUnblockArtist(id);
       if (!updatedStatus) {
         throw new AppError("Artist not found or status update failed", HttpStatus.NOT_FOUND); // Adjust based on use case response
@@ -163,7 +159,6 @@ export default class AdminController {
       }
 
       const archivedProduct = await this._adminUseCase.archivePlan(productId as string);
-      console.log("set ayo")
       res.status(HttpStatus.OK).json({ success: true, data: archivedProduct });
     } catch (error) {
       next(error);
@@ -191,7 +186,6 @@ export default class AdminController {
     try {
 
       const result = await this._adminUseCase.getCoupons()
-      console.log(result, "ododododo")
       res.status(HttpStatus.CREATED).json({ success: true, data: result });
     } catch (error) {
       next(error)
@@ -230,7 +224,6 @@ export default class AdminController {
   async deleteCoupon(req: Request, res: Response, next: NextFunction) {
     try {
       const couponId = req.query.id;
-      console.log(req.query, "what al")
 
       const deletedCoupon = await this._adminUseCase.deleteCoupon(couponId as string)
       if (!deletedCoupon) {
@@ -249,8 +242,6 @@ export default class AdminController {
       const couponId = req.query.id;
       const { code, discountAmount, expires, maxUses } = req.body;
 
-      console.log("Params:", req.params); // Debug
-      console.log("Body:", req.body); // Debug
 
       const updateData = {
         code,
@@ -283,7 +274,6 @@ export default class AdminController {
   async getMusicMonetization(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const monetizationData = await this._adminUseCase.getMusicMonetization();
-      console.log(monetizationData, "joellll")
       res.status(HttpStatus.OK).json({ data: monetizationData });
     } catch (error: unknown) {
       console.error("Error in getMusicMonetization controller:", error);
@@ -295,7 +285,6 @@ export default class AdminController {
     try {
       const { artistName } = req.body
       const data = await this._adminUseCase.artistPayout(artistName);
-      console.log(data, "sasaasassa")
       res.status(HttpStatus.OK).json({ data: data });
     } catch (error: unknown) {
       console.error("Error in payout controller:", error);
@@ -306,10 +295,8 @@ export default class AdminController {
   async getUsersByIds(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { userIds } = req.body
-      console.log(req.body, 'ssssssa', userIds as string)
 
       const data = await this._adminUseCase.getUsersByIds(userIds);
-      console.log(data, "sasaasassa")
       res.status(HttpStatus.OK).json({ data: data });
     } catch (error: unknown) {
       console.error("Error in getUsers controller:", error);

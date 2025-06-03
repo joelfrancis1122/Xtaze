@@ -62,8 +62,8 @@ const PreviewModal: React.FC<PreviewModalProps> = ({ track, isOpen, toggleModal,
           .filter((t) => {
             const trackGenres = Array.isArray(t.genre) ? t.genre : t.genre ? [t.genre] : [];
             return (
-              t._id !== track._id && // Exclude current track
-              trackGenres.some((genre) => currentGenres.includes(genre)) // Match any genre
+              t._id !== track._id && //  without current track 
+              trackGenres.some((genre) => currentGenres.includes(genre)) // Match any 
             );
           })
           .slice(0, 5); // Limit to 5
