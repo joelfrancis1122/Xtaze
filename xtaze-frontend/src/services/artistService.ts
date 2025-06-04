@@ -63,7 +63,7 @@ export const refreshToken = async (): Promise<string | null> => {
 // Generic API Call Helper
 const apiCall = async <T>(
   instance: any,
-  method: "get" | "post" | "put" | "delete",
+  method: typeof HTTP_METHODS[keyof typeof HTTP_METHODS],
   url: string,
   data?: any,
   token?: string
@@ -233,7 +233,7 @@ export const getVerificationStatus = async (artistId: string,token: string): Pro
   try {
     const response = await apiCall<{ success: boolean; data: VerificationStatus }>(
       artistApi,
-      "get",
+      HTTP_METHODS.GET,
       `/getVerificationStatus?artistId=${artistId}`,
       token
     );
@@ -250,7 +250,7 @@ export const requestVerification = async (artistId: string,formData: FormData,to
 
   const data = await apiCall<{ success: boolean; idProof?: string; message?: string }>(
     artistApi,
-    "post",
+    HTTP_METHODS.POST,
     "/requestVerification",
     formData,
     token
@@ -269,7 +269,7 @@ export const fetchSongEarnings = async (artistId: string, token: string): Promis
   console.log("Fetching song earnings with:", { artistId, token });
   const data = await apiCall<{ data: any[] }>(
     artistApi,
-    "get",
+    HTTP_METHODS.GET,
     `/statsOfArtist?userId=${artistId}`,
     undefined,
     token
@@ -293,7 +293,7 @@ export const updateArtistUsername = async (
   try {
     const response = await apiCall<{ data: ArtistS }>(
       userApi,
-      "put",
+      HTTP_METHODS.PUT,
       `/usersName?id=${id}`,
       { username: name },
       token
@@ -305,6 +305,34 @@ export const updateArtistUsername = async (
     throw new Error(error.response?.data?.message || "Failed to update username");
   }
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export default {
   loginArtist,
   fetchArtistTracks,

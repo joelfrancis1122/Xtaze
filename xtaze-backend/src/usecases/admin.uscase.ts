@@ -65,7 +65,6 @@ export default class AdminUseCase {
   }
 
   async toggleBlockUnblockArtist(id: string): Promise<IUser | null> {
-    console.log("Artist coming to the toggle");
     const artist = await this._adminRepository.getArtistById(id);
     if (!artist) {
       throw new Error("Artist not found");

@@ -65,7 +65,7 @@ export const refreshToken = async (): Promise<string | null> => {
 // Generic API Call Helper
 const apiCall = async <T>(
   instance: any,
-  method: "get" | "post" | "put" | "delete" | "patch",
+  method: typeof HTTP_METHODS[keyof typeof HTTP_METHODS],
   url: string,
   data?: any,
   token?: string

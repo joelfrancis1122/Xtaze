@@ -16,6 +16,7 @@ import { IBanner } from '../domain/entities/IBanner';
 import { SubscriptionHistory } from '../domain/entities/ISubscriptionHistory';
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2023-08-16" });
 dotenv.config();
+import { MESSAGES } from '../domain/constants/messages';
 
 interface useCaseDependencies {
   repository: {
@@ -53,8 +54,8 @@ export default class UserUseCase {
     ]);
 
     if (existingUserByEmail) {
-
-      throw new Error("User already exists with this email");
+      
+      throw new Error(MESSAGES.USER_ALREADY_EXISTS); 
     }
 
     // if (existingUserByPhone) {
@@ -90,7 +91,7 @@ export default class UserUseCase {
   async forgotPassword(email: string): Promise<{ success: boolean; message: string }> {
     const user = await this._userRepository.findByEmail(email);
     if (!user) {
-      throw new Error("User not found");
+      throw new Error(MESSAGES.USER_NOT_FOUND);
     }
 
     const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET!, {
@@ -99,7 +100,7 @@ export default class UserUseCase {
 
     await this._emailService.sendEmail(email, "Password Reset", token);
 
-    return { success: true, message: "Reset link sent successfully" };  
+    return { success: true, message: MESSAGES.RESET_LINK_SENT };  
   }
 
   async resetPassword(token: string, password: string): Promise<{ success: boolean; message: string }> {
@@ -125,7 +126,7 @@ export default class UserUseCase {
 
       return {
         success: true,
-        message: "Password reset successfully"
+        message: MESSAGES.PASSWORD_RESET_SUCCESS
       };
     } catch (error) {
       throw error; // You might want to handle this more specifically based on your needs
@@ -136,25 +137,25 @@ export default class UserUseCase {
   async verifyOTP(otp: string): Promise<{ success: boolean; message: string }> {
     const isStore = await this._otpService.isEmpty()
     if (isStore) {
-      return { success: false, message: "This Otp is expired click the resend button" };
+      return { success: false, message: MESSAGES.OTP_EXPIRED };
     }
     const data = await this._otpService.verifyOTP(otp);
     if (data) {
-      return { success: true, message: "Otp verified successfully" };
+      return { success: true, message: MESSAGES.OTP_VERIFIED };
     } else {
-      return { success: false, message: "Invalid Otp" };
+      return { success: false, message: MESSAGES.OTP_INVALID };
     }
 
   }
 
   async login(email: string, password: string): Promise<{ success: boolean; message: string; token?: string; refreshToken?: string; user?: IUser }> {
     const user = await this._userRepository.findByEmail(email);
-    if (!user) return { success: false, message: "User not found" };
-    if (user.role === "admin" || user.role === "artist") return { success: false, message: "This login form is for users" };
-    if (user.isActive === false) return { success: false, message: "Your account is suspended!" };
+    if (!user) return { success: false, message: MESSAGES.USER_NOT_FOUND };
+    if (user.role === "admin" || user.role === "artist") return { success: false, message: MESSAGES.USER_LOGIN_ONLY };
+    if (user.isActive === false) return { success: false, message: MESSAGES.ACCOUNT_SUSPENDED };
 
     const isPasswordValid = await this._passwordService.comparePassword(password, user.password);
-    if (!isPasswordValid) throw new Error("Invalid credentials!");
+    if (!isPasswordValid) throw new Error(MESSAGES.LOGIN_FAILED);
     console.log("JWT_SECRET at login:", process.env.JWT_SECRET);
 
     const token = jwt.sign(
@@ -167,11 +168,10 @@ export default class UserUseCase {
       process.env.JWT_REFRESH_SECRET!,
       { expiresIn: "7d" } // Long-lived refresh token
     );
-    console.log("ith unda asaa", refreshToken);
 
     return {
       success: true,
-      message: "Login successful!",
+      message: MESSAGES.LOGIN_SUCCESS,
       token,
       refreshToken,
       user,
@@ -188,12 +188,11 @@ export default class UserUseCase {
       const payload = ticket.getPayload();
       if (!payload) throw new Error("Invalid Google token");
       const { email } = payload;
-      console.log("Google Payload:", payload);
 
       const user = await UserModel.findOne({ email });
-      if (user?.isActive === false) return { success: false, message: "Your account is suspended!" };
-      if (user?.role === "admin" || user?.role === "artist") return { success: false, message: "This login form is for users" };
-      if (!user) return { success: false, message: "User not found. Please sign up." };
+      if (user?.isActive === false) return { success: false, message: MESSAGES.ACCOUNT_SUSPENDED };
+      if (user?.role === "admin" || user?.role === "artist") return { success: false, message:MESSAGES.USER_LOGIN_ONLY };
+      if (!user) return { success: false, message: MESSAGES.USER_NOT_FOUND };
 
       const userObj: IUser = { ...user.toObject(), _id: user._id.toString() };
 
@@ -210,14 +209,14 @@ export default class UserUseCase {
 
       return {
         success: true,
-        message: "Login successful!",
+        message: MESSAGES.LOGIN_SUCCESS,
         token,
         refreshToken,
         user: userObj,
       };
     } catch (error) {
       console.error("Google Login Error:", error);
-      return { success: false, message: "Google login failed" };
+      return { success: false, message: MESSAGES.GOOGLE_LOGIN_FAILED };
     }
   }
 
@@ -225,8 +224,8 @@ export default class UserUseCase {
     try {
       const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET!) as { userId: string };
       const user = await this._userRepository.findById(decoded.userId);
-      if (!user) return { success: false, message: "User not found" };
-      if (user.isActive === false) return { success: false, message: "Your account is suspended!" };
+      if (!user) return { success: false, message: MESSAGES.USER_NOT_FOUND };
+      if (user.isActive === false) return { success: false, message: MESSAGES.ACCOUNT_SUSPENDED };
 
       const newToken = jwt.sign(
         { userId: user._id, email: user.email, role: "user" },
@@ -241,13 +240,13 @@ export default class UserUseCase {
 
       return {
         success: true,
-        message: "Token refreshed successfully",
+        message: MESSAGES.TOKEN_REFRESHED,
         token: newToken,
         refreshToken: newRefreshToken,
       };
     } catch (error) {
       console.error("Refresh Token Error:", error);
-      return { success: false, message: "Invalid or expired refresh token" };
+      return { success: false, message: MESSAGES.INVALID_REFRESH_TOKEN };
     }
   }
 
@@ -262,13 +261,13 @@ export default class UserUseCase {
       const updatedUser = await this._userRepository.updateProfile(userId, profilePicUrl);
 
       if (!updatedUser) {
-        return { success: false, message: "Failed to update profile" };
+        return { success: false, message: MESSAGES.PROFILE_UPDATE_FAILED };
       }
 
-      return { success: true, message: "Profile updated successfully", user: updatedUser };
+      return { success: true, message: MESSAGES.PROFILE_UPDATE_SUCCESS, user: updatedUser };
     } catch (error) {
       console.error("Error during profile upload:", error);
-      return { success: false, message: "An error occurred while updating the profile" };
+      return { success: false, message: MESSAGES.ERROR_UPDATING_PROFILE };
     }
 
   }
@@ -279,13 +278,13 @@ export default class UserUseCase {
       const BannerPicUrl = cloudinaryResponse.secure_url;
       const updatedUser = await this._userRepository.uploadBanner(userId, BannerPicUrl);
       if (!updatedUser) {
-        return { success: false, message: "Failed to update profile" };
+        return { success: false, message: MESSAGES.BANNER_UPDATE_FAILED };
       }
 
-      return { success: true, message: "Banner updated successfully", user: updatedUser, isVideo: isVideo };
+      return { success: true, message: MESSAGES.BANNER_UPDATE_SUCCESS, user: updatedUser, isVideo: isVideo };
     } catch (error) {
       console.error("Error during Banner upload:", error);
-      return { success: false, message: "An error occurred while updating the profile" };
+      return { success: false, message: MESSAGES.ERROR_UPDATING_PROFILE };
     }
 
   }
@@ -296,13 +295,13 @@ export default class UserUseCase {
       const coverpage = cloudinaryResponse.secure_url;
       const updatedData = await this._userRepository.updateImagePlaylist(id, coverpage);
       if (!updatedData) {
-        return { success: false, message: "Failed to update profile" };
+        return { success: false, message: MESSAGES.ERROR_UPDATING_PROFILE };
       }
 
       return { success: true, message: "Banner updated successfully", data: updatedData };
     } catch (error) {
       console.error("Error during Banner upload:", error);
-      return { success: false, message: "An error occurred while updating the profile" };
+      return { success: false, message: MESSAGES.ERROR_UPDATING_PROFILE };
     }
 
   }
@@ -312,13 +311,13 @@ export default class UserUseCase {
       const updated = await this._userRepository.updateBio(userId, bio);
 
       if (!updated) {
-        return { success: false, message: "Failed to update profile" };
+        return { success: false, message: MESSAGES.ERROR_UPDATING_PROFILE };
       }
 
       return { success: true, message: "Profile updated successfully", user: updated };
     } catch (error) {
       console.error("Error during profile upload:", error);
-      return { success: false, message: "An error occurred while updating the profile" };
+      return { success: false, message: MESSAGES.ERROR_UPDATING_PROFILE };
     }
 
   }
@@ -333,8 +332,8 @@ export default class UserUseCase {
       return updated;
   
     } catch (error) {
-      console.error("Error during profile upload:", error);
-      return null; 
+      console.error(MESSAGES.ERROR_UPDATING_PROFILE, error);
+      return null;
     }
   }
 
@@ -361,8 +360,8 @@ async getliked(songIds:string,userId:string): Promise<ITrack[]|null>{
 
       return user; // Directly return the user object
     } catch (error) {
-      console.error("Error during adding liked song:", error);
-      throw new Error("An error occurred while updating liked songs.");
+      console.error(MESSAGES.ERROR_UPDATING_PROFILE, error);
+      throw new Error(MESSAGES.ERROR_UPDATING_PROFILE);
     }
   }
 
@@ -375,8 +374,8 @@ async getliked(songIds:string,userId:string): Promise<ITrack[]|null>{
 
       return user;
     } catch (error) {
-      console.error("Error during adding liked song:", error);
-      throw new Error("An error occurred while updating liked songs.");
+      console.error(MESSAGES.ERROR_UPDATING_PROFILE, error);
+      throw new Error(MESSAGES.ERROR_UPDATING_PROFILE);
     }
   }
 
@@ -391,8 +390,8 @@ async getliked(songIds:string,userId:string): Promise<ITrack[]|null>{
 
       return playlist; // Directly return the user object
     } catch (error) {
-      console.error("Error during adding playlist:", error);
-      throw new Error("An error occurred while creating playlist.");
+      console.error(MESSAGES.ERROR_UPDATING_PROFILE, error);
+      throw new Error(MESSAGES.ERROR_UPDATING_PROFILE);
     }
   }
   async getAllPlaylist(userId: string): Promise<IPlaylist[] | null> {
@@ -405,8 +404,8 @@ async getliked(songIds:string,userId:string): Promise<ITrack[]|null>{
 
       return playlist;
     } catch (error) {
-      console.error("Error during adding playlist:", error);
-      throw new Error("An error occurred while creating playlist.");
+      console.error(MESSAGES.ERROR_UPDATING_PROFILE, error);
+      throw new Error(MESSAGES.ERROR_UPDATING_PROFILE);
     }
   }
   async getPlaylist(id: string, pageNum: number, limitNum: number, skip: number): Promise<{ tracks: ITrack[]; total: number } | null> {
@@ -419,8 +418,8 @@ async getliked(songIds:string,userId:string): Promise<ITrack[]|null>{
 
       return playlist;
     } catch (error) {
-      console.error("Error during adding playlist:", error);
-      throw new Error("An error occurred while creating playlist.");
+      console.error(MESSAGES.ERROR_UPDATING_PROFILE, error);
+      throw new Error(MESSAGES.ERROR_UPDATING_PROFILE);
     }
   }
   async deletePlaylist(id: string): Promise<IPlaylist | null> {
@@ -432,8 +431,8 @@ async getliked(songIds:string,userId:string): Promise<ITrack[]|null>{
       return playlist
 
     } catch (error) {
-      console.error("Error during deleteing playlist:", error);
-      throw new Error("An error occurred while deleteing.");
+      console.error(MESSAGES.ERROR_DELETING_PLAYLIST, error);
+      throw new Error(MESSAGES.ERROR_DELETING_PLAYLIST);
     }
   }
   async updateNamePlaylist(id: string, playlistName: string): Promise<IPlaylist | null> {
@@ -445,8 +444,8 @@ async getliked(songIds:string,userId:string): Promise<ITrack[]|null>{
       return playlist
 
     } catch (error) {
-      console.error("Error during editing playlist:", error);
-      throw new Error("An error occurred while editing.");
+      console.error(MESSAGES.ERROR_UPDATING_PROFILE, error);
+      throw new Error(MESSAGES.ERROR_UPDATING_PROFILE);
     }
   }
   async getAllTracks(): Promise<ITrack[] | null> {
@@ -458,8 +457,8 @@ async getliked(songIds:string,userId:string): Promise<ITrack[]|null>{
       return tracks
 
     } catch (error) {
-      console.error("Error during editing playlist:", error);
-      throw new Error("An error occurred while editing.");
+      console.error(MESSAGES.ERROR_UPDATING_PROFILE, error);
+      throw new Error(MESSAGES.ERROR_UPDATING_PROFILE);
     }
   }
   async fetchGenreTracks(GenreName: string): Promise<ITrack[] | null> {
@@ -471,8 +470,8 @@ async getliked(songIds:string,userId:string): Promise<ITrack[]|null>{
       return tracks
 
     } catch (error) {
-      console.error("Error during editing playlist:", error);
-      throw new Error("An error occurred while editing.");
+      console.error(MESSAGES.ERROR_UPDATING_PROFILE, error);
+      throw new Error(MESSAGES.ERROR_UPDATING_PROFILE);
     }
   }
   async resetPaymentStatus(): Promise<void> {
@@ -480,8 +479,8 @@ async getliked(songIds:string,userId:string): Promise<ITrack[]|null>{
       await this._userRepository.resetPaymentStatus();
 
     } catch (error) {
-      console.error("Error during reset:", error);
-      throw new Error("An error occurred while reset.");
+      console.error(MESSAGES.ERROR_UPDATING_PROFILE, error);
+      throw new Error(MESSAGES.ERROR_UPDATING_PROFILE);
     }
   }
 
@@ -493,7 +492,7 @@ async getliked(songIds:string,userId:string): Promise<ITrack[]|null>{
     try {
       const user = await this._userRepository.findById(userId);
       if (!user) {
-        throw new Error("User not found");
+        throw new Error(MESSAGES.USER_NOT_FOUND);
       }
 
       // Retrieve price and product
@@ -518,7 +517,7 @@ async getliked(songIds:string,userId:string): Promise<ITrack[]|null>{
       // Handle coupon if provided
       if (couponCode) {
         const coupon = await this._userRepository.findCouponByCode(couponCode);
-        if (!coupon) throw new Error("Incorrect coupon code");
+        if (!coupon) throw new Error(MESSAGES.COUPON_NOT_FOUND);
 
         const currentUses = coupon.uses ?? 0;
         const usedUsers = coupon.users ?? [];
@@ -528,12 +527,12 @@ async getliked(songIds:string,userId:string): Promise<ITrack[]|null>{
           currentUses >= coupon.maxUses ||
           new Date(coupon.expires) < new Date()
         ) {
-          throw new Error("Coupon is expired");
+          throw new Error(MESSAGES.COUPON_EXPIRED);
         }
 
         const isCouponUsed = await this._userRepository.checkCouponisUsed(couponCode, userId);
         if (isCouponUsed) {
-          throw new Error("You've already used this coupon. Try a different one");
+          throw new Error(MESSAGES.COUPON_ALREADY_USED);
         }
 
         const stripeCoupon = await this._stripe.coupons.create({
@@ -548,7 +547,6 @@ async getliked(songIds:string,userId:string): Promise<ITrack[]|null>{
       const session = await this._stripe.checkout.sessions.create(sessionConfig);
       return session;
     } catch (error) {    
-      console.error("Error in UserUseCase.execute:", error);
       throw error;
     }
   }

@@ -10,11 +10,12 @@ import {  SubscriptionPlan } from "../pages/User/types/IStripe";
 import { MusicMonetization } from "../pages/User/types/IMonetization";
 import { ListenerUser } from "../pages/User/types/IListenerUser";
 import { HTTP_METHODS } from "../constants/httpMethods";
+import { COUPON_ROUTE } from "../constants/routeConstants";
 
 
 const apiCall = async <T>(
   instance: any,
-  method: "get" | "post" | "put" | "delete" | "patch",
+  method: typeof HTTP_METHODS[keyof typeof HTTP_METHODS],
   url: string,
   data?: any,
   token?: string
@@ -110,7 +111,7 @@ export const toggleBlockArtist = async (id: string,currentStatus: boolean,token:
 };
 
 export const fetchGenres = async (token: string): Promise<IGenre[]> => {
-  const data = await apiCall<{ data: IGenre[] }>(adminApi, "get", "/genreList", undefined, token);
+  const data = await apiCall<{ data: IGenre[] }>(adminApi, HTTP_METHODS.GET, "/genreList", undefined, token);
   return data.data;
 };
 
@@ -176,12 +177,12 @@ export const updateBanner = async (
   formData.append("isActive", String(banner.isActive));
 
   console.log(formData, "odi avaindah comming ", banner.title, banner.description, banner.isActive)
-  const data = await apiCall<{ data: IBanner }>(adminApi, "put", `/banners/${id}`, formData, token);
+  const data = await apiCall<{ data: IBanner }>(adminApi, HTTP_METHODS.PUT, `/banners/${id}`, formData, token);
   return data.data;
 };
 
 export const deleteBanner = async (id: string, token: string): Promise<void> => {
-  await apiCall<{ success: boolean }>(adminApi, "delete", `/banners/${id}`, undefined, token);
+  await apiCall<{ success: boolean }>(adminApi, HTTP_METHODS.DELETE, `/banners/${id}`, undefined, token);
 
 };
 
@@ -207,7 +208,7 @@ export const fetchCoupons = async (): Promise<any> => {
     const data = await apiCall<{ success: boolean; data: string[]; message?: string }>(
       adminApi,
       HTTP_METHODS.GET,
-      "/coupons",
+      COUPON_ROUTE,
     );
     console.log("Fetch user details response:", data);
 
@@ -245,7 +246,7 @@ export const createCoupon = async (couponData: { code: string; discountAmount: n
     const data = await apiCall<{ result: Coupon }>(
       adminApi,
       HTTP_METHODS.POST,
-      "/coupons",
+      COUPON_ROUTE,
       { ...couponData, uses: 0 },
       token
     );
@@ -263,7 +264,7 @@ export const updateCoupon = async (id: string, couponData: { code: string; disco
     const data = await apiCall<{ data: Coupon }>(
       adminApi,
       HTTP_METHODS.PUT,
-      `/coupons?id=${id}`,
+      `${COUPON_ROUTE}?id=${id}`,
       couponData,
       token
     );
@@ -281,7 +282,7 @@ export const deleteCoupon = async (id: string, token?: string): Promise<void> =>
     await apiCall<{ success: boolean }>(
       adminApi,
       HTTP_METHODS.DELETE,
-      `/coupons?id=${id}`,
+      `${COUPON_ROUTE}?id=${id}`,
       undefined,
       token
     );
@@ -335,7 +336,7 @@ export const fetchSubscriptionPlans = async (token?: string): Promise<Subscripti
   try {
     const data = await apiCall<{ data: SubscriptionPlan[] }>(
       adminApi,
-      "get",
+      HTTP_METHODS.GET,
       "/stripe/plans",
       undefined,
       token
@@ -357,7 +358,7 @@ export const createSubscriptionPlan = async (
     const unitAmount = Math.round(parseFloat(planData.price.toString()) * 100); // Convert dollars to cents
     const data = await apiCall<{ data: SubscriptionPlan }>(
       adminApi,
-      "post",
+      HTTP_METHODS.POST,
       "/stripe/createProduct",
       {
         name: planData.name,
@@ -385,7 +386,7 @@ export const updateSubscriptionPlan = async (
     const unitAmount = Math.round(parseFloat(planData.price.toString()) * 100); // Convert dollars to cents
     const data = await apiCall<{ data: SubscriptionPlan }>(
       adminApi,
-      "put",
+      HTTP_METHODS.PUT,
       `/stripe/products/?productId=${productId}`,
       {
         name: planData.name,
@@ -408,7 +409,7 @@ export const archiveSubscriptionPlan = async (productId: string, token?: string)
   try {
     await apiCall<{ status: number }>(
       adminApi,
-      "post",
+      HTTP_METHODS.POST,
       `/stripe/products/delete?productId=${productId}`,
       undefined,
       token
@@ -423,7 +424,7 @@ export const fetchAllArtistsVerification = async (token:string): Promise<any> =>
   try {
     const response = await apiCall<{ data: any }>(
       adminApi,
-      "get",
+      HTTP_METHODS.GET,
       `/fetchAllArtistsVerification`,
       undefined,
       token
@@ -449,7 +450,7 @@ export const updateVerificationStatus = async (
     console.log("Service called with:", { status, feedback, id, token });
     const response = await apiCall(
       adminApi,
-      "put",
+      HTTP_METHODS.PUT,
       `/updateVerificationStatus?id=${id}`,
       { status, feedback },
       token

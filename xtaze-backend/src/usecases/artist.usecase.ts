@@ -10,6 +10,7 @@ import { IUserRepository } from "../domain/repositories/IUserRepository";
 import { ArtistMonetization, MusicMonetization } from "../domain/entities/IMonetization";
 import { IVerificationRequest } from "../domain/entities/IVeridicationRequest";
 import { IVerificationStatusResponse } from "../domain/entities/IVerificationStatusResponse ";
+import { MESSAGES } from "../domain/constants/messages";
 dotenv.config();
 
 interface useCaseDependencies {
@@ -37,18 +38,18 @@ export default class ArtistUseCase {
   async login(email: string, password: string): Promise<{ success: boolean; message: string; token?: string; ArefreshToken?: string; artist?: IUser }> {
     const artist = await this._artistRepository.findByEmail(email);
     if (!artist) {
-      return { success: false, message: "User not found!" };
+      return { success: false, message: MESSAGES.USER_NOT_FOUND };
     }
     // Check if the role is 'artist'
     if (artist.role !== "artist") {
-      return { success: false, message: "Only artists are allowed to login!" };
+      return { success: false, message: MESSAGES.ARTIST_LOGIN_ONLY};
     }
     if (artist.isActive == false) {
-      return { success: false, message: "You're account is suspended !" };
+      return { success: false, message: MESSAGES.ACCOUNT_SUSPENDED };
     }
     const isPasswordValid = await this._passwordService.comparePassword(password, artist.password);
     if (!isPasswordValid) {
-      return { success: false, message: "Invalid credentials!" };
+      return { success: false, message: MESSAGES.LOGIN_FAILED };
     }
     const token = jwt.sign(
       { userId: artist._id, email: artist.email, role: "artist" },
@@ -89,13 +90,13 @@ export default class ArtistUseCase {
 
       return {
         success: true,
-        message: "Token refreshed successfully",
+        message: MESSAGES.TOKEN_REFRESHED,
         token: newToken,
         ArefreshToken: newRefreshToken,
       };
     } catch (error) {
       console.error("Refresh Token Error:", error);
-      return { success: false, message: "Invalid or expired refresh token" };
+      return { success: false, message: MESSAGES.INVALID_REFRESH_TOKEN };
     }
   }
 
@@ -181,8 +182,8 @@ export default class ArtistUseCase {
       return updated;
   
     } catch (error) {
-      console.error("Error during profile upload:", error);
-      return null; 
+      console.error(MESSAGES.ERROR_UPDATING_PROFILE, error);
+      return null;
     }
   }
 
