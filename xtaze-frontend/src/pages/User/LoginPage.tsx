@@ -82,7 +82,7 @@ const Login = () => {
       toast.success("Logged in with Google successfully!", { position: "top-right" });
       navigate("/home", { replace: true });
     } catch (error: any) {
-      toast.error(error.message, { position: "top-right" });
+      toast.error(error.response.data.message, { position: "top-right" });
     }
   };
 
