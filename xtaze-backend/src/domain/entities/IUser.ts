@@ -1,6 +1,7 @@
 import { ObjectId } from "mongoose";
 
 export default interface IUser {
+  toObject(): IUser;
   _id?: string;
   username: string;
   country: string;
@@ -11,12 +12,14 @@ export default interface IUser {
   password: string;
   premium?: string;
   role?: "user" | "artist" | "provider" | "admin";
-  isActive?: boolean; 
-  profilePic?:string;
-  bio?:string;
-  banner?:string;
-  likedSongs?:string[];
-  stripePaymentMethodId?:string| null;
-  paymentStatus?:boolean
+  isActive?: boolean;
+  profilePic?: string;
+  isGoogleUser?: boolean;
+
+  bio?: string;
+  banner?: string;
+  likedSongs?: string[];
+  stripePaymentMethodId?: string | null;
+  paymentStatus?: boolean
 }
 

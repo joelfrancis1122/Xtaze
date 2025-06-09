@@ -20,6 +20,8 @@ export default class UserRepository implements IUserRepository {
       throw error
     }
   }
+
+  
   async resetPaymentStatus(): Promise<void> {
     try {
       const result = await UserModel.updateMany(

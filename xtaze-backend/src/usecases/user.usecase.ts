@@ -50,7 +50,6 @@ export default class UserUseCase {
 
     const [existingUserByEmail] = await Promise.all([
       this._userRepository.findByEmail(email),
-      // this._userRepository.findByPhone(phone)
     ]);
 
     if (existingUserByEmail) {
@@ -58,13 +57,18 @@ export default class UserUseCase {
       throw new Error(MESSAGES.USER_ALREADY_EXISTS); 
     }
 
-    // if (existingUserByPhone) {
-    //   throw new Error("User already exists with this phone number");
-    // }
-
     const hashedPassword = await this._passwordService.hashPassword(password);
 
-    const user = { username, country, gender, year, phone, email, password: hashedPassword }
+    const user = { 
+      username, 
+      country, 
+      gender, 
+      year, 
+      phone, 
+      email, 
+      password: hashedPassword,
+      toObject: function () { return { ...this }; }
+    };
 
     const userData = await this._userRepository.add(user);
 
@@ -178,47 +182,73 @@ export default class UserUseCase {
     };
   }
 
-  async googleLogin(Token: string): Promise<{ success: boolean; message: string; token?: string; refreshToken?: string; user?: IUser | null }> {
-    try {
-      const ticket = await client.verifyIdToken({
-        idToken: Token,
-        audience: process.env.GOOGLE_CLIENT_ID,
-      });
+ async googleLogin(Token: string): Promise<{ success: boolean; message: string; token?: string; refreshToken?: string; user?: IUser | null }> {
+  try {
+    const ticket = await client.verifyIdToken({
+      idToken: Token,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
 
-      const payload = ticket.getPayload();
-      if (!payload) throw new Error("Invalid Google token");
-      const { email } = payload;
+    const payload = ticket.getPayload();
+    if (!payload) throw new Error("Invalid Google token");
 
-      const user = await UserModel.findOne({ email });
-      if (user?.isActive === false) return { success: false, message: MESSAGES.ACCOUNT_SUSPENDED };
-      if (user?.role === "admin" || user?.role === "artist") return { success: false, message:MESSAGES.USER_LOGIN_ONLY };
-      if (!user) return { success: false, message: MESSAGES.USER_NOT_FOUND };
+    const { email, name, picture } = payload;
+    if (!email || !name) throw new Error("Incomplete Google data");
 
-      const userObj: IUser = { ...user.toObject(), _id: user._id.toString() };
+    let user = await this._userRepository.findByEmail(email);
 
-      const token = jwt.sign(
-        { userId: user._id.toString(), email: user.email, role: "user" },
-        process.env.JWT_SECRET!,
-        { expiresIn: "15m" }
-      );
-      const refreshToken = jwt.sign(
-        { userId: user._id.toString() },
-        process.env.JWT_REFRESH_SECRET!,
-        { expiresIn: "7d" }
-      );
-
-      return {
-        success: true,
-        message: MESSAGES.LOGIN_SUCCESS,
-        token,
-        refreshToken,
-        user: userObj,
-      };
-    } catch (error) {
-      console.error("Google Login Error:", error);
-      return { success: false, message: MESSAGES.GOOGLE_LOGIN_FAILED };
+    if (user?.isActive === false) {
+      return { success: false, message: MESSAGES.ACCOUNT_SUSPENDED };
     }
+
+    if (!user) {
+      // Split name
+      const [firstName, ...rest] = name.split(" ");
+      const lastName = rest.join(" ");
+
+      const newUser: IUser = {
+        username: name,
+        email,
+        password: "qwertyuiopasdfghjkl", 
+        profilePic: picture || "",
+        role: "user",
+        isGoogleUser: true, // optionally mark Google signup
+        country: "USA", gender: "male", year: 20, phone: 1234567890,
+        toObject: function (): IUser {
+          throw new Error('Function not implemented.');
+        }
+      };
+
+      user = await this._userRepository.add(newUser);
+    }
+
+    const userObj: IUser = { ...user.toObject(), _id: user._id!.toString() };
+
+    const token = jwt.sign(
+      { userId: user._id!.toString(), email: user.email, role: "user" },
+      process.env.JWT_SECRET!,
+      { expiresIn: "15m" }
+    );
+
+    const refreshToken = jwt.sign(
+      { userId: user._id!.toString() },
+      process.env.JWT_REFRESH_SECRET!,
+      { expiresIn: "7d" }
+    );
+
+    return {
+      success: true,
+      message: MESSAGES.LOGIN_SUCCESS,
+      token,
+      refreshToken,
+      user: userObj,
+    };
+  } catch (error) {
+    console.error("Google Login Error:", error);
+    return { success: false, message: MESSAGES.GOOGLE_LOGIN_FAILED };
   }
+}
+
 
   async refresh(refreshToken: string): Promise<{ success: boolean; message: string; token?: string; refreshToken?: string }> {
     try {
