@@ -176,25 +176,44 @@ export default function LikedSongsPage() {
           onClick={() => setIsSidebarOpen(false)}
         ></div>
       )}
-      <main className="flex-1 ml-[240px] py-16 px-10 pb-24">
-        <div className="max-w-7xl mx-auto space-y-10">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <h1 className="text-5xl font-bold">Liked Songs</h1>
-            </div>
-            <p className="text-gray-400 text-base">{likedSongs.length} songs</p>
+      <main className="flex-1 md:ml-[240px] py-6 sm:py-16 px-4 sm:px-10 pb-24 transition-all duration-300">
+        <nav className="md:hidden text-sm text-gray-400 mb-4 sm:mb-6">
+          <a
+            href="/home"
+            className="hover:text-white transition-colors"
+            onClick={(e) => {
+              e.preventDefault();
+              navigate("/home");
+            }}
+          >
+            Home
+          </a>
+          <span className="mx-2"></span>
+          <span className="text-white">Liked Songs</span>
+        </nav>
+        <div className="max-w-7xl mx-auto space-y-6 sm:space-y-10">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-4">
+            <h1 className="text-3xl sm:text-5xl font-bold">Liked Songs</h1>
+            <p className="text-gray-400 text-sm sm:text-base">{likedSongs.length} songs</p>
           </div>
           {loading ? (
-            <div className="text-center py-4 text-gray-400">Loading liked songs...</div>
+            <div className="text-center py-4 text-sm sm:text-base text-gray-400">
+              Loading liked songs...
+            </div>
           ) : likedSongs.length > 0 ? (
             <div className="bg-[#151515] rounded-xl shadow-lg border border-black-900 overflow-hidden">
-              <div className="grid grid-cols-[48px_48px_2fr_1fr_1fr_48px_48px] gap-4 px-6 py-4 text-gray-400 text-lg font-semibold border-b border-gray-700">
+              <div className="hidden md:grid grid-cols-[48px_48px_2fr_1fr_1fr_48px_48px] gap-4 px-6 py-4 text-gray-400 text-lg font-semibold border-b border-gray-700">
                 <span className="text-center"></span>
                 <span className="text-center">#</span>
                 <span>Title</span>
                 <span>Artist</span>
                 <span>Album</span>
                 <span></span>
+                <span></span>
+              </div>
+              <div className="md:hidden grid grid-cols-[32px_2fr_48px] gap-2 px-4 py-2 text-gray-400 text-sm font-semibold border-b border-gray-700">
+                <span className="text-center">#</span>
+                <span>Title</span>
                 <span></span>
               </div>
               <DragDropContext onDragEnd={onDragEnd}>
@@ -207,14 +226,17 @@ export default function LikedSongsPage() {
                             <div
                               ref={provided.innerRef}
                               {...provided.draggableProps}
-                              className="grid grid-cols-[48px_48px_2fr_1fr_1fr_48px_48px] gap-4 px-6 py-4 hover:bg-[#212121] transition-all duration-200 cursor-pointer items-center group"
+                              className="md:grid md:grid-cols-[48px_48px_2fr_1fr_1fr_48px_48px] md:gap-4 grid grid-cols-[32px_2fr_48px] gap-2 px-4 sm:px-6 py-2 sm:py-4 hover:bg-[#212121] active:bg-[#212121] transition-colors duration-200 cursor-pointer items-center group box-content"
                             >
-                              <div {...provided.dragHandleProps} className="flex items-center justify-center">
+                              <div
+                                {...provided.dragHandleProps}
+                                className="hidden md:flex items-center justify-center"
+                              >
                                 <GripVertical size={20} className="text-gray-400" />
                               </div>
-                              <span className="text-gray-400 text-lg text-center">{index + 1}</span>
-                              <div className="flex items-center space-x-4 truncate">
-                                <div className="relative w-12 h-12 rounded-md overflow-hidden flex-shrink-0">
+                              <span className="text-gray-400 text-sm sm:text-lg text-center">{index + 1}</span>
+                              <div className="flex items-center space-x-2 sm:space-x-4 truncate">
+                                <div className="relative w-10 sm:w-12 h-10 sm:h-12 rounded-md overflow-hidden flex-shrink-0">
                                   <img
                                     src={song.img || "/placeholder.svg"}
                                     alt={song.title}
@@ -225,33 +247,39 @@ export default function LikedSongsPage() {
                                       e.stopPropagation();
                                       handlePlay(song);
                                     }}
-                                    className="absolute inset-0 flex items-center justify-center bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity rounded-md"
+                                    className="absolute inset-0 flex items-center justify-center bg-black/70 md:opacity-0 md:group-hover:opacity-100 opacity-100 transition-opacity duration-200 rounded-md box-content"
                                   >
                                     {currentTrack?.fileUrl === song.fileUrl && isPlaying ? (
-                                      <PauseCircle size={24} className="text-white" />
+                                      <PauseCircle size={20} className="text-white" />
                                     ) : (
-                                      <PlayCircle size={24} className="text-white" />
+                                      <PlayCircle size={20} className="text-white" />
                                     )}
                                   </button>
                                 </div>
                                 <div className="truncate">
-                                  <h3 className="text-white font-medium text-lg truncate">{song.title}</h3>
+                                  <h3 className="text-white font-medium text-sm sm:text-lg truncate">{song.title}</h3>
+                                  <p className="text-gray-400 text-xs sm:text-sm truncate md:hidden">
+                                    {Array.isArray(song.artists) ? song.artists.join(", ") : song.artists}
+                                  </p>
                                 </div>
                               </div>
-                              <span className="text-gray-400 text-lg truncate">
+                              <span className="text-gray-400 text-sm sm:text-lg truncate hidden md:block">
                                 {Array.isArray(song.artists) ? song.artists.join(", ") : song.artists}
                               </span>
-                              <span className="text-gray-400 text-lg truncate">{song.album}</span>
-                              <div className="flex items-center justify-end opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
-                              <div className="flex items-center justify-end opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                              <span className="text-gray-400 text-sm sm:text-lg truncate hidden md:block">
+                                {song.album}
+                              </span>
+                              <div className="hidden md:flex items-center justify-end md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-200"></div>
+                              <div className="flex items-center justify-end md:opacity-0 md:group-hover:opacity-100 opacity-100 transition-opacity duration-200">
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     handleUnlike(song._id);
                                   }}
                                   title="Unlike this song"
+                                  className="p-2 rounded-full hover:bg-[#333333] active:bg-[#333333] transition-colors duration-200 box-content"
                                 >
-                                  <Heart size={24} className="text-red-500 fill-red-500" />
+                                  <Heart size={20} className="text-red-500 fill-red-500" />
                                 </button>
                               </div>
                             </div>
@@ -265,8 +293,10 @@ export default function LikedSongsPage() {
               </DragDropContext>
             </div>
           ) : (
-            <div className="bg-[#1d1d1d] p-8 rounded-xl shadow-md border border-gray-800 text-center">
-              <p className="text-gray-400 text-lg">No liked songs yet. Start liking some premium tracks!</p>
+            <div className="bg-[#1d1d1d] p-4 sm:p-8 rounded-xl shadow-md border border-gray-800 text-center">
+              <p className="text-gray-400 text-sm sm:text-lg">
+                No liked songs yet. Start liking some premium tracks!
+              </p>
             </div>
           )}
         </div>
