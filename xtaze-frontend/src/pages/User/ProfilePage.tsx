@@ -1,5 +1,3 @@
-
-
 import { useEffect, useState, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -33,7 +31,6 @@ export default function Home() {
     if (!token) {
       console.error("No token found. Please login.");
     }
-    // Sync newUsername with user.username
     setNewUsername(user?.username || "");
   }, [user]);
 
@@ -153,11 +150,12 @@ export default function Home() {
 
   return (
     <div className="flex h-screen flex-col bg-black text-white">
+      {/* Cropper Modal */}
       {showCropper && (
-        <div className="fixed inset-0 bg-black bg-opacity-30 backdrop-blur-md flex items-center justify-center z-50">
-          <div className="bg-[#1d1d1d] p-4 rounded-lg shadow-lg">
-            <h2 className="text-white text-lg font-bold mb-3">Crop Image</h2>
-            <div className="relative w-[300px] h-[300px] bg-gray-800">
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-md flex items-center justify-center z-50">
+          <div className="bg-[#1d1d1d] p-4 rounded-lg shadow-lg w-[90vw] max-w-[280px] sm:max-w-[300px]">
+            <h2 className="text-white text-base sm:text-lg font-bold mb-3">Crop Image</h2>
+            <div className="relative w-full h-[200px] sm:h-[300px] bg-gray-800">
               <Cropper
                 image={imageSrc!}
                 crop={crop}
@@ -168,15 +166,15 @@ export default function Home() {
                 onCropComplete={onCropComplete}
               />
             </div>
-            <div className="flex justify-end mt-4">
+            <div className="flex justify-end mt-4 gap-2">
               <button
-                className="px-4 py-2 bg-gray-500 text-white rounded mr-2"
+                className="px-3 py-1.5 sm:px-4 sm:py-2 bg-gray-500 text-white rounded text-sm sm:text-base"
                 onClick={() => setShowCropper(false)}
               >
                 Cancel
               </button>
               <button
-                className="px-4 py-2 bg-blue-500 text-white rounded"
+                className="px-3 py-1.5 sm:px-4 sm:py-2 bg-blue-500 text-white rounded text-sm sm:text-base"
                 onClick={handleCropConfirm}
               >
                 Crop & Upload
@@ -186,49 +184,61 @@ export default function Home() {
         </div>
       )}
 
-      <div className="flex flex-1">
+      <div className="flex flex-1 relative">
+        {/* Sidebar (Visible on PC only) */}
         <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
-        {isSidebarOpen && (
-          <div
-            className="fixed inset-0 bg-black/50 z-20 md:hidden"
-            onClick={() => setIsSidebarOpen(false)}
-          ></div>
-        )}
-        <main className="flex-1 min-h-screen ml-64 bg-black">
-          <header className="flex justify-between items-center p-4">
-            <div className="relative">
+
+        {/* Main Content */}
+        <main className="flex-1 min-h-screen bg-black md:ml-64 transition-all duration-300">
+          {/* Header */}
+          <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 gap-4">
+            {/* Breadcrumbs on Mobile, Hidden on PC */}
+            <nav className="md:hidden text-sm text-gray-400">
+              <a
+                href="/home"
+                className="hover:text-white transition-colors"
+                onClick={(e) => { e.preventDefault(); navigate("/home"); }}
+              >
+                Home
+              </a>
+              <span className="mx-2"> </span>
+              <span className="text-white">Profile</span>
+            </nav>
+            <div className="relative w-full sm:w-auto">
               <Search
                 className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-                size={20}
+                size={18}
               />
               <input
                 type="search"
                 placeholder="Search"
-                className="bg-[#242424] rounded-full py-2 pl-10 pr-4 w-[300px] text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                className="bg-[#242424] rounded-full py-2 pl-10 pr-4 w-full sm:w-[250px] text-sm focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </div>
             <button
               className="p-2 hover:bg-[#242424] rounded-full"
               onClick={handleLogout}
+              aria-label="Log out"
             >
-              <Power size={20} />
+              <Power size={18} />
             </button>
           </header>
 
-          <section className="px-6 py-4">
-            <div className="flex items-center gap-6">
-              <div className="relative w-24 h-24 group">
+          <section className="px-4 sm:px-6 py-4">
+            {/* Profile Section */}
+            <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
+              <div className="relative w-20 h-20 sm:w-24 sm:h-24 group">
                 <div className="absolute inset-0.5 bg-red-500 opacity-50 rounded-full blur-md z-0"></div>
                 <img
                   src={(croppedImage as string) ?? user?.profilePic ?? profileImg}
                   alt="Profile"
-                  className="w-24 h-24 rounded-full object-cover relative z-10"
+                  className="w-full h-full rounded-full object-cover relative z-10"
                 />
                 <label
                   htmlFor="profile-upload"
                   className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-full opacity-0 group-hover:opacity-100 transition cursor-pointer z-20"
                 >
-                  <Camera size={24} className="text-white" />
+                  <Camera size={20} className="text-white" />
                 </label>
                 <input
                   type="file"
@@ -238,70 +248,74 @@ export default function Home() {
                   onChange={handleImageChange}
                 />
               </div>
-
-              <div>
-                <h2 className="text-2xl font-bold text-white">{user?.username}</h2>
-                <p className="text-gray-400">{user?.email}</p>
+              <div className="text-center sm:text-left">
+                <h2 className="text-xl sm:text-2xl font-bold text-white">{user?.username}</h2>
+                <p className="text-gray-400 text-sm sm:text-base">{user?.email}</p>
               </div>
             </div>
+
+            {/* Personal Information */}
             <div className="py-4">
               <div className="mb-6">
-                <h3 className="text-2xl font-bold text-white mb-3">Personal Information</h3>
-                <div className="bg-[#1d1d1d] p-6 rounded-lg shadow-md">
-                  <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl sm:text-2xl font-bold text-white mb-3">Personal Information</h3>
+                <div className="bg-[#1d1d1d] p-4 sm:p-6 rounded-lg shadow-md">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4">
                     <div className="flex-1">
-                      <p className="text-gray-400 text-lg">Username</p>
+                      <p className="text-gray-400 text-base sm:text-lg">Username</p>
                       {isEditingUsername ? (
-                        <div className="flex items-center gap-3 mt-2">
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mt-2">
                           <input
                             type="text"
                             value={newUsername}
                             onChange={(e) => setNewUsername(e.target.value)}
                             placeholder="Enter new username"
-                            className="bg-[#242424] text-white p-2 rounded-lg border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full max-w-xs"
+                            className="bg-[#242424] text-white p-2 rounded-lg border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:max-w-xs"
                           />
-                          <button
-                            onClick={handleUpdateUsername}
-                            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-                          >
-                            Save
-                          </button>
-                          <button
-                            onClick={() => {
-                              setIsEditingUsername(false);
-                              setNewUsername(user?.username || "");
-                            }}
-                            className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600"
-                          >
-                            Cancel
-                          </button>
+                          <div className="flex gap-2 mt-2 sm:mt-0">
+                            <button
+                              onClick={handleUpdateUsername}
+                              className="px-3 py-1.5 sm:px-4 sm:py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-sm sm:text-base"
+                            >
+                              Save
+                            </button>
+                            <button
+                              onClick={() => {
+                                setIsEditingUsername(false);
+                                setNewUsername(user?.username || "");
+                              }}
+                              className="px-3 py-1.5 sm:px-4 sm:py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 text-sm sm:text-base"
+                            >
+                              Cancel
+                            </button>
+                          </div>
                         </div>
                       ) : (
                         <div className="flex items-center gap-3">
-                          <p className="text-white text-lg font-semibold">{user?.username}</p>
+                          <p className="text-white text-base sm:text-lg font-semibold">{user?.username}</p>
                           <button
                             onClick={() => setIsEditingUsername(true)}
                             className="p-1 text-gray-400 hover:text-blue-500 transition"
                           >
-                            <Edit2 size={18} />
+                            <Edit2 size={16} />
                           </button>
                         </div>
                       )}
                     </div>
                   </div>
-                  <p className="text-gray-400 text-lg">Email</p>
-                  <p className="text-white text-lg font-semibold">{user?.email}</p>
+                  <p className="text-gray-400 text-base sm:text-lg">Email</p>
+                  <p className="text-white text-base sm:text-lg font-semibold">{user?.email}</p>
                 </div>
               </div>
             </div>
 
-            <h3 className="text-2xl font-bold text-white mb-6">Your Subscription Plan</h3>
-            <div className="bg-[#1d1d1d] p-6 rounded-xl shadow-lg flex flex-col items-center border border-gray-800 transition-all hover:shadow-xl">
+            {/* Subscription Plan */}
+            <h3 className="text-xl sm:text-2xl font-bold text-white mb-6">Your Subscription Plan</h3>
+            <div className="bg-[#1d1d1d] p-4 sm:p-6 rounded-xl shadow-lg flex flex-col items-center border border-gray-800 transition-all hover:shadow-xl">
               {user?.premium !== "Free" ? (
                 <div className="text-center space-y-2">
-                  <p className="text-xl font-semibold text-white">{user?.premium}</p>
+                  <p className="text-lg sm:text-xl font-semibold text-white">{user?.premium}</p>
                   <p className="text-sm text-gray-300">Enjoy full access to all features!</p>
-                  <span className="inline-block bg-green-500 text-white text-xs font-medium px-2.5 py-1 rounded-full">
+                  <span className="inline-block bg-green-500 text-white text-xs sm:text-sm font-medium px-2.5 py-1 rounded-full">
                     Active
                   </span>
                 </div>
@@ -311,7 +325,7 @@ export default function Home() {
                   <p className="text-sm text-gray-500">Upgrade to unlock premium features.</p>
                   <button
                     onClick={handleSubscribe}
-                    className="bg-blue-600 text-white px-6 py-2.5 rounded-lg font-medium hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 transition-all duration-200 ease-in-out transform hover:scale-105"
+                    className="bg-blue-600 text-white px-4 sm:px-6 py-2 sm:py-2.5 rounded-lg font-medium hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 transition-all duration-200 ease-in-out transform hover:scale-105 text-sm sm:text-base"
                   >
                     Upgrade Now
                   </button>
@@ -319,29 +333,32 @@ export default function Home() {
               )}
             </div>
 
-            <h3 className="text-xl font-bold mt-8 mb-4 text-white">Advanced Settings</h3>
-            <div className="bg-[#1d1d1d] p-6 rounded-lg shadow-md">
-              <div className="flex items-center justify-between mb-4">
-                <p className="text-white">Change Password</p>
+            {/* Advanced Settings */}
+            <h3 className="text-lg sm:text-xl font-bold mt-6 sm:mt-8 mb-4 text-white">Advanced Settings</h3>
+            <div className="bg-[#1d1d1d] p-4 sm:p-6 rounded-lg shadow-md">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4">
+                <p className="text-white text-base sm:text-lg">Change Password</p>
               </div>
               <div
                 onClick={() => navigate("/equalizer")}
-                className="flex items-center justify-between mb-4"
+                className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4"
               >
-                <p className="text-white">Equalizer</p>
-                <button className="bg-indigo-500 px-5 py-2 text-white rounded-lg hover:bg-red-600 transition">
+                <p className="text-white text-base sm:text-lg">Equalizer</p>
+                <button
+                  className="mt-2 sm:mt-0 bg-indigo-500 px-4 sm:px-5 py-1.5 sm:py-2 text-white rounded-lg hover:bg-red-600 transition text-sm sm:text-base"
+                >
                   Tune
                 </button>
               </div>
               {user?.role !== "Artist" && (
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between">
                   <div>
-                    <p className="text-white">Become an Artist</p>
+                    <p className="text-white text-base sm:text-lg">Become an Artist</p>
                     <p className="text-sm text-red-400">Warning: This is a permanent change</p>
                   </div>
                   <button
                     onClick={handleBecomeArtist}
-                    className="bg-red-500 px-5 py-2 text-white rounded-lg hover:bg-red-600 transition"
+                    className="mt-2 sm:mt-0 bg-red-500 px-4 sm:px-5 py-1.5 sm:py-2 text-white rounded-lg hover:bg-red-600 transition text-sm sm:text-base"
                   >
                     Become Artist
                   </button>

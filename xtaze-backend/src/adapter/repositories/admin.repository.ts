@@ -50,7 +50,7 @@ export default class AdminRepository implements IAdminRepository {
 
       const users = await UserModel.find({ _id: { $in: userIds } });
 
-      const formattedUsers: any[] = users.map(user => ({  
+      const formattedUsers: any = users.map(user => ({  
         ...user.toObject(),
         _id: user._id.toString(),
       }));
