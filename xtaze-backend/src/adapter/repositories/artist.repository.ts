@@ -121,7 +121,7 @@ export default class ArtistRepository implements IArtistRepository {
         { new: true } // Ensures the updated document is returned
       );
 
-      return updatedArtist ? { ...updatedArtist.toObject(), _id: updatedArtist._id.toString() } : null;
+      return updatedArtist ? ({ ...updatedArtist.toObject(), _id: updatedArtist._id.toString() } as unknown as IUser) : null; 
     } catch (error) {
       console.error(error);
       return null;
@@ -137,7 +137,7 @@ export default class ArtistRepository implements IArtistRepository {
       }
 
       // Return the artist document, converting _id to string
-      return { ...artist.toObject(), _id: artist._id.toString() };
+      return { ...artist.toObject(), _id: artist._id.toString() } as unknown as IUser;
     } catch (error) {
       console.error("Error in checkcard:", error);
       return null; // Return null on error to keep it simple
