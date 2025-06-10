@@ -481,12 +481,7 @@ export default function Home() {
                                 ) : (
                                   <li className="px-4 py-2 text-gray-400">No playlists available</li>
                                 )}
-                                {/* <li
-                                  className="px-4 py-2 hover:bg-[#333333] cursor-pointer text-white border-t border-gray-700"
-                                  onClick={() => navigate(`/playlists/${user?._id}`)}
-                                >
-                                  Create New Playlist
-                                </li> */}
+                            
                               </ul>
                             </div>
                           )}
