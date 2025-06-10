@@ -24,7 +24,7 @@ export default function ExplorePage() {
   const [tracks, setTracks] = useState<Track[]>([]);
   const [genres, setGenres] = useState<{ name: string; color: string }[]>([]);
   const [recentSongs, setRecentSongs] = useState<Track[]>([]);
-  const [topCharts, setTopCharts] = useState<Track[]>([]); // Changed to just Track[] for current month
+  const [topCharts, setTopCharts] = useState<Track[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [likedSongs, setLikedSongs] = useState<Set<string>>(new Set());
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
@@ -142,7 +142,6 @@ export default function ExplorePage() {
     }
   };
 
-  // Fetch data and calculate top charts for the current month
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -150,7 +149,6 @@ export default function ExplorePage() {
         console.log("All tracks:", allTracks);
         setTracks(allTracks);
 
-        // Extract unique genres
         const uniqueGenres = Array.from(
           new Set(
             allTracks.flatMap((track) =>
@@ -176,15 +174,13 @@ export default function ExplorePage() {
         }));
         setGenres(genreColors);
 
-        // Recent songs
         const sortedTracks = allTracks
           .filter((track) => track.createdAt && !isNaN(new Date(track.createdAt).getTime()))
           .sort((a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime());
         setRecentSongs(sortedTracks.slice(0, 6));
 
-        // Calculate top charts for the current month
         const now = new Date();
-        const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`; // e.g., "2025-04"
+        const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
 
         const monthlyPlays: { track: Track; plays: number }[] = [];
         allTracks.forEach((track) => {
@@ -197,9 +193,9 @@ export default function ExplorePage() {
         });
 
         const topTracks = monthlyPlays
-          .sort((a, b) => b.plays - a.plays) // Sort by plays descending
-          .slice(0, 5) // Top 5 tracks
-          .map((tp) => tp.track); // Extract track objects
+          .sort((a, b) => b.plays - a.plays)
+          .slice(0, 5)
+          .map((tp) => tp.track);
 
         setTopCharts(topTracks);
 
@@ -215,14 +211,12 @@ export default function ExplorePage() {
     fetchData();
   }, [user?._id]);
 
-  // Sync likedSongs from user data
   useEffect(() => {
     if (user?.likedSongs) {
       setLikedSongs(new Set(user.likedSongs.map(String) || []));
     }
   }, [user?.likedSongs]);
 
-  // Audio playback logic
   useEffect(() => {
     if (!audioRef.current) {
       audioRef.current = audio;
@@ -283,30 +277,45 @@ export default function ExplorePage() {
 
   return (
     <div className="flex min-h-screen bg-black text-white">
-     <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
-             {isSidebarOpen && (
-               <div
-                 className="fixed inset-0 bg-black/50 z-20 md:hidden"
-                 onClick={() => setIsSidebarOpen(false)}
-               ></div>
-             )}
-      <div className="flex-1 ml-64">
-        <main className="container px-4 py-8">
-          <section className="mb-10">
-            <h1 className="text-3xl font-bold">Explore</h1>
+      <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
+      {isSidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-20 md:hidden"
+          onClick={() => setIsSidebarOpen(false)}
+        ></div>
+      )}
+      <div className="flex-1 md:ml-64 transition-all duration-300">
+        <main className="container px-4 py-6 sm:px-6 sm:py-8">
+          {/* Breadcrumbs on Mobile, Hidden on PC */}
+          <nav className="md:hidden text-sm text-gray-400 mb-4">
+            <a
+              href="/home"
+              className="hover:text-white transition-colors"
+              onClick={(e) => {
+                e.preventDefault();
+                navigate("/home");
+              }}
+            >
+              Home
+            </a>
+            <span className="mx-2"></span>
+            <span className="text-white">Explore</span>
+          </nav>
+          <section className="mb-8 sm:mb-10">
+            <h1 className="text-2xl sm:text-3xl font-bold mb-4">Explore</h1>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-2xl font-bold mt-15">Recent Songs</h2>
-              <Link to="#" className="text-white/70 hover:text-white flex items-center gap-1">
+              <h2 className="text-xl sm:text-2xl font-bold">Recent Songs</h2>
+              <Link to="#" className="text-white/70 hover:text-white text-sm sm:text-base flex items-center gap-1">
                 {/* See all <ChevronRight className="h-4 w-4" /> */}
               </Link>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6 gap-4">
               {recentSongs.length > 0 ? (
                 recentSongs.map((track) => (
                   <Link
                     key={track._id}
                     to="#"
-                    className="group bg-[#1d1d1d] rounded-lg p-4 hover:bg-[#242424] transition-colors flex flex-col"
+                    className="group bg-[#1d1d1d] rounded-lg p-3 sm:p-4 hover:bg-[#242424] transition-colors flex flex-col"
                   >
                     <div className="relative w-full h-[90%]">
                       <img
@@ -323,58 +332,52 @@ export default function ExplorePage() {
                           className="absolute inset-0 flex items-center justify-center pointer-events-auto"
                         >
                           {currentTrack?.fileUrl === track.fileUrl && isPlaying ? (
-                            <Pause size={24} className="text-white" />
+                            <Pause size={20} className="text-white" />
                           ) : (
-                            <Play size={24} className="text-white" />
+                            <Play size={20} className="text-white" />
                           )}
                         </button>
                       </div>
                     </div>
                     <div className="pt-2">
-                      <h3 className="font-medium text-sm truncate">{track.title}</h3>
-                      <p className="text-xs text-white/70 truncate">
+                      <h3 className="font-medium text-sm sm:text-base truncate">{track.title}</h3>
+                      <p className="text-xs sm:text-sm text-white/70 truncate">
                         {Array.isArray(track.artists) ? track.artists.join(", ") : track.artists}
                       </p>
                     </div>
                     {user?.premium !== "Free" && (
                       <div className="relative flex gap-2 mt-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
                         <button
-                          className="p-1 hover:bg-[#333333] rounded-full text-white pointer-events-auto"
+                          className="p-1.5 sm:p-2 hover:bg-[#333333] rounded-full text-white pointer-events-auto"
                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
                             setDropdownTrackId(dropdownTrackId === track._id ? null : track._id);
                           }}
                         >
-                          <Plus size={16} />
+                          <Plus size={18} />
                         </button>
                         {dropdownTrackId === track._id && (
-                          <div className="absolute left-0 mt-8 w-48 bg-[#242424] rounded-md shadow-lg z-20 pointer-events-auto">
-                            <ul className="py-1">
+                          <div className="absolute left-0 mt-8 w-40 sm:w-48 bg-[#242424] rounded-md shadow-lg z-20 pointer-events-auto">
+                            <ul className="py-1 text-sm sm:text-base">
                               {playlists.length > 0 ? (
                                 playlists.map((playlist) => (
                                   <li
                                     key={playlist._id}
-                                    className="px-4 py-2 hover:bg-[#333333] cursor-pointer text-white"
+                                    className="px-3 sm:px-4 py-1.5 sm:py-2 hover:bg-[#333333] cursor-pointer text-white"
                                     onClick={() => handleAddToPlaylist(track._id || track.fileUrl, playlist._id as string)}
                                   >
                                     {playlist.title}
                                   </li>
                                 ))
                               ) : (
-                                <li className="px-4 py-2 text-gray-400">No playlists available</li>
+                                <li className="px-3 sm:px-4 py-1.5 sm:py-2 text-gray-400">No playlists available</li>
                               )}
-                              {/* <li
-                                className="px-4 py-2 hover:bg-[#333333] cursor-pointer text-white border-t border-gray-700"
-                                onClick={() => navigate(`/playlists/${user?._id}`)}
-                              >
-                                Create New Playlist
-                              </li> */}
                             </ul>
                           </div>
                         )}
                         <button
-                          className={`p-1 hover:bg-[#333333] rounded-full pointer-events-auto ${
+                          className={`p-1.5 sm:p-2 hover:bg-[#333333] rounded-full pointer-events-auto ${
                             likedSongs.has(track._id || track.fileUrl) ? "text-red-500" : "text-white"
                           }`}
                           onClick={(e) => {
@@ -384,42 +387,42 @@ export default function ExplorePage() {
                           }}
                         >
                           <Heart
-                            size={16}
+                            size={18}
                             fill={likedSongs.has(track._id || track.fileUrl) ? "currentColor" : "none"}
                           />
                         </button>
                         <button
-                          className="p-1 hover:bg-[#333333] rounded-full text-white pointer-events-auto"
+                          className="p-1.5 sm:p-2 hover:bg-[#333333] rounded-full text-white pointer-events-auto"
                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
                             handleDownload(track.fileUrl, track.title);
                           }}
                         >
-                          <Download size={16} />
+                          <Download size={18} />
                         </button>
                         <button
-                          className="p-1 hover:bg-[#333333] rounded-full text-white pointer-events-auto"
+                          className="p-1.5 sm:p-2 hover:bg-[#333333] rounded-full text-white pointer-events-auto"
                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
                             handleAddToQueue(track);
                           }}
                         >
-                          <ListMusic size={16} />
+                          <ListMusic size={18} />
                         </button>
                       </div>
                     )}
                   </Link>
                 ))
               ) : (
-                <p className="text-white/70">No recent songs available</p>
+                <p className="text-white/70 text-sm sm:text-base">No recent songs available</p>
               )}
             </div>
           </section>
 
-          <section className="mb-10">
-            <h2 className="text-2xl font-bold mb-4">Browse by Genre</h2>
+          <section className="mb-8 sm:mb-10">
+            <h2 className="text-xl sm:text-2xl font-bold mb-4">Browse by Genre</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {genres.length > 0 ? (
                 genres.map((genre) => (
@@ -429,26 +432,26 @@ export default function ExplorePage() {
                     className="group cursor-pointer border-0 overflow-hidden rounded-md"
                     style={{ backgroundColor: genre.color }}
                   >
-                    <div className="relative h-28 w-full p-4 flex items-start">
-                      <h3 className="text-xl font-bold text-white">{genre.name}</h3>
+                    <div className="relative h-24 sm:h-28 w-full p-3 sm:p-4 flex items-start">
+                      <h3 className="text-lg sm:text-xl font-bold text-white">{genre.name}</h3>
                     </div>
                   </div>
                 ))
               ) : (
-                <p className="text-white/70">No genres available</p>
+                <p className="text-white/70 text-sm sm:text-base">No genres available</p>
               )}
             </div>
           </section>
 
-          <section className="mb-10">
-            <h2 className="text-2xl font-bold mb-4">Top Charts - This Month</h2>
+          <section className="mb-8 sm:mb-10">
+            <h2 className="text-xl sm:text-2xl font-bold mb-4">Top Charts - This Month</h2>
             {topCharts.length > 0 ? (
-              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                 {topCharts.map((track) => (
                   <Link
                     key={track._id}
                     to="#"
-                    className="group bg-[#1d1d1d] rounded-lg p-4 hover:bg-[#242424] transition-colors flex flex-col"
+                    className="group bg-[#1d1d1d] rounded-lg p-3 sm:p-4 hover:bg-[#242424] transition-colors flex flex-col"
                   >
                     <div className="relative w-full h-[90%]">
                       <img
@@ -465,58 +468,52 @@ export default function ExplorePage() {
                           className="absolute inset-0 flex items-center justify-center pointer-events-auto"
                         >
                           {currentTrack?.fileUrl === track.fileUrl && isPlaying ? (
-                            <Pause size={24} className="text-white" />
+                            <Pause size={20} className="text-white" />
                           ) : (
-                            <Play size={24} className="text-white" />
+                            <Play size={20} className="text-white" />
                           )}
                         </button>
                       </div>
                     </div>
                     <div className="pt-2">
-                      <h3 className="font-medium text-sm truncate">{track.title}</h3>
-                      <p className="text-xs text-white/70 truncate">
+                      <h3 className="font-medium text-sm sm:text-base truncate">{track.title}</h3>
+                      <p className="text-xs sm:text-sm text-white/70 truncate">
                         {Array.isArray(track.artists) ? track.artists.join(", ") : track.artists}
                       </p>
                     </div>
                     {user?.premium !== "Free" && (
                       <div className="relative flex gap-2 mt-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
                         <button
-                          className="p-1 hover:bg-[#333333] rounded-full text-white pointer-events-auto"
+                          className="p-1.5 sm:p-2 hover:bg-[#333333] rounded-full text-white pointer-events-auto"
                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
                             setDropdownTrackId(dropdownTrackId === track._id ? null : track._id);
                           }}
                         >
-                          <Plus size={16} />
+                          <Plus size={18} />
                         </button>
                         {dropdownTrackId === track._id && (
-                          <div className="absolute left-0 mt-8 w-48 bg-[#242424] rounded-md shadow-lg z-20 pointer-events-auto">
-                            <ul className="py-1">
+                          <div className="absolute left-0 mt-8 w-40 sm:w-48 bg-[#242424] rounded-md shadow-lg z-20 pointer-events-auto">
+                            <ul className="py-1 text-sm sm:text-base">
                               {playlists.length > 0 ? (
                                 playlists.map((playlist) => (
                                   <li
                                     key={playlist._id}
-                                    className="px-4 py-2 hover:bg-[#333333] cursor-pointer text-white"
+                                    className="px-3 sm:px-4 py-1.5 sm:py-2 hover:bg-[#333333] cursor-pointer text-white"
                                     onClick={() => handleAddToPlaylist(track._id || track.fileUrl, playlist._id as string)}
                                   >
                                     {playlist.title}
                                   </li>
                                 ))
                               ) : (
-                                <li className="px-4 py-2 text-gray-400">No playlists available</li>
+                                <li className="px-3 sm:px-4 py-1.5 sm:py-2 text-gray-400">No playlists available</li>
                               )}
-                              {/* <li
-                                className="px-4 py-2 hover:bg-[#333333] cursor-pointer text-white border-t border-gray-700"
-                                onClick={() => navigate(`/playlists/${user?._id}`)}
-                              >
-                                Create New Playlist
-                              </li> */}
                             </ul>
                           </div>
                         )}
                         <button
-                          className={`p-1 hover:bg-[#333333] rounded-full pointer-events-auto ${
+                          className={`p-1.5 sm:p-2 hover:bg-[#333333] rounded-full pointer-events-auto ${
                             likedSongs.has(track._id || track.fileUrl) ? "text-red-500" : "text-white"
                           }`}
                           onClick={(e) => {
@@ -526,29 +523,29 @@ export default function ExplorePage() {
                           }}
                         >
                           <Heart
-                            size={16}
+                            size={18}
                             fill={likedSongs.has(track._id || track.fileUrl) ? "currentColor" : "none"}
                           />
                         </button>
                         <button
-                          className="p-1 hover:bg-[#333333] rounded-full text-white pointer-events-auto"
+                          className="p-1.5 sm:p-2 hover:bg-[#333333] rounded-full text-white pointer-events-auto"
                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
                             handleDownload(track.fileUrl, track.title);
                           }}
                         >
-                          <Download size={16} />
+                          <Download size={18} />
                         </button>
                         <button
-                          className="p-1 hover:bg-[#333333] rounded-full text-white pointer-events-auto"
+                          className="p-1.5 sm:p-2 hover:bg-[#333333] rounded-full text-white pointer-events-auto"
                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
                             handleAddToQueue(track);
                           }}
                         >
-                          <ListMusic size={16} />
+                          <ListMusic size={18} />
                         </button>
                       </div>
                     )}
@@ -556,7 +553,7 @@ export default function ExplorePage() {
                 ))}
               </div>
             ) : (
-              <p className="text-white/70">No top charts available for this month</p>
+              <p className="text-white/70 text-sm sm:text-base">No top charts available for this month</p>
             )}
           </section>
         </main>

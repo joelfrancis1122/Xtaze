@@ -1,11 +1,10 @@
-
 import { useEffect, useState } from "react";
 import axios from "axios";
 import Sidebar from "./userComponents/SideBar";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 const API_KEY = import.meta.env.VITE_YOUTUBE_API;
-
 
 interface Video {
   id: string;
@@ -15,16 +14,8 @@ interface Video {
   thumbnail: string;
 }
 
-// interface Playlist {
-//   _id: number | string;
-//   title: string;
-//   description: string;
-//   imageUrl: string;
-//   createdBy: string;
-//   tracks?: string[];
-// }
-
 export default function VideoPage() {
+  const navigate = useNavigate();
   const [trendingVideos, setTrendingVideos] = useState<Video[]>([]);
   const [newReleases, setNewReleases] = useState<Video[]>([]);
   const [playlistHits, setPlaylistHits] = useState<Video[]>([]);
@@ -34,8 +25,6 @@ export default function VideoPage() {
   const [jazzVideos, setJazzVideos] = useState<Video[]>([]);
   const [highViewsVideos, setHighViewsVideos] = useState<Video[]>([]);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-
-  // const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [loading, setLoading] = useState(true);
   const [dropdownVideoId, setDropdownVideoId] = useState<string | null>(null);
   const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
@@ -68,7 +57,7 @@ export default function VideoPage() {
             id: item.id,
             title: item.snippet.title,
             artist: item.snippet.channelTitle,
-            videoUrl: `https://www.youtube.com/embed/${item.id}?autoplay=1&mute=1`, // Muted by default
+            videoUrl: `https://www.youtube.com/embed/${item.id}?autoplay=1&mute=1`,
             thumbnail: item.snippet.thumbnails.high.url,
           }))
         );
@@ -170,7 +159,6 @@ export default function VideoPage() {
             thumbnail: item.snippet.thumbnails.high.url,
           }))
         );
-
       } catch (error) {
         console.error("Error fetching data:", error);
         toast.error("Failed to load videos or playlists");
@@ -182,32 +170,28 @@ export default function VideoPage() {
     fetchAllVideosAndPlaylists();
   }, [token]);
 
-  
-
-
   const handlePlayVideo = (videoId: string) => {
-    // Toggle off if same video, otherwise play new one
     setSelectedVideo(selectedVideo === videoId ? null : videoId);
   };
 
-
-
   const renderVideoSection = (title: string, videos: Video[]) => (
-    <div className="mb-8">
-      <h3 className="text-2xl font-bold mb-4">{title}</h3>
+    <div className="mb-6 sm:mb-8">
+      <h3 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4">{title}</h3>
       {loading && videos.length === 0 ? (
-        <div className="text-center py-4">Loading {title.toLowerCase()}...</div>
+        <div className="text-center py-3 sm:py-4 text-sm sm:text-base text-gray-400">
+          Loading {title.toLowerCase()}...
+        </div>
       ) : (
-        <div className="grid grid-cols-3 md:grid-cols-3 xl::grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
           {videos.map((video) => (
             <div
-              key={`${video.id}-${Date.now()}`} // Unique key to force re-render
-              className="group bg-[#1d1d1d] rounded-lg p-4 hover:bg-[#242424] transition-colors flex flex-col"
+              key={`${video.id}-${Date.now()}`}
+              className="group bg-[#1d1d1d] rounded-lg p-3 sm:p-4 hover:bg-[#242424] transition-colors flex flex-col"
             >
-              <div className="w-full h-[180px] mb-3 relative aspect-[16/9]">
+              <div className="w-full mb-2 sm:mb-3 relative aspect-[16/9]">
                 {selectedVideo === video.id ? (
                   <iframe
-                    key={video.id} // Unique key for iframe to ensure unmount
+                    key={video.id}
                     src={video.videoUrl}
                     className="w-full h-full rounded-md"
                     allow="autoplay; encrypted-media"
@@ -224,12 +208,12 @@ export default function VideoPage() {
                 )}
               </div>
               <div className="flex flex-col flex-1">
-                <div className="text-white font-semibold truncate">{video.title}</div>
-                <div className="text-gray-400 text-sm truncate mb-2">{video.artist}</div>
+                <div className="text-white font-semibold text-sm sm:text-base truncate">{video.title}</div>
+                <div className="text-gray-400 text-xs sm:text-sm truncate mb-1 sm:mb-2">{video.artist}</div>
                 <div className="flex gap-2 mt-auto opacity-0 group-hover:opacity-100 transition-opacity relative">
                   <div className="relative">
                     <button
-                      className="p-1 hover:bg-[#333333] rounded-full"
+                      className="p-1.5 sm:p-2 hover:bg-[#333333] rounded-full text-white"
                       onClick={(e) => {
                         e.stopPropagation();
                         setDropdownVideoId(dropdownVideoId === video.id ? null : video.id);
@@ -238,32 +222,14 @@ export default function VideoPage() {
                       {/* <Plus size={16} /> */}
                     </button>
                     {dropdownVideoId === video.id && (
-                      <div className="absolute left-0 mt-2 w-48 bg-[#242424] rounded-md shadow-lg z-20">
-                        <ul className="py-1">
-                          {/* {playlists.length > 0 ? (
-                            playlists.map((playlist) => (
-                              <li
-                                key={playlist._id}
-                                className="px-4 py-2 hover:bg-[#333333] cursor-pointer text-white"
-                                onClick={() => handleAddToPlaylist(video.id, playlist._id.toString())}
-                              >
-                                {playlist.title}
-                              </li>
-                            ))
-                          ) : (
-                            <li className="px-4 py-2 text-gray-400">No playlists available</li>
-                          )} */}
-                          {/* <li
-                            className="px-4 py-2 hover:bg-[#333333] cursor-pointer text-white border-t border-gray-700"
-                            onClick={() => navigate(`/playlists/${userId}`)}
-                          >
-                            Create New Playlist
-                          </li> */}
+                      <div className="absolute left-0 mt-2 w-40 sm:w-48 bg-[#242424] rounded-md shadow-lg z-20">
+                        <ul className="py-1 text-sm sm:text-base">
+                          {/* Placeholder for playlist functionality */}
+                          <li className="px-3 sm:px-4 py-1.5 sm:py-2 text-gray-400">No playlists available</li>
                         </ul>
                       </div>
                     )}
                   </div>
-               
                 </div>
               </div>
             </div>
@@ -276,16 +242,31 @@ export default function VideoPage() {
   return (
     <div className="flex h-screen flex-col bg-black text-white">
       <div className="flex flex-1">
-      <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
-            {isSidebarOpen && (
-              <div
-                className="fixed inset-0 bg-black/50 z-20 md:hidden"
-                onClick={() => setIsSidebarOpen(false)}
-              ></div>
-            )}
-        <main className="flex-1 min-h-screen ml-64 bg-black overflow-y-auto">
-          <section className="px-6 py-4">
-            <h2 className="text-3xl font-bold mb-6">Music Videos</h2>
+        <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
+        {isSidebarOpen && (
+          <div
+            className="fixed inset-0 bg-black/50 z-20 md:hidden"
+            onClick={() => setIsSidebarOpen(false)}
+          ></div>
+        )}
+        <main className="flex-1 min-h-screen md:ml-64 bg-black overflow-y-auto transition-all duration-300">
+          <section className="px-4 sm:px-6 py-4 sm:py-6">
+            {/* Breadcrumbs on Mobile, Hidden on PC */}
+            <nav className="md:hidden text-sm text-gray-400 mb-3 sm:mb-4">
+              <a
+                href="/home"
+                className="hover:text-white transition-colors"
+                onClick={(e) => {
+                  e.preventDefault();
+                  navigate("/home");
+                }}
+              >
+                Home
+              </a>
+              <span className="mx-2"></span>
+              <span className="text-white">Videos</span>
+            </nav>
+            <h2 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6">Music Videos</h2>
             {renderVideoSection("Trending Music (US)", trendingVideos)}
             {renderVideoSection("New Releases (UK)", newReleases)}
             {renderVideoSection("Top Playlist Hits (Germany)", playlistHits)}
