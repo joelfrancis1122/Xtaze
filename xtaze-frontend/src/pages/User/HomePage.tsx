@@ -342,7 +342,7 @@ export default function Home() {
         <main
           className={`flex-1 min-h-screen bg-black overflow-y-auto transition-all duration-300 ${
             isSidebarOpen ? "ml-64" : "ml-0"
-          } md:ml-[256px]`} // Dynamic margin on mobile, fixed on desktop
+          } md:ml-[256px]`} 
         >
           <header className="flex justify-between items-center p-4 sticky top-0 bg-black z-10">
             {/* Hamburger menu for mobile */}
