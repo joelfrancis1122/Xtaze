@@ -8,6 +8,7 @@ export default function CancelPage() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   return (
+    
     <div className="min-h-screen bg-black text-white flex">
       <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
         {isSidebarOpen && (
