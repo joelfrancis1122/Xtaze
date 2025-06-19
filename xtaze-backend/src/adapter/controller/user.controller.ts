@@ -93,7 +93,7 @@ export default class UserController {
         res.status(HttpStatus.OK).json({
           success: true,
           message: response.message,
-          token: response.token, // Return access token in response
+          token: response.token, 
           user: response.user,
         });
       } else {
@@ -112,7 +112,7 @@ export default class UserController {
       const response = await this._userUseCase.googleLogin(token);
 
       if (response.success && response.token && response.refreshToken) {
-        // Only set refreshToken in cookie
+        
         res.cookie("refreshToken", response.refreshToken, {
           httpOnly: true, // Prevent JavaScript access
           secure: true,   // Required for HTTPS
@@ -123,7 +123,7 @@ export default class UserController {
         res.status(HttpStatus.OK).json({
           success: true,
           message: response.message,
-          token: response.token, // Return access token in response
+          token: response.token, // access token
           user: response.user,
         });
       } else {
@@ -148,13 +148,12 @@ export default class UserController {
       const response = await this._userUseCase.refresh(refreshToken);
 
       if (response.success && response.token && response.refreshToken) {
-        // Update refresh token cookie with new value (httpOnly: true for security)
         res.cookie("refreshToken", response.refreshToken, {
-          httpOnly: true, // Prevent JavaScript access
-          secure: true,   // Required for HTTPS
-          sameSite: "none", // For cross-origin
-          maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-          path: "/",     // Ensure site-wide availabilit
+          httpOnly: true, 
+          secure: true,   
+          sameSite: "none", 
+          maxAge: 7 * 24 * 60 * 60 * 1000,
+          path: "/",     // Ensure site-wide availability
         });
 
         // Return new access token in response
