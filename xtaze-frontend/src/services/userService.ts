@@ -40,7 +40,8 @@ const addRefreshInterceptor = (apiInstance: any) => {
   );
 };
 
-[userApi, providerApi, deezerApi].forEach(addRefreshInterceptor); 
+// Apply interceptors
+[userApi, providerApi, deezerApi].forEach(addRefreshInterceptor); // Only user-related APIs
 
 // Refresh Token
 export const refreshToken = async (): Promise<string | null> => {
@@ -61,6 +62,7 @@ export const refreshToken = async (): Promise<string | null> => {
   }
 };
 
+// Generic API Call Helper
 const apiCall = async <T>(
   instance: any,
   method: typeof HTTP_METHODS[keyof typeof HTTP_METHODS],
@@ -89,16 +91,19 @@ export const checkUsername = async (username: string): Promise<boolean> => {
   return data.available;
 };
 
+// Send OTP
 export const sendOtp = async (email: string): Promise<void> => {
   const data = await apiCall<{ success: boolean; message?: string }>(userApi, HTTP_METHODS.POST, "/send-otp", { email });
   if (!data.success) throw new Error(data.message || "Failed to send OTP");
 };
 
+// Verify OTP
 export const verifyOtp = async (otp: string): Promise<void> => {
   const data = await apiCall<{ success: boolean; message?: string }>(userApi, HTTP_METHODS.POST, "/verify-otp", { otp });
   if (!data.success) throw new Error(data.message || "Failed to verify OTP");
 };
 
+// Register User
 export const registerUser = async (
   signupData: { username: string; country: string; gender: string; year: string; phone: string; email: string; password?: string; confirmPassword?: string },
   dispatch: ReturnType<typeof useDispatch>
@@ -114,6 +119,7 @@ export const registerUser = async (
   if (data.user) dispatch(saveSignupData(data.user));
 };
 
+// Login User
 export const loginUser = async (email: string, password: string, dispatch: ReturnType<typeof useDispatch>): Promise<void> => {
   const data = await apiCall<{ success: boolean; token: string; user: UserSignupData }>(userApi, HTTP_METHODS.POST, "/login", { email, password });
   if (!data.success) throw new Error("Failed to login");
@@ -121,6 +127,7 @@ export const loginUser = async (email: string, password: string, dispatch: Retur
   dispatch(saveSignupData(data.user));
 };
 
+// Google Login
 export const googleLogin = async (idToken: string, dispatch: ReturnType<typeof useDispatch>): Promise<void> => {
   const data = await apiCall<{ success: boolean; token: string; user: UserSignupData; message?: string }>(
     userApi,
@@ -133,6 +140,7 @@ export const googleLogin = async (idToken: string, dispatch: ReturnType<typeof u
   dispatch(saveSignupData(data.user));
 };
 
+// Fetch Tracks
 export const fetchTracks = async (userId: string, isPremium: string): Promise<{ tracks: Track[]; user?: UserSignupData }> => {
   const instance = isPremium !== "Free" ? providerApi : deezerApi;
   const url = isPremium !== "Free" ? `/getAllTracks?userId=${userId}` : `/songs/deezer?userId=${userId}`;
@@ -142,18 +150,21 @@ export const fetchTracks = async (userId: string, isPremium: string): Promise<{ 
   return { tracks, user: data.user };
 };
 
+// Fetch All Tracks
 export const fetchAllTrack = async (): Promise<Track[]> => {
   const data = await apiCall<{ success: boolean; data: Track[] }>(userApi, HTTP_METHODS.GET, "/fetchAllTrack");
   if (!data.success) throw new Error("Failed to fetch all tracks");
   return data.data;
 };
 
+// Fetch Genre Tracks
 export const fetchGenreTracks = async (genre: string): Promise<Track[]> => {
   const data = await apiCall<{ success: boolean; data: Track[] }>(userApi, HTTP_METHODS.GET, `/fetchGenreTracks?GenreName=${genre}`);
   if (!data.success) throw new Error("Failed to fetch genre tracks");
   return data.data;
 };
 
+// Fetch Liked Songs
 export const fetchLikedSongs = async (userId: string, songIds: string[]): Promise<Track[]> => {
   const data = await apiCall<{ success: boolean; tracks: Track[] }>(
     userApi,
@@ -165,11 +176,13 @@ export const fetchLikedSongs = async (userId: string, songIds: string[]): Promis
   return data.tracks;
 };
 
+// Increment Listeners
 export const incrementListeners = async (trackId: string, id: string): Promise<void> => {
   const data = await apiCall<{ success: boolean }>(artistApi, HTTP_METHODS.POST, "/incrementListeners", { trackId, id });
   if (!data.success) throw new Error("Failed to increment listeners");
 };
 
+// Toggle Like
 export const toggleLike = async (userId: string, trackId: string): Promise<UserSignupData> => {
   const data = await apiCall<{ success: boolean; user: UserSignupData }>(
     userApi,
@@ -181,6 +194,7 @@ export const toggleLike = async (userId: string, trackId: string): Promise<UserS
   return data.user;
 };
 
+// Upload Profile Image
 export const uploadProfileImage = async (userId: string, base64Image: string): Promise<UserSignupData> => {
   const blob = await (await fetch(base64Image)).blob();
   const formData = new FormData();
@@ -191,28 +205,33 @@ export const uploadProfileImage = async (userId: string, base64Image: string): P
   return data.user;
 };
 
+// Forgot Password
 export const forgotPassword = async (email: string): Promise<void> => {
   const data = await apiCall<{ success: boolean; message?: string }>(userApi, HTTP_METHODS.POST, "/forgotPassword", { email });
   if (!data.success) throw new Error(data.message || "Failed to send reset email");
 };
 
-export const resetPassword = async (formData: string): Promise<void> => {
-  const data = await apiCall<{ success: boolean; message?: string }>(userApi, HTTP_METHODS.POST, "/resetPassword", { formData });
+// Reset Password
+export const resetPassword = async ( formData: string): Promise<void> => {
+  const data = await apiCall<{ success: boolean; message?: string }>(userApi, HTTP_METHODS.POST, "/resetPassword", {formData });
   if (!data.success) throw new Error(data.message || "Failed to reset password");
 };
 
+// Create Playlist
 export const createPlaylists = async (userId: string, playlistData: Partial<Playlist>): Promise<Playlist> => {
   const data = await apiCall<{ success: boolean; data: Playlist }>(userApi, HTTP_METHODS.POST, "/createPlaylist", { userId, playlist: playlistData });
   if (!data.success) throw new Error("Failed to create playlist");
   return data.data;
 };
 
+// Get My Playlists
 export const getMyplaylist = async (userId: string): Promise<Playlist[]> => {
   const data = await apiCall<{ success: boolean; data: Playlist[] }>(userApi, HTTP_METHODS.GET, `/getPlaylist?userId=${userId}`);
   if (!data.success) throw new Error("Failed to get playlists");
   return data.data;
 };
 
+// Fetch Playlist Tracks
 export const fetchPlaylistTracks = async (id: string, page: number = 1, limit: number = 20): Promise<{ tracks: Track[]; total: number }> => {
   const data = await apiCall<{ success: boolean; data: { tracks: Track[]; total: number } }>(
     userApi,
@@ -223,33 +242,39 @@ export const fetchPlaylistTracks = async (id: string, page: number = 1, limit: n
   return data.data;
 };
 
+// Fetch Banners
 export const fetchBanners = async (): Promise<IBanner[]> => {
   const data = await apiCall<{ success: boolean; data: IBanner[] }>(userApi, HTTP_METHODS.GET, "/banners");
   if (!data.success) throw new Error("Failed to fetch banners");
   return data.data;
 };
 
+// Add Track to Playlist
 export const addTrackToPlaylist = async (userId: string, playlistId: string, trackId: string): Promise<void> => {
   const data = await apiCall<{ success: boolean }>(userApi, HTTP_METHODS.POST, "/addToPlaylist", { userId, playlistId, trackId });
   if (!data.success) throw new Error("Failed to add track to playlist");
 };
 
+// Delete Playlist
 export const deletePlaylist = async (id: string): Promise<void> => {
   const data = await apiCall<{ success: boolean }>(userApi, HTTP_METHODS.POST, "/deletePlaylist", { id });
   if (!data.success) throw new Error("Failed to delete playlist");
 };
 
+// Update Playlist Name
 export const updatePlaylistName = async (id: string, playlistName: string): Promise<void> => {
   const data = await apiCall<{ success: boolean }>(userApi, HTTP_METHODS.PUT, "/updateNamePlaylist", { id, playlistName });
   if (!data.success) throw new Error("Failed to update playlist name");
 };
 
+// Become Artist
 export const becomeArtist = async (id: string): Promise<UserSignupData> => {
   const data = await apiCall<{ success: boolean; data: UserSignupData }>(userApi, HTTP_METHODS.PUT, "/becomeArtist", { id });
   if (!data.success) throw new Error("Failed to become artist");
   return data.data;
 };
 
+// Update Playlist Image
 export const updatePlaylistImage = async (id: string, file: File): Promise<string> => {
   const formData = new FormData();
   formData.append("id", id);
@@ -259,18 +284,21 @@ export const updatePlaylistImage = async (id: string, file: File): Promise<strin
   return data.updated || "";
 };
 
+// Initiate Checkout
 export const initiateCheckout = async (userId: string, priceId: string, code: string): Promise<string> => {
   const data = await apiCall<{ success: boolean; sessionId: string }>(userApi, HTTP_METHODS.POST, "/checkOut", { userId, priceId, code });
   if (!data.success) throw new Error("Failed to initiate checkout");
   return data.sessionId;
 };
 
+// Fetch Plans
 export const fetchPlans = async (): Promise<string> => {
   const data = await apiCall<{ success: boolean; sessionId: string }>(adminApi, HTTP_METHODS.GET, "/stripe/plans");
   if (!data.success) throw new Error("Failed to fetch plans");
   return data.sessionId;
 };
 
+// Fetch Pricing Plans
 export const fetchPricingPlans = async (): Promise<any[]> => {
   const data = await apiCall<{ success: boolean; data: any[] }>(adminApi, HTTP_METHODS.GET, "/stripe/plans");
   if (!data.success) throw new Error("Failed to fetch pricing plans");
@@ -284,12 +312,14 @@ export const fetchPricingPlans = async (): Promise<any[]> => {
   }));
 };
 
+// Verify Coupon
 export const verifyCoupon = async (code: string): Promise<any> => {
   const data = await apiCall<{ success: boolean; data: any }>(adminApi, HTTP_METHODS.POST, "/coupons/verify", { code });
   if (!data.success) throw new Error("Failed to verify coupon");
   return data.data;
 };
 
+// Fetch Artists
 export const fetchArtists = async (): Promise<Artist[]> => {
   const data = await apiCall<{ success: boolean; data: any[] }>(userApi, HTTP_METHODS.GET, "/listArtists");
   if (!data.success) throw new Error("Failed to fetch artists");
@@ -302,24 +332,28 @@ export const fetchArtists = async (): Promise<Artist[]> => {
   }));
 };
 
+// Fetch Artist Tracks
 export const fetchArtistTracks = async (artistId: string): Promise<Track[]> => {
   const data = await apiCall<{ success: boolean; tracks: Track[] }>(userApi, HTTP_METHODS.GET, `/getAllTracksArtist?userId=${artistId}`);
   if (!data.success) throw new Error("Failed to fetch artist tracks");
   return data.tracks;
 };
 
+// Fetch User by Username
 export const fetchUserByUsername = async (username: string): Promise<UserSignupData> => {
   const data = await apiCall<{ success: boolean; data: UserSignupData }>(userApi, HTTP_METHODS.GET, `/username?userId=${username}`);
   if (!data.success) throw new Error("Failed to fetch user");
   return data.data;
 };
 
+// Fetch All Artists Verification
 export const fetchAllArtistsVerification = async (): Promise<any> => {
   const data = await apiCall<{ success: boolean; data: any }>(userApi, HTTP_METHODS.GET, "/fetchAllArtistsVerification");
   if (!data.success) throw new Error("Failed to fetch artist verifications");
   return data.data;
 };
 
+// Update Username
 export const updateUsername = async (id: string, name: string): Promise<UserSignupData> => {
   const data = await apiCall<{ success: boolean; data: UserSignupData }>(userApi, HTTP_METHODS.PUT, `/usersName?id=${id}`, { username: name });
   if (!data.success) throw new Error("Failed to update username");

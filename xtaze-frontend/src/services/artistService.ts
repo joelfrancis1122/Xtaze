@@ -334,8 +334,6 @@ export const updateArtistUsername = async (
 
 
 export default {
-  loginArtist,
-  fetchArtistTracks,
   fetchActiveGenres,
   uploadSong,
   uploadProfileImage,

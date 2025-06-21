@@ -177,7 +177,7 @@ export default function GenrePage() {
     if (!token || !trackId || !user?._id) return;
     const isCurrentlyLiked = likedSongs.has(trackId);
     try {
-      const updatedUser = await toggleLike(user._id, trackId, token);
+      const updatedUser = await toggleLike(user._id, trackId);
       dispatch(saveSignupData(updatedUser));
       setLikedSongs((prev) => {
         const newLiked = new Set(prev);
@@ -218,7 +218,7 @@ export default function GenrePage() {
       return;
     }
     try {
-      await addTrackToPlaylist(user._id, playlistId, trackId, token);
+      await addTrackToPlaylist(user._id, playlistId, trackId);
       const playlist = playlists.find((p) => p._id === playlistId);
       if (!playlist) throw new Error("Playlist not found");
       toast.success(`Added to ${playlist.title}`);

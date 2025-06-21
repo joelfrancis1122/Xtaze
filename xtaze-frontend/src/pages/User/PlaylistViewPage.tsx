@@ -187,16 +187,18 @@ export default function PlaylistPageView() {
         toast.error("Failed to update name");
       }
     } else {
-        setIsEditingName(true);
-      }
-    };
+      setIsEditingName(true);
+    }
+  };
 
   const handleImageUpdate = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       try {
         const updatedImageUrl = await updatePlaylistImage(id as string, file);
-        if (updatedImageUrl) setPlaylistImage(updatedImageUrl?.data?.imageUrl);
+
+        if (updatedImageUrl) setPlaylistImage((updatedImageUrl as any)?.data?.imageUrl);
+
         toast.success("Playlist cover changed");
       } catch (err) {
         console.error("Failed to update playlist image:", err);

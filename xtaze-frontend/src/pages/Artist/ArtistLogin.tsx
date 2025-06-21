@@ -7,7 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { IconEye, IconEyeOff } from "@tabler/icons-react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../store/store";
-import artistService from "../../services/artistService"; 
+import { loginArtist } from "../../services/artistService"; 
 
 const ArtistLogin = () => {
   const navigate = useNavigate();
@@ -36,7 +36,7 @@ const ArtistLogin = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await artistService.loginArtist(formData.email, formData.password, dispatch);
+      await loginArtist(formData.email, formData.password, dispatch);
       toast.success("Artist Login success!", { position: "top-right" });
       navigate("/artist/dashboard");
     } catch (error: any) {

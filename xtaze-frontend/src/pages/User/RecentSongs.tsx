@@ -58,7 +58,7 @@ export default function RecentSongsPage() {
       }
 
       try {
-        const { tracks } = await fetchTracks(user._id, token, user.premium || "Free");
+        const { tracks } = await fetchTracks(user._id, user.premium || "Free");
 
         const sortedRecentSongs = [...storedSongs].sort((a, b) => 
           new Date(b.playedAt).getTime() - new Date(a.playedAt).getTime()

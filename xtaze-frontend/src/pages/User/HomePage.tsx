@@ -94,7 +94,6 @@ export default function Home() {
       try {
         const { tracks: fetchedTracks, user: updatedUser } = await fetchTracks(
           user?._id || "",
-          token,
           user?.premium || "Free"
         );
         setTracks(fetchedTracks);
@@ -104,7 +103,7 @@ export default function Home() {
         }
 
         if (user?.likedSongs && user.likedSongs.length > 0) {
-          const liked = await fetchLikedSongs(user._id || "", token, user.likedSongs);
+          const liked = await fetchLikedSongs(user._id || "", user.likedSongs);
           setLikedTracks(liked);
         } else {
           setLikedTracks([]);
@@ -158,7 +157,7 @@ export default function Home() {
     if (!token || !trackId || !user?._id) return;
 
     try {
-      await incrementListeners(trackId, token, user._id);
+      await incrementListeners(trackId, user._id);
 
       setTracks((prevTracks) =>
         prevTracks.map((track) =>
@@ -188,7 +187,7 @@ export default function Home() {
     if (!token || !trackId || !user?._id) return;
     const isCurrentlyLiked = likedSongs.has(trackId);
     try {
-      const updatedUser = await toggleLike(user._id, trackId, token);
+      const updatedUser = await toggleLike(user._id, trackId);
       dispatch(saveSignupData(updatedUser));
       setLikedSongs((prev) => {
         const newLiked = new Set(prev);
@@ -213,7 +212,7 @@ export default function Home() {
       return;
     }
     try {
-      await addTrackToPlaylist(user._id, playlistId, trackId, token);
+      await addTrackToPlaylist(user._id, playlistId, trackId);
       const playlist = playlists.find((p) => p._id === playlistId);
       if (!playlist) throw new Error("Playlist not found");
       toast.success(`Added to ${playlist.title}`);

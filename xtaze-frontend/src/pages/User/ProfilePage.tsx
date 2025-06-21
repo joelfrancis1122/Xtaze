@@ -95,7 +95,7 @@ export default function Home() {
       setCroppedImage(cropped);
       setShowCropper(false);
       try {
-        const updatedUser = await uploadProfileImage(user?._id || "", cropped, token as string);
+        const updatedUser = await uploadProfileImage(user?._id || "", cropped);
         dispatch(saveSignupData(updatedUser));
         toast.success("Profile picture updated!");
       } catch (error) {
@@ -114,7 +114,7 @@ export default function Home() {
       return;
     }
     try {
-      const updatedUser = await updateUsername(user._id, newUsername, token);
+      const updatedUser = await updateUsername(user._id, newUsername);
       dispatch(saveSignupData(updatedUser));
       setIsEditingUsername(false);
       toast.success("Username updated successfully!");

@@ -89,7 +89,7 @@ export default function LikedSongsPage() {
       }
 
       try {
-        const tracks = await fetchLikedSongs(user._id, token, user.likedSongs);
+        const tracks = await fetchLikedSongs(user._id, user.likedSongs);
         const sortedTracks = user.likedSongs
           .slice()
           .reverse()
@@ -146,7 +146,7 @@ export default function LikedSongsPage() {
     }
 
     try {
-      const updatedUser = await toggleLike(user._id, trackId, token);
+      const updatedUser = await toggleLike(user._id, trackId);
       dispatch(saveSignupData(updatedUser));
       setLikedSongs((prev) => prev.filter((song) => song._id !== trackId));
       toast.success("Song removed from liked songs!");

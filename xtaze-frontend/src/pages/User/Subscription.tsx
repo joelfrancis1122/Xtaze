@@ -84,8 +84,7 @@ const validateCoupon = async () => {
     return;
   }
   try {
-    const token = localStorage.getItem("token") || "";
-    const coupon = await verifyCoupon(couponCode, token);
+    const coupon = await verifyCoupon(couponCode);
     if (coupon.status === "active" && coupon.uses < coupon.maxUses && new Date(coupon.expires) >= new Date()) {
       setAppliedCoupon(coupon);
       setCouponError(null);
