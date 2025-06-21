@@ -40,8 +40,7 @@ const addRefreshInterceptor = (apiInstance: any) => {
   );
 };
 
-// Apply interceptors
-[userApi, providerApi, deezerApi].forEach(addRefreshInterceptor); // Only user-related APIs
+[userApi, providerApi, deezerApi].forEach(addRefreshInterceptor); 
 
 // Refresh Token
 export const refreshToken = async (): Promise<string | null> => {
@@ -62,7 +61,6 @@ export const refreshToken = async (): Promise<string | null> => {
   }
 };
 
-// Generic API Call Helper
 const apiCall = async <T>(
   instance: any,
   method: typeof HTTP_METHODS[keyof typeof HTTP_METHODS],
@@ -85,28 +83,27 @@ const apiCall = async <T>(
     throw error;
   }
 };
-
-// Check Username Availability
 export const checkUsername = async (username: string): Promise<boolean> => {
-  const data = await apiCall<{ available: boolean }>(userApi, HTTP_METHODS.POST, "/checkUsername", { userName: username });
+  const data = await apiCall<{ success: boolean; available: boolean }>(userApi, HTTP_METHODS.POST, "/checkUsername", { userName: username });
+  if (!data.success) throw new Error("Failed to check username");
   return data.available;
 };
 
-// Send OTP
 export const sendOtp = async (email: string): Promise<void> => {
   const data = await apiCall<{ success: boolean; message?: string }>(userApi, HTTP_METHODS.POST, "/send-otp", { email });
   if (!data.success) throw new Error(data.message || "Failed to send OTP");
 };
 
-// Verify OTP
 export const verifyOtp = async (otp: string): Promise<void> => {
   const data = await apiCall<{ success: boolean; message?: string }>(userApi, HTTP_METHODS.POST, "/verify-otp", { otp });
   if (!data.success) throw new Error(data.message || "Failed to verify OTP");
 };
 
-// Register User
-export const registerUser = async (signupData: {username: string;country: string;gender: string;year: string;phone: string;email: string;password?: string;confirmPassword?: string;}): Promise<void> => {
-  const data = await apiCall<{ success: boolean; token?: string; user?: any; message?: string }>(
+export const registerUser = async (
+  signupData: { username: string; country: string; gender: string; year: string; phone: string; email: string; password?: string; confirmPassword?: string },
+  dispatch: ReturnType<typeof useDispatch>
+): Promise<void> => {
+  const data = await apiCall<{ success: boolean; token?: string; user?: UserSignupData; message?: string }>(
     userApi,
     HTTP_METHODS.POST,
     "/register",
@@ -114,384 +111,217 @@ export const registerUser = async (signupData: {username: string;country: string
   );
   if (!data.success) throw new Error(data.message || "Failed to register user");
   if (data.token) localStorage.setItem("token", data.token);
+  if (data.user) dispatch(saveSignupData(data.user));
 };
 
-export const loginUser = async (email: string,password: string,dispatch: ReturnType<typeof useDispatch>): Promise<void> => {
-  const data = await apiCall<{ token: string; user: any }>(userApi, HTTP_METHODS.POST, "/login", { email, password });
-  console.log("Login response:", data);
+export const loginUser = async (email: string, password: string, dispatch: ReturnType<typeof useDispatch>): Promise<void> => {
+  const data = await apiCall<{ success: boolean; token: string; user: UserSignupData }>(userApi, HTTP_METHODS.POST, "/login", { email, password });
+  if (!data.success) throw new Error("Failed to login");
   localStorage.setItem("token", data.token);
   dispatch(saveSignupData(data.user));
 };
 
-export const googleLogin = async (idToken: string,dispatch: ReturnType<typeof useDispatch>): Promise<void> => {
-  const data = await apiCall<{ success: boolean; token: string; user: any; message?: string }>(
+export const googleLogin = async (idToken: string, dispatch: ReturnType<typeof useDispatch>): Promise<void> => {
+  const data = await apiCall<{ success: boolean; token: string; user: UserSignupData; message?: string }>(
     userApi,
     HTTP_METHODS.POST,
     "/google-login",
     { token: idToken }
   );
-  console.log("Google login response:", data);
-  if (data.success) {
-    localStorage.setItem("token", data.token);
-    dispatch(saveSignupData(data.user));
-  } else {
-    throw new Error(data.message || "Google login failed");
-  }
+  if (!data.success) throw new Error(data.message || "Google login failed");
+  localStorage.setItem("token", data.token);
+  dispatch(saveSignupData(data.user));
 };
 
-
-export const fetchTracks = async (userId: string,token: string,isPremium: string): Promise<{ tracks: Track[]; user?: any }> => {
+export const fetchTracks = async (userId: string, isPremium: string): Promise<{ tracks: Track[]; user?: UserSignupData }> => {
   const instance = isPremium !== "Free" ? providerApi : deezerApi;
   const url = isPremium !== "Free" ? `/getAllTracks?userId=${userId}` : `/songs/deezer?userId=${userId}`;
-  console.log("Fetching tracks with:", { url, token, isPremium });
-  const data = await apiCall<{ tracks?: any[]; songs?: any[]; user?: any }>(instance,  HTTP_METHODS.GET, url, undefined, token);
-  const tracks = (isPremium !== "Free" ? data.tracks : data.songs)?.map((track: any) => ({
-    _id: track._id || track.fileUrl,
-    title: track.title,
-    album: track.album || "Unknown Album",
-    artists: Array.isArray(track.artists)
-      ? track.artists
-      : track.artists
-        ? JSON.parse(track.artists)
-        : [track.artist || "Unknown Artist"],
-    genre: Array.isArray(track.genre) ? track.genre[0] : track.genre || "Unknown Genre",
-    fileUrl: track.fileUrl,
-    img: track.img,
-    listeners: track.listeners || [],
-    playHistory: track.playHistory || [],
-  })) || [];
+  const data = await apiCall<{ success: boolean; tracks?: Track[]; songs?: Track[]; user?: UserSignupData }>(instance, HTTP_METHODS.GET, url);
+  if (!data.success) throw new Error("Failed to fetch tracks");
+  const tracks = (isPremium !== "Free" ? data.tracks : data.songs) || [];
   return { tracks, user: data.user };
 };
 
 export const fetchAllTrack = async (): Promise<Track[]> => {
-  const data = await apiCall<{ success: boolean; data: Track[] }>(
-    userApi,
-    HTTP_METHODS.GET,
-    `/fetchAllTrack`,
-  );
-  console.log(data, "liliiiii")
-  return data.data
+  const data = await apiCall<{ success: boolean; data: Track[] }>(userApi, HTTP_METHODS.GET, "/fetchAllTrack");
+  if (!data.success) throw new Error("Failed to fetch all tracks");
+  return data.data;
 };
 
 export const fetchGenreTracks = async (genre: string): Promise<Track[]> => {
-  console.log(genre, "alhildas")
-  const data = await apiCall<{ success: boolean; data: Track[] }>(
-    userApi,
-    HTTP_METHODS.GET,
-    `/fetchGenreTracks?GenreName=${genre}`,
-  );
-  console.log(data, "ambu")
-  return data.data
+  const data = await apiCall<{ success: boolean; data: Track[] }>(userApi, HTTP_METHODS.GET, `/fetchGenreTracks?GenreName=${genre}`);
+  if (!data.success) throw new Error("Failed to fetch genre tracks");
+  return data.data;
 };
 
-
-export const fetchLikedSongs = async (userId: string, token: string, songIds: string[]): Promise<Track[]> => {
+export const fetchLikedSongs = async (userId: string, songIds: string[]): Promise<Track[]> => {
   const data = await apiCall<{ success: boolean; tracks: Track[] }>(
     userApi,
     HTTP_METHODS.POST,
     `/getliked?userId=${userId}`,
-    { songIds },
-    token
+    { songIds }
   );
-  if (!data.success) throw new Error("Failed to fetch liked songs details");
-  return data.tracks
+  if (!data.success) throw new Error("Failed to fetch liked songs");
+  return data.tracks;
 };
 
-export const incrementListeners = async (trackId: string, token: string,id:string): Promise<void> => {
-  console.log("Incrementing listeners:", { trackId, token,id });
-  const data = await apiCall<{ success: boolean }>(artistApi, HTTP_METHODS.POST, "/incrementListeners", { trackId,id }, token);
+export const incrementListeners = async (trackId: string, id: string): Promise<void> => {
+  const data = await apiCall<{ success: boolean }>(artistApi, HTTP_METHODS.POST, "/incrementListeners", { trackId, id });
   if (!data.success) throw new Error("Failed to increment listeners");
 };
 
-export const toggleLike = async (userId: string, trackId: string, token: string): Promise<any> => {
-  const data = await apiCall<{ success: boolean; user?: any }>(
+export const toggleLike = async (userId: string, trackId: string): Promise<UserSignupData> => {
+  const data = await apiCall<{ success: boolean; user: UserSignupData }>(
     userApi,
     HTTP_METHODS.POST,
     `/toggle-like?userId=${userId}`,
-    { trackId },
-    token
+    { trackId }
   );
   if (!data.success) throw new Error("Failed to toggle like");
   return data.user;
 };
 
-export const uploadProfileImage = async (userId: string, base64Image: string, token: string): Promise<any> => {
+export const uploadProfileImage = async (userId: string, base64Image: string): Promise<UserSignupData> => {
   const blob = await (await fetch(base64Image)).blob();
   const formData = new FormData();
   formData.append("profileImage", blob, "cropped-image.jpg");
   formData.append("userId", userId);
-  const data = await apiCall<{ success: boolean; user?: any }>(userApi, HTTP_METHODS.POST, "/uploadProfilepic", formData, token);
-  if (!data.success || !data.user) throw new Error("Failed to upload profile picture");
+  const data = await apiCall<{ success: boolean; user: UserSignupData }>(userApi, HTTP_METHODS.POST, "/uploadProfilepic", formData);
+  if (!data.success) throw new Error("Failed to upload profile picture");
   return data.user;
 };
 
 export const forgotPassword = async (email: string): Promise<void> => {
-  const data = await apiCall<{ success: boolean; message?: string }>(
-    userApi,
-    HTTP_METHODS.POST,
-    "/forgotPassword",
-    { email }
-  );
+  const data = await apiCall<{ success: boolean; message?: string }>(userApi, HTTP_METHODS.POST, "/forgotPassword", { email });
   if (!data.success) throw new Error(data.message || "Failed to send reset email");
 };
-export const resetPassword = async (token: string, formData: string): Promise<void> => {
-  const data = await apiCall<{ success: boolean; message?: string }>(
-    userApi,
-    HTTP_METHODS.POST,
-    "/resetPassword",
-    { token, formData }
-  );
-  if (!data.success) throw new Error(data.message || "Failed to send reset email");
+
+export const resetPassword = async (formData: string): Promise<void> => {
+  const data = await apiCall<{ success: boolean; message?: string }>(userApi, HTTP_METHODS.POST, "/resetPassword", { formData });
+  if (!data.success) throw new Error(data.message || "Failed to reset password");
 };
 
 export const createPlaylists = async (userId: string, playlistData: Partial<Playlist>): Promise<Playlist> => {
-  const data = await apiCall<{ success: boolean; data: Playlist; message?: string }>(
-    userApi,
-    HTTP_METHODS.POST,
-    "/createPlaylist",
-    { userId, playlist: playlistData }
-  );
-  if (!data.success) throw new Error(data.message || "Failed to create playlist");
-  console.log(data, "from user service createplaylist")
-  return data.data;
-};
-export const getMyplaylist = async (userId: string): Promise<Playlist[]> => {
-  console.log(userId, "odi odi o ds");
-  const data = await apiCall<{ success: boolean; message?: string; data: Playlist[] }>(
-    userApi,
-    HTTP_METHODS.GET,
-    `/getPlaylist?userId=${userId}`
-  );
-  if (!data.success) throw new Error(data.message || "Failed to get all playlists");
-  console.log(data);
+  const data = await apiCall<{ success: boolean; data: Playlist }>(userApi, HTTP_METHODS.POST, "/createPlaylist", { userId, playlist: playlistData });
+  if (!data.success) throw new Error("Failed to create playlist");
   return data.data;
 };
 
+export const getMyplaylist = async (userId: string): Promise<Playlist[]> => {
+  const data = await apiCall<{ success: boolean; data: Playlist[] }>(userApi, HTTP_METHODS.GET, `/getPlaylist?userId=${userId}`);
+  if (!data.success) throw new Error("Failed to get playlists");
+  return data.data;
+};
 
 export const fetchPlaylistTracks = async (id: string, page: number = 1, limit: number = 20): Promise<{ tracks: Track[]; total: number }> => {
-  console.log(id, "Fetching tracks with pagination", { page, limit });
-  const data = await apiCall<{ success: boolean; message?: string; data: { tracks: Track[]; total: number } }>(
+  const data = await apiCall<{ success: boolean; data: { tracks: Track[]; total: number } }>(
     userApi,
     HTTP_METHODS.GET,
-    `/getTracksInPlaylist?id=${id}&page=${page}&limit=${limit}`,
-
+    `/getTracksInPlaylist?id=${id}&page=${page}&limit=${limit}`
   );
-  console.log(data, "Playlist tracks response");
+  if (!data.success) throw new Error("Failed to fetch playlist tracks");
   return data.data;
 };
 
 export const fetchBanners = async (): Promise<IBanner[]> => {
-  const data = await apiCall<{ success: boolean; message?: string; data: IBanner[] }>(
-    userApi,
-    HTTP_METHODS.GET,
-    `/banners`
-  );
-  console.log(data, "ithan sanam");
+  const data = await apiCall<{ success: boolean; data: IBanner[] }>(userApi, HTTP_METHODS.GET, "/banners");
+  if (!data.success) throw new Error("Failed to fetch banners");
   return data.data;
 };
 
-
-
-export const addTrackToPlaylist = async (userId: string,playlistId: string,trackId: string,token: string): Promise<void> => {
-  const data = await apiCall<{ success: boolean; message?: string }>(
-    userApi,
-    HTTP_METHODS.POST,
-    "/addToPlaylist",
-    { userId, playlistId, trackId },
-    token
-  );
-  if (!data.success) throw new Error(data.message || "Failed to add track to playlist");
+export const addTrackToPlaylist = async (userId: string, playlistId: string, trackId: string): Promise<void> => {
+  const data = await apiCall<{ success: boolean }>(userApi, HTTP_METHODS.POST, "/addToPlaylist", { userId, playlistId, trackId });
+  if (!data.success) throw new Error("Failed to add track to playlist");
 };
 
-export const deletePlaylist = async (id: string,): Promise<void> => {
-  const data = await apiCall<{ success: boolean; message?: string }>(
-    userApi,
-    HTTP_METHODS.POST,
-    "/deletePlaylist",
-    { id },
-  );
-  if (!data.success) throw new Error(data.message || "Failed to add track to playlist");
+export const deletePlaylist = async (id: string): Promise<void> => {
+  const data = await apiCall<{ success: boolean }>(userApi, HTTP_METHODS.POST, "/deletePlaylist", { id });
+  if (!data.success) throw new Error("Failed to delete playlist");
 };
-
 
 export const updatePlaylistName = async (id: string, playlistName: string): Promise<void> => {
-  const data = await apiCall<{ success: boolean; message?: string }>(
-    userApi,
-    HTTP_METHODS.PUT,
-    "/updateNamePlaylist",
-    { id, playlistName },
-  );
-  if (!data.success) throw new Error(data.message || "Failed to add track to playlist");
+  const data = await apiCall<{ success: boolean }>(userApi, HTTP_METHODS.PUT, "/updateNamePlaylist", { id, playlistName });
+  if (!data.success) throw new Error("Failed to update playlist name");
 };
 
-export const becomeArtist = async (id: string,): Promise<void> => {
-  const data = await apiCall<{ success: boolean; message?: string, data:any }>(
-    userApi,
-    HTTP_METHODS.PUT,
-    "/becomeArtist",
-    { id},
-  );
-  return data.data
+export const becomeArtist = async (id: string): Promise<UserSignupData> => {
+  const data = await apiCall<{ success: boolean; data: UserSignupData }>(userApi, HTTP_METHODS.PUT, "/becomeArtist", { id });
+  if (!data.success) throw new Error("Failed to become artist");
+  return data.data;
 };
 
-export const updatePlaylistImage = async (id: string, file: File): Promise<any> => {
+export const updatePlaylistImage = async (id: string, file: File): Promise<string> => {
   const formData = new FormData();
   formData.append("id", id);
   formData.append("imageUpload", file);
-
-  const data = await apiCall<{ success: boolean; updated?: string; message?: string }>(
-    userApi,
-    HTTP_METHODS.PUT,
-    "/updateImagePlaylist",
-    formData,
-  );
-
-  if (!data.success) throw new Error(data.message || "Failed to update playlist image");
-  console.log(data)
-  return data?.updated || "";
+  const data = await apiCall<{ success: boolean; updated: string }>(userApi, HTTP_METHODS.PUT, "/updateImagePlaylist", formData);
+  if (!data.success) throw new Error("Failed to update playlist image");
+  return data.updated || "";
 };
 
-export const initiateCheckout = async (userId: string,priceId: string,code: string): Promise<string> => {
-  const data = await apiCall<{ sessionId: string }>(
-    userApi,
-    HTTP_METHODS.POST,
-    "/checkOut",
-    { userId, priceId, code }
-  );
-  console.log("Checkout response:", data);
+export const initiateCheckout = async (userId: string, priceId: string, code: string): Promise<string> => {
+  const data = await apiCall<{ success: boolean; sessionId: string }>(userApi, HTTP_METHODS.POST, "/checkOut", { userId, priceId, code });
+  if (!data.success) throw new Error("Failed to initiate checkout");
   return data.sessionId;
 };
 
 export const fetchPlans = async (): Promise<string> => {
-  const data = await apiCall<{ sessionId: string }>(
-    adminApi,
-    HTTP_METHODS.GET,
-    "/stripe/plans",
-  );
-  console.log("Checkout response:", data);
+  const data = await apiCall<{ success: boolean; sessionId: string }>(adminApi, HTTP_METHODS.GET, "/stripe/plans");
+  if (!data.success) throw new Error("Failed to fetch plans");
   return data.sessionId;
 };
 
 export const fetchPricingPlans = async (): Promise<any[]> => {
-  try {
-    const data = await apiCall<{ data: any[] }>(
-      adminApi,
-      HTTP_METHODS.GET,
-      "/stripe/plans",
-      undefined,
-    );
-    return data.data.map((plan: any) => ({
-      name: plan.product.name,
-      price: plan.price.unit_amount / 100,
-      period: plan.price.recurring?.interval || "month",
-      features: ["Full-length songs", "High-quality FLAC", "Offline playback", "Exclusive content"],
-      priceId: plan.price.id,
-      featured: true,
-    }));
-  } catch (error: any) {
-    console.error("Error fetching pricing plans:", error);
-    throw new Error(error.message || "Failed to fetch pricing plans");
-  }
+  const data = await apiCall<{ success: boolean; data: any[] }>(adminApi, HTTP_METHODS.GET, "/stripe/plans");
+  if (!data.success) throw new Error("Failed to fetch pricing plans");
+  return data.data.map((plan: any) => ({
+    name: plan.product.name,
+    price: plan.price.unit_amount / 100,
+    period: plan.price.recurring?.interval || "month",
+    features: ["Full-length songs", "High-quality FLAC", "Offline playback", "Exclusive content"],
+    priceId: plan.price.id,
+    featured: true,
+  }));
 };
 
-export const verifyCoupon = async (code: string, token?: string): Promise<any> => {
-  console.log("Verifying coupon:", code);
-  try {
-    const data = await apiCall<{ data: any }>(
-      adminApi,
-      HTTP_METHODS.POST,
-      "/coupons/verify",
-      { code },
-      token
-    );
-    console.log("Coupon verification response:", data);
-    return data.data; 
-  } catch (error: any) {
-    console.error("Coupon verification error:", error);
-    throw new Error(error.response?.data?.message || "Failed to verify coupon");
-  }
-};
-export const fetchArtists = async (token: string): Promise<Artist[]> => {
-  console.log("Fetching artists with token:", token);
-  
-  try {
-    const data = await apiCall<{ success: boolean; data: any[]; message?: string }>(
-      userApi,
-      HTTP_METHODS.GET,
-      "/listArtists",
-      undefined,
-      token
-    );
-    console.log("Fetch artists response:", data);
-    if (!data.success) throw new Error(data.message || "Failed to fetch artists");
-    return data.data.map((artist: any) => ({
-      id: artist._id,
-      name: artist.username,
-      role: artist.role,
-      image: artist.profilePic,
-      isActive: artist.isActive ? true : false,
-    }));
-  } catch (error) {
-    console.error("Fetch artists error:", error);
-    throw error;
-  }
-};
-
-export const fetchArtistTracks = async (artistId: string, token: string): Promise<any[]> => {
-  console.log("Fetching artist tracks with:", { artistId, token });
-  const data = await apiCall<{ success: boolean; tracks: any[]; message?: string }>(
-    userApi,
-    HTTP_METHODS.GET,
-    `/getAllTracksArtist?userId=${artistId}`,
-    undefined,
-    token
-  );
-  // if (!data.success) throw new Error(data.message || "Failed to fetch artist tracks");
-  return data.tracks;
-};
-export const fetchUserByUsername = async (username: string, token: string): Promise<any> => {
-  console.log("testing complete",username)
-  const data = await apiCall<{ success: boolean; tracks: any[]; data?: string }>(
-    userApi,
-    HTTP_METHODS.GET,
-    `/username?userId=${username}`,
-    undefined,
-    token
-  );
-  console.log(data)
+export const verifyCoupon = async (code: string): Promise<any> => {
+  const data = await apiCall<{ success: boolean; data: any }>(adminApi, HTTP_METHODS.POST, "/coupons/verify", { code });
+  if (!data.success) throw new Error("Failed to verify coupon");
   return data.data;
 };
 
-
-export const fetchAllArtistsVerification = async (token:string): Promise<any> => {
-  try {
-    const response = await apiCall<{ data: any }>(
-      userApi,
-      HTTP_METHODS.GET,
-      `/fetchAllArtistsVerification`,
-      undefined,
-      token
-    );
-    
-    return response.data
-  } catch (error: any) {
-    console.error("Error archiving verification plan:", error);
-    throw new Error(error.response?.data?.message);
-  }
+export const fetchArtists = async (): Promise<Artist[]> => {
+  const data = await apiCall<{ success: boolean; data: any[] }>(userApi, HTTP_METHODS.GET, "/listArtists");
+  if (!data.success) throw new Error("Failed to fetch artists");
+  return data.data.map((artist: any) => ({
+    id: artist._id,
+    name: artist.username,
+    role: artist.role,
+    image: artist.profilePic,
+    isActive: artist.isActive ? true : false,
+  }));
 };
-export const updateUsername = async (id: string, name: string, token: string): Promise<UserSignupData> => {
-  try {
-    const response = await apiCall<{ data: UserSignupData }>(
-      userApi,
-      HTTP_METHODS.PUT,
-      `/usersName?id=${id}`,
-      { username: name },
-      token
-    );
-    console.log("Update username response:", response);
-    return response.data;
-  } catch (error: any) {
-    console.error("Error updating username:", error);
-    throw new Error(error.response?.data?.message || "Failed to update username");
-  }
+
+export const fetchArtistTracks = async (artistId: string): Promise<Track[]> => {
+  const data = await apiCall<{ success: boolean; tracks: Track[] }>(userApi, HTTP_METHODS.GET, `/getAllTracksArtist?userId=${artistId}`);
+  if (!data.success) throw new Error("Failed to fetch artist tracks");
+  return data.tracks;
+};
+
+export const fetchUserByUsername = async (username: string): Promise<UserSignupData> => {
+  const data = await apiCall<{ success: boolean; data: UserSignupData }>(userApi, HTTP_METHODS.GET, `/username?userId=${username}`);
+  if (!data.success) throw new Error("Failed to fetch user");
+  return data.data;
+};
+
+export const fetchAllArtistsVerification = async (): Promise<any> => {
+  const data = await apiCall<{ success: boolean; data: any }>(userApi, HTTP_METHODS.GET, "/fetchAllArtistsVerification");
+  if (!data.success) throw new Error("Failed to fetch artist verifications");
+  return data.data;
+};
+
+export const updateUsername = async (id: string, name: string): Promise<UserSignupData> => {
+  const data = await apiCall<{ success: boolean; data: UserSignupData }>(userApi, HTTP_METHODS.PUT, `/usersName?id=${id}`, { username: name });
+  if (!data.success) throw new Error("Failed to update username");
+  return data.data;
 };

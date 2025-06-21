@@ -74,6 +74,7 @@ export default class UserController {
 
   async loginUser(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
+      
       const { email, password } = req.body;
       if (!email || !password) throw new AppError("Email and password are required", HttpStatus.BAD_REQUEST);
 
@@ -99,6 +100,7 @@ export default class UserController {
       } else {
         res.status(HttpStatus.BAD_REQUEST).json(response);
       }
+
     } catch (error) {
       next(error);
     }
