@@ -328,12 +328,3 @@ export const updateArtistUsername = async (
 
 
 
-export default {
-  fetchActiveGenres,
-  uploadSong,
-  uploadProfileImage,
-  updateArtistBio,
-  updateArtistBanner,
-  refreshToken,
-};
-

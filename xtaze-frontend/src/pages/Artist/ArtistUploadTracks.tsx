@@ -9,8 +9,8 @@ import { cn } from "../../../lib/utils";
 import { RootState } from "../../store/store";
 import { useDispatch, useSelector } from "react-redux";
 import { saveArtistData } from "../../redux/artistSlice";
-import artistService from "../../services/artistService";
 import { IGenre } from "../User/types/IGenre";
+import { fetchActiveGenres, uploadSong } from "../../services/artistService";
 
 const UploadMusicPage = () => {
   const artist = useSelector((state: RootState) => state.artist.signupData);
@@ -56,7 +56,7 @@ const UploadMusicPage = () => {
     setIsUploading(true);
 
     try {
-      await artistService.uploadSong(songData);
+      await uploadSong(songData);
       toast.success("Song uploaded successfully");
 
       // Reset form after upload
@@ -84,7 +84,7 @@ const UploadMusicPage = () => {
       }
 
       try {
-        const { genres, artist: updatedArtist } = await artistService.fetchActiveGenres(artist._id);
+        const { genres, artist: updatedArtist } = await fetchActiveGenres(artist._id);
         setGenres(genres);
         dispatch(saveArtistData(updatedArtist)); // Update Redux with latest artist data
         console.log("Fetched genres:", genres);

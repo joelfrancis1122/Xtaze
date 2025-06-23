@@ -10,7 +10,7 @@ import ArtistSidebar from "./artistComponents/artist-aside";
 import { saveArtistData } from "../../redux/artistSlice";
 import { Button } from "../../components/ui/button";
 import { Card } from "../../components/ui/card";
-import artistService, { getVerificationStatus, requestVerification, updateArtistUsername } from "../../services/artistService";
+import { getVerificationStatus, requestVerification, updateArtistBanner, updateArtistBio, updateArtistUsername, uploadProfileImage } from "../../services/artistService";
 import { fetchArtistTracks } from "../../services/userService";
 
 interface Track {
@@ -164,11 +164,11 @@ export default function ArtistProfile() {
 
     try {
       if (field === "profileImage") {
-        const updatedUser = await artistService.uploadProfileImage(user._id, mediaData);
+        const updatedUser = await uploadProfileImage(user._id, mediaData);
         dispatch(saveArtistData(updatedUser));
         toast.success("Profile picture updated!");
       } else {
-        const updatedUser = await artistService.updateArtistBanner(user._id, mediaData);
+        const updatedUser = await updateArtistBanner(user._id, mediaData);
         dispatch(saveArtistData(updatedUser));
         setCroppedCoverMedia(updatedUser.banner);
         toast.success("Banner updated!");
@@ -191,7 +191,7 @@ export default function ArtistProfile() {
     }
 
     try {
-      const updatedUser = await artistService.updateArtistBio(user._id, bioText);
+      const updatedUser = await updateArtistBio(user._id, bioText);
       dispatch(saveArtistData(updatedUser));
       setIsEditingBio(false);
       toast.success("Bio updated successfully!");
