@@ -340,7 +340,7 @@ export const fetchArtistTracks = async (artistId: string): Promise<Track[]> => {
 };
 
 // Fetch User by Username
-export const fetchUserByUsername = async (username: string): Promise<UserSignupData> => {
+export const fetchUserByUsername = async (username: string): Promise<any> => {
   const data = await apiCall<{ success: boolean; data: UserSignupData }>(userApi, HTTP_METHODS.GET, `/username?userId=${username}`);
   if (!data.success) throw new Error("Failed to fetch user");
   return data.data;

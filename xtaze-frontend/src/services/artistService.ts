@@ -82,7 +82,7 @@ const apiCall = async <T>(
 };
 
 export const loginArtist = async (email: string,password: string,dispatch: ReturnType<typeof useDispatch>): Promise<void> => {
-  const data = await apiCall<{ success: boolean; token: string; artist: any; message?: string }>(
+  const data = await apiCall<{ success: boolean; artist: any; message?: string }>(
     artistApi,
     HTTP_METHODS.POST,
     "/login",
@@ -90,31 +90,30 @@ export const loginArtist = async (email: string,password: string,dispatch: Retur
   );
   if (!data.success) throw new Error(data.message || "Failed to login artist");
   console.log("Login response:", data);
-  localStorage.setItem("artistToken", data.token);
   dispatch(saveArtistData(data.artist));
 };
 
-export const fetchArtistTracks = async (artistId: string, token: string): Promise<any[]> => {
-  console.log("Fetching artist tracks with:", { artistId, token });
+export const fetchArtistTracks = async (artistId: string): Promise<any[]> => {
+  console.log("Fetching artist tracks with:", { artistId });
   const data = await apiCall<{ success: boolean; tracks: any[]; message?: string }>(
     artistApi,
     HTTP_METHODS.GET,
     `/getAllTracksArtist?userId=${artistId}`,
     undefined,
-    token
+  
   );
   if (!data.success) throw new Error(data.message || "Failed to fetch artist tracks");
   return data.tracks;
 };
 
-export const fetchActiveGenres = async (artistId: string, token: string): Promise<{ artist: any; genres: IGenre[] }> => {
-  console.log("Fetching active genres with:", { artistId, token });
+export const fetchActiveGenres = async (artistId: string): Promise<{ artist: any; genres: IGenre[] }> => {
+  console.log("Fetching active genres with:", { artistId});
   const data = await apiCall<{ success: boolean; data: IGenre[]; artist: any; message?: string }>(
     artistApi,
     HTTP_METHODS.GET,
     `/listActiveGenres?artistId=${artistId}`,
     undefined,
-    token
+
   );
   if (!data.success) throw new Error(data.message || "Failed to fetch genres");
   return { genres: data.data, artist: data.artist };
@@ -129,9 +128,8 @@ export const uploadSong = async (
     image: File | null;
     song: File | null;
   },
-  token: string
 ): Promise<any> => {
-  console.log("Uploading song with:", { songData, token });
+  console.log("Uploading song with:", { songData });
   const formData = new FormData();
   formData.append("songName", songData.songName);
   formData.append("artist", songData.artist);
@@ -145,14 +143,13 @@ export const uploadSong = async (
     HTTP_METHODS.POST,
     "/upload",
     formData,
-    token
   );
   if (!data.success) throw new Error(data.message || "Failed to upload song");
   return data;
 };
 
 
-export const uploadProfileImage = async (artistId: string, base64Image: string, token: string): Promise<any> => {
+export const uploadProfileImage = async (artistId: string, base64Image: string): Promise<any> => {
   const blob = await (await fetch(base64Image)).blob();
   const formData = new FormData();
   formData.append("profileImage", blob, "artist-profileImage.jpg");
@@ -163,13 +160,12 @@ export const uploadProfileImage = async (artistId: string, base64Image: string, 
     HTTP_METHODS.POST,
     "/uploadProfilepic",
     formData,
-    token
   );
   if (!data.success || !data.user) throw new Error(data.message || "Failed to upload profile picture");
   return data.user;
 };
 
-export const updateArtistBanner = async (artistId: string, base64Banner: string, token: string): Promise<any> => {
+export const updateArtistBanner = async (artistId: string, base64Banner: string): Promise<any> => {
   const blob = await (await fetch(base64Banner)).blob();
   const formData = new FormData();
   formData.append("coverImage", blob, `artist-coverImage.${blob.type.startsWith("video/") ? "mp4" : "jpg"}`);
@@ -180,46 +176,46 @@ export const updateArtistBanner = async (artistId: string, base64Banner: string,
     HTTP_METHODS.POST,
     "/updateBanner",
     formData,
-    token
+    
   );
   if (!data.success || !data.user) throw new Error(data.message || "Failed to update banner");
   return data.user;
 };
 
-export const updateArtistBio = async (artistId: string, bio: string, token: string): Promise<any> => {
-  console.log("Updating artist bio with:", { artistId, token });
+export const updateArtistBio = async (artistId: string, bio: string,): Promise<any> => {
+  console.log("Updating artist bio with:", { artistId });
   const data = await apiCall<{ success: boolean; user?: any; message?: string }>(
     userApi,
     HTTP_METHODS.PUT,
     "/updateBio",
     { userId: artistId, bio },
-    token
+    
   );
   if (!data.success || !data.user) throw new Error(data.message || "Failed to update bio");
   return data.user;
 };
 
-export const checkCardStatus = async (artistId: string, token: string): Promise<boolean> => {
-  console.log("Checking card status with:", { artistId, token });
+export const checkCardStatus = async (artistId: string): Promise<boolean> => {
+  console.log("Checking card status with:", { artistId });
   const data = await apiCall<{ data: { stripePaymentMethodId: string } }>(
     artistApi,
     HTTP_METHODS.GET,
     `/checkcard?userId=${artistId}`,
     undefined,
-    token
+    
   );
   console.log("Card status response:", data);
   return !!data.data.stripePaymentMethodId; 
 };
 
-export const saveCard = async (artistId: string, paymentMethodId: string, token: string): Promise<void> => {
-  console.log("Saving card with:", { artistId, paymentMethodId, token });
+export const saveCard = async (artistId: string, paymentMethodId: string): Promise<void> => {
+  console.log("Saving card with:", { artistId, paymentMethodId });
   const data = await apiCall<{ success: boolean; message?: string }>(
     artistApi,
     HTTP_METHODS.POST,
     "/saveCard",
     { artistId, paymentMethodId },
-    token
+    
   );
   if (!data.success) throw new Error(data.message || "Failed to save card");
 };
@@ -228,14 +224,14 @@ export const saveCard = async (artistId: string, paymentMethodId: string, token:
 
 
 
-export const getVerificationStatus = async (artistId: string,token: string): Promise<VerificationStatus> => {
-  console.log("Fetching verification status for:", { artistId, token });
+export const getVerificationStatus = async (artistId: string): Promise<VerificationStatus> => {
+  console.log("Fetching verification status for:", { artistId});
   try {
     const response = await apiCall<{ success: boolean; data: VerificationStatus }>(
       artistApi,
       HTTP_METHODS.GET,
       `/getVerificationStatus?artistId=${artistId}`,
-      token
+
     );
     console.log(response, "verification on proces what ?")
     return response.data;
@@ -245,7 +241,7 @@ export const getVerificationStatus = async (artistId: string,token: string): Pro
   }
 };
 
-export const requestVerification = async (artistId: string,formData: FormData,token: string): Promise<{ idProof: string }> => {
+export const requestVerification = async (artistId: string,formData: FormData): Promise<{ idProof: string }> => {
   formData.append("artistId", artistId);
 
   const data = await apiCall<{ success: boolean; idProof?: string; message?: string }>(
@@ -253,7 +249,7 @@ export const requestVerification = async (artistId: string,formData: FormData,to
     HTTP_METHODS.POST,
     "/requestVerification",
     formData,
-    token
+
   );
 
   if (!data.success || !data.idProof) {
@@ -265,14 +261,13 @@ export const requestVerification = async (artistId: string,formData: FormData,to
 
 
 
-export const fetchSongEarnings = async (artistId: string, token: string): Promise<any[]> => {
-  console.log("Fetching song earnings with:", { artistId, token });
+export const fetchSongEarnings = async (artistId: string): Promise<any[]> => {
+  console.log("Fetching song earnings with:", { artistId });
   const data = await apiCall<{ data: any[] }>(
     artistApi,
     HTTP_METHODS.GET,
     `/statsOfArtist?userId=${artistId}`,
     undefined,
-    token
   );
   console.log("Song earnings response:", data.data);
   return data.data.map((song: any) => ({
@@ -288,15 +283,15 @@ export const fetchSongEarnings = async (artistId: string, token: string): Promis
 export const updateArtistUsername = async (
   id: string, 
   name: string, 
-  token: string
-): Promise<ArtistS> => {  // <- returning Artist, not ArtistState
+
+): Promise<ArtistS> => {  //returning Artist
   try {
     const response = await apiCall<{ data: ArtistS }>(
       userApi,
       HTTP_METHODS.PUT,
       `/usersName?id=${id}`,
       { username: name },
-      token
+      
     );
     console.log("Update username response:", response);
     return response.data;

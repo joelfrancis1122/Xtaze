@@ -56,7 +56,7 @@ const UploadMusicPage = () => {
     setIsUploading(true);
 
     try {
-      await artistService.uploadSong(songData, token);
+      await artistService.uploadSong(songData);
       toast.success("Song uploaded successfully");
 
       // Reset form after upload
@@ -84,7 +84,7 @@ const UploadMusicPage = () => {
       }
 
       try {
-        const { genres, artist: updatedArtist } = await artistService.fetchActiveGenres(artist._id, token);
+        const { genres, artist: updatedArtist } = await artistService.fetchActiveGenres(artist._id);
         setGenres(genres);
         dispatch(saveArtistData(updatedArtist)); // Update Redux with latest artist data
         console.log("Fetched genres:", genres);

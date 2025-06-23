@@ -11,11 +11,11 @@ import { saveArtistData } from "../../redux/artistSlice";
 import { Button } from "../../components/ui/button";
 import { Card } from "../../components/ui/card";
 import artistService, { getVerificationStatus, requestVerification, updateArtistUsername } from "../../services/artistService";
+import { fetchArtistTracks } from "../../services/userService";
 
 interface Track {
   _id: string;
   title: string;
-  releaseDate: string;
   listeners: string[];
 }
 
@@ -59,11 +59,16 @@ export default function ArtistProfile() {
       if (!user?._id) return;
 
       try {
-        const fetchedTracks = await artistService.fetchArtistTracks(user._id, token);
-        setTracks(fetchedTracks);
-        console.log("Fetched tracks:", fetchedTracks);
+        const fetchedTracks = await fetchArtistTracks(user._id);
+        const mappedTracks = fetchedTracks.map((track: any) => ({
+          _id: track._id,
+          title: track.title,
+          listeners: track.listeners ?? []
+        }));
+        setTracks(mappedTracks);
+        console.log("Fetched tracks:", mappedTracks);
 
-        const verificationData = await getVerificationStatus(user._id, token);
+        const verificationData = await getVerificationStatus(user._id);
         setVerification(verificationData || { status: "unsubmitted" });
       } catch (error: any) {
         console.error("Error fetching data:", error);
@@ -159,11 +164,11 @@ export default function ArtistProfile() {
 
     try {
       if (field === "profileImage") {
-        const updatedUser = await artistService.uploadProfileImage(user._id, mediaData, token);
+        const updatedUser = await artistService.uploadProfileImage(user._id, mediaData);
         dispatch(saveArtistData(updatedUser));
         toast.success("Profile picture updated!");
       } else {
-        const updatedUser = await artistService.updateArtistBanner(user._id, mediaData, token);
+        const updatedUser = await artistService.updateArtistBanner(user._id, mediaData);
         dispatch(saveArtistData(updatedUser));
         setCroppedCoverMedia(updatedUser.banner);
         toast.success("Banner updated!");
@@ -186,7 +191,7 @@ export default function ArtistProfile() {
     }
 
     try {
-      const updatedUser = await artistService.updateArtistBio(user._id, bioText, token);
+      const updatedUser = await artistService.updateArtistBio(user._id, bioText);
       dispatch(saveArtistData(updatedUser));
       setIsEditingBio(false);
       toast.success("Bio updated successfully!");
@@ -212,7 +217,7 @@ export default function ArtistProfile() {
     }
 
     try {
-      const updatedUser = await updateArtistUsername(user._id, usernameText, token);
+      const updatedUser = await updateArtistUsername(user._id, usernameText);
       dispatch(saveArtistData(updatedUser));
       setIsEditingUsername(false);
       toast.success("Username updated successfully!");
@@ -241,7 +246,7 @@ export default function ArtistProfile() {
     formData.append("idProof", selectedFile);
 
     try {
-      await requestVerification(user._id, formData, token);
+      await requestVerification(user._id, formData);
       setVerification({ status: "pending" });
       toast.success("Verification request submitted!");
       setSelectedFile(null);

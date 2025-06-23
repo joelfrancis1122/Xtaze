@@ -21,7 +21,6 @@ interface SongEarnings {
   totalEarnings: number;
   monthlyEarnings: number;
 }
-const token = localStorage.getItem("artistToken") || "";
 
 const CardInput = ({ artistId, onCardSaved }: { artistId: string; onCardSaved: () => void }) => {
   const stripe = useStripe();
@@ -45,7 +44,7 @@ const CardInput = ({ artistId, onCardSaved }: { artistId: string; onCardSaved: (
 
       if (error) throw new Error(error.message);
 
-      await saveCard(artistId, paymentMethod!.id, token);
+      await saveCard(artistId, paymentMethod!.id);
       onCardSaved(); // Update parent state
       toast.success("Card saved successfully!");
     } catch (err: any) {
@@ -85,9 +84,9 @@ export default function ArtistMonetizePage() {
         if (!user) {
           return
         }
-        const songData = await fetchSongEarnings(user._id, token);
+        const songData = await fetchSongEarnings(user._id);
         setSongs(songData);
-        const cardStatus = await checkCardStatus(user._id, token);
+        const cardStatus = await checkCardStatus(user._id);
         setHasCard(cardStatus);
       } catch (err) {
         console.error(err);
