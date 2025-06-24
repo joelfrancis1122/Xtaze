@@ -39,8 +39,7 @@ export default function AdminMusicMonetizationPage() {
     const fetchMonetizationDataAsync = async () => {
       try {
         setLoading(true);
-        const token = localStorage.getItem("token") || "";
-        const rawData = await fetchMonetizationData(token);
+        const rawData = await fetchMonetizationData();
 
         const groupedData = rawData.reduce((acc: { [key: string]: ArtistData }, song: MusicMonetization) => {
           if (!acc[song.artistName]) {
@@ -97,8 +96,7 @@ export default function AdminMusicMonetizationPage() {
 
   const handlePayArtist = async (artistName: string) => {
     try {
-      const token = localStorage.getItem("token") || "";
-      const sessionUrl = await initiateArtistPayout(artistName, token);
+      const sessionUrl = await initiateArtistPayout(artistName, );
       if (sessionUrl) {
         window.location.href = sessionUrl;
       }

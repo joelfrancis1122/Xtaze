@@ -26,9 +26,8 @@ export default function AdminSubscriptionHistoryPage() {
     const fetchSubscription = async () => {
       try {
         setLoading(true);
-        const token = localStorage.getItem("adminToken") || "";
 
-        const response = await fetchSubscriptionHistory(token);
+        const response = await fetchSubscriptionHistory();
         console.log(response, "asssssssss")
         setHistory(response);
         setError(null);

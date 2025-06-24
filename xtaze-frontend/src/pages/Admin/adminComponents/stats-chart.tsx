@@ -26,8 +26,7 @@ export function StatsChart() {
   useEffect(() => {
     const fetchSubscriptionHistoryData = async () => {
       try {
-        const token = localStorage.getItem("adminToken") || "";
-        const subscriptionHistory = await fetchSubscriptionHistory(token);
+        const subscriptionHistory = await fetchSubscriptionHistory();
         console.log("Fetched Data:", subscriptionHistory);
         setHistory(subscriptionHistory);
       } catch (err: any) {

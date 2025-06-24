@@ -417,7 +417,7 @@ export default class UserController {
 
 
       const allBanners = await this._userUseCase.getAllBanners()
-      res.status(HttpStatus.CREATED).json({ message: "Banner added successfully", data: allBanners });
+      res.status(HttpStatus.CREATED).json({ success: true,message: "Banner added successfully", data: allBanners });
 
     } catch (error) {
       next(error);

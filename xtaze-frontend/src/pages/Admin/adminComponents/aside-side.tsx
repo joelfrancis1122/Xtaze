@@ -38,13 +38,11 @@ export default function Sidebar() {
     { icon: History, label: "History", path: "/admin/history" },
   ]
 
-  // Handle logout
   const handleLogout = () => {
-    // Clear user-related data (e.g., JWT token, user data)
     localStorage.removeItem("adminToken");
             dispatch(clearAdminData())
     
-    navigate("/admin") // Redirect to login page after logout
+    navigate("/admin") 
   
   }
 

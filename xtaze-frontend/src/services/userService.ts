@@ -14,7 +14,7 @@ const addRefreshInterceptor = (apiInstance: any) => {
       const newToken = response.data?.token || response.headers["authorization"]?.replace("Bearer ", "");
       if (newToken) {
         localStorage.setItem("token", newToken);
-        console.log("Updated token in localStorage:", newToken);
+        // console.log("Updated token in localStorage:", newToken);
       }
       return response;
     },
@@ -22,7 +22,7 @@ const addRefreshInterceptor = (apiInstance: any) => {
       const originalRequest = error.config;
       if (error.response?.status === 401 && !originalRequest._retry) {
         originalRequest._retry = true;
-        console.log("Calling refresh token due to 401", { cookies: document.cookie });
+        // console.log("Calling refresh token due to 401", { cookies: document.cookie });
 
         const response = await userApi.post("/refresh", {}, { withCredentials: true });
         const newToken = response.data.token;
@@ -153,7 +153,7 @@ export const fetchTracks = async (userId: string, isPremium: string): Promise<{ 
 // Fetch All Tracks
 export const fetchAllTrack = async (): Promise<Track[]> => {
   const data = await apiCall<{ success: boolean; data: Track[] }>(userApi, HTTP_METHODS.GET, "/fetchAllTrack");
-  if (!data.success) throw new Error("Failed to fetch all tracks");
+  // if (!data.success) throw new Error("Failed to fetch all tracks");
   return data.data;
 };
 

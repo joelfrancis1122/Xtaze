@@ -187,9 +187,9 @@ export default function ArtistMonetizePage() {
                   <span>Total Earnings</span>
                   <span>Monthly Earnings</span>
                 </div>
-                {songs.map((song) => (
+                {songs.map((song, index) => (
                   <div
-                    key={song.trackId}
+                    key={song.trackId || index}
                     className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr] gap-4 px-6 py-4 hover:bg-[#212121] transition-all duration-200 items-center"
                   >
                     <span className="text-white truncate">{song.trackName}</span>
@@ -199,6 +199,7 @@ export default function ArtistMonetizePage() {
                     <span className="text-gray-400">${song.monthlyEarnings.toFixed(2)}</span>
                   </div>
                 ))}
+
               </div>
             </Card>
           ) : (

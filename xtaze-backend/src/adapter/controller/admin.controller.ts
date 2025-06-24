@@ -1,7 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import IAdminUseCase from "../../domain/usecase/IAdminUseCase";
 import AppError from "../../utils/AppError";
-import { IBanner } from "../../domain/entities/IBanner";
 import { HttpStatus } from "../../domain/constants/httpStatus";
 
 interface Dependencies {

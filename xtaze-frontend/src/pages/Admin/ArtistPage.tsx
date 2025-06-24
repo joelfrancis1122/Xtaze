@@ -23,7 +23,7 @@ export default function ArtistList() {
       }
 
       try {
-        const artistData = await fetchArtists(token);
+        const artistData = await fetchArtists( token);
         setArtists(artistData);
         console.log(artistData, "sasd");
       } catch (error: any) {

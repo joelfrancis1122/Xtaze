@@ -44,8 +44,7 @@ export default function AdminSubscriptionPage() {
     const fetchPlansAsync = async () => {
       try {
         setLoading(true);
-        const token = localStorage.getItem("adminToken") || "";
-        const fetchedPlans = await fetchSubscriptionPlans(token);
+        const fetchedPlans = await fetchSubscriptionPlans();
         setPlans(fetchedPlans);
         setError(null);
       } catch (err: any) {
@@ -63,7 +62,6 @@ export default function AdminSubscriptionPage() {
     try {
       const unitAmount = parseFloat(newPlan.price) * 100; // Convert dollars to cents
       if (isNaN(unitAmount) || unitAmount <= 0) throw new Error("Invalid price");
-      const token = localStorage.getItem("adminToken") || "";
       const createdPlan = await createSubscriptionPlan(
         {
           name: newPlan.name,
@@ -71,7 +69,7 @@ export default function AdminSubscriptionPage() {
           price: unitAmount / 10000, // Send cents / 10000 to API
           interval: newPlan.interval,
         },
-        token
+        
       );
       console.log("Created plan response:", createdPlan); // Debug log
       setPlans([...plans, createdPlan]);
@@ -95,7 +93,6 @@ export default function AdminSubscriptionPage() {
     try {
       const unitAmount = editPlan.price.unit_amount; // Cents
       if (isNaN(unitAmount) || unitAmount <= 0) throw new Error("Invalid price");
-      const token = localStorage.getItem("adminToken") || "";
       const updatedPlan = await updateSubscriptionPlan(
         editPlan.product.id,
         {
@@ -104,7 +101,7 @@ export default function AdminSubscriptionPage() {
           price: unitAmount / 10000, // Send cents / 10000 to API
           interval: editPlan.price.recurring?.interval || "month",
         },
-        token
+        
       );
       console.log("Updated plan response:", updatedPlan); // Debug log
       setPlans(plans.map((plan) => (plan.product.id === editPlan.product.id ? updatedPlan : plan)));
@@ -117,8 +114,7 @@ export default function AdminSubscriptionPage() {
 
   const handleArchivePlan = async (productId: string) => {
     try {
-      const token = localStorage.getItem("adminToken") || "";
-      await archiveSubscriptionPlan(productId, token);
+      await archiveSubscriptionPlan(productId);
       setPlans(plans.filter((plan) => plan.product.id !== productId));
       toast.success("Plan archived successfully");
     } catch (err: any) {

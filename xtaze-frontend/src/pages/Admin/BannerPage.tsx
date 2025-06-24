@@ -60,8 +60,7 @@ export default function AdminBannerManagement() {
           action: newBanner.action || "/discover",
           isActive: newBanner.isActive ?? true,
           createdBy: user._id,
-        },
-        token
+        }, token
       );
       setBanners([...banners, createdBanner]);
       setNewBanner({ title: "", description: "", action: "/discover", isActive: true });
@@ -87,8 +86,8 @@ export default function AdminBannerManagement() {
           file: editingFile || undefined,
           action: editingBanner.action,
           isActive: editingBanner.isActive,
-        },
-        token
+        }, token
+        
       );
       setBanners(banners.map(b => (b._id === updatedBanner._id ? updatedBanner : b)));
       setEditingBanner(null);

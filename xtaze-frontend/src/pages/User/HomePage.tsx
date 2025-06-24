@@ -135,6 +135,7 @@ export default function Home() {
     const loadBanners = async () => {
       try {
         const allBanners = await fetchBanners();
+        console.log(allBanners,'ss');
         setBanners(allBanners);
       } catch (error) {
         console.error("Error fetching banners:", error);

@@ -87,8 +87,7 @@ export default function AdminCouponPage() {
     }
 
     try {
-      const token = localStorage.getItem("adminToken") || "";
-      const createdCoupon = await createCoupon(newCoupon, token);
+      const createdCoupon = await createCoupon(newCoupon);
       setCoupons([...coupons, { ...createdCoupon, _id: createdCoupon._id }]);
       setNewCoupon({ code: "", discountAmount: 0, expires: "", maxUses: 0 });
       setIsCreateFormOpen(false);
@@ -118,8 +117,7 @@ export default function AdminCouponPage() {
     }
 
     try {
-      const token = localStorage.getItem("adminToken") || "";
-      const updatedCoupon = await updateCoupon(editingCoupon._id, newCoupon, token);
+      const updatedCoupon = await updateCoupon(editingCoupon._id, newCoupon);
       setCoupons(coupons.map((c) => (c._id === editingCoupon._id ? updatedCoupon : c)));
       setEditingCoupon(null);
       setNewCoupon({ code: "", discountAmount: 0, expires: "", maxUses: 0 });
@@ -137,8 +135,7 @@ export default function AdminCouponPage() {
       return;
     }
     try {
-      const token = localStorage.getItem("adminToken") || "";
-      await deleteCoupon(id, token);
+      await deleteCoupon(id);
       setCoupons(coupons.filter((c) => c._id !== id));
       toast.success("Coupon deleted successfully!");
     } catch (error: any) {

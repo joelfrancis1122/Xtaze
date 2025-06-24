@@ -25,7 +25,8 @@ export default function Page() {
       const fetchSubscription = async () => {
         try {
           const token = localStorage.getItem("adminToken") || "";
-          const response =await fetchSubscriptionHistory(token);
+          console.log(token, 'token')
+          const response =await fetchSubscriptionHistory();
           const subscriptions: Subscription[] = response;
           
           const validSubscriptions = subscriptions.filter(sub => sub.email && sub.planName);

@@ -21,7 +21,6 @@ export default function GenreManagement() {
   const [editingGenreId, setEditingGenreId] = useState<string | null>(null);
   const [editedGenreName, setEditedGenreName] = useState<string>("");
   const token = localStorage.getItem("adminToken") || "";
-
   useEffect(() => {
     fetchGenres(token)
       .then((genres) => setGenres(genres))

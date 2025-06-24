@@ -51,7 +51,7 @@ export function PopularArtists() {
                 const artistsWithListeners: ArtistWithListeners[] = await Promise.all(
                     artistList.map(async (artist: Artist) => {
                         try {
-                            const tracks = await fetchArtistTracks(artist.id, token);
+                            const tracks = await fetchArtistTracks(artist.id,token );
                             // Calculate monthly listeners (last 30 days: March 4 to April 3, 2025)
                             const relevantMonths = ["2025-03", "2025-04"];
                             const listenersSet = new Set<string>();
