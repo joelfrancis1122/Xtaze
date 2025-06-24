@@ -11,25 +11,25 @@ import { MusicMonetization } from "../pages/User/types/IMonetization";
 import { ListenerUser } from "../pages/User/types/IListenerUser";
 import { HTTP_METHODS } from "../constants/httpMethods";
 
-
 const apiCall = async <T>(
   instance: any,
-  method: "get" | "post" | "put" | "delete" | "patch",
+  method: typeof HTTP_METHODS[keyof typeof HTTP_METHODS],
   url: string,
   data?: any,
-  token?: string
 ): Promise<T> => {
   try {
+    const token = localStorage.getItem("adminToken");
     const config = {
       headers: token ? { Authorization: `Bearer ${token}` } : undefined,
       withCredentials: true,
     };
-    const response = method === "get" || method === "delete"
+    const response = method === "get"
       ? await instance[method](url, config)
       : await instance[method](url, data, config);
     if (!response.data) throw new Error(`Failed to ${method} ${url}`);
     return response.data as T;
   } catch (error: any) {
+    
     console.error(`Error in ${method} ${url}:`, error);
     throw error;
   }
@@ -49,15 +49,13 @@ export const loginAdmin = async (email: string,password: string,dispatch: Return
   dispatch(saveAdminData(data.admin));
 };
 
-export const fetchArtists = async (token: string): Promise<Artist[]> => {
-  console.log("Fetching artists with token:", token);
+export const fetchArtists = async (): Promise<Artist[]> => {
   try {
     const data = await apiCall<{ success: boolean; data: any[]; message?: string }>(
       adminApi,
       HTTP_METHODS.GET,
       "/listUsers",
       undefined,
-      token
     );
     console.log("Fetch artists response:", data);
     if (!data.success) throw new Error(data.message || "Failed to fetch artists");
@@ -75,14 +73,14 @@ export const fetchArtists = async (token: string): Promise<Artist[]> => {
 };
 
 
-export const fetchArtistTracks = async (userId: string, token: string): Promise<Track[]> => {
+export const fetchArtistTracks = async (userId: string,): Promise<Track[]> => {
   try {
     const data = await apiCall<{ success: boolean; tracks?: Track[]; message?: string }>(
       artistApi,
       HTTP_METHODS.GET,
       `/getAllTracksArtist?userId=${userId}`,
       undefined,
-      token
+      // token
     );
     console.log("Fetch artist tracks response:", data);
     if (!data.success || !Array.isArray(data.tracks)) {
@@ -95,61 +93,61 @@ export const fetchArtistTracks = async (userId: string, token: string): Promise<
   }
 };
 
-export const toggleBlockArtist = async (id: string,currentStatus: boolean,token: string): Promise<boolean> => {
+export const toggleBlockArtist = async (id: string,currentStatus: boolean,): Promise<boolean> => {
   const newStatus = !currentStatus;
   const data = await apiCall<{ success: boolean; message?: string }>(
     adminApi,
     HTTP_METHODS.PATCH,
     `/toggleBlock/${id}`,
     { status: newStatus },
-    token
+    
   );
   console.log("Toggle block response:", data);
   if (!data.success) throw new Error(data.message || "Failed to toggle artist status");
   return newStatus;
 };
 
-export const fetchGenres = async (token: string): Promise<IGenre[]> => {
-  const data = await apiCall<{ data: IGenre[] }>(adminApi, "get", "/genreList", undefined, token);
+export const fetchGenres = async (): Promise<IGenre[]> => {
+  const data = await apiCall<{ data: IGenre[] }>(adminApi, HTTP_METHODS.GET, "/genreList", undefined);
   return data.data;
 };
 
 
 
-export const addGenre = async (name: string, token: string): Promise<IGenre> => {
+export const addGenre = async (name: string,): Promise<IGenre> => {
   const data = await apiCall<{ data: IGenre; message: string }>(
     adminApi,
     HTTP_METHODS.POST,
     "/genreCreate",
     { name },
-    token
+    
   );
   return data.data;
 };
 
-export const toggleBlockGenre = async (id: string, token: string): Promise<void> => {
-  await apiCall<{ success: boolean }>(adminApi, HTTP_METHODS.PUT, `/genreToggleBlockUnblock/${id}`, {}, token);
+export const toggleBlockGenre = async (id: string): Promise<void> => {
+  await apiCall<{ success: boolean }>(adminApi, HTTP_METHODS.PUT, `/genreToggleBlockUnblock/${id}`, {});
 };
 
-export const updateGenre = async (id: string, name: string, token: string): Promise<{ success: boolean; message: string }> => {
+export const updateGenre = async (id: string, name: string): Promise<{ success: boolean; message: string }> => {
   const data = await apiCall<{ data: { success: boolean; message: string } }>(
     adminApi,
     HTTP_METHODS.PUT,
     `/genreUpdate/${id}`,
     { name },
-    token
+    
   );
   return data.data;
 };
 
-export const fetchBanners = async (token: string): Promise<IBanner[]> => {
-  const data = await apiCall<{ data: IBanner[] }>(adminApi, HTTP_METHODS.GET, "/banners/all", undefined, token);
+export const fetchBanners = async (): Promise<IBanner[]> => {
+  const data = await apiCall<{ data: IBanner[] }>(adminApi, HTTP_METHODS.GET, "/banners/all", undefined);
   return data.data;
 };
 
 export const createBanner = async (
   banner: { title: string; description: string; file?: File; action: string; isActive: boolean; createdBy: string },
-  token: string
+  
 ): Promise<IBanner> => {
   const formData = new FormData();
   formData.append("title", banner.title);
@@ -159,14 +157,14 @@ export const createBanner = async (
   formData.append("isActive", String(banner.isActive));
   formData.append("createdBy", banner.createdBy);
   console.log(formData, "visvajith")
-  const data = await apiCall<{ data: IBanner }>(adminApi, HTTP_METHODS.POST, "/banners", formData, token);
+  const data = await apiCall<{ data: IBanner }>(adminApi, HTTP_METHODS.POST, "/banners", formData);
   return data.data;
 };
 
 export const updateBanner = async (
   id: string,
   banner: { title: string; description: string; file?: File; action: string; isActive: boolean },
-  token: string
+  
 ): Promise<IBanner> => {
   const formData = new FormData();
   formData.append("title", banner.title);
@@ -176,23 +174,23 @@ export const updateBanner = async (
   formData.append("isActive", String(banner.isActive));
 
   console.log(formData, "odi avaindah comming ", banner.title, banner.description, banner.isActive)
-  const data = await apiCall<{ data: IBanner }>(adminApi, "put", `/banners/${id}`, formData, token);
+  const data = await apiCall<{ data: IBanner }>(adminApi, HTTP_METHODS.PUT, `/banners/${id}`, formData);
   return data.data;
 };
 
-export const deleteBanner = async (id: string, token: string): Promise<void> => {
-  await apiCall<{ success: boolean }>(adminApi, "delete", `/banners/${id}`, undefined, token);
+export const deleteBanner = async (id: string): Promise<void> => {
+  await apiCall<{ success: boolean }>(adminApi, HTTP_METHODS.DELETE, `/banners/${id}`, undefined);
 
 };
 
-export const fetchUserDetails = async (userIds: string[], token: string): Promise<ListenerUser[]> => {
+export const fetchUserDetails = async (userIds: string[]): Promise<ListenerUser[]> => {
   try {
     const data = await apiCall<{ success: boolean; data: ListenerUser[]; message?: string }>(
       adminApi,
       HTTP_METHODS.POST,
       "/getUsersByIds",
       { userIds },
-      token
+      
     );
     console.log("Fetch user details response:", data);
 
@@ -219,7 +217,7 @@ export const fetchCoupons = async (): Promise<any> => {
 };
 
 
-export const fetchSubscriptionHistory = async (token?: string): Promise<any> => {
+export const fetchSubscriptionHistory = async (): Promise<any> => {
   console.log("Fetching subscription history...");
   try {
     const data = await apiCall<{ data: any }>(
@@ -227,7 +225,7 @@ export const fetchSubscriptionHistory = async (token?: string): Promise<any> => 
       HTTP_METHODS.GET,
       "/stripe/subscription-history",
       undefined,
-      token
+      
     );
     console.log("Fetched subscription history:", data.data);
     return data.data;
@@ -239,7 +237,7 @@ export const fetchSubscriptionHistory = async (token?: string): Promise<any> => 
 
 
 
-export const createCoupon = async (couponData: { code: string; discountAmount: number; expires: string; maxUses: number }, token?: string): Promise<Coupon> => {
+export const createCoupon = async (couponData: { code: string; discountAmount: number; expires: string; maxUses: number }): Promise<Coupon> => {
   console.log("Creating coupon with:", couponData);
   try {
     const data = await apiCall<{ result: Coupon }>(
@@ -247,7 +245,6 @@ export const createCoupon = async (couponData: { code: string; discountAmount: n
       HTTP_METHODS.POST,
       "/coupons",
       { ...couponData, uses: 0 },
-      token
     );
     console.log("Created coupon:", data.result);
     return data.result;
@@ -257,7 +254,7 @@ export const createCoupon = async (couponData: { code: string; discountAmount: n
   }
 };
 
-export const updateCoupon = async (id: string, couponData: { code: string; discountAmount: number; expires: string; maxUses: number }, token?: string): Promise<Coupon> => {
+export const updateCoupon = async (id: string, couponData: { code: string; discountAmount: number; expires: string; maxUses: number }): Promise<Coupon> => {
   console.log("Updating coupon with:", { id, couponData });
   try {
     const data = await apiCall<{ data: Coupon }>(
@@ -265,7 +262,7 @@ export const updateCoupon = async (id: string, couponData: { code: string; disco
       HTTP_METHODS.PUT,
       `/coupons?id=${id}`,
       couponData,
-      token
+      
     );
     console.log("Updated coupon:", data.data);
     return data.data;
@@ -275,7 +272,7 @@ export const updateCoupon = async (id: string, couponData: { code: string; disco
   }
 };
 
-export const deleteCoupon = async (id: string, token?: string): Promise<void> => {
+export const deleteCoupon = async (id: string): Promise<void> => {
   console.log("Deleting coupon with id:", id);
   try {
     await apiCall<{ success: boolean }>(
@@ -283,7 +280,7 @@ export const deleteCoupon = async (id: string, token?: string): Promise<void> =>
       HTTP_METHODS.DELETE,
       `/coupons?id=${id}`,
       undefined,
-      token
+      
     );
     console.log("Coupon deleted successfully");
   } catch (error: any) {
@@ -292,7 +289,7 @@ export const deleteCoupon = async (id: string, token?: string): Promise<void> =>
   }
 };
 
-export const fetchMonetizationData = async (token?: string): Promise<MusicMonetization[]> => {
+export const fetchMonetizationData = async (): Promise<MusicMonetization[]> => {
   console.log("Fetching monetization data...");
   try {
     const data = await apiCall<{ data: MusicMonetization[] }>(
@@ -300,7 +297,7 @@ export const fetchMonetizationData = async (token?: string): Promise<MusicMoneti
       HTTP_METHODS.GET,
       "/music/monetization",
       undefined,
-      token
+      
     );
     console.log("Fetched monetization data:", data.data);
     return data.data || [];
@@ -310,7 +307,7 @@ export const fetchMonetizationData = async (token?: string): Promise<MusicMoneti
   }
 };
 
-export const initiateArtistPayout = async (artistName: string, token?: string): Promise<string> => {
+export const initiateArtistPayout = async (artistName: string, ): Promise<string> => {
   console.log("Initiating payout for artist:", artistName);
   try {
     const data = await apiCall<{ data: { sessionUrl: string } }>(
@@ -318,7 +315,7 @@ export const initiateArtistPayout = async (artistName: string, token?: string): 
       HTTP_METHODS.POST,
       "/artistPayout",
       { artistName },
-      token
+      
     );
     console.log("Payout session URL:", data.data.sessionUrl);
     return data.data.sessionUrl;
@@ -330,15 +327,14 @@ export const initiateArtistPayout = async (artistName: string, token?: string): 
 
 
 
-export const fetchSubscriptionPlans = async (token?: string): Promise<SubscriptionPlan[]> => {
+export const fetchSubscriptionPlans = async (): Promise<SubscriptionPlan[]> => {
   console.log("Fetching subscription plans...");
   try {
     const data = await apiCall<{ data: SubscriptionPlan[] }>(
       adminApi,
-      "get",
+      HTTP_METHODS.GET,
       "/stripe/plans",
       undefined,
-      token
     );
     console.log("Fetched subscription plans:", data.data);
     return data.data || [];
@@ -350,14 +346,13 @@ export const fetchSubscriptionPlans = async (token?: string): Promise<Subscripti
 
 export const createSubscriptionPlan = async (
   planData: { name: string; description?: string; price: number; interval: "month" | "year" },
-  token?: string
 ): Promise<SubscriptionPlan> => {
   console.log("Creating subscription plan with:", planData);
   try {
     const unitAmount = Math.round(parseFloat(planData.price.toString()) * 100); // Convert dollars to cents
     const data = await apiCall<{ data: SubscriptionPlan }>(
       adminApi,
-      "post",
+      HTTP_METHODS.POST,
       "/stripe/createProduct",
       {
         name: planData.name,
@@ -365,7 +360,6 @@ export const createSubscriptionPlan = async (
         price: unitAmount,
         interval: planData.interval,
       },
-      token
     );
     console.log("Created subscription plan:", data.data);
     return data.data;
@@ -378,14 +372,13 @@ export const createSubscriptionPlan = async (
 export const updateSubscriptionPlan = async (
   productId: string,
   planData: { name: string; description?: string; price: number; interval: "month" | "year" },
-  token?: string
 ): Promise<SubscriptionPlan> => {
   console.log("Updating subscription plan with:", { productId, planData });
   try {
     const unitAmount = Math.round(parseFloat(planData.price.toString()) * 100); // Convert dollars to cents
     const data = await apiCall<{ data: SubscriptionPlan }>(
       adminApi,
-      "put",
+      HTTP_METHODS.PUT,
       `/stripe/products/?productId=${productId}`,
       {
         name: planData.name,
@@ -393,7 +386,6 @@ export const updateSubscriptionPlan = async (
         price: unitAmount,
         interval: planData.interval,
       },
-      token
     );
     console.log("Updated subscription plan:", data.data);
     return data.data;
@@ -403,15 +395,14 @@ export const updateSubscriptionPlan = async (
   }
 };
 
-export const archiveSubscriptionPlan = async (productId: string, token?: string): Promise<void> => {
+export const archiveSubscriptionPlan = async (productId: string,): Promise<void> => {
   console.log("Archiving subscription plan with productId:", productId);
   try {
     await apiCall<{ status: number }>(
       adminApi,
-      "post",
+      HTTP_METHODS.POST,
       `/stripe/products/delete?productId=${productId}`,
       undefined,
-      token
     );
     console.log("Subscription plan archived successfully");
   } catch (error: any) {
@@ -419,14 +410,13 @@ export const archiveSubscriptionPlan = async (productId: string, token?: string)
     throw new Error(error.response?.data?.message || "Failed to archive subscription plan");
   }
 };
-export const fetchAllArtistsVerification = async (token:string): Promise<any> => {
+export const fetchAllArtistsVerification = async (): Promise<any> => {
   try {
     const response = await apiCall<{ data: any }>(
       adminApi,
-      "get",
+      HTTP_METHODS.GET,
       `/fetchAllArtistsVerification`,
       undefined,
-      token
     );
     console.log(response,"ossss")
     return response.data
@@ -438,21 +428,18 @@ export const fetchAllArtistsVerification = async (token:string): Promise<any> =>
 
 
 
-// Update verification status
 export const updateVerificationStatus = async (
   status: "approved" | "rejected" | "pending" | "unsubmitted",
   feedback: string | null,
   id: string,
-  token: string
 ): Promise<any> => {
   try {
-    console.log("Service called with:", { status, feedback, id, token });
     const response = await apiCall(
       adminApi,
-      "put",
+      HTTP_METHODS.PUT,
       `/updateVerificationStatus?id=${id}`,
       { status, feedback },
-      token
+      
     );
     return response;
   } catch (error) {

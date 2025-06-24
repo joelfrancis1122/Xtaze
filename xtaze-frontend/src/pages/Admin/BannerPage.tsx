@@ -34,7 +34,7 @@ export default function AdminBannerManagement() {
       try {
         const token = localStorage.getItem("adminToken");
         if (!token) throw new Error("No token found");
-        const fetchedBanners = await fetchBanners(token);
+        const fetchedBanners = await fetchBanners();
         setBanners(fetchedBanners);
       } catch (error) {
         console.error("Error fetching banners:", error);
@@ -60,7 +60,7 @@ export default function AdminBannerManagement() {
           action: newBanner.action || "/discover",
           isActive: newBanner.isActive ?? true,
           createdBy: user._id,
-        }, token
+        }, 
       );
       setBanners([...banners, createdBanner]);
       setNewBanner({ title: "", description: "", action: "/discover", isActive: true });
@@ -86,7 +86,7 @@ export default function AdminBannerManagement() {
           file: editingFile || undefined,
           action: editingBanner.action,
           isActive: editingBanner.isActive,
-        }, token
+        },
         
       );
       setBanners(banners.map(b => (b._id === updatedBanner._id ? updatedBanner : b)));
@@ -105,7 +105,7 @@ export default function AdminBannerManagement() {
     try {
       const token = localStorage.getItem("adminToken");
       if (!token) throw new Error("Authentication required");
-      await deleteBanner(_id, token);
+      await deleteBanner(_id);
       setBanners(banners.filter(b => b._id !== _id));
       toast.success("Banner deleted successfully");
     } catch (error) {

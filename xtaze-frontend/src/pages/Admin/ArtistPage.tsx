@@ -23,7 +23,7 @@ export default function ArtistList() {
       }
 
       try {
-        const artistData = await fetchArtists( token);
+        const artistData = await fetchArtists();
         setArtists(artistData);
         console.log(artistData, "sasd");
       } catch (error: any) {
@@ -43,7 +43,7 @@ export default function ArtistList() {
     }
 
     try {
-      const newStatus = await toggleBlockArtist(id, currentStatus, token);
+      const newStatus = await toggleBlockArtist(id, currentStatus);
       setArtists(artists.map((artist) =>
         artist.id === id ? { ...artist, isActive: newStatus } : artist
       ));

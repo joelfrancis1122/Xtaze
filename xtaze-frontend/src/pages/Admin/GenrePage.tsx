@@ -20,9 +20,8 @@ export default function GenreManagement() {
   const [newGenre, setNewGenre] = useState<string>("");
   const [editingGenreId, setEditingGenreId] = useState<string | null>(null);
   const [editedGenreName, setEditedGenreName] = useState<string>("");
-  const token = localStorage.getItem("adminToken") || "";
   useEffect(() => {
-    fetchGenres(token)
+    fetchGenres()
       .then((genres) => setGenres(genres))
       .catch((err) => console.error("Error fetching genres:", err));
   }, []);
@@ -32,7 +31,7 @@ export default function GenreManagement() {
     if (!newGenre.trim()) return;
 
     try {
-      const addedGenre = await addGenre(newGenre.toLowerCase(), token);
+      const addedGenre = await addGenre(newGenre.toLowerCase());
       setGenres([addedGenre, ...genres]);
       setNewGenre("");
       toast.success("Genre added successfully!");
@@ -53,7 +52,7 @@ export default function GenreManagement() {
           genre._id === id ? { ...genre, isBlocked: !genre.isBlocked } : genre
         )
       );
-      await toggleBlockGenre(id, token);
+      await toggleBlockGenre(id);
       toast.success("Genre status updated successfully!");
     } catch (error) {
       console.error("Error updating genre status:", error);
@@ -73,7 +72,7 @@ export default function GenreManagement() {
       return;
     }
     try {
-      const result = await updateGenre(id, editedGenreName.trim().toLowerCase(), token);
+      const result = await updateGenre(id, editedGenreName.trim().toLowerCase());
       if (result.success) {
         setGenres((prevGenres) =>
           prevGenres.map((genre) =>

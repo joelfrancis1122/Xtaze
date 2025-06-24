@@ -31,7 +31,7 @@ export default function AdminAnalytics() {
             }
 
             try {
-                const verificationData = await fetchAllArtistsVerification(token);
+                const verificationData = await fetchAllArtistsVerification();
                 console.log("Verification data:", verificationData);
 
                 if (!verificationData || verificationData.length === 0) {
@@ -40,7 +40,7 @@ export default function AdminAnalytics() {
                 }
 
                 const artistIds = verificationData.map((item: { artistId: any; }) => item.artistId);
-                const userDetails = await fetchUserDetails(artistIds, token);
+                const userDetails = await fetchUserDetails(artistIds);
                 console.log("User details:", userDetails);
 
                 const mergedData = verificationData
@@ -72,7 +72,7 @@ export default function AdminAnalytics() {
 
     const handleVerify = async (verificationId: string, status: "approved" | "rejected", feedback: string | null = null) => {
         try {
-            const updatedVerification = await updateVerificationStatus(status, feedback, verificationId, token as string);
+            const updatedVerification = await updateVerificationStatus(status, feedback, verificationId );
             if (updatedVerification) {
                 setArtists((prevArtists) =>
                     prevArtists.map((artist) =>

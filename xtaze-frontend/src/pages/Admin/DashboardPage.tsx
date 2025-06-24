@@ -41,8 +41,7 @@ export default function Page() {
 
       const fetchTotalArtists = async () => {
         try {
-          const token = localStorage.getItem("adminToken") || "";
-          const artists = await fetchArtists(token);
+          const artists = await fetchArtists();
             console.log(artists,'odi odi od i')
           // Count valid artists (those with role === "artist" and active)
           const artistCount = artists.filter(artist => artist.role === "artist" && artist.isActive).length;
