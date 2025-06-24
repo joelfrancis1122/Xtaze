@@ -40,7 +40,7 @@ export function MonthlyListenersChart() {
       }
 
       try {
-        const tracks = await fetchArtistTracks(user._id, token);
+        const tracks = await fetchArtistTracks(user._id);
         console.log("Tracks:", tracks); // Debug: Inspect track data structure
 
         if (!tracks || tracks.length === 0) {

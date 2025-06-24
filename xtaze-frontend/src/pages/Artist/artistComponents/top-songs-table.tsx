@@ -36,7 +36,7 @@ export function TopSongsTable() {
       }
 
       try {
-        const tracks = await fetchArtistTracks(user._id, token);
+        const tracks = await fetchArtistTracks(user._id);
         setTopSongs(tracks);
       } catch (error) {
         console.error("Error fetching tracks:", error);

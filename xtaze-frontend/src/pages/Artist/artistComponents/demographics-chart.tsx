@@ -42,7 +42,7 @@ export function DemographicsChart() {
 
       try {
         // Fetch artist's tracks
-        const tracks = await fetchArtistTracks(user._id, token);
+        const tracks = await fetchArtistTracks(user._id);
         
         // Collect all unique listener IDs
         const listenerIds = Array.from(
@@ -57,7 +57,7 @@ export function DemographicsChart() {
         }
 
         // Fetch user details for all listeners
-        const users = await fetchUserDetails(listenerIds, token);
+        const users = await fetchUserDetails(listenerIds);
         
         // Aggregate demographics
         const { genderData, ageData, countryData } = aggregateDemographics(users);
