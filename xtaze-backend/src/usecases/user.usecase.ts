@@ -222,7 +222,7 @@ export default class UserUseCase {
       user = await this._userRepository.add(newUser);
     }
 
-    const userObj: IUser = { ...user.toObject(), _id: user._id!.toString() };
+    const userObj: IUser = { ...(typeof user.toObject === "function" ? user.toObject() : user), _id: user._id!.toString() };
 
     const token = jwt.sign(
       { userId: user._id!.toString(), email: user.email, role: "user" },
