@@ -244,7 +244,7 @@ export const fetchPlaylistTracks = async (id: string, page: number = 1, limit: n
 // Fetch Banners
 export const fetchBanners = async (): Promise<IBanner[]> => {
   const data = await apiCall<{ success: boolean; data: IBanner[] }>(userApi, HTTP_METHODS.GET, "/banners");
-  if (!data.success) throw new Error("Failed to fetch banners");
+  // if (!data.success) throw new Error("Failed to fetch banners");
   return data.data;
 };
 
