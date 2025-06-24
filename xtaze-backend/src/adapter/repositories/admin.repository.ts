@@ -21,16 +21,16 @@ export default class AdminRepository implements IAdminRepository {
       throw error
     }
   }
-  async updateVerificationStatus(status:string,feedback: string | null,id: string): Promise<IVerificationRequest | null> {
+  async updateVerificationStatus(status: string, feedback: string | null, id: string): Promise<IVerificationRequest | null> {
     try {
       const updatedVerification = await VerificationModel.findByIdAndUpdate(
         id,
         {
           status,
           feedback,
-          reviewedAt: new Date().toISOString(), 
+          reviewedAt: new Date().toISOString(),
         },
-        { new: true } 
+        { new: true }
       );
 
       if (!updatedVerification) {
@@ -44,16 +44,17 @@ export default class AdminRepository implements IAdminRepository {
       throw error;
     }
   }
-  
+
   async getUsersByIds(userIds: string[]): Promise<IUser[] | null> {
     try {
 
       const users = await UserModel.find({ _id: { $in: userIds } });
 
-      const formattedUsers: any = users.map(user => ({  
-        ...user.toObject(),
-        _id: user._id.toString(),
-      }));
+      const formattedUsers: any = users.map(user =>
+        typeof user.toObject === 'function'
+          ? { ...user.toObject(), _id: user._id.toString() }
+          : { ...user, _id: user._id.toString() }
+      );
 
       return formattedUsers;
     } catch (error) {
@@ -108,7 +109,7 @@ export default class AdminRepository implements IAdminRepository {
       const savedCoupon = await newCoupon.save();
       return savedCoupon;
     } catch (error: unknown) {
-      if ((error as any).code === 11000) {  
+      if ((error as any).code === 11000) {
         throw new Error(`Coupon code '${couponData.code}' already exists`);
       }
       throw new Error("Failed to save coupon: " + (error as Error).message);
