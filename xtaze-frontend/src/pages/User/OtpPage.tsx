@@ -1,6 +1,6 @@
 import { useState, useRef, type KeyboardEvent } from "react";
 import { Input } from "../../components/ui/input";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "../../store/store";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -12,6 +12,7 @@ export default function OTPVerification() {
   const inputRefs = Array.from({ length: 6 }, () => useRef<HTMLInputElement>(null));
   const navigate = useNavigate();
   const [isResendDisabled, setIsResendDisabled] = useState(false);
+  const dispatch = useDispatch();
 
   const signupData = useSelector((state: RootState) => state.user.signupData);
 
@@ -75,10 +76,10 @@ export default function OTPVerification() {
     }
 
     try {
-      setIsSubmitting(true);
       await verifyOtp(otpCode);
-      await registerUser(signupData); 
+      await registerUser(signupData, dispatch); 
       toast.success("OTP verified successfully!");
+      navigate("/home");
       navigate("/home");
     } catch (error: any) {
       console.log(error, "error in console");

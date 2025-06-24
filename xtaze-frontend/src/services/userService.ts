@@ -108,14 +108,13 @@ export const registerUser = async (
   signupData: { username: string; country: string; gender: string; year: string; phone: string; email: string; password?: string; confirmPassword?: string },
   dispatch: ReturnType<typeof useDispatch>
 ): Promise<void> => {
-  const data = await apiCall<{ success: boolean; token?: string; user?: UserSignupData; message?: string }>(
+  const data = await apiCall<{ success: boolean; user?: UserSignupData; message?: string }>(
     userApi,
     HTTP_METHODS.POST,
     "/register",
     signupData
   );
   if (!data.success) throw new Error(data.message || "Failed to register user");
-  if (data.token) localStorage.setItem("token", data.token);
   if (data.user) dispatch(saveSignupData(data.user));
 };
 
