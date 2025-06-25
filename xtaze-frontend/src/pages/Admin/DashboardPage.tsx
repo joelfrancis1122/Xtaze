@@ -39,6 +39,7 @@ export default function Page() {
         }
       };
 
+      
       const fetchTotalArtists = async () => {
         try {
           const artists = await fetchArtists();

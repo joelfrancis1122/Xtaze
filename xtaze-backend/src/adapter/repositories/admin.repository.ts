@@ -47,14 +47,12 @@ export default class AdminRepository implements IAdminRepository {
 
   async getUsersByIds(userIds: string[]): Promise<IUser[] | null> {
     try {
-
       const users = await UserModel.find({ _id: { $in: userIds } });
-
-  const formattedUsers: IUser[] = users.map(user =>
-  typeof user.toObject === 'function'
-    ? { ...user.toObject(), _id: user._id.toString() }
-    : { ...user, _id: user._id.toString() }
-);
+      const formattedUsers: IUser[] = users.map(user =>
+        typeof user.toObject === 'function'
+          ? { ...user.toObject(), _id: user._id.toString() }
+          : { ...user, _id: user._id.toString() }
+      );
       return formattedUsers;
     } catch (error) {
       throw error;

@@ -121,7 +121,6 @@ export default function Home() {
     getTracksAndLikedSongsAndPlaylists();
   }, [dispatch, user?._id, user?.premium]);
 
-  // Random index for featured track
   useEffect(() => {
     if (user?.premium !== "Free" && tracks.length > 0 && randomIndex === null) {
       setRandomIndex(Math.floor(Math.random() * tracks.length));

@@ -43,7 +43,6 @@ export const loginAdmin = async (email: string,password: string,dispatch: Return
     "/login",
     { email, password }
   );
-  console.log("Admin login response:", data);
   if (!data.success) throw new Error(data.message || "Admin login failed");
   localStorage.setItem("adminToken", data.token);
   dispatch(saveAdminData(data.admin));
@@ -57,7 +56,6 @@ export const fetchArtists = async (): Promise<Artist[]> => {
       "/listUsers",
       undefined,
     );
-    console.log("Fetch artists response:", data);
     if (!data.success) throw new Error(data.message || "Failed to fetch artists");
     return data.data.map((artist: any) => ({
       id: artist._id,
@@ -227,7 +225,7 @@ export const fetchSubscriptionHistory = async (): Promise<any> => {
       undefined,
       
     );
-    console.log("Fetched subscription history:", data.data);
+    // console.log("Fetched subscription history:", data.data);
     return data.data;
   } catch (error: any) {
     console.error("Error fetching subscription history:", error);
@@ -246,7 +244,7 @@ export const createCoupon = async (couponData: { code: string; discountAmount: n
       "/coupons",
       { ...couponData, uses: 0 },
     );
-    console.log("Created coupon:", data.result);
+    // console.log("Created coupon:", data.result);
     return data.result;
   } catch (error: any) {
     console.error("Error creating coupon:", error);
@@ -264,7 +262,7 @@ export const updateCoupon = async (id: string, couponData: { code: string; disco
       couponData,
       
     );
-    console.log("Updated coupon:", data.data);
+    // console.log("Updated coupon:", data.data);
     return data.data;
   } catch (error: any) {
     console.error("Error updating coupon:", error);
@@ -299,7 +297,7 @@ export const fetchMonetizationData = async (): Promise<MusicMonetization[]> => {
       undefined,
       
     );
-    console.log("Fetched monetization data:", data.data);
+    // console.log("Fetched monetization data:", data.data);
     return data.data || [];
   } catch (error: any) {
     console.error("Error fetching monetization data:", error);
@@ -361,7 +359,7 @@ export const createSubscriptionPlan = async (
         interval: planData.interval,
       },
     );
-    console.log("Created subscription plan:", data.data);
+    // console.log("Created subscription plan:", data.data);
     return data.data;
   } catch (error: any) {
     console.error("Error creating subscription plan:", error);
@@ -373,7 +371,6 @@ export const updateSubscriptionPlan = async (
   productId: string,
   planData: { name: string; description?: string; price: number; interval: "month" | "year" },
 ): Promise<SubscriptionPlan> => {
-  console.log("Updating subscription plan with:", { productId, planData });
   try {
     const unitAmount = Math.round(parseFloat(planData.price.toString()) * 100); // Convert dollars to cents
     const data = await apiCall<{ data: SubscriptionPlan }>(
@@ -387,7 +384,6 @@ export const updateSubscriptionPlan = async (
         interval: planData.interval,
       },
     );
-    console.log("Updated subscription plan:", data.data);
     return data.data;
   } catch (error: any) {
     console.error("Error updating subscription plan:", error);
@@ -396,7 +392,6 @@ export const updateSubscriptionPlan = async (
 };
 
 export const archiveSubscriptionPlan = async (productId: string,): Promise<void> => {
-  console.log("Archiving subscription plan with productId:", productId);
   try {
     await apiCall<{ status: number }>(
       adminApi,
@@ -418,7 +413,6 @@ export const fetchAllArtistsVerification = async (): Promise<any> => {
       `/fetchAllArtistsVerification`,
       undefined,
     );
-    console.log(response,"ossss")
     return response.data
   } catch (error: any) {
     console.error("Error archiving verification plan:", error);
