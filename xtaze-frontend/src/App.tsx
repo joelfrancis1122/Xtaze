@@ -3,7 +3,7 @@ import { Toaster } from "sonner";
 import { Provider } from "react-redux";
 import { store, persistor } from "./store/store";
 import { PersistGate } from "redux-persist/integration/react";
-// import Cursor from "./features/cursor";
+import Cursor from "./features/cursor";
 import { AppRoutes } from "./routes";
 
 const App = () => {
@@ -27,7 +27,7 @@ const App = () => {
               className: "premium-toaster backdrop-blur-md",
             }}
           />
-          {/* <Cursor /> */}
+          <Cursor />
           <AppRoutes />
         </PersistGate>
       </Provider>

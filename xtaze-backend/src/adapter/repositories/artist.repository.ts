@@ -33,6 +33,7 @@ export default class ArtistRepository implements IArtistRepository {
       return null;
     }
   }
+  
 
   async upload(track: ITrack): Promise<ITrack | null> {
     const newTrack = new Track(track)
@@ -216,7 +217,4 @@ export default class ArtistRepository implements IArtistRepository {
       throw new Error((error as Error).message || "Failed to fetch artist stats");
     }
   }
-
-
-
 }

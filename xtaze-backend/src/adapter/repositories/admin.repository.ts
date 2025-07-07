@@ -21,6 +21,7 @@ export default class AdminRepository implements IAdminRepository {
       throw error
     }
   }
+  
   async updateVerificationStatus(status: string, feedback: string | null, id: string): Promise<IVerificationRequest | null> {
     try {
       const updatedVerification = await VerificationModel.findByIdAndUpdate(

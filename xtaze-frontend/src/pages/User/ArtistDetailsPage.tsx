@@ -68,25 +68,25 @@ export default function ArtistDetailsPage() {
       try {
         setLoading(true);
         const fetchedTracks = await fetchArtistTracks(artistId);
-
         if (fetchedTracks.length > 0) {
           const artistUsername = fetchedTracks[0].artists[0];
           const userResponse = await fetchUserByUsername(artistUsername);
           const verificationRecords = await fetchAllArtistsVerification();
           const verificationRecord = verificationRecords.find((record: { artistId: string; }) => record.artistId === artistId);
           const verificationStatus = verificationRecord ? verificationRecord.status : "unsubmitted";
-
+          
+          console.log(fetchedTracks,"1")
           const artistData: Artist = {
             id: artistId,
             name: artistUsername,
             role: "artist",
-            profilePic: userResponse.profilePic || "/default-image.png",
-            banner: userResponse?.banner || "/default-banner.jpg",
+            profilePic: userResponse.profilePic || "",
+            banner: userResponse?.banner || "",
             isActive: userResponse.isActive || true,
             bio: userResponse?.bio || "",
             verificationStatus,
           };
-
+          console.log(artistData, "artistData");
           setArtist(artistData);
           setTracks(fetchedTracks);
           setError(null);
