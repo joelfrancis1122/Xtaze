@@ -24,6 +24,7 @@ import ArtistDetailsPage from "../pages/User/ArtistDetailsPage";
 import UserPrivateRoute from "../pages/User/UserPrivateRoute";
 import Home from "../pages/User/HomePage";
 import { USER_ROUTE_PREFIX } from "../constants/routeConstants";
+import AlbumSongsPage from "../pages/Artist/ALbumPageView";
 
 export const UserRoutes = () => (
     <>
@@ -40,6 +41,8 @@ export const UserRoutes = () => (
             <Route path={`${USER_ROUTE_PREFIX}/success`} element={<SuccessPage />} />
             <Route path={`${USER_ROUTE_PREFIX}/cancel`} element={<CancelPage />} />
             <Route path={`${USER_ROUTE_PREFIX}/playlist/:userId`} element={<PlaylistsPage />} />
+            <Route path={`${USER_ROUTE_PREFIX}/Albums`} element={< AlbumSongsPage/>} />
+
             <Route path={`${USER_ROUTE_PREFIX}/playlist/:userId/:id`} element={<PlaylistPageView />} />
             <Route path={`${USER_ROUTE_PREFIX}/likedsongs`} element={<LikedSongsPage />} />
             <Route path={`${USER_ROUTE_PREFIX}/uploadTrack`} element={<UploadMusicPage />} />

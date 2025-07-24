@@ -99,12 +99,12 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                   Artists
                 </a>
 
-                {/* <a
-                  onClick={() => navigate("/radio")}
+                <a
+                  onClick={() => navigate("/albums")}
                   className="text-gray-300 hover:text-white block transition-colors"
                 >
-                  Mixes & Radio
-                </a> */}
+                  Albums
+                </a>
                 <a
                   onClick={() => navigate(`/playlist/${signupData?._id}`)}
                   className="text-gray-300 hover:text-white block transition-colors"

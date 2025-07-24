@@ -78,7 +78,7 @@ export default class UserUseCase {
   async sendOTP(email: string): Promise<string> {
 
     const findEmail = await this._userRepository.findByEmail(email) //using the storage 
-
+ 
     if (findEmail) {
       return "403"
     }

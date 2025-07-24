@@ -2,7 +2,7 @@ import axios from "axios";
 
 const axiosBaseConfig = {
   baseURL: import.meta.env.VITE_BASE_URL || "https://api.xtaze.fun",
-  timeout: 30000,
+  timeout: 50000,
 };
 
 // User API instance

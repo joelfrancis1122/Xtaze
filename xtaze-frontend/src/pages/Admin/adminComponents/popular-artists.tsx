@@ -35,6 +35,7 @@ export function PopularArtists() {
     useEffect(() => {
         const fetchTopArtists = async () => {
             try {
+                console.log("ssssss")
                 const token = localStorage.getItem("adminToken");
                 if (!token) {
                     throw new Error("No token found. Please login.");
@@ -52,8 +53,7 @@ export function PopularArtists() {
                     artistList.map(async (artist: Artist) => {
                         try {
                             const tracks = await fetchArtistTracks(artist.id );
-                            // Calculate monthly listeners (last 30 days: March 4 to April 3, 2025)
-                            const relevantMonths = ["2025-03", "2025-04"];
+                            const relevantMonths = ["2025-06", "2025-07"];
                             const listenersSet = new Set<string>();
                             tracks.forEach((track: Track) => {
                                 const hasRecentPlays = track.playHistory.some((entry) =>
@@ -73,7 +73,7 @@ export function PopularArtists() {
                         }
                     })
                 );
-
+                console.log(artistsWithListeners,"this is ")
                 // Sort by monthly listeners and take top 5
                 const sortedArtists = artistsWithListeners
                     .sort((a, b) => b.monthlyListeners - a.monthlyListeners)

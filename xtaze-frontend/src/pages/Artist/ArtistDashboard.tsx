@@ -92,7 +92,7 @@ const ArtistDashboard = () => {
       <div className="grid lg:grid-cols-[280px_1fr]">
         {/* Sidebar Component */}
         <ArtistSidebar />
-
+        
         <main className="flex-1 pl-0.4 pr-6 pt-5 pb-6">
           <div className="mb-6 flex items-center justify-between">
             <div className="space-y-1">

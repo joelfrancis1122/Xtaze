@@ -9,7 +9,7 @@ import adminDependencies from "../../dependencies/admin.dependencies";
 import AdminController from "../../../adapter/controller/admin.controller";
 
 const router = express.Router();
-
+    
 const userController = new UserController(userDependencies)
 const artistController = new ArtistController(artistDependencies)
 const adminController = new AdminController(adminDependencies)

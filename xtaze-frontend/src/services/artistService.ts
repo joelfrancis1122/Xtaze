@@ -5,6 +5,7 @@ import { IGenre } from "../pages/User/types/IGenre";
 import { VerificationStatus } from "../pages/User/types/IverficationStatus";
 import { ArtistS } from "../pages/User/types/IArtist";
 import { HTTP_METHODS } from "../constants/httpMethods";
+import { IAlbum } from "../pages/User/types/IAlbums";
 
 const addRefreshInterceptor = (apiInstance: any) => {
   apiInstance.interceptors.response.use(
@@ -124,17 +125,16 @@ export const uploadSong = async (
     songName: string;
     artist: string;
     genre: string;
-    album: string;
+    albumId: string;
     image: File | null;
     song: File | null;
   },
 ): Promise<any> => {
-  console.log("Uploading song with:", { songData });
   const formData = new FormData();
   formData.append("songName", songData.songName);
   formData.append("artist", songData.artist);
   formData.append("genre", songData.genre);
-  formData.append("album", songData.album);
+  formData.append("albumId", songData.albumId);
   if (songData.image) formData.append("image", songData.image);
   if (songData.song) formData.append("file", songData.song);
 
@@ -148,6 +148,62 @@ export const uploadSong = async (
   return data;
 };
 
+export const createAlbum = async (albumData: {
+  name: string;
+  description?: string;
+  coverImage?: File | null;
+  artistId: string;
+}): Promise<IAlbum> => {
+  const formData = new FormData();
+  formData.append("name", albumData.name);
+  if (albumData.description) formData.append("description", albumData.description);
+  if (albumData.coverImage) formData.append("coverImage", albumData.coverImage);
+  formData.append("artistId", albumData.artistId);
+console.log("alums","ss")
+  const data = await apiCall<{ success: boolean; data: IAlbum }>(artistApi, HTTP_METHODS.POST, "/albumsa", formData);
+  // if (!data.success) throw new Error(data.message || "Failed to create album");
+  return data.data;
+};
+
+export const fetchAlbums = async (artistId: string): Promise<IAlbum[]> => {
+  const data = await apiCall<{ success: boolean; data: IAlbum[] }>(artistApi, HTTP_METHODS.GET, `/albums?artistId=${artistId}`);
+  // if (!data.success) throw new Error(data.message || "Failed to fetch albums");
+  return data.data;
+};
+
+export const fetchAlbumSongs = async (albumId: string): Promise<IAlbum> => {
+  const data = await apiCall<{ success: boolean; data: IAlbum }>(
+    artistApi,
+    HTTP_METHODS.GET,
+    `/albumsongs?albumId=${albumId}`
+  );
+  console.log("datadatadata",data)
+  return data.data;
+};
+export const updateTrackByArtist = async (trackId: string, songData: {
+  title: string;
+  artists: string[];
+  genre: string[];
+  albumId?: string;
+  img?: File;
+  fileUrl?: File;
+}): Promise<any> => {
+  const formData = new FormData();
+  formData.append("title", songData.title);
+  formData.append("artists", songData.artists.join(", "));
+  formData.append("genre", songData.genre.join(", "));
+  if (songData.albumId) formData.append("album", songData.albumId);
+  if (songData.img) formData.append("img", songData.img);
+  if (songData.fileUrl) formData.append("fileUrl", songData.fileUrl);
+console.log(songData,"krisnapriya")
+  const data = await apiCall<{ success: boolean; track: unknown }>(
+    artistApi,
+    HTTP_METHODS.PUT,
+    `/updateTrackByArtist?TrackId=${trackId}`,
+    formData
+  );
+  return data.track;
+};
 
 export const uploadProfileImage = async (artistId: string, base64Image: string): Promise<any> => {
   const blob = await (await fetch(base64Image)).blob();

@@ -1,3 +1,4 @@
+import { IAlbum } from "../entities/IAlbum";
 import { ArtistMonetization, MusicMonetization } from "../entities/IMonetization";
 import { ITrack } from "../entities/ITrack";
 import IUser from "../entities/IUser";
@@ -16,5 +17,9 @@ export interface IArtistRepository {
   getVerificationStatus(artistId: string): Promise<IVerificationRequest | null>;
   requestVerification(artistId: string, imageFile: string): Promise<IVerificationRequest| null>
   usernameUpdate(userId:string,username:string): Promise<IUser|null>
+  allAlbums(userId:string): Promise<IAlbum[]|null>
+  albumsongs(userId:string): Promise<IAlbum|null>
+  findTracksByIds(albumTracks: string[]): Promise<ITrack[]>;
+  uploadAlbum(newAlbum:IAlbum): Promise<IAlbum|null>
 
 }

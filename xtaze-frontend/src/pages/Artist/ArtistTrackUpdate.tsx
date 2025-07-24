@@ -9,6 +9,11 @@ import { Card } from "../../components/ui/card";
 import { Table, TableBody, TableCell, TableRow } from "../../components/ui/table";
 import ArtistSidebar from "./artistComponents/artist-aside";
 import { toast } from "sonner";
+import { IGenre } from "../User/types/IGenre";
+import { IAlbum } from "../User/types/IAlbums";
+import { fetchActiveGenres, fetchAlbums, updateTrackByArtist } from "../../services/artistService";
+import { saveArtistData } from "../../redux/artistSlice";
+import { useDispatch } from "react-redux";
 
 // Define the Song interface (aligned with backend)
 interface Song {
@@ -17,7 +22,7 @@ interface Song {
   fileUrl: string;
   listeners: string[];
   genre?: string[];
-  album?: string;
+  albumId?: string;
   img?: string;
   artists?: string[];
 }
@@ -118,7 +123,7 @@ export function ArtistSongUpdatePage() {
       title: song.title,
       artists: song.artists ?? [],
       genre: song.genre ?? [],
-      album: song.album || "",
+      albumId: song.albumId || "",
     });
 
     setImageFile(null);
@@ -127,7 +132,7 @@ export function ArtistSongUpdatePage() {
 
 
   // Handle text input changes
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (  e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setEditedSong((prev) => ({ ...prev, [name]: value }));
   };
@@ -143,58 +148,52 @@ export function ArtistSongUpdatePage() {
     const file = e.target.files?.[0];
     if (file) setAudioFile(file);
   };
+  const dispatch = useDispatch();
 
   // Save updated song
-  const saveSong = async () => {
-    if (!editingSongId || !editedSong._id) return;
-    const token = localStorage.getItem("artistToken");
-    if (!token) {
-      console.error("No token found");
-      toast.error("No authentication token found. Please login.");
-      return;
-    }
+ const saveSong = async () => {
+  if (!editingSongId || !editedSong._id) return;
 
-    try {
-      const formData = new FormData();
+  const token = localStorage.getItem("artistToken");
+  if (!token) {
+    toast.error("No authentication token found. Please login.");
+    return;
+  }
 
-      // Always append all fields, even if unchanged
-      formData.append("title", editedSong.title || "");
-      formData.append("artists", Array.isArray(editedSong.artists) ? editedSong.artists.join(", ") : editedSong.artists || "");
-      formData.append("genre", Array.isArray(editedSong.genre) ? editedSong.genre.join(", ") : editedSong.genre || "");
-      formData.append("album", editedSong.album || "");
-      if (imageFile) formData.append("img", imageFile);
-      if (audioFile) formData.append("fileUrl", audioFile);
+  try {
+    const songData = {
+      title: editedSong.title || "",
+      artists: Array.isArray(editedSong.artists)
+        ? editedSong.artists
+        : (editedSong.artists
+            ? String(editedSong.artists).split(",").map(a => a.trim())
+            : []),
+      genre: Array.isArray(editedSong.genre)
+        ? editedSong.genre
+        : (editedSong.genre ? String(editedSong.genre).split(",").map(g => g.trim()) : []),
+      albumId: editedSong.albumId || "", 
+      img: imageFile || undefined,
+      fileUrl: audioFile || undefined,
+    };
 
-      const response = await axios.put(`${baseUrl}/artist/updateTrackByArtist?TrackId=${editingSongId}`, formData, {
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "multipart/form-data",
-        },
-      });
+    const updatedTrack = await updateTrackByArtist(editingSongId, songData);
 
-      console.log("Response:", response.data);
+    setTopSongs((prev) =>
+      prev.map((song) =>
+        song._id === editingSongId ? { ...song, ...updatedTrack } : song
+      )
+    );
 
-      if (response.data.success) {
-        const updatedTrack = response.data.track as Song;
-        setTopSongs((prev) =>
-          prev.map((song) =>
-            song._id === editingSongId ? { ...song, ...updatedTrack } : song
-          )
-        );
-        setEditingSongId(null);
-        setEditedSong({});
-        setImageFile(null);
-        setAudioFile(null);
-        toast.success("Song updated successfully!");
-      } else {
-        console.error("Failed to update song:", response.data.message);
-        toast.error(response.data.message || "Failed to update song.");
-      }
-    } catch (error) {
-      console.error("Error updating song:", error);
-      toast.error("An error occurred while updating the song.");
-    }
-  };
+    setEditingSongId(null);
+    setEditedSong({});
+    setImageFile(null);
+    setAudioFile(null);
+    toast.success("Song updated successfully!");
+  } catch (error: any) {
+    console.error("Error updating song:", error);
+    toast.error(error?.message || "An error occurred while updating the song.");
+  }
+};
 
   // Cancel editing
   const cancelEditing = () => {
@@ -203,6 +202,33 @@ export function ArtistSongUpdatePage() {
     setImageFile(null);
     setAudioFile(null);
   };
+    const artist = useSelector((state: RootState) => state.artist.signupData);
+  const token = localStorage.getItem("artistToken");
+
+    const [genres, setGenres] = useState<IGenre[]>([]);
+    const [albums, setAlbums] = useState<IAlbum[]>([]);
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!token || !artist?._id) {
+        toast.error("Please log in to fetch genres and albums.");
+        return;
+      }
+
+      try {
+        const [genreResponse, albumResponse] = await Promise.all([
+          fetchActiveGenres(artist._id),
+          fetchAlbums(artist._id),
+        ]);
+        setGenres(genreResponse.genres);
+        setAlbums(albumResponse);
+        dispatch(saveArtistData(genreResponse.artist));
+      } catch (error: any) {
+        toast.error(error.message || "Error fetching data. Please try again.");
+      }
+    };
+
+    fetchData();
+  }, [artist?._id, token, dispatch]);
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -317,24 +343,56 @@ export function ArtistSongUpdatePage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs md:text-sm font-medium mb-1">Genre (comma-separated)</label>
-                  <input
-                    type="text"
+                  <label
+                    htmlFor="genre"
+                    className="block text-xs md:text-sm font-medium mb-1"
+                  >
+                    Genre
+                  </label>
+                  <select
+                    id="genre"
                     name="genre"
-                    value={editedSong.genre || ""}
+                    value={editedSong.genre?.[0] || ""}
                     onChange={handleInputChange}
                     className="w-full p-2 bg-gray-800 border border-gray-700 rounded text-white text-sm"
-                  />
+                    aria-describedby="genre-desc"
+                  >
+                    <option value="" disabled>
+                      Select Genre
+                    </option>
+                    {genres.map((genre) => (
+                      <option key={genre._id} value={genre.name}>
+                        {genre.name}
+                      </option>
+                    ))}
+                  </select>
+                  <span id="genre-desc" className="text-xs text-gray-400">
+                    Select the song genre.
+                  </span>
                 </div>
                 <div>
-                  <label className="block text-xs md:text-sm font-medium mb-1">Album</label>
-                  <input
-                    type="text"
-                    name="album"
-                    value={editedSong.album || ""}
+                  <label
+                    htmlFor="albumId"
+                    className="block text-xs md:text-sm font-medium mb-1"
+                  >
+                    Album
+                  </label>
+                  <select
+                    id="albumId"
+                    name="albumId"
+                    value={editedSong.albumId || ""}
                     onChange={handleInputChange}
                     className="w-full p-2 bg-gray-800 border border-gray-700 rounded text-white text-sm"
-                  />
+                    aria-describedby="albumId-desc"
+                  >
+                    <option value="">No Album</option>
+                    {albums.map((album) => (
+                      <option key={album._id} value={album._id}>
+                        {album.name}
+                      </option>
+                    ))}
+                  </select>
+                
                 </div>
               </div>
               <div className="flex justify-end gap-2 mt-6">

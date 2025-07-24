@@ -74,7 +74,7 @@ export default class UserController {
 
   async loginUser(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      
+
       const { email, password } = req.body;
       if (!email || !password) throw new AppError("Email and password are required", HttpStatus.BAD_REQUEST);
 
@@ -85,16 +85,16 @@ export default class UserController {
       if (response.success && response.token && response.refreshToken) {
         console.log(response.token, "emt vannilessssssss");
         res.cookie("refreshToken", response.refreshToken, {
-          httpOnly: true, 
-          secure: true,   
-          sameSite: "none", 
-          maxAge: 7 * 24 * 60 * 60 * 1000, 
-          path: "/", 
+          httpOnly: true,
+          secure: true,
+          sameSite: "none",
+          maxAge: 7 * 24 * 60 * 60 * 1000,
+          path: "/",
         });
         res.status(HttpStatus.OK).json({
           success: true,
           message: response.message,
-          token: response.token, 
+          token: response.token,
           user: response.user,
         });
       } else {
@@ -114,7 +114,7 @@ export default class UserController {
       const response = await this._userUseCase.googleLogin(token);
 
       if (response.success && response.token && response.refreshToken) {
-        
+
         res.cookie("refreshToken", response.refreshToken, {
           httpOnly: true, // Prevent JavaScript access
           secure: true,   // Required for HTTPS
@@ -151,9 +151,9 @@ export default class UserController {
 
       if (response.success && response.token && response.refreshToken) {
         res.cookie("refreshToken", response.refreshToken, {
-          httpOnly: true, 
-          secure: true,   
-          sameSite: "none", 
+          httpOnly: true,
+          secure: true,
+          sameSite: "none",
           maxAge: 7 * 24 * 60 * 60 * 1000,
           path: "/",     // Ensure site-wide availability
         });
@@ -181,7 +181,8 @@ export default class UserController {
       const available = await this._userUseCase.checkUnique(userName);
       console.log("Checking username:", userName, "Available:", available);
 
-      res.status(HttpStatus.OK).json({ available });
+      res.status(HttpStatus.OK).json({ success: true, message: "OTP sent successfully!", available });
+
     } catch (error) {
       next(error);
     }
@@ -417,7 +418,7 @@ export default class UserController {
 
 
       const allBanners = await this._userUseCase.getAllBanners()
-      res.status(HttpStatus.CREATED).json({ success: true,message: "Banner added successfully", data: allBanners });
+      res.status(HttpStatus.CREATED).json({ success: true, message: "Banner added successfully", data: allBanners });
 
     } catch (error) {
       next(error);

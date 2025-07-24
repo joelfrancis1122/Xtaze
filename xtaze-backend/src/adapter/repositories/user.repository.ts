@@ -14,14 +14,13 @@ export default class UserRepository implements IUserRepository {
   async add(userData: IUser): Promise<IUser> {
     try {
       const user = await UserModel.create(userData)
-
       return user as unknown as IUser
     } catch (error) {
       throw error
     }
   }
-
-  
+ 
+   
   async resetPaymentStatus(): Promise<void> {
     try {
       const result = await UserModel.updateMany(
@@ -32,6 +31,8 @@ export default class UserRepository implements IUserRepository {
       throw error
     }
   }
+
+
   async updatePassword(user: IUser): Promise<IUser> {
     try {
       const updatedUser = await UserModel.findByIdAndUpdate(

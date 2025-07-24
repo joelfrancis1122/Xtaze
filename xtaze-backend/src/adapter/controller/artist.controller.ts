@@ -96,7 +96,7 @@ export default class ArtistController {
     try {
       const { TrackId } = req.query;
       const { title, artists, genre, album } = req.body;
-
+      console.log(album,"odi odi odi di")
       if (!TrackId) {
         res.status(HttpStatus.BAD_REQUEST).json({ success: false, message: "Track ID is required" });
       }
@@ -108,15 +108,6 @@ export default class ArtistController {
       const genreArray = genre ? genre.split(",").map((g: string) => g.trim()) : [];
       const artistArray = artists ? artists.split(",").map((g: string) => g.trim()) : [];
 
-      console.log({ songFile, imageFile }, "Processed Files");
-
-      console.log("trac", TrackId as string,
-        title,
-        artistArray,
-        genreArray,
-        album,
-        songFile,
-        imageFile)
       const updatedTrack = await this._artistnUseCase.updateTrackByArtist(
         TrackId as string,
         title,
@@ -137,7 +128,6 @@ export default class ArtistController {
 
   async incrementListeners(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      console.log("increment", req.body);
       const { trackId, id } = req.body;
       const track = await this._artistnUseCase.increment(trackId as string, id as string);
 
@@ -158,15 +148,15 @@ export default class ArtistController {
       }
 
       // Extract request data
-      const { songName, artist, genre, album } = req.body;
+      const { songName, artist, genre, albumId } = req.body;
       const songFile = (req.files as { [fieldname: string]: Express.Multer.File[] }).file[0];
       const imageFile = (req.files as { [fieldname: string]: Express.Multer.File[] }).image[0];
 
-      console.log(songFile, imageFile, "Extracted files");
+      console.log(albumId, "Extracted files123",req.body);
       const genreArray = genre ? genre.split(",").map((g: string) => g.trim()) : [];
       const artistArray = artist ? artist.split(",").map((g: string) => g.trim()) : [];
 
-      const track = await this._artistnUseCase.trackUpload(songName, artistArray, genreArray, album, songFile, imageFile);
+      const track = await this._artistnUseCase.trackUpload(songName, artistArray, genreArray, albumId, songFile, imageFile);
       res.status(HttpStatus.CREATED).json({
         message: "Track uploaded successfully!",
         track,
@@ -176,6 +166,55 @@ export default class ArtistController {
       next(error); // Pass error to middleware
     }
   }
+
+  async allAlbums(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { artistId } = req.query
+      const data = await this._artistnUseCase.allAlbums(artistId as string);
+      res.status(HttpStatus.OK).json({ data: data });
+    } catch (error: unknown) {
+      console.error("Error in all albums controller:", error);
+      res.status(HttpStatus.NOT_FOUND).json({ message: (error as Error).message || "Internal server error" });
+      next(error);
+    }
+  }
+  async albumsongs(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { albumId } = req.query
+      console.log(req.query,"odiiii")
+      const data = await this._artistnUseCase.albumsongs(albumId as string);
+      console.log(data,"kakathaa",albumId)
+     res.status(HttpStatus.OK).json({ data: data });
+    } catch (error: unknown) {
+      console.error("Error in all albums controller:", error);
+      res.status(HttpStatus.NOT_FOUND).json({ message: (error as Error).message || "Internal server error" });
+      next(error);
+    }
+  }
+
+  async uploadAlbums(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    console.log('odi odi odi ',req.files)
+    const { artistId, name, description } = req.body;
+    const songFile = (req.files as { [fieldname: string]: Express.Multer.File[] }).coverImage[0];
+    console.log('odi adi ')
+
+    console.log("Upload Request:", { body: req.body, files: req.files,songFile });
+
+    const albums = await this._artistnUseCase.uploadAlbums(artistId as string,name,description,songFile);
+
+    res.status(HttpStatus.CREATED).json({
+      message: "Albums uploaded successfully",
+      data: albums,
+    });
+  } catch (error: unknown) {
+    console.error("Error in all albums controller:", error);
+    res.status(HttpStatus.NOT_FOUND).json({ message: (error as Error).message || "Internal server error" });
+    next(error);
+  }
+}
+
+
 
   async statsOfArtist(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {

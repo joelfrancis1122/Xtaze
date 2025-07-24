@@ -10,7 +10,7 @@ const PlanSchema = new Schema<IPlanModel>(
     price: { type: Number, required: true, min: 0 },
     interval: { type: String, enum: ["monthly", "yearly", "weekly"], required: true },
   },
-  { timestamps: true } // Automatically adds createdAt and updatedAt
+  { timestamps: true } 
 );
 
 export const PlanModel = mongoose.model<IPlanModel>("Plan", PlanSchema);

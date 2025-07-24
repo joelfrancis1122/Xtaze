@@ -17,6 +17,10 @@ router.post("/login",(req:Request,res:Response,next:NextFunction)=>artistControl
 router.post("/refresh",(req:Request,res:Response,next:NextFunction)=>artistController.refreshToken(req,res,next))
 
 router.post("/upload",authenticateArtist,upload.fields([{ name: "file", maxCount: 1 }, { name: "image", maxCount: 1 }]),(req:Request,res:Response,next:NextFunction)=>artistController.uploadTracks(req,res,next))
+router.get("/albums",authenticateArtist,(req:Request,res:Response,next:NextFunction)=>artistController.allAlbums(req,res,next))
+router.get("/albumsongs",authenticateArtist,(req:Request,res:Response,next:NextFunction)=>artistController.albumsongs(req,res,next))
+
+router.post("/albumsa",authenticateArtist,upload.fields([{ name: "file", maxCount: 1 }, { name: "coverImage", maxCount: 1 }]),(req:Request,res:Response,next:NextFunction)=>artistController.uploadAlbums(req,res,next))
 router.get("/listActiveGenres",authenticateArtist,(req:Request,res:Response,next:NextFunction)=>genreController.listActiveGenres(req,res,next))
 router.get("/getAllTracksArtist",authenticateArtist,(req:Request,res:Response,next:NextFunction)=>artistController.getAllTracksArtist(req,res,next))
 router.post("/incrementListeners",authenticateUser,(req:Request,res:Response,next:NextFunction)=>artistController.incrementListeners(req,res,next))

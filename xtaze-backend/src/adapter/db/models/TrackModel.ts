@@ -3,7 +3,7 @@ import mongoose, { Schema, Document } from "mongoose";
 export interface ITrack extends Document {
   title: string;
   genre: string[];
-  album: string;
+  albumId: string;
   fileUrl: string;
   img: string;
   createdAt: Date;
@@ -15,7 +15,7 @@ export interface ITrack extends Document {
 const TrackSchema = new Schema<ITrack>({
   title: { type: String, required: true },
   genre: { type: [String], required: true },
-  album: { type: String, required: true },
+  albumId: { type: String, required: true },
   fileUrl: { type: String, required: true },
   img: { type: String, required: true },
   createdAt: { type: Date, default: Date.now },

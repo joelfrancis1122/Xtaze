@@ -85,11 +85,7 @@ export function TopSongsTable() {
   return (
     <Table>
       <TableHeader className="bg-black text-white">
-        {/* <TableRow>
-          <TableHead className="px-4 py-2 text-left text-sm font-semibold">##</TableHead>
-          <TableHead className="px-4 py-2 text-left text-sm font-semibold">Title</TableHead>
-          <TableHead className="px-4 py-2 text-center text-sm font-semibold">Total Plays</TableHead>
-        </TableRow> */}
+  
       </TableHeader>
       <TableBody>
         {topSongs.length > 0 ? (

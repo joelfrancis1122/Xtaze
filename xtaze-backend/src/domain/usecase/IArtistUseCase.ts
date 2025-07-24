@@ -3,6 +3,7 @@ import IUser from "../entities/IUser";
 import { ITrack } from "../entities/ITrack";
 import { IVerificationRequest } from "../entities/IVeridicationRequest";
 import { IVerificationStatusResponse } from "../entities/IVerificationStatusResponse ";
+import { IAlbum } from "../entities/IAlbum";
 
 export default interface IArtistUseCase {
     login(email: string, password: string): Promise<{ success: boolean; message: string; token?: string; ArefreshToken?: string; user?: IUser }>;
@@ -10,6 +11,10 @@ export default interface IArtistUseCase {
 
     trackUpload(songName: string, artist: string[], genre: string[], album: string, songFile: Express.Multer.File, imageFile: Express.Multer.File): Promise<ITrack | null>;
     updateTrackByArtist(TrackId:string,songName: string, artist: string[], genre: string[], album: string, songFile?: Express.Multer.File, imageFile?: Express.Multer.File): Promise<ITrack | null>;
+
+    allAlbums(userId:string): Promise<IAlbum[]|null>
+    albumsongs(userId:string): Promise<IAlbum|null>
+    uploadAlbums(artistId:string,name:string,description:string,image?:Express.Multer.File): Promise<IAlbum|null>
 
     listArtists(): Promise<IUser[]>
     listArtistReleases(userId: string): Promise<ITrack[]>

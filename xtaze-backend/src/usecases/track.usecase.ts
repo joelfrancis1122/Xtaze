@@ -12,7 +12,7 @@ export class UploadTrackUseCase {
     const newTrack: ITrack = {
       title: songUpload.title,
       genre: songUpload.genre,
-      album: songUpload.album,
+      albumId: songUpload.album,
       fileUrl: songUpload.secure_url,
       img: imageUpload.secure_url,
       listeners: [],

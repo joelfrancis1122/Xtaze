@@ -11,6 +11,7 @@ import { ArtistMonetization, MusicMonetization } from "../domain/entities/IMonet
 import { IVerificationRequest } from "../domain/entities/IVeridicationRequest";
 import { IVerificationStatusResponse } from "../domain/entities/IVerificationStatusResponse ";
 import { MESSAGES } from "../domain/constants/messages";
+import { IAlbum } from "../domain/entities/IAlbum";
 dotenv.config();
 
 interface useCaseDependencies {
@@ -42,7 +43,7 @@ export default class ArtistUseCase {
     }
     // Check if the role is 'artist'
     if (artist.role !== "artist") {
-      return { success: false, message: MESSAGES.ARTIST_LOGIN_ONLY};
+      return { success: false, message: MESSAGES.ARTIST_LOGIN_ONLY };
     }
     if (artist.isActive == false) {
       return { success: false, message: MESSAGES.ACCOUNT_SUSPENDED };
@@ -100,46 +101,56 @@ export default class ArtistUseCase {
     }
   }
 
-  async trackUpload(songName: string, artist: string[], genre: string[], album: string, songFile: Express.Multer.File, imageFile: Express.Multer.File): Promise<ITrack | null> {
-    const data = { title: songName, artists: artist, genre: genre, album, fileUrl: songFile, img: imageFile }
+  async trackUpload(songName: string, artist: string[], genre: string[], albumId: string, songFile: Express.Multer.File, imageFile: Express.Multer.File): Promise<ITrack | null> {
+    console.log("eda eda eda eda")
+    const data = { title: songName, artists: artist, genre: genre, albumId, fileUrl: songFile, img: imageFile }
+    console.log("eda eda eda eda", data)
     const songUpload = await uploadSongToCloud(songFile);
+    console.log("vishvajiths")
     const imageUpload = await uploadImageToCloud(imageFile);
+    console.log("vishvajith")
     const newTrack: ITrack = {
       title: songName,
       genre: genre,
-      album: album,
+      albumId: albumId,
       fileUrl: songUpload.secure_url,
       img: imageUpload.secure_url,
       listeners: [],
       artists: artist,
     };
-
+    console.log("tittle", newTrack)
     return await this._artistRepository.upload(newTrack);
   }
 
-  async updateTrackByArtist(TrackId: string,songName: string,artist: string[],genre: string[],album: string,songFile?: Express.Multer.File,imageFile?: Express.Multer.File
+  async updateTrackByArtist(TrackId: string, songName: string, artist: string[], genre: string[], albumId: string, songFile?: Express.Multer.File, imageFile?: Express.Multer.File
   ): Promise<ITrack | null> {
     const songUpload = songFile ? await uploadSongToCloud(songFile) : null;
     const imageUpload = imageFile ? await uploadImageToCloud(imageFile) : null;
-  
+
     const updatedTrack: Omit<ITrack, 'fileUrl' | 'img'> & { fileUrl?: string; img?: string } = {
-      title: songName || "", 
+      title: songName || "",
       genre,
-      album,
+      albumId,
       artists: artist,
       ...(imageUpload && { img: imageUpload.secure_url }),
       ...(songUpload && { fileUrl: songUpload.secure_url }),
     };
-  
-    // Update only the provided fields
-    console.log(updatedTrack,"joellll")
+
     return await this._artistRepository.updateTrackByArtist(updatedTrack, TrackId);
   }
-  
+
 
   async listArtists(): Promise<IUser[]> {
     return await this._artistRepository.getAllArtists() as IUser[];
 
+  }
+  async albumsongs(id: string): Promise<IAlbum | null> {
+    const album = await this._artistRepository.albumsongs(id) as IAlbum;
+    const tracks = await this._artistRepository.findTracksByIds(album.tracks);
+    return {
+      ...album,
+      tracks,
+    } as unknown as IAlbum;
   }
 
   async listArtistReleases(userId: string): Promise<ITrack[]> {
@@ -147,12 +158,30 @@ export default class ArtistUseCase {
     return await this._artistRepository.getAllTracksByArtist(userId) as ITrack[];
 
   }
-  async increment(trackId: string,id:string): Promise<ITrack | null> {
+  async increment(trackId: string, id: string): Promise<ITrack | null> {
 
-    return await this._artistRepository.increment(trackId,id);
-
+    return await this._artistRepository.increment(trackId, id);
 
   }
+  async allAlbums(userid: string,): Promise<IAlbum[] | null> {
+
+    return await this._artistRepository.allAlbums(userid as string);
+
+  }
+  async uploadAlbums(artistId: string, name: string, description: string, image?: Express.Multer.File): Promise<IAlbum | null> {
+    const imageUpload = image ? await uploadImageToCloud(image) : null;
+
+    const newAlbum: IAlbum = {
+      name,
+      description,
+      coverImage: imageUpload?.secure_url,
+      artistId,
+      tracks: []
+    };
+
+    return await this._artistRepository.uploadAlbum(newAlbum);
+  }
+
   async statsOfArtist(userId: string): Promise<ArtistMonetization[]> {
 
     return await this._artistRepository.statsOfArtist(userId);
@@ -170,17 +199,17 @@ export default class ArtistUseCase {
     return await this._artistRepository.checkcard(artistId);
   }
 
-  
+
   async usernameUpdate(userId: string, username: string): Promise<IUser | null> {
     try {
       const updated = await this._userRepository.usernameUpdate(userId, username);
-  
+
       if (!updated) {
         return null;
       }
-  
+
       return updated;
-  
+
     } catch (error) {
       console.error(MESSAGES.ERROR_UPDATING_PROFILE, error);
       return null;
@@ -195,29 +224,29 @@ export default class ArtistUseCase {
     if (!verification) {
       return { status: "unsubmitted" };
     }
-  
+
     return {
       status: verification.status,
       idProof: verification.idProof,
       feedback: verification.feedback,
-    
+
     };
   }
-  
-  async requestVerification(artistId:string,imageFile: Express.Multer.File): Promise<IVerificationStatusResponse | null> {
+
+  async requestVerification(artistId: string, imageFile: Express.Multer.File): Promise<IVerificationStatusResponse | null> {
     const imageUpload = imageFile ? await uploadIdproofCloud(imageFile) : null;
-    if(!imageUpload) return null
+    if (!imageUpload) return null
     let image = imageUpload.secure_url
-    const verification = await this._artistRepository.requestVerification(artistId,image as string);
+    const verification = await this._artistRepository.requestVerification(artistId, image as string);
     if (!verification) {
       return { status: "unsubmitted" };
     }
-  
+
     return {
       status: verification.status,
       idProof: verification.idProof,
       feedback: verification.feedback,
-    
+
     };
   }
 

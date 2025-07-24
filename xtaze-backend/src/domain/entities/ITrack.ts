@@ -2,7 +2,7 @@ export interface ITrack {
   id?: string;
   title: string;
   genre: string[];
-  album: string;
+  albumId: string;
   fileUrl?: string;
   img?: string;
   createdAt?: Date;

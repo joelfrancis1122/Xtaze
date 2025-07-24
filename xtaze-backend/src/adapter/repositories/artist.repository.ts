@@ -1,8 +1,10 @@
+import { IAlbum } from "../../domain/entities/IAlbum";
 import { ArtistMonetization, MusicMonetization } from "../../domain/entities/IMonetization";
 import { ITrack } from "../../domain/entities/ITrack";
 import IUser from "../../domain/entities/IUser";
 import { IVerificationRequest } from "../../domain/entities/IVeridicationRequest";
 import { IArtistRepository } from "../../domain/repositories/IArtistRepository";
+import { AlbumModel } from "../db/models/AlbumModel";
 import { Track } from "../db/models/TrackModel";
 import UserModel from "../db/models/UserModel";
 import VerificationModel from "../db/models/VerificationRequestModel";
@@ -33,12 +35,29 @@ export default class ArtistRepository implements IArtistRepository {
       return null;
     }
   }
-  
+
 
   async upload(track: ITrack): Promise<ITrack | null> {
-    const newTrack = new Track(track)
-    return await newTrack.save()
+    const newTrack = new Track(track);
+    const savedTrack = await newTrack.save();
+
+    if (savedTrack && track.albumId) {
+      await AlbumModel.findByIdAndUpdate(
+        track.albumId,
+        { $push: { tracks: savedTrack._id } },
+        { new: true }
+      );
+    }
+
+    return savedTrack;
   }
+
+  async uploadAlbum(album: IAlbum): Promise<IAlbum | null> {
+    const newAlbum = new AlbumModel(album);
+    const savedAlbum = await newAlbum.save();
+    return savedAlbum.toObject() as IAlbum;
+  }
+
   async updateTrackByArtist(track: ITrack, trackId: string): Promise<ITrack | null> {
     try {
       const updatedTrack = await Track.findByIdAndUpdate(
@@ -46,7 +65,11 @@ export default class ArtistRepository implements IArtistRepository {
         { $set: track },
         { new: true, runValidators: true }
       );
-
+      await AlbumModel.findByIdAndUpdate(
+        track.albumId,
+        { $push: { tracks:trackId } },
+        { new: true }
+      );
       return updatedTrack;
     } catch (error) {
       console.error("Error updating track:", error);
@@ -60,6 +83,23 @@ export default class ArtistRepository implements IArtistRepository {
 
   async getAllArtists(): Promise<IUser[]> {
     return await UserModel.find({ role: { $ne: "admin" } });
+  }
+
+  async allAlbums(userId: string): Promise<IAlbum[] | null> {
+    console.log(userId, "ssssssssssssssssssss")
+    return await AlbumModel.find({ artistId: userId });
+  }
+
+  async albumsongs(userId: string): Promise<IAlbum | null> {
+    const album = await AlbumModel.findOne({ _id: userId });
+    if (!album) {
+      return null;
+    }
+    const tracks = await Track.find({ _id: { $in: album.tracks } });
+    return { ...album.toObject(), tracks } as unknown as IAlbum;
+  }
+  async findTracksByIds(trackIds: string[]): Promise<ITrack[]> {
+    return await Track.find({ _id: { $in: trackIds } });
   }
 
 
@@ -122,7 +162,7 @@ export default class ArtistRepository implements IArtistRepository {
         { new: true } // Ensures the updated document is returned
       );
 
-      return updatedArtist ? ({ ...updatedArtist.toObject(), _id: updatedArtist._id.toString() } as unknown as IUser) : null; 
+      return updatedArtist ? ({ ...updatedArtist.toObject(), _id: updatedArtist._id.toString() } as unknown as IUser) : null;
     } catch (error) {
       console.error(error);
       return null;
@@ -158,7 +198,7 @@ export default class ArtistRepository implements IArtistRepository {
   async requestVerification(artistId: string, idProof: string): Promise<IVerificationRequest | null> {
     try {
       await VerificationModel.deleteOne({ artistId });
-  
+
       const verificationRequest: IVerificationRequest = {
         artistId,
         idProof,
@@ -167,17 +207,17 @@ export default class ArtistRepository implements IArtistRepository {
         reviewedAt: null,
         feedback: null,
       };
-  
+
       const newVerification = new VerificationModel(verificationRequest);
       const savedVerification = await newVerification.save();
-  
+
       return savedVerification;
     } catch (error) {
       console.error("Error in verificationRepository.requestVerification:", error);
       throw new Error("Failed to save verification request");
     }
   }
-  
+
 
   async statsOfArtist(userId: string): Promise<ArtistMonetization[]> {
     try {
