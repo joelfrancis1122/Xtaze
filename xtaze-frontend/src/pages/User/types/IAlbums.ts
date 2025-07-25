@@ -1,6 +1,4 @@
-import { SetStateAction } from "react";
 export interface IAlbum {
-  songs: SetStateAction<[]>;
   _id: string;
   name: string;
   description?: string;
@@ -15,7 +13,7 @@ export interface ISong {
   artists: string[];
   genre: string[];
   img?: string;
-  albumId?: string;
+  album?: IAlbum | null; 
   fileUrl: string;
   listeners: string[];
 }

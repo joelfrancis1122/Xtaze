@@ -191,7 +191,7 @@ const PreviewModal: React.FC<PreviewModalProps> = ({ track, isOpen, toggleModal,
                       </p>
                       <p>
                         <span className="text-zinc-400">Artists: </span>
-                        {Array.isArray(track.artists) ? track.artists.join(", ") : track.artists}
+                        {Array.isArray(track.artists) ? track.artists.join(", ") : track.artist}
                       </p>
                       <p>
                         <span className="text-zinc-400">Genre: </span>

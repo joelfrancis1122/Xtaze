@@ -1,8 +1,9 @@
 export interface Track {
   _id: string
   title: string
-  album: string
-  artists: string
+  album?: string |null
+  artists: string | string[];
+  artist?: string | string[];
   genre: string
   fileUrl: string
   img: string

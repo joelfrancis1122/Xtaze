@@ -83,6 +83,7 @@ export default function Home() {
   }, [user?.likedSongs]);
 
   useEffect(() => {
+    console.log("vishvaa")
     const getTracksAndLikedSongsAndPlaylists = async () => {
       const token = localStorage.getItem("token");
       if (!token) {
@@ -92,10 +93,12 @@ export default function Home() {
       }
 
       try {
+        console.log("akd")
         const { tracks: fetchedTracks, user: updatedUser } = await fetchTracks(
           user?._id || "",
           user?.premium || "Free"
         );
+        console.log(tracks,"akhildasd")
         setTracks(fetchedTracks);
 
         if (updatedUser && JSON.stringify(updatedUser) !== JSON.stringify(user)) {
@@ -111,6 +114,7 @@ export default function Home() {
         console.log(likedSongs, likedTracks);
         const fetchedPlaylists = await getMyplaylist((user?._id) as string);
         setPlaylists(fetchedPlaylists);
+        
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
@@ -313,15 +317,15 @@ export default function Home() {
     handlePlay(track);
   };
 
-  // Filter tracks based on search query
-  const filteredTracks = tracks.filter((track) => {
-    const query = searchQuerysaved.toLowerCase();
-    const titleMatch = track.title.toLowerCase().includes(query);
-    const artistMatch = Array.isArray(track.artists)
-      ? track.artists.some((artist) => artist.toLowerCase().includes(query))
-      : track.artists.toLowerCase().includes(query);
-    return titleMatch || artistMatch;
-  });
+const filteredTracks = tracks.filter((track) => {
+  const query = searchQuerysaved;
+  console.log(tracks,"ambdana",query)
+  const titleMatch = track.title.toLowerCase().includes(query);
+  const artistMatch = Array.isArray(track.artist)
+
+  return titleMatch || artistMatch;
+});
+
 
   // Split filtered tracks into newArrivals and otherSongs
   const newArrivals = filteredTracks.slice(0, 5);
@@ -449,7 +453,7 @@ export default function Home() {
                       </div>
                       <div className="text-white font-semibold truncate">{track.title}</div>
                       <div className="text-gray-400 text-sm truncate">
-                        {Array.isArray(track.artists) ? track.artists.join(", ") : track.artists}
+                        {Array.isArray(track.artists) ? track.artists.join(", ") : track.artist}
                       </div>
                       {user?.premium !== "Free" && (
                         <div className="relative flex gap-2 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
