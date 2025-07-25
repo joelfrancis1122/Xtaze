@@ -14,15 +14,15 @@ export class DeezerController {
     try {
       const songs = await this.fetchDeezerSongsUseCase.execute();
       const userId = req.query.userId as string;
-      let userData = null; 
+      let userData = null;
       if (userId) {
-        userData = await userRepository.getUserUpdated(userId); 
+        userData = await userRepository.getUserUpdated(userId);
       }
-  
+
       if (songs.length === 0) {
         res.status(HttpStatus.NOT_FOUND).json({ error: "No songs found with previews" });
       } else {
-        res.json({ songs,user:userData });
+        res.json({ success: true, songs, user: userData });
       }
     } catch (error: unknown) {
       console.error("Error fetching Deezer songs:", (error as Error).message);
