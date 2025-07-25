@@ -160,7 +160,7 @@ export const fetchAllTrack = async (): Promise<Track[]> => {
 // Fetch Genre Tracks
 export const fetchGenreTracks = async (genre: string): Promise<Track[]> => {
   const data = await apiCall<{ success: boolean; data: Track[] }>(userApi, HTTP_METHODS.GET, `/fetchGenreTracks?GenreName=${genre}`);
-  if (!data.success) throw new Error("Failed to fetch genre tracks");
+  // if (!data.success) throw new Error("Failed to fetch genre tracks");
   return data.data;
 };
 
