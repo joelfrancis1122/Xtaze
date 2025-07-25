@@ -72,7 +72,7 @@ const UserAlbumViewPage = () => {
   };
 
   const handleShare = () => {
-    const albumUrl = `${window.location.origin}/albumView?=${albumId}`;
+    const albumUrl = `${window.location.origin}/albumView?albumId=${albumId}`;
     const shareMessage = `Check out this album: ${albumUrl}`;
     const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareMessage)}`;
     window.open(whatsappUrl, "_blank");
