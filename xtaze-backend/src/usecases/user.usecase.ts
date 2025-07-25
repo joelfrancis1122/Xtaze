@@ -17,6 +17,7 @@ import { SubscriptionHistory } from '../domain/entities/ISubscriptionHistory';
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2023-08-16" });
 dotenv.config();
 import { MESSAGES } from '../domain/constants/messages';
+import { IAlbum } from '../domain/entities/IAlbum';
 
 interface useCaseDependencies {
   repository: {
@@ -337,20 +338,27 @@ export default class UserUseCase {
   }
   async updateBio(userId: string, bio: string): Promise<{ success: boolean; message: string, user?: IUser }> {
     try {
-
       const updated = await this._userRepository.updateBio(userId, bio);
-
       if (!updated) {
         return { success: false, message: MESSAGES.ERROR_UPDATING_PROFILE };
       }
-
       return { success: true, message: "Profile updated successfully", user: updated };
     } catch (error) {
       console.error("Error during profile upload:", error);
       return { success: false, message: MESSAGES.ERROR_UPDATING_PROFILE };
     }
-
   }
+
+  async allAlbums(): Promise<IAlbum[] | null> {
+    const albums = await this._userRepository.allAlbums() as IAlbum[];
+    return albums;
+  }
+  async albumView(albumId:string): Promise<IAlbum | null> {
+    const albums = await this._userRepository.albumView(albumId) as IAlbum;
+    return albums;
+  }
+
+
   async usernameUpdate(userId: string, username: string): Promise<IUser | null> {
     try {
       const updated = await this._userRepository.usernameUpdate(userId, username);

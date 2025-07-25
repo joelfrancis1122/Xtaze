@@ -1,48 +1,49 @@
 import { useState, useEffect, useRef } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "../../components/ui/button";
 import { Card } from "../../components/ui/card";
-import ArtistSidebar from "./artistComponents/artist-aside";
+import Sidebar from "./userComponents/SideBar";
 import { toast } from "sonner";
-import { Play, Pause, ArrowLeft } from "lucide-react";
+import { Play, Pause, ArrowLeft, Share2 } from "lucide-react";
 import { cn } from "../../../lib/utils";
 import { IAlbum, ISong } from "../User/types/IAlbums";
 import { fetchAlbumSongs } from "../../services/userService";
 
-
-
-const AlbumSongsPage = () => {
-  const { albumId } = useParams<{ albumId: string }>();
+const UserAlbumViewPage = () => {
   const navigate = useNavigate();
   const [album, setAlbum] = useState<IAlbum | null>(null);
   const [songs, setSongs] = useState<ISong[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [currentPlayingId, setCurrentPlayingId] = useState<string | null>(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const audioRefs = useRef<{ [key: string]: HTMLAudioElement | null }>({});
-  const token = localStorage.getItem("artistToken");
-
+ const location = useLocation();
+    const queryParams = new URLSearchParams(location.search);
+    const albumId = queryParams.get("albumId");
   useEffect(() => {
-  const fetchSongs = async () => {
-    setIsLoading(true);
-    try {
-      if (!albumId) {
-        toast.error("Invalid album ID.");
-        setIsLoading(false);
-        return;
-      }
-      const songsData = await fetchAlbumSongs(albumId);
-      setAlbum(songsData);
-      setSongs((songsData.tracks || []) as any[]);
-      console.log(songsData, "Fetched tracks");
-    } catch (error: any) {
-      toast.error(error.message || "Error fetching songs. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    const fetchSongs = async () => {
 
-  fetchSongs();
-  }, [albumId, token]);
+
+      setIsLoading(true);
+      try {
+        console.log(albumId,"sssssssss")
+        if (!albumId) {
+          toast.error("Invalid album ID.");
+          setIsLoading(false);
+          return;
+        }
+        const songsData = await fetchAlbumSongs(albumId);
+        setAlbum(songsData);
+        setSongs(songsData.tracks || []);
+      } catch (error: any) {
+        toast.error(error.message || "Error fetching songs. Please try again.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchSongs();
+  }, [albumId]);
 
   const togglePlay = (songId: string, fileUrl: string) => {
     const audio = audioRefs.current[songId];
@@ -70,39 +71,52 @@ const AlbumSongsPage = () => {
     navigate(-1);
   };
 
+  const handleShare = () => {
+    const albumUrl = `${window.location.origin}/albumView?=${albumId}`;
+    const shareMessage = `Check out this album: ${albumUrl}`;
+    const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareMessage)}`;
+    window.open(whatsappUrl, "_blank");
+  };
+
   return (
-    <div className="min-h-screen bg-black text-white">
-      <div className="grid lg:grid-cols-[280px_1fr]">
-        <ArtistSidebar />
-        <main className="flex-1">
+    <div className="min-h-screen bg-gray-900 text-white font-sans">
+      <div className="flex">
+        <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
+        {isSidebarOpen && (
+          <div
+            className="fixed inset-0 bg-black/50 z-20 md:hidden"
+            onClick={() => setIsSidebarOpen(false)}
+          ></div>
+        )}
+        <main className="flex-1 md:ml-[240px] px-4 sm:px-6 py-4 sm:py-7">
           {/* Hero Section */}
           {album && (
             <section
-              className="relative mb-8 rounded-xl overflow-hidden bg-black animate-fade-in"
+              className="relative mb-8 rounded-xl overflow-hidden bg-gray-900 animate-fade-in"
               style={
                 album.coverImage
                   ? {
-                    backgroundImage: `url(${album.coverImage})`,
-                    backgroundSize: "cover",
-                    backgroundPosition: "center",
-                    backgroundRepeat: "no-repeat",
-                  }
+                      backgroundImage: `url(${album.coverImage})`,
+                      backgroundSize: "cover",
+                      backgroundPosition: "center",
+                      backgroundRepeat: "no-repeat",
+                    }
                   : {}
               }
               role="banner"
               aria-label={`Album ${album.name}`}
             >
-              <div className="absolute inset-0 bg-black-900 backdrop-blur-md"></div>
+              <div className="absolute inset-0 bg-gray-900/80 backdrop-blur-md"></div>
               <div className="relative flex flex-col sm:flex-row items-center sm:items-start p-6 sm:p-8">
                 {album.coverImage ? (
                   <img
                     src={album.coverImage}
                     alt={`${album.name} cover`}
-                    className="w-48 h-48 sm:w-64 sm:h-64 object-cover rounded-lg shadow-2xl"
+                    className="w-48 h-48 sm:w-64 sm:h-64 object-cover rounded-lg shadow-xl"
                     loading="lazy"
                   />
                 ) : (
-                  <div className="w-48 h-48 sm:w-64 sm:h-64 bg-gray-900 rounded-lg flex items-center justify-center text-gray-500 shadow-2xl">
+                  <div className="w-48 h-48 sm:w-64 sm:h-64 bg-gray-800 rounded-lg flex items-center justify-center text-gray-400 shadow-xl">
                     No Cover
                   </div>
                 )}
@@ -117,8 +131,7 @@ const AlbumSongsPage = () => {
                   )}
                   <div className="mt-6 flex items-center gap-4">
                     <Button
-
-                      className="bg-gold-400 text-navy-900 hover:bg-gold-500 font-semibold px-6 py-3 shadow-1xl hover:shadow-2xl transition-all duration-300"
+                      className="bg-gold-400 text-navy-900 hover:bg-gold-500 font-semibold px-6 py-3 shadow-xl hover:shadow-2xl transition-all duration-300"
                       onClick={() => {
                         if (songs[0]) togglePlay(songs[0]._id, songs[0].fileUrl);
                       }}
@@ -127,11 +140,18 @@ const AlbumSongsPage = () => {
                       <Play className="h-5 w-5 mr-2" /> Play Album
                     </Button>
                     <Button
-                      className="bg-gold-400 text-navy-900 hover:bg-gold-500 font-semibold px-6 py-3 drop-shadow-1xl hover:shadow-2xl transition-all duration-300"
+                      className="border-gold-400 text-gold-400 hover:bg-gold-400 hover:text-navy-900 font-semibold px-6 py-3 shadow-xl hover:shadow-2xl transition-all duration-300"
                       onClick={handleBack}
                       aria-label="Go back to previous page"
                     >
                       <ArrowLeft className="h-5 w-5 mr-2" /> Back
+                    </Button>
+                    <Button
+                      className="border-gold-400 text-gold-400 hover:bg-gold-400 hover:text-navy-900 font-semibold px-6 py-3 shadow-xl hover:shadow-2xl transition-all duration-300"
+                      onClick={handleShare}
+                      aria-label="Share album"
+                    >
+                      <Share2 className="h-5 w-5 mr-2" /> Share
                     </Button>
                   </div>
                 </div>
@@ -225,4 +245,4 @@ const AlbumSongsPage = () => {
   );
 };
 
-export default AlbumSongsPage;
+export default UserAlbumViewPage;

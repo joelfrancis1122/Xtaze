@@ -39,6 +39,8 @@ router.get("/username",authenticateUser,(req:Request,res:Response,next:NextFunct
 router.get("/fetchAllArtistsVerification",authenticateUser,(req:Request,res:Response,next:NextFunction)=>adminController.fetchVerification(req,res,next))
 router.put("/usersName",authenticateUser,(req:Request,res:Response,next:NextFunction)=>userController.usernameUpdate(req,res,next))
 
+router.get("/albums",authenticateUser,(req:Request,res:Response,next:NextFunction)=>userController.albums(req,res,next))
+router.get("/albumsongs",authenticateUser,(req:Request,res:Response,next:NextFunction)=>userController.albumView(req,res,next))
 
 router.post("/createPlaylist",authenticateUser,(req:Request,res:Response,next:NextFunction)=>userController.createPlaylist(req,res,next))
 router.get("/getPlaylist",authenticateUser,(req:Request,res:Response,next:NextFunction)=>userController.getPlaylist(req,res,next))

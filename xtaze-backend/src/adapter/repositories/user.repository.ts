@@ -1,8 +1,10 @@
+import { IAlbum } from "../../domain/entities/IAlbum";
 import { IBanner } from "../../domain/entities/IBanner";
 import { ICoupon } from "../../domain/entities/ICoupon";
 import { IPlaylist } from "../../domain/entities/IPlaylist";
 import IUser from "../../domain/entities/IUser";
 import { IUserRepository } from "../../domain/repositories/IUserRepository";
+import { AlbumModel } from "../db/models/AlbumModel";
 import BannerModel from "../db/models/BannerModel";
 import { CouponModel } from "../db/models/CouponModel";
 import PlaylistModel from "../db/models/PlaylistModel";
@@ -164,6 +166,26 @@ export default class UserRepository implements IUserRepository {
       return null
     }
   }
+
+
+    async allAlbums(): Promise<IAlbum[] | null> {
+      const albumDocs = await AlbumModel.find().lean();
+      if (!albumDocs) {
+        return null;
+      }
+      return albumDocs as unknown as IAlbum[];
+    }
+
+    async albumView(albumId:string): Promise<IAlbum | null> {
+   const album = await AlbumModel.findOne({ _id: albumId });
+    if (!album) {
+      return null;
+    }
+    const tracks = await Track.find({ _id: { $in: album.tracks } });
+    return { ...album.toObject(), tracks } as unknown as IAlbum;
+  }
+
+
 
   async findById(userId: string): Promise<IUser | null> {
     try {

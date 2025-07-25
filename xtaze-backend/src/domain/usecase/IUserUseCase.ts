@@ -5,6 +5,7 @@ import { IPlaylist } from "../entities/IPlaylist";
 import { ITrack } from "../entities/ITrack";
 import { IBanner } from "../entities/IBanner";
 import { SubscriptionHistory } from "../entities/ISubscriptionHistory";
+import { IAlbum } from "../entities/IAlbum";
 
 export default interface IuserUseCase{
     registerUser(username: string, country: string, gender: string, year: number, phone: number, email: string, password: string): Promise<IUser> 
@@ -41,6 +42,7 @@ export default interface IuserUseCase{
     getArtistByName(username:string): Promise<IUser|null>
     usernameUpdate(userId:string,username:string): Promise<IUser|null>
     getliked(songIds:string,userId:string): Promise<ITrack[]|null>
-    
+    allAlbums(): Promise<IAlbum[]|null>
+    albumView(albumId:string): Promise<IAlbum|null>
 
 }

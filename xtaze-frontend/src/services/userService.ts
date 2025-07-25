@@ -7,6 +7,7 @@ import { IBanner } from "../pages/User/types/IBanner";
 import { Artist } from "../pages/User/types/IArtist";
 import { UserSignupData } from "../pages/User/types/IUser";
 import { HTTP_METHODS } from "../constants/httpMethods";
+import { IAlbum } from "../pages/User/types/IAlbums";
 
 const addRefreshInterceptor = (apiInstance: any) => {
   apiInstance.interceptors.response.use(
@@ -211,8 +212,8 @@ export const forgotPassword = async (email: string): Promise<void> => {
 };
 
 // Reset Password
-export const resetPassword = async ( formData: string): Promise<void> => {
-  const data = await apiCall<{ success: boolean; message?: string }>(userApi, HTTP_METHODS.POST, "/resetPassword", {formData });
+export const resetPassword = async (formData: string): Promise<void> => {
+  const data = await apiCall<{ success: boolean; message?: string }>(userApi, HTTP_METHODS.POST, "/resetPassword", { formData });
   if (!data.success) throw new Error(data.message || "Failed to reset password");
 };
 
@@ -227,6 +228,18 @@ export const createPlaylists = async (userId: string, playlistData: Partial<Play
 export const getMyplaylist = async (userId: string): Promise<Playlist[]> => {
   const data = await apiCall<{ success: boolean; data: Playlist[] }>(userApi, HTTP_METHODS.GET, `/getPlaylist?userId=${userId}`);
   if (!data.success) throw new Error("Failed to get playlists");
+  return data.data;
+};
+export const getMyAlbums = async (): Promise<IAlbum[]> => {
+  const data = await apiCall<{ success: boolean; data: IAlbum[] }>(userApi, HTTP_METHODS.GET, `/albums`);
+  // if (!data.success) throw new Error("Failed to get Albums");
+  return data.data;
+};
+export const fetchAlbumSongs = async (albumId:string): Promise<IAlbum> => {
+  const data = await apiCall<{ success: boolean; data: IAlbum }>(userApi, HTTP_METHODS.GET, `/albumsongs?albumId=${albumId}`
+  );
+  console.log(data, "datajoel")
+  // if (!data.success) throw new Error("Failed to get Albums");
   return data.data;
 };
 

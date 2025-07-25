@@ -3,6 +3,7 @@ import { IPlaylist } from "../entities/IPlaylist";
 import { ITrack } from "../entities/ITrack";
 import { IBanner } from "../entities/IBanner";
 import { ICoupon } from "../entities/ICoupon";
+import { IAlbum } from "../entities/IAlbum";
 
 export interface IUserRepository {
   add: (user: IUser) => Promise<IUser>;
@@ -36,5 +37,7 @@ export interface IUserRepository {
   getArtistByName(username:string):  Promise<IUser|null> 
   usernameUpdate(userId:string,username:string): Promise<IUser|null>
   getliked(songIds:string,userId:string): Promise<ITrack[]|null>
+  allAlbums(): Promise<IAlbum[]|null>
+  albumView(albumId:string): Promise<IAlbum|null>
 
 }

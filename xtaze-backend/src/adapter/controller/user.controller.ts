@@ -345,6 +345,28 @@ export default class UserController {
     }
   }
 
+  async albums(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const data = await this._userUseCase.allAlbums();
+     res.status(HttpStatus.OK).json({ data: data });
+    } catch (error: unknown) {
+      console.error("Error in all albums controller:", error);
+      res.status(HttpStatus.NOT_FOUND).json({ message: (error as Error).message || "Internal server error" });
+      next(error);
+    }
+  }
+  async albumView(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const {albumId} = req.query
+      const data = await this._userUseCase.albumView(albumId as string);
+     res.status(HttpStatus.OK).json({ data: data });
+    } catch (error: unknown) {
+      console.error("Error in all albums controller:", error);
+      res.status(HttpStatus.NOT_FOUND).json({ message: (error as Error).message || "Internal server error" });
+      next(error);
+    }
+  }
+
   async getPlaylist(req: Request, res: Response, next: NextFunction) {
     try {
       const { userId } = req.query

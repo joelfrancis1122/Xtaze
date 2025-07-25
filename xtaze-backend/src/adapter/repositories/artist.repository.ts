@@ -98,6 +98,7 @@ export default class ArtistRepository implements IArtistRepository {
     const tracks = await Track.find({ _id: { $in: album.tracks } });
     return { ...album.toObject(), tracks } as unknown as IAlbum;
   }
+  
   async findTracksByIds(trackIds: string[]): Promise<ITrack[]> {
     return await Track.find({ _id: { $in: trackIds } });
   }
