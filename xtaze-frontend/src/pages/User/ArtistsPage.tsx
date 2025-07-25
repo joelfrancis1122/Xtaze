@@ -67,7 +67,7 @@ export default function ArtistPage() {
             onClick={() => setIsSidebarOpen(false)}
           ></div>
         )}
-        <main className="flex-1 min-h-screen md:ml-[240px] bg-black overflow-y-auto">
+        <main className="flex-1 min-h-screen md:ml-[240px] bg-black overflow-y-auto px-4">
           <section className="px-4 sm:px-6 py-4 sm:py-6 pb-20">
             <nav className="md:hidden text-sm text-gray-400 mb-4 sm:mb-6">
               <a

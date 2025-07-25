@@ -82,7 +82,7 @@ export default function PlaylistsPage() {
   }, [userId]);
 
   return (
-    <div className="flex min-h-screen bg-black text-white">
+    <div className="flex min-h-screen bg-black text-white px-4">
       <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
       {isSidebarOpen && (
         <div

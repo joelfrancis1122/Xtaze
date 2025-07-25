@@ -79,7 +79,7 @@ const UserAlbumViewPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white font-sans">
+    <div className="min-h-screen bg-black/50 text-white font-sans px-4">
       <div className="flex">
         <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
         {isSidebarOpen && (

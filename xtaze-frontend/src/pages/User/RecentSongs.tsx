@@ -122,7 +122,7 @@ export default function RecentSongsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white flex">
+    <div className="min-h-screen bg-black text-white flex px-1">
       <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
       {isSidebarOpen && (
         <div
