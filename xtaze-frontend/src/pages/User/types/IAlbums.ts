@@ -9,6 +9,7 @@ export interface IAlbum {
   tracks: ISong[];
 }
 export interface ISong {
+  playHistory: never[];
   _id: string;
   title: string;
   artists: string[];
