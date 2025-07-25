@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Button } from "../../components/ui/button";
 import { Card } from "../../components/ui/card";
 import Sidebar from "./userComponents/SideBar";
@@ -10,7 +10,6 @@ import { cn } from "../../../lib/utils";
 import { IAlbum } from "../User/types/IAlbums";
 
 const UserAlbumsListPage = () => {
-  const { userId } = useParams<{ userId: string }>();
   const navigate = useNavigate();
   const [albums, setAlbums] = useState<IAlbum[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -19,11 +18,7 @@ const UserAlbumsListPage = () => {
 
   useEffect(() => {
     const fetchAlbums = async () => {
-      if (!token || !userId) {
-        toast.error("Please log in to view albums.");
-        return;
-      }
-
+   
       setIsLoading(true);
       try {
         const albumsData = await getMyAlbums();
@@ -36,7 +31,7 @@ const UserAlbumsListPage = () => {
     };
 
     fetchAlbums();
-  }, [userId, token]);
+  }, [token]);
 
   const handleBack = () => {
     navigate(-1);
@@ -94,7 +89,7 @@ const UserAlbumsListPage = () => {
                     )}
                     role="listitem"
                     aria-label={`View album ${album.name}`}
-                    onClick={() => navigate(`/user/${userId}/albums/${album._id}/songs`)}
+                    onClick={() => navigate(`/user/albums/${album._id}`)}
                     style={{ animationDelay: `${index * 100}ms` }}
                   >
                     <div className="w-full h-48 bg-gray-700 rounded-md overflow-hidden mb-3 relative">
