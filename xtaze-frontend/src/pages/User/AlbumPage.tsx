@@ -7,6 +7,14 @@ import { toast } from "sonner";
 import { getMyAlbums } from "../../services/userService";
 import { ArrowLeft } from "lucide-react";
 import { IAlbum } from "../User/types/IAlbums";
+import MusicPlayer from "./userComponents/TrackBar";
+import PreviewModal from "./PreviewPage";
+import { useDispatch, useSelector } from "react-redux";
+import { RootState } from "../../store/store";
+import { Track } from "./types/ITrack";
+import { useAudioPlayback } from "./userComponents/audioPlayback";
+import { audio } from "../../utils/audio";
+import { setCurrentTrack, setIsPlaying } from "../../redux/audioSlice";
 
 const AlbumList = () => {
   const { userId } = useParams<{ userId: string }>();
@@ -14,6 +22,29 @@ const AlbumList = () => {
   const [albums, setAlbums] = useState<IAlbum[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+const [isModalOpen, setIsModalOpen] = useState(false);
+  const { currentTrack, isPlaying, isShuffled, isRepeating } = useSelector((state: RootState) => state.audio);
+  const dispatch = useDispatch();
+    const handlePlay = (track: Track) => {
+      baseHandlePlay(track);
+      dispatch(setCurrentTrack(track));
+      dispatch(setIsPlaying(true));
+    };
+  
+const toggleModal = () => {
+    setIsModalOpen((prev) => !prev);
+  };
+  const handlePlayFromModal = (track: Track) => {
+    handlePlay(track);
+  };
+
+  const {
+    handlePlay: baseHandlePlay,
+    handleSkipBack,
+    handleToggleShuffle,
+    handleToggleRepeat,
+    handleSkipForward,
+  } = useAudioPlayback(currentTrack as unknown as Track[]);
 
   useEffect(() => {
     const fetchAlbums = async () => {
@@ -98,6 +129,29 @@ const AlbumList = () => {
             </div>
           )}
         </main>
+              {currentTrack && (
+          <MusicPlayer
+            currentTrack={currentTrack}
+            isPlaying={isPlaying}
+            handlePlay={baseHandlePlay}
+            handleSkipBack={handleSkipBack}
+            handleSkipForward={handleSkipForward}
+            toggleShuffle={handleToggleShuffle}
+            toggleRepeat={handleToggleRepeat}
+            isShuffled={isShuffled}
+            isRepeating={isRepeating}
+            audio={audio}
+            toggleModal={toggleModal}
+          />
+        )}
+        {currentTrack && (
+          <PreviewModal
+            track={currentTrack}
+            isOpen={isModalOpen}
+            toggleModal={toggleModal}
+            onPlayTrack={handlePlayFromModal}
+          />
+        )}
       </div>
     </div>
   );
