@@ -37,7 +37,14 @@ export function PopularTracks() {
           .sort((a, b) => b.totalListeners - a.totalListeners) // Sort by listeners
           .slice(0, 5); // Get top 5
 
-        setTopTracks(sortedTracks);
+        // Map to Track interface, ensuring artists is a string
+        const mappedTracks: Track[] = sortedTracks.map((track) => ({
+          title: track.title,
+          artists: Array.isArray(track.artists) ? track.artists.join(", ") : track.artists,
+          listeners: track.listeners,
+        }));
+
+        setTopTracks(mappedTracks);
         setLoading(false);
       } catch (err) {
         console.error("Error fetching tracks:", err);
