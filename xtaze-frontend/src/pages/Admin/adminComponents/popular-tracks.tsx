@@ -26,7 +26,6 @@ export function PopularTracks() {
     const fetchTracks = async () => {
       try {
         const tracks = await fetchAllTrack();
-        console.log("Fetched Tracks:", tracks);
 
         // Sort tracks based on the number of listeners
         const sortedTracks = tracks

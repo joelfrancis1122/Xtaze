@@ -5,7 +5,6 @@ import { RootState } from "../../store/store";
 const AdminProtectedRoute = () => {
   const token = localStorage.getItem("adminToken");
   const role = useSelector((state: RootState) => state.admin.signupData?.role);
-  // console.log(role,"entha role sss ")  
   if (!token || role !== "admin") {
       return <Navigate to="/admin" replace />;
   }

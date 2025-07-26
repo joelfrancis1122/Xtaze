@@ -120,7 +120,6 @@ const validateCoupon = async () => {
         toast.error(error.message, { position: "top-right" });
       }
     } catch (error: any) {
-      console.log(error,"krish")
       toast.error(error.response.data.message, { position: "top-right" });
     }
   };

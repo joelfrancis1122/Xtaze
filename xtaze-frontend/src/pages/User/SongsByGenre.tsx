@@ -95,7 +95,6 @@ export default function GenrePage() {
 
       try {
         const genreTracks = await fetchGenreTracks(genre || "");
-        console.log(`Tracks for genre ${genre}:`, genreTracks);
         setTracks(genreTracks);
         setGenreName(genre || "");
 
@@ -113,7 +112,6 @@ export default function GenrePage() {
   useEffect(() => {
     if (!audioRef.current) {
       audioRef.current = audio;
-      console.log("Audio initialized:", audioRef.current);
     }
 
     const audioElement = audioRef.current;
@@ -123,16 +121,13 @@ export default function GenrePage() {
       if (audioElement.src !== currentTrack.fileUrl) {
         audioElement.src = currentTrack.fileUrl;
         audioElement.load();
-        console.log("Loaded audio src:", currentTrack.fileUrl);
       }
 
       try {
         if (isPlaying) {
           await audioElement.play();
-          console.log("Playing:", currentTrack.title);
         } else {
           audioElement.pause();
-          console.log("Paused:", currentTrack.title);
         }
       } catch (error) {
         console.error("Playback error:", error);
@@ -147,10 +142,8 @@ export default function GenrePage() {
       if (isRepeating) {
         audioElement.currentTime = 0;
         audioElement.play();
-        console.log("Repeating:", currentTrack.title);
       } else {
         handleSkipForward();
-        console.log("Skipping forward from:", currentTrack.title);
       }
     };
 
@@ -168,7 +161,6 @@ export default function GenrePage() {
   }, [currentTrack, isPlaying, isRepeating, dispatch, handleSkipForward]);
 
   const handlePlay = (track: Track) => {
-    console.log("Handle play called for:", track.title);
     baseHandlePlay(track);
   };
 

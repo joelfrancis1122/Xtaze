@@ -28,7 +28,6 @@ export default function AdminSubscriptionHistoryPage() {
         setLoading(true);
 
         const response = await fetchSubscriptionHistory();
-        console.log(response, "asssssssss")
         setHistory(response);
         setError(null);
       } catch (err) {

@@ -27,7 +27,6 @@ export function TopSongsTable() {
   useEffect(() => {
     const fetchSongs = async () => {
       const token = localStorage.getItem("artistToken");
-      console.log("User ID:", user?._id, "Token:", token);
 
       if (!token || !user?._id) {
         setError("Token or User ID not found. Please login.");

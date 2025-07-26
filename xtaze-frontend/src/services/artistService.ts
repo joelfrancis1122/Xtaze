@@ -13,7 +13,6 @@ const addRefreshInterceptor = (apiInstance: any) => {
       const newToken = response.data?.token || response.headers["authorization"]?.replace("Bearer ", "");
       if (newToken) {
         localStorage.setItem("artistToken", newToken);
-        console.log("Updated artist token in localStorage:", newToken);
       }
       return response;
     },
@@ -45,7 +44,6 @@ addRefreshInterceptor(artistApi);
 // Refresh Token (specific to artist)
 export const refreshToken = async (): Promise<string | null> => {
   try {
-    console.log("Attempting to refresh artist token...");
     const response = await artistApi.post("/refresh", {}, { withCredentials: true });
     const newToken = response.data.token;
     if (newToken) {
@@ -90,12 +88,10 @@ export const loginArtist = async (email: string,password: string,dispatch: Retur
     { email, password }
   );
   if (!data.success) throw new Error(data.message || "Failed to login artist");
-  console.log("Login response:", data);
   dispatch(saveArtistData(data.artist));
 };
 
 export const fetchArtistTracks = async (artistId: string): Promise<any[]> => {
-  console.log("Fetching artist tracks with:", { artistId });
   const data = await apiCall<{ success: boolean; tracks: any[]; message?: string }>(
     artistApi,
     HTTP_METHODS.GET,
@@ -159,7 +155,6 @@ export const createAlbum = async (albumData: {
   if (albumData.description) formData.append("description", albumData.description);
   if (albumData.coverImage) formData.append("coverImage", albumData.coverImage);
   formData.append("artistId", albumData.artistId);
-console.log("alums","ss")
   const data = await apiCall<{ success: boolean; data: IAlbum }>(artistApi, HTTP_METHODS.POST, "/albumsa", formData);
   // if (!data.success) throw new Error(data.message || "Failed to create album");
   return data.data;
@@ -177,7 +172,6 @@ export const fetchAlbumSongs = async (albumId: string): Promise<IAlbum> => {
     HTTP_METHODS.GET,
     `/albumsongs?albumId=${albumId}`
   );
-  console.log("datadatadata",data)
   return data.data;
 };
 export const updateTrackByArtist = async (trackId: string, songData: {
@@ -195,7 +189,6 @@ export const updateTrackByArtist = async (trackId: string, songData: {
   if (songData.albumId) formData.append("album", songData.albumId);
   if (songData.img) formData.append("img", songData.img);
   if (songData.fileUrl) formData.append("fileUrl", songData.fileUrl);
-console.log(songData,"krisnapriya")
   const data = await apiCall<{ success: boolean; track: unknown }>(
     artistApi,
     HTTP_METHODS.PUT,
@@ -265,7 +258,6 @@ export const checkCardStatus = async (artistId: string): Promise<boolean> => {
 };
 
 export const saveCard = async (artistId: string, paymentMethodId: string): Promise<void> => {
-  console.log("Saving card with:", { artistId, paymentMethodId });
   const data = await apiCall<{ success: boolean; message?: string }>(
     artistApi,
     HTTP_METHODS.POST,
@@ -289,7 +281,6 @@ export const getVerificationStatus = async (artistId: string): Promise<Verificat
       `/getVerificationStatus?artistId=${artistId}`,
 
     );
-    console.log(response, "verification on proces what ?")
     return response.data;
   } catch (error: any) {
     console.error("Error fetching verification status:", error);
@@ -325,7 +316,6 @@ export const fetchSongEarnings = async (artistId: string): Promise<any[]> => {
     `/statsOfArtist?userId=${artistId}`,
     undefined,
   );
-  console.log("Song earnings response:", data.data);
   return data.data.map((song: any) => ({
     trackId: song.trackId,
     trackName: song.trackName,
@@ -349,7 +339,6 @@ export const updateArtistUsername = async (
       { username: name },
       
     );
-    console.log("Update username response:", response);
     return response.data;
   } catch (error: any) {
     console.error("Error updating username:", error);

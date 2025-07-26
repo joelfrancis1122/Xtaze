@@ -66,7 +66,6 @@ export default function ArtistProfile() {
           listeners: track.listeners ?? []
         }));
         setTracks(mappedTracks);
-        console.log("Fetched tracks:", mappedTracks);
 
         const verificationData = await getVerificationStatus(user._id);
         setVerification(verificationData || { status: "unsubmitted" });

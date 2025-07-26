@@ -41,7 +41,6 @@ export function MonthlyListenersChart() {
 
       try {
         const tracks = await fetchArtistTracks(user._id);
-        console.log("Tracks:", tracks); // Debug: Inspect track data structure
 
         if (!tracks || tracks.length === 0) {
           setData([]);
@@ -56,7 +55,6 @@ export function MonthlyListenersChart() {
             monthlyData[month] = (monthlyData[month] || 0) + plays;
           });
         });
-        console.log("Aggregated Monthly Data:", monthlyData); // Debug: Check summed data
 
         // Convert to ChartData array with all 12 months
         const fullData = Array.from({ length: 12 }, (_, i) => {
@@ -69,7 +67,6 @@ export function MonthlyListenersChart() {
           };
         });
 
-        console.log("Monthly Play Data:", fullData); // Debug: Check final chart data
         setData(fullData);
         setIsLoading(false);
       } catch (error) {

@@ -24,8 +24,6 @@ export default function Page() {
     useEffect(() => {
       const fetchSubscription = async () => {
         try {
-          const token = localStorage.getItem("adminToken") || "";
-          console.log(token, 'token')
           const response =await fetchSubscriptionHistory();
           const subscriptions: Subscription[] = response;
           
@@ -43,7 +41,6 @@ export default function Page() {
       const fetchTotalArtists = async () => {
         try {
           const artists = await fetchArtists();
-            console.log(artists,'odi odi od i')
           // Count valid artists (those with role === "artist" and active)
           const artistCount = artists.filter(artist => artist.role === "artist" && artist.isActive).length;
           setTotalArtists(artistCount);

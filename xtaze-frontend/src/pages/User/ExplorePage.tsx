@@ -48,7 +48,6 @@ export default function ExplorePage() {
   };
 
   const handlePlay = (track: Track) => {
-    console.log("Handle play called for:", track.title);
     if (currentTrack?.fileUrl === track.fileUrl && isPlaying) {
       audio.pause();
       dispatch(setIsPlaying(false));
@@ -146,7 +145,6 @@ export default function ExplorePage() {
     const fetchData = async () => {
       try {
         const allTracks = await fetchAllTrack();
-        console.log("All tracks:", allTracks);
         setTracks(allTracks);
 
         const uniqueGenres = Array.from(
@@ -220,7 +218,6 @@ export default function ExplorePage() {
   useEffect(() => {
     if (!audioRef.current) {
       audioRef.current = audio;
-      console.log("Audio initialized:", audioRef.current);
     }
 
     const audioElement = audioRef.current;
@@ -230,16 +227,13 @@ export default function ExplorePage() {
       if (audioElement.src !== currentTrack.fileUrl) {
         audioElement.src = currentTrack.fileUrl;
         audioElement.load();
-        console.log("Loaded audio src:", currentTrack.fileUrl);
       }
 
       try {
         if (isPlaying) {
           await audioElement.play();
-          console.log("Playing:", currentTrack.title);
         } else {
           audioElement.pause();
-          console.log("Paused:", currentTrack.title);
         }
       } catch (error) {
         console.error("Playback error:", error);
@@ -255,10 +249,8 @@ export default function ExplorePage() {
       if (isRepeating) {
         audioElement.currentTime = 0;
         audioElement.play();
-        console.log("Repeating:", currentTrack.title);
       } else {
         handleSkipForward();
-        console.log("Skipping forward from:", currentTrack.title);
       }
     };
 

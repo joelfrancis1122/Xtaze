@@ -83,7 +83,6 @@ export default function Home() {
   }, [user?.likedSongs]);
 
   useEffect(() => {
-    console.log("vishvaa")
     const getTracksAndLikedSongsAndPlaylists = async () => {
       const token = localStorage.getItem("token");
       if (!token) {
@@ -93,12 +92,10 @@ export default function Home() {
       }
 
       try {
-        console.log("akd")
         const { tracks: fetchedTracks, user: updatedUser } = await fetchTracks(
           user?._id || "",
           user?.premium || "Free"
         );
-        console.log(tracks,"akhildasd")
         setTracks(fetchedTracks);
 
         if (updatedUser && JSON.stringify(updatedUser) !== JSON.stringify(user)) {
@@ -138,7 +135,6 @@ export default function Home() {
     const loadBanners = async () => {
       try {
         const allBanners = await fetchBanners();
-        console.log(allBanners,'ss');
         setBanners(allBanners);
       } catch (error) {
         console.error("Error fetching banners:", error);
@@ -263,7 +259,6 @@ export default function Home() {
   const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setSearchQuerysaved(searchQuery);
-    console.log("Search submitted:", searchQuery);
   };
 
   const handleUpgradeClick = () => {
@@ -319,7 +314,6 @@ export default function Home() {
 
 const filteredTracks = tracks.filter((track) => {
   const query = searchQuerysaved;
-  console.log(tracks,"ambdana",query)
   const titleMatch = track.title.toLowerCase().includes(query);
   const artistMatch = Array.isArray(track.artist)
 

@@ -32,7 +32,6 @@ export default function AdminAnalytics() {
 
             try {
                 const verificationData = await fetchAllArtistsVerification();
-                console.log("Verification data:", verificationData);
 
                 if (!verificationData || verificationData.length === 0) {
                     setArtists([]);
@@ -41,7 +40,6 @@ export default function AdminAnalytics() {
 
                 const artistIds = verificationData.map((item: { artistId: any; }) => item.artistId);
                 const userDetails = await fetchUserDetails(artistIds);
-                console.log("User details:", userDetails);
 
                 const mergedData = verificationData
                     .sort((a: { submittedAt: string | number | Date; }, b: { submittedAt: string | number | Date; }) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime())

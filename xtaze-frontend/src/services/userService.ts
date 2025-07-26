@@ -15,7 +15,6 @@ const addRefreshInterceptor = (apiInstance: any) => {
       const newToken = response.data?.token || response.headers["authorization"]?.replace("Bearer ", "");
       if (newToken) {
         localStorage.setItem("token", newToken);
-        // console.log("Updated token in localStorage:", newToken);
       }
       return response;
     },
@@ -23,7 +22,6 @@ const addRefreshInterceptor = (apiInstance: any) => {
       const originalRequest = error.config;
       if (error.response?.status === 401 && !originalRequest._retry) {
         originalRequest._retry = true;
-        // console.log("Calling refresh token due to 401", { cookies: document.cookie });
 
         const response = await userApi.post("/refresh", {}, { withCredentials: true });
         const newToken = response.data.token;
@@ -51,7 +49,6 @@ export const refreshToken = async (): Promise<string | null> => {
     const newToken = response.data.token;
     if (newToken) {
       localStorage.setItem("token", newToken);
-      console.log("New user token:", newToken);
       return newToken;
     }
     return null;
@@ -142,12 +139,10 @@ export const googleLogin = async (idToken: string, dispatch: ReturnType<typeof u
 
 // Fetch Tracks
 export const fetchTracks = async (userId: string, isPremium: string): Promise<{ tracks: Track[]; user?: UserSignupData }> => {
-  console.log("ssadadasda")
   const instance = isPremium !== "Free" ? providerApi : deezerApi;
   const url = isPremium !== "Free" ? `/getAllTracks?userId=${userId}` : `/songs/deezer?userId=${userId}`;
   const data = await apiCall<{ success: boolean; tracks?: Track[]; songs?: Track[]; user?: UserSignupData }>(instance, HTTP_METHODS.GET, url);
   // if (!data.success) throw new Error("Failed to fetch tracks");
-  console.log(data,"akhildas akhidlasd")
   const tracks = (isPremium !== "Free" ? data.tracks : data.songs) || [];
   return { tracks, user: data.user };
 };
@@ -240,7 +235,6 @@ export const getMyAlbums = async (): Promise<IAlbum[]> => {
 export const fetchAlbumSongs = async (albumId:string): Promise<IAlbum> => {
   const data = await apiCall<{ success: boolean; data: IAlbum }>(userApi, HTTP_METHODS.GET, `/albumsongs?albumId=${albumId}`
   );
-  console.log(data, "datajoel")
   // if (!data.success) throw new Error("Failed to get Albums");
   return data.data;
 };

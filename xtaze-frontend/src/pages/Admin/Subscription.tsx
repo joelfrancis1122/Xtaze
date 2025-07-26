@@ -71,7 +71,6 @@ export default function AdminSubscriptionPage() {
         },
         
       );
-      console.log("Created plan response:", createdPlan); // Debug log
       setPlans([...plans, createdPlan]);
       setNewPlan({ name: "", description: "", price: "", interval: "month" });
       setIsFormOpen(false);
@@ -103,7 +102,6 @@ export default function AdminSubscriptionPage() {
         },
         
       );
-      console.log("Updated plan response:", updatedPlan); // Debug log
       setPlans(plans.map((plan) => (plan.product.id === editPlan.product.id ? updatedPlan : plan)));
       setEditPlan(null);
       toast.success("Plan updated successfully");

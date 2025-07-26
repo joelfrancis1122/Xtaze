@@ -35,7 +35,6 @@ const ArtistDashboard = () => {
 
       try {
         const tracks = await fetchArtistTracks(user._id);
-        console.log("Tracks for Metrics:", tracks);
 
         if (!tracks || tracks.length === 0) {
           setMostListenedSong("None");

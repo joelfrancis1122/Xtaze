@@ -96,7 +96,6 @@ export default function LikedSongsPage() {
           .map((trackId) => tracks.find((track) => track._id === trackId))
           .filter((track): track is Track => !!track);
         setLikedSongs(sortedTracks);
-        console.log(sortedTracks, "ithan sanam");
       } catch (error) {
         toast.error("Error fetching liked songs", { position: "top-right" });
       } finally {

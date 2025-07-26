@@ -80,7 +80,6 @@ export const fetchArtistTracks = async (userId: string,): Promise<Track[]> => {
       undefined,
       // token
     );
-    console.log("Fetch artist tracks response:", data);
     if (!data.success || !Array.isArray(data.tracks)) {
       throw new Error(data.message || "Failed to fetch artist tracks");
     }
@@ -100,7 +99,6 @@ export const toggleBlockArtist = async (id: string,currentStatus: boolean,): Pro
     { status: newStatus },
     
   );
-  console.log("Toggle block response:", data);
   if (!data.success) throw new Error(data.message || "Failed to toggle artist status");
   return newStatus;
 };
@@ -154,7 +152,6 @@ export const createBanner = async (
   formData.append("action", banner.action);
   formData.append("isActive", String(banner.isActive));
   formData.append("createdBy", banner.createdBy);
-  console.log(formData, "visvajith")
   const data = await apiCall<{ data: IBanner }>(adminApi, HTTP_METHODS.POST, "/banners", formData);
   return data.data;
 };
@@ -171,7 +168,6 @@ export const updateBanner = async (
   formData.append("action", banner.action);
   formData.append("isActive", String(banner.isActive));
 
-  console.log(formData, "odi avaindah comming ", banner.title, banner.description, banner.isActive)
   const data = await apiCall<{ data: IBanner }>(adminApi, HTTP_METHODS.PUT, `/banners/${id}`, formData);
   return data.data;
 };
@@ -190,7 +186,6 @@ export const fetchUserDetails = async (userIds: string[]): Promise<ListenerUser[
       { userIds },
       
     );
-    console.log("Fetch user details response:", data);
 
     return data.data;
   } catch (error) {
@@ -205,7 +200,6 @@ export const fetchCoupons = async (): Promise<any> => {
       HTTP_METHODS.GET,
       "/coupons",
     );
-    console.log("Fetch user details response:", data);
 
     return data.data;
   } catch (error) {
@@ -216,7 +210,6 @@ export const fetchCoupons = async (): Promise<any> => {
 
 
 export const fetchSubscriptionHistory = async (): Promise<any> => {
-  console.log("Fetching subscription history...");
   try {
     const data = await apiCall<{ data: any }>(
       adminApi,
@@ -225,7 +218,6 @@ export const fetchSubscriptionHistory = async (): Promise<any> => {
       undefined,
       
     );
-    // console.log("Fetched subscription history:", data.data);
     return data.data;
   } catch (error: any) {
     console.error("Error fetching subscription history:", error);
@@ -236,7 +228,6 @@ export const fetchSubscriptionHistory = async (): Promise<any> => {
 
 
 export const createCoupon = async (couponData: { code: string; discountAmount: number; expires: string; maxUses: number }): Promise<Coupon> => {
-  console.log("Creating coupon with:", couponData);
   try {
     const data = await apiCall<{ result: Coupon }>(
       adminApi,
@@ -244,7 +235,6 @@ export const createCoupon = async (couponData: { code: string; discountAmount: n
       "/coupons",
       { ...couponData, uses: 0 },
     );
-    // console.log("Created coupon:", data.result);
     return data.result;
   } catch (error: any) {
     console.error("Error creating coupon:", error);
@@ -253,7 +243,6 @@ export const createCoupon = async (couponData: { code: string; discountAmount: n
 };
 
 export const updateCoupon = async (id: string, couponData: { code: string; discountAmount: number; expires: string; maxUses: number }): Promise<Coupon> => {
-  console.log("Updating coupon with:", { id, couponData });
   try {
     const data = await apiCall<{ data: Coupon }>(
       adminApi,
@@ -262,7 +251,6 @@ export const updateCoupon = async (id: string, couponData: { code: string; disco
       couponData,
       
     );
-    // console.log("Updated coupon:", data.data);
     return data.data;
   } catch (error: any) {
     console.error("Error updating coupon:", error);
@@ -271,7 +259,6 @@ export const updateCoupon = async (id: string, couponData: { code: string; disco
 };
 
 export const deleteCoupon = async (id: string): Promise<void> => {
-  console.log("Deleting coupon with id:", id);
   try {
     await apiCall<{ success: boolean }>(
       adminApi,
@@ -280,7 +267,6 @@ export const deleteCoupon = async (id: string): Promise<void> => {
       undefined,
       
     );
-    console.log("Coupon deleted successfully");
   } catch (error: any) {
     console.error("Error deleting coupon:", error);
     throw new Error(error.response?.data?.message || "Failed to delete coupon");
@@ -288,7 +274,6 @@ export const deleteCoupon = async (id: string): Promise<void> => {
 };
 
 export const fetchMonetizationData = async (): Promise<MusicMonetization[]> => {
-  console.log("Fetching monetization data...");
   try {
     const data = await apiCall<{ data: MusicMonetization[] }>(
       adminApi,
@@ -297,7 +282,6 @@ export const fetchMonetizationData = async (): Promise<MusicMonetization[]> => {
       undefined,
       
     );
-    // console.log("Fetched monetization data:", data.data);
     return data.data || [];
   } catch (error: any) {
     console.error("Error fetching monetization data:", error);
@@ -306,7 +290,6 @@ export const fetchMonetizationData = async (): Promise<MusicMonetization[]> => {
 };
 
 export const initiateArtistPayout = async (artistName: string, ): Promise<string> => {
-  console.log("Initiating payout for artist:", artistName);
   try {
     const data = await apiCall<{ data: { sessionUrl: string } }>(
       adminApi,
@@ -315,7 +298,6 @@ export const initiateArtistPayout = async (artistName: string, ): Promise<string
       { artistName },
       
     );
-    console.log("Payout session URL:", data.data.sessionUrl);
     return data.data.sessionUrl;
   } catch (error: any) {
     console.error("Error initiating payout:", error);
@@ -326,7 +308,6 @@ export const initiateArtistPayout = async (artistName: string, ): Promise<string
 
 
 export const fetchSubscriptionPlans = async (): Promise<SubscriptionPlan[]> => {
-  console.log("Fetching subscription plans...");
   try {
     const data = await apiCall<{ data: SubscriptionPlan[] }>(
       adminApi,
@@ -334,7 +315,6 @@ export const fetchSubscriptionPlans = async (): Promise<SubscriptionPlan[]> => {
       "/stripe/plans",
       undefined,
     );
-    console.log("Fetched subscription plans:", data.data);
     return data.data || [];
   } catch (error: any) {
     console.error("Error fetching subscription plans:", error);
@@ -345,7 +325,6 @@ export const fetchSubscriptionPlans = async (): Promise<SubscriptionPlan[]> => {
 export const createSubscriptionPlan = async (
   planData: { name: string; description?: string; price: number; interval: "month" | "year" },
 ): Promise<SubscriptionPlan> => {
-  console.log("Creating subscription plan with:", planData);
   try {
     const unitAmount = Math.round(parseFloat(planData.price.toString()) * 100); // Convert dollars to cents
     const data = await apiCall<{ data: SubscriptionPlan }>(
@@ -359,7 +338,6 @@ export const createSubscriptionPlan = async (
         interval: planData.interval,
       },
     );
-    // console.log("Created subscription plan:", data.data);
     return data.data;
   } catch (error: any) {
     console.error("Error creating subscription plan:", error);
@@ -399,7 +377,6 @@ export const archiveSubscriptionPlan = async (productId: string,): Promise<void>
       `/stripe/products/delete?productId=${productId}`,
       undefined,
     );
-    console.log("Subscription plan archived successfully");
   } catch (error: any) {
     console.error("Error archiving subscription plan:", error);
     throw new Error(error.response?.data?.message || "Failed to archive subscription plan");

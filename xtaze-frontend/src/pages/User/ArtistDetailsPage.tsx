@@ -75,7 +75,6 @@ export default function ArtistDetailsPage() {
           const verificationRecord = verificationRecords.find((record: { artistId: string; }) => record.artistId === artistId);
           const verificationStatus = verificationRecord ? verificationRecord.status : "unsubmitted";
           
-          console.log(fetchedTracks,"1")
           const artistData: Artist = {
             id: artistId,
             name: artistUsername,
@@ -86,7 +85,6 @@ export default function ArtistDetailsPage() {
             bio: userResponse?.bio || "",
             verificationStatus,
           };
-          console.log(artistData, "artistData");
           setArtist(artistData);
           setTracks(fetchedTracks);
           setError(null);

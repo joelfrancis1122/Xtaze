@@ -25,7 +25,6 @@ export default function ArtistList() {
       try {
         const artistData = await fetchArtists();
         setArtists(artistData);
-        console.log(artistData, "sasd");
       } catch (error: any) {
         console.error(error);
         setError(error.message || "Failed to fetch artists");

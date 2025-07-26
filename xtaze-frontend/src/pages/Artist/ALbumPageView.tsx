@@ -33,7 +33,6 @@ const AlbumSongsPage = () => {
       const songsData = await fetchAlbumSongs(albumId);
       setAlbum(songsData);
       setSongs((songsData.tracks || []) as any[]);
-      console.log(songsData, "Fetched tracks");
     } catch (error: any) {
       toast.error(error.message || "Error fetching songs. Please try again.");
     } finally {

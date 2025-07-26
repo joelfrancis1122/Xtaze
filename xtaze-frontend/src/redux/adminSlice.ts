@@ -25,7 +25,6 @@ const AdminSlice = createSlice({
   initialState,
   reducers: {
     saveAdminData: (state, action: PayloadAction<AdminState["signupData"]>) => {
-      console.log(action.payload,"payload thada")
       state.signupData = action.payload;
     },
     clearAdminData: (state) => {

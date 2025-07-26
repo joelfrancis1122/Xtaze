@@ -35,7 +35,6 @@ export function PopularArtists() {
     useEffect(() => {
         const fetchTopArtists = async () => {
             try {
-                console.log("ssssss")
                 const token = localStorage.getItem("adminToken");
                 if (!token) {
                     throw new Error("No token found. Please login.");
@@ -43,7 +42,6 @@ export function PopularArtists() {
 
                 // Fetch all artists
                 const artists = await fetchArtists();
-                console.log("Fetched Artists:", artists);
 
                 // Filter for artists only (exclude other roles if needed)
                 const artistList = artists.filter((artist: Artist) => artist.role === "artist");
@@ -73,7 +71,6 @@ export function PopularArtists() {
                         }
                     })
                 );
-                console.log(artistsWithListeners,"this is ")
                 // Sort by monthly listeners and take top 5
                 const sortedArtists = artistsWithListeners
                     .sort((a, b) => b.monthlyListeners - a.monthlyListeners)

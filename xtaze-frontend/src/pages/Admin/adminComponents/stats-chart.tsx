@@ -27,7 +27,6 @@ export function StatsChart() {
     const fetchSubscriptionHistoryData = async () => {
       try {
         const subscriptionHistory = await fetchSubscriptionHistory();
-        console.log("Fetched Data:", subscriptionHistory);
         setHistory(subscriptionHistory);
       } catch (err: any) {
         console.error("Error fetching subscriptions:", err);
