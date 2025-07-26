@@ -8,7 +8,6 @@ export function setupCronJobs() {
 
 
   cron.schedule("0 0 * * * *", async () => {
-    console.log("Cron job: Running coupon status check at midnight.");
     try {
       await userController.checkCouponStatus();
     } catch (error) {
@@ -21,7 +20,6 @@ export function setupCronJobs() {
 
 
   cron.schedule("0 0 1 * *", async () => {
-      console.log("Cron job: Running another midnight task...");
       try {
         await userController.resetPaymentStatus()
       } catch (error) {

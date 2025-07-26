@@ -58,7 +58,6 @@ export default class GenreController {
 
       const genre = await this._genreUseCase.createGenre(name);
       if (!genre.success) {
-        console.log("⚠️ Genre already exists, throwing error.");
         throw new AppError(genre.message || "Failed to create genre", HttpStatus.BAD_REQUEST); // Use message from use case
       }
 

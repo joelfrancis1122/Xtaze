@@ -19,7 +19,6 @@ export default class AdminController {
   async login(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { email, password } = req.body;
-      console.log("email", req.body);
 
       const response = await this._adminUseCase.login(email, password);
       if (!response.success) {
@@ -36,7 +35,6 @@ export default class AdminController {
       const { title, description, action, isActive, createdBy } = req.body;
       const file = req.file;
 
-      console.log("Request Body:", req.body, "File:", req.file);
 
       if (!file) {
         throw new AppError("Banner image is required", HttpStatus.BAD_REQUEST);
@@ -128,7 +126,6 @@ export default class AdminController {
     try {
       const { name, description, price, interval } = req.body;
 
-      console.log(req.body, "admin stripe ")
       if (!name || !price || !interval) {
         throw new AppError("Name, price, and interval are required", HttpStatus.BAD_REQUEST);
       }
@@ -167,7 +164,6 @@ export default class AdminController {
     try {
       const productId = req.query.productId;
       const { name, description, price, interval } = req.body;
-      console.log(req.body, req.params)
       if (!productId || !name || !price || !interval) {
         throw new AppError("Product ID, name, price, and interval are required", HttpStatus.BAD_REQUEST);
       }

@@ -12,7 +12,6 @@ export class DeezerController {
 
   async getDeezerSongs(req: Request, res: Response): Promise<void> {
     try {
-      console.log("heii ambhuu")
       const songs = await this.fetchDeezerSongsUseCase.execute();
       const userId = req.query.userId as string;
       let userData   = null;

@@ -72,7 +72,6 @@ export default class ArtistUseCase {
   }
   async refresh(refreshToken: string): Promise<{ success: boolean; message: string; token?: string; ArefreshToken?: string }> {
     try {
-      console.log("yeaah ithil varunind");
       const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET!) as { userId: string };
       const user = await this._userRepository.findById(decoded.userId);
       if (!user) return { success: false, message: "User not found" };
@@ -102,13 +101,9 @@ export default class ArtistUseCase {
   }
 
   async trackUpload(songName: string, artist: string[], genre: string[], albumId: string, songFile: Express.Multer.File, imageFile: Express.Multer.File): Promise<ITrack | null> {
-    console.log("eda eda eda eda")
     const data = { title: songName, artists: artist, genre: genre, albumId, fileUrl: songFile, img: imageFile }
-    console.log("eda eda eda eda", data)
     const songUpload = await uploadSongToCloud(songFile);
-    console.log("vishvajiths")
     const imageUpload = await uploadImageToCloud(imageFile);
-    console.log("vishvajith")
     const newTrack: ITrack = {
       title: songName,
       genre: genre,
@@ -118,7 +113,6 @@ export default class ArtistUseCase {
       listeners: [],
       artists: artist,
     };
-    console.log("tittle", newTrack)
     return await this._artistRepository.upload(newTrack);
   }
 

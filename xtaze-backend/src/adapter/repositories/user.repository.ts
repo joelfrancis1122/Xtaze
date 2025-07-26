@@ -102,7 +102,6 @@ export default class UserRepository implements IUserRepository {
         { new: true, runValidators: true }
       ).lean();
 
-      console.log(updatedUser, "ASSSSSSSSSSs")
       return updatedUser as IUser | null;
     } catch (error) {
       console.log(error);
@@ -287,7 +286,6 @@ export default class UserRepository implements IUserRepository {
       // Fetch the fully saved playlist (ensuring all fields, including _id, are included)
       const completePlaylist = await PlaylistModel.findById(savedPlaylist._id).lean();
 
-      console.log("Saved playlist:", completePlaylist);
       return completePlaylist as IPlaylist;
     } catch (error) {
       console.error("Error creating playlist:", error);

@@ -28,7 +28,6 @@ export default class OtpService implements IOtpService {
 
         try {
             await transporter.sendMail(mailOptions);
-            console.log("Before storing:", OtpService.otpStore);
 
             OtpService.otpStore[otp] = email;
             setTimeout(() => {
@@ -46,7 +45,6 @@ export default class OtpService implements IOtpService {
     }
 
     async verifyOTP(otp: string): Promise<boolean> {
-        console.log("Verifying OTP...",OtpService.otpStore['otp'],"ithen th",otp);
         
         if (!OtpService.otpStore[otp]) {
             console.log(`No OTP stored for ${otp}. Current otpStore:`, OtpService.otpStore);

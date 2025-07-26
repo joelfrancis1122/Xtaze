@@ -24,7 +24,6 @@ class AppError extends Error {
 
 const authenticateToken = (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
   const token = req.headers.authorization?.split(" ")[1];
-  console.log("Checking token:", token);
 
   if (!token) {
     throw new AppError("Unauthorized: No token provided", HttpStatus.UNAUTHORIZED);

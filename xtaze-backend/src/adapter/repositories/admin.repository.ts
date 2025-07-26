@@ -35,7 +35,6 @@ export default class AdminRepository implements IAdminRepository {
       );
 
       if (!updatedVerification) {
-        console.log(`Verification record with ID ${id} not found`);
         return null;
       }
 
@@ -187,7 +186,6 @@ export default class AdminRepository implements IAdminRepository {
   }
   async fetchVerification(): Promise<IVerificationRequest | null> {
     const verification = await VerificationModel.find();
-    console.log(verification, "this is what i want ")
     return verification as unknown as IVerificationRequest
   }
 

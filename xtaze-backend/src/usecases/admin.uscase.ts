@@ -42,7 +42,6 @@ export default class AdminUseCase {
 
   async login(email: string, password: string): Promise<{ success: boolean; message: string; token?: string; admin?: IUser }> {
     const admin = await this._adminRepository.findByEmail(email);
-    console.log("thisi is admin broo", admin)
     if (!admin) {
       return { success: false, message: "User not found!" };
     }

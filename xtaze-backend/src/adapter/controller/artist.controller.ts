@@ -96,7 +96,6 @@ export default class ArtistController {
     try {
       const { TrackId } = req.query;
       const { title, artists, genre, album } = req.body;
-      console.log(album,"odi odi odi di")
       if (!TrackId) {
         res.status(HttpStatus.BAD_REQUEST).json({ success: false, message: "Track ID is required" });
       }
@@ -131,7 +130,6 @@ export default class ArtistController {
       const { trackId, id } = req.body;
       const track = await this._artistnUseCase.increment(trackId as string, id as string);
 
-      console.log(req.body);
       res.status(HttpStatus.OK).json({ success: true, message: "List Of Artists" });
     } catch (error) {
       next(error);
@@ -139,8 +137,6 @@ export default class ArtistController {
   }
 
   async uploadTracks(req: Request, res: Response, next: NextFunction): Promise<void> {
-    console.log(req.body, "Received request");
-    console.log(req.files, "Uploaded files ");
     try {
       // Validate that files exist
       if (!req.files || !("file" in req.files) || !("image" in req.files)) {
@@ -152,7 +148,6 @@ export default class ArtistController {
       const songFile = (req.files as { [fieldname: string]: Express.Multer.File[] }).file[0];
       const imageFile = (req.files as { [fieldname: string]: Express.Multer.File[] }).image[0];
 
-      console.log(albumId, "Extracted files123",req.body);
       const genreArray = genre ? genre.split(",").map((g: string) => g.trim()) : [];
       const artistArray = artist ? artist.split(",").map((g: string) => g.trim()) : [];
 
@@ -181,9 +176,7 @@ export default class ArtistController {
   async albumsongs(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { albumId } = req.query
-      console.log(req.query,"odiiii")
       const data = await this._artistnUseCase.albumsongs(albumId as string);
-      console.log(data,"kakathaa",albumId)
      res.status(HttpStatus.OK).json({ data: data });
     } catch (error: unknown) {
       console.error("Error in all albums controller:", error);
@@ -194,15 +187,9 @@ export default class ArtistController {
 
   async uploadAlbums(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    console.log('odi odi odi ',req.files)
     const { artistId, name, description } = req.body;
     const songFile = (req.files as { [fieldname: string]: Express.Multer.File[] }).coverImage[0];
-    console.log('odi adi ')
-
-    console.log("Upload Request:", { body: req.body, files: req.files,songFile });
-
     const albums = await this._artistnUseCase.uploadAlbums(artistId as string,name,description,songFile);
-
     res.status(HttpStatus.CREATED).json({
       message: "Albums uploaded successfully",
       data: albums,
@@ -268,7 +255,6 @@ export default class ArtistController {
     const { artistId } = req.query;
     try {
       const verificationStatus = await this._artistnUseCase.getVerificationStatus(artistId as string);
-      console.log(verificationStatus, "verification statuss")
       res.status(HttpStatus.OK).json({ success: true, data: verificationStatus });
     } catch (error: unknown) {
       console.error("Error in getVerificationStatusController:", error);
@@ -289,8 +275,6 @@ export default class ArtistController {
         throw new Error("Artist ID or image file is missing.");
       }
 
-      console.log("Artist ID:", artistId);
-      console.log("Image File:", imageFile);
 
       const verificationStatus = await this._artistnUseCase.requestVerification(artistId, imageFile);
 

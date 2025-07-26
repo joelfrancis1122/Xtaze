@@ -54,19 +54,19 @@ export default class UserUseCase {
     ]);
 
     if (existingUserByEmail) {
-      
-      throw new Error(MESSAGES.USER_ALREADY_EXISTS); 
+
+      throw new Error(MESSAGES.USER_ALREADY_EXISTS);
     }
 
     const hashedPassword = await this._passwordService.hashPassword(password);
 
-    const user = { 
-      username, 
-      country, 
-      gender, 
-      year, 
-      phone, 
-      email, 
+    const user = {
+      username,
+      country,
+      gender,
+      year,
+      phone,
+      email,
       password: hashedPassword,
       toObject: function () { return { ...this }; }
     };
@@ -79,7 +79,7 @@ export default class UserUseCase {
   async sendOTP(email: string): Promise<string> {
 
     const findEmail = await this._userRepository.findByEmail(email) //using the storage 
- 
+
     if (findEmail) {
       return "403"
     }
@@ -105,7 +105,7 @@ export default class UserUseCase {
 
     await this._emailService.sendEmail(email, "Password Reset", token);
 
-    return { success: true, message: MESSAGES.RESET_LINK_SENT };  
+    return { success: true, message: MESSAGES.RESET_LINK_SENT };
   }
 
   async resetPassword(token: string, password: string): Promise<{ success: boolean; message: string }> {
@@ -183,72 +183,72 @@ export default class UserUseCase {
     };
   }
 
- async googleLogin(Token: string): Promise<{ success: boolean; message: string; token?: string; refreshToken?: string; user?: IUser | null }> {
-  try {
-    const ticket = await client.verifyIdToken({
-      idToken: Token,
-      audience: process.env.GOOGLE_CLIENT_ID,
-    });
+  async googleLogin(Token: string): Promise<{ success: boolean; message: string; token?: string; refreshToken?: string; user?: IUser | null }> {
+    try {
+      const ticket = await client.verifyIdToken({
+        idToken: Token,
+        audience: process.env.GOOGLE_CLIENT_ID,
+      });
 
-    const payload = ticket.getPayload();
-    if (!payload) throw new Error("Invalid Google token");
+      const payload = ticket.getPayload();
+      if (!payload) throw new Error("Invalid Google token");
 
-    const { email, name, picture } = payload;
-    if (!email || !name) throw new Error("Incomplete Google data");
+      const { email, name, picture } = payload;
+      if (!email || !name) throw new Error("Incomplete Google data");
 
-    let user = await this._userRepository.findByEmail(email);
+      let user = await this._userRepository.findByEmail(email);
 
-    if (user?.isActive === false) {
-      return { success: false, message: MESSAGES.ACCOUNT_SUSPENDED };
-    }
+      if (user?.isActive === false) {
+        return { success: false, message: MESSAGES.ACCOUNT_SUSPENDED };
+      }
 
-    if (!user) {
-      // Split name
-      const [firstName, ...rest] = name.split(" ");
-      const lastName = rest.join(" ");
+      if (!user) {
+        // Split name
+        const [firstName, ...rest] = name.split(" ");
+        const lastName = rest.join(" ");
 
-      const newUser: IUser = {
-        username: name,
-        email,
-        password: "qwertyuiopasdfghjkl", 
-        profilePic: picture || "",
-        role: "user",
-        isGoogleUser: true, // optionally mark Google signup
-        country: "USA", gender: "male", year: 20, phone: 1234567890,
-        toObject: function (): IUser {
-          throw new Error('Function not implemented.');
-        }
+        const newUser: IUser = {
+          username: name,
+          email,
+          password: "qwertyuiopasdfghjkl",
+          profilePic: picture || "",
+          role: "user",
+          isGoogleUser: true, // optionally mark Google signup
+          country: "USA", gender: "male", year: 20, phone: 1234567890,
+          toObject: function (): IUser {
+            throw new Error('Function not implemented.');
+          }
+        };
+
+        user = await this._userRepository.add(newUser);
+      }
+
+      const userObj: IUser = { ...(typeof user.toObject === "function" ? user.toObject() : user), _id: user._id!.toString() };
+
+      const token = jwt.sign(
+        { userId: user._id!.toString(), email: user.email, role: "user" },
+        process.env.JWT_SECRET!,
+        { expiresIn: "15m" }
+      );
+
+      const refreshToken = jwt.sign(
+        { userId: user._id!.toString() },
+        process.env.JWT_REFRESH_SECRET!,
+        { expiresIn: "7d" }
+      );
+
+      return {
+        success: true,
+        message: MESSAGES.LOGIN_SUCCESS,
+        token,
+        refreshToken,
+        user: userObj,
       };
-
-      user = await this._userRepository.add(newUser);
+    } catch (error) {
+      console.error("Google Login Error:", error);
+      return { success: false, message: MESSAGES.GOOGLE_LOGIN_FAILED };
     }
-
-    const userObj: IUser = { ...(typeof user.toObject === "function" ? user.toObject() : user), _id: user._id!.toString() };
-
-    const token = jwt.sign(
-      { userId: user._id!.toString(), email: user.email, role: "user" },
-      process.env.JWT_SECRET!,
-      { expiresIn: "15m" }
-    );
-
-    const refreshToken = jwt.sign(
-      { userId: user._id!.toString() },
-      process.env.JWT_REFRESH_SECRET!,
-      { expiresIn: "7d" }
-    );
-
-    return {
-      success: true,
-      message: MESSAGES.LOGIN_SUCCESS,
-      token,
-      refreshToken,
-      user: userObj,
-    };
-  } catch (error) {
-    console.error("Google Login Error:", error);
-    return { success: false, message: MESSAGES.GOOGLE_LOGIN_FAILED };
   }
-}
 
 
   async refresh(refreshToken: string): Promise<{ success: boolean; message: string; token?: string; refreshToken?: string }> {
@@ -353,7 +353,7 @@ export default class UserUseCase {
     const albums = await this._userRepository.allAlbums() as IAlbum[];
     return albums;
   }
-  async albumView(albumId:string): Promise<IAlbum | null> {
+  async albumView(albumId: string): Promise<IAlbum | null> {
     const albums = await this._userRepository.albumView(albumId) as IAlbum;
     return albums;
   }
@@ -362,13 +362,13 @@ export default class UserUseCase {
   async usernameUpdate(userId: string, username: string): Promise<IUser | null> {
     try {
       const updated = await this._userRepository.usernameUpdate(userId, username);
-  
+
       if (!updated) {
         return null;
       }
-  
+
       return updated;
-  
+
     } catch (error) {
       console.error(MESSAGES.ERROR_UPDATING_PROFILE, error);
       return null;
@@ -376,18 +376,18 @@ export default class UserUseCase {
   }
 
 
-async getliked(songIds:string,userId:string): Promise<ITrack[]|null>{
-  try{
-    const liked  = await this._userRepository.getliked(songIds,userId)
-  return liked
-  }catch(error){
-    console.log(error)
-    return null
+  async getliked(songIds: string, userId: string): Promise<ITrack[] | null> {
+    try {
+      const liked = await this._userRepository.getliked(songIds, userId)
+      return liked
+    } catch (error) {
+      console.log(error)
+      return null
+    }
   }
-}
 
 
-  
+
   async addToLiked(userId: string, trackId: string): Promise<IUser | null> {
     try {
       const user = await this._userRepository.addToLiked(userId, trackId);
@@ -584,7 +584,7 @@ async getliked(songIds:string,userId:string): Promise<ITrack[]|null>{
 
       const session = await this._stripe.checkout.sessions.create(sessionConfig);
       return session;
-    } catch (error) {    
+    } catch (error) {
       throw error;
     }
   }

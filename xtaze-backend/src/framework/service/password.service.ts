@@ -6,7 +6,6 @@ const saltRounds =10
 export default class PasswordService {
 
   async hashPassword(password: string): Promise<string> {
-    console.log("password",password);
     
     const jero=bcrypt.hash(password, saltRounds);
     return jero

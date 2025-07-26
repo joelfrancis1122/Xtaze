@@ -41,7 +41,6 @@ export default class UserController {
       const { otp } = req.body;
       if (!otp) throw new AppError("OTP is required", HttpStatus.BAD_REQUEST);
 
-      console.log("Body received in controller:", req.body);
       const response = await this._userUseCase.verifyOTP(otp);
 
       if (!response.success) {
@@ -61,9 +60,7 @@ export default class UserController {
         throw new AppError("Username, email, and password are required", HttpStatus.BAD_REQUEST);
       }
 
-      console.log(req.body, "Register body");
       const user = await this._userUseCase.registerUser(username, country, gender, year, phone, email, password);
-      console.log("User registered:", user);
 
       res.status(HttpStatus.CREATED).json({ success: true, message: "User registered successfully", data: user });
     } catch (error) {
@@ -78,12 +75,9 @@ export default class UserController {
       const { email, password } = req.body;
       if (!email || !password) throw new AppError("Email and password are required", HttpStatus.BAD_REQUEST);
 
-      console.log("Login body:", req.body);
       const response = await this._userUseCase.login(email, password);
-      console.log(response.token, "emt vannile");
 
       if (response.success && response.token && response.refreshToken) {
-        console.log(response.token, "emt vannilessssssss");
         res.cookie("refreshToken", response.refreshToken, {
           httpOnly: true,
           secure: true,
@@ -139,9 +133,7 @@ export default class UserController {
 
   async refreshToken(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      console.log("Refresh token triggered");
       const refreshToken = req.cookies.refreshToken;
-      console.log("Refresh token from cookie:", refreshToken);
 
       if (!refreshToken) {
         throw new AppError("No refresh token available in cookie", HttpStatus.UNAUTHORIZED);
@@ -179,7 +171,6 @@ export default class UserController {
       if (!userName) throw new AppError("Username is required", HttpStatus.BAD_REQUEST);
 
       const available = await this._userUseCase.checkUnique(userName);
-      console.log("Checking username:", userName, "Available:", available);
 
       res.status(HttpStatus.OK).json({ success: true, message: "OTP sent successfully!", available });
 
@@ -308,7 +299,6 @@ export default class UserController {
   async getliked(req: Request, res: Response, next: NextFunction) {
     try {
       const { songIds } = req.body
-      console.log(songIds, "songssssss")
       const userId = req.query.userId as string;
       const tracks = await this._userUseCase.getliked(songIds as string, userId as string)
       res.json({ success: true, tracks });
@@ -542,10 +532,8 @@ export default class UserController {
     try {
       const userId = req.query.id
       const username = req.body.username
-      console.log(userId, req.body, "joes")
 
       const data = await this._userUseCase.usernameUpdate(userId as string, username);
-      console.log("remene", data)
       res.status(HttpStatus.OK).json({ data: data });
     } catch (error: unknown) {
       console.error("Error in getUsers controller:", error);
