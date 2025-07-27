@@ -80,7 +80,7 @@ export default class AdminUseCase {
 
   }
   async getAllBanners(): Promise<IBanner[] | null> {
-    const banners = await this._adminRepository.findAll()
+    const banners = await this._adminRepository.getAllBanners()
     return banners;
 
   }

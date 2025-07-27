@@ -10,8 +10,12 @@ import { CouponModel } from "../db/models/CouponModel";
 import PlaylistModel from "../db/models/PlaylistModel";
 import { ITrack, Track } from "../db/models/TrackModel";
 import UserModel from "../db/models/UserModel";
+import { BaseRepository } from "./BaseRepository";
 
-export default class UserRepository implements IUserRepository {
+export default class UserRepository extends BaseRepository<IUser> implements IUserRepository {
+  constructor() {
+    super(UserModel);
+  }
 
   async add(userData: IUser): Promise<IUser> {
     try {
@@ -156,7 +160,6 @@ export default class UserRepository implements IUserRepository {
 
   async getliked(songIds: string, userId: string) {
     try {
-
       const user = await UserModel.findById(userId);
       const tracks = await Track.find({ _id: { $in: songIds } });
       return tracks
@@ -388,8 +391,8 @@ export default class UserRepository implements IUserRepository {
       throw error;
     }
   }
-  async findAll(): Promise<IBanner[] | null> {
-    const data = await BannerModel.find({ isActive: true })
+  async getAllBanners(): Promise<IBanner[] | null> {
+    const data = await BannerModel.find({ isActive: true }).lean()
 
     return data
   }

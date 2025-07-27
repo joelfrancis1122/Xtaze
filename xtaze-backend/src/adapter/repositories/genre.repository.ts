@@ -1,9 +1,14 @@
 import { IGenreRepository } from "../../domain/repositories/IGenreRepository";
 import GenreModel  from "../../adapter/db/models/GenreModel";
 import { IGenre } from "../../domain/entities/IGenre";
-import { log } from "console";
+import { BaseRepository } from "./BaseRepository";
 
-export class GenreRepository implements IGenreRepository {
+// export class GenreRepository implements IGenreRepository {
+export class GenreRepository extends BaseRepository<IGenre> implements IGenreRepository {
+  constructor() {
+    super(GenreModel); // attach GenreModel to base
+  }
+  
   async createGenre(name: string): Promise<IGenre> {
     return await GenreModel.create({name})
   }

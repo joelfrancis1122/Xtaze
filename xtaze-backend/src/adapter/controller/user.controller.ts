@@ -365,7 +365,7 @@ export default class UserController {
       const playlist = await this._userUseCase.getAllPlaylist(userId as string)
       res.status(HttpStatus.OK).json({ success: true, data: playlist });
     } catch (error) {
-      console.error("Error in getliked:", error);
+      console.error("Error in playlist:", error);
       next(error);
     }
   }
@@ -380,7 +380,7 @@ export default class UserController {
       }
       res.status(HttpStatus.OK).json({ success: true });
     } catch (error) {
-      console.error("Error in getliked:", error);
+      console.error("Error in playlist:", error);
       next(error);
     }
   }
@@ -391,7 +391,7 @@ export default class UserController {
 
       res.status(HttpStatus.OK).json({ success: true });
     } catch (error) {
-      console.error("Error in getliked:", error);
+      console.error("Error in playlist:", error);
       next(error);
     }
   }
@@ -402,7 +402,7 @@ export default class UserController {
 
       res.status(HttpStatus.OK).json({ success: true });
     } catch (error) {
-      console.error("Error in getliked:", error);
+      console.error("Error in playlist:", error);
       next(error);
     }
   }
@@ -420,7 +420,7 @@ export default class UserController {
 
       res.status(HttpStatus.OK).json({ updated, success: true });
     } catch (error) {
-      console.error("Error in getliked:", error);
+      console.error("Error in playlist:", error);
       next(error);
     }
   }

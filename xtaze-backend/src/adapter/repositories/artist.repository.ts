@@ -8,8 +8,17 @@ import { AlbumModel } from "../db/models/AlbumModel";
 import { Track } from "../db/models/TrackModel";
 import UserModel from "../db/models/UserModel";
 import VerificationModel from "../db/models/VerificationRequestModel";
+import { BaseRepository } from "./BaseRepository";
 
-export default class ArtistRepository implements IArtistRepository {
+// export default class ArtistRepository implements IArtistRepository {
+export default class ArtistRepository
+  extends BaseRepository<IUser> implements IArtistRepository {
+ 
+    constructor() {
+    super(UserModel); // ee modelne base classilek pass
+ 
+  }
+
 
   async findByEmail(email: string): Promise<IUser> {
     try {
@@ -67,7 +76,7 @@ export default class ArtistRepository implements IArtistRepository {
       );
       await AlbumModel.findByIdAndUpdate(
         track.albumId,
-        { $push: { tracks:trackId } },
+        { $push: { tracks: trackId } },
         { new: true }
       );
       return updatedTrack;
@@ -98,7 +107,7 @@ export default class ArtistRepository implements IArtistRepository {
     const tracks = await Track.find({ _id: { $in: album.tracks } });
     return { ...album.toObject(), tracks } as unknown as IAlbum;
   }
-  
+
   async findTracksByIds(trackIds: string[]): Promise<ITrack[]> {
     return await Track.find({ _id: { $in: trackIds } });
   }

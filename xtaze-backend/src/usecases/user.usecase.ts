@@ -657,7 +657,7 @@ export default class UserUseCase {
   }
 
   async getAllBanners(): Promise<IBanner[] | null> {
-    const banners = await this._userRepository.findAll()
+    const banners = await this._userRepository.getAllBanners()
     return banners;
 
   }

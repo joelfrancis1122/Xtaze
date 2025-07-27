@@ -10,8 +10,13 @@ import { CouponModel } from "../db/models/CouponModel";
 import { ITrack, Track } from "../db/models/TrackModel";
 import UserModel from "../db/models/UserModel";
 import VerificationModel from "../db/models/VerificationRequestModel";
+import { BaseRepository } from "./BaseRepository";
 
-export default class AdminRepository implements IAdminRepository {
+// export default class AdminRepository implements IAdminRepository {
+export default class AdminRepository extends BaseRepository<IUser> implements IAdminRepository{
+  constructor(){
+    super(UserModel)
+  }
 
   async findByEmail(email: string): Promise<IUser | null> {
     try {
@@ -87,7 +92,7 @@ export default class AdminRepository implements IAdminRepository {
 
     return await banner.save()
   }
-  async findAll(): Promise<IBanner[] | null> {
+  async getAllBanners(): Promise<IBanner[] | null> {
     const data = await BannerModel.find()
 
     return data

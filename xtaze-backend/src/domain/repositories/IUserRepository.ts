@@ -25,7 +25,7 @@ export interface IUserRepository {
   deletePlaylist(id: string): Promise<IPlaylist | null>;
   updateNamePlaylist(id: string, playlistName: string): Promise<IPlaylist | null>;
   updateImagePlaylist(id: string, file: string): Promise<IPlaylist | null>;
-  findAll(): Promise<IBanner[] | null>
+  getAllBanners(): Promise<IBanner[] | null>
   findCouponByCode(code: string): Promise<ICoupon | null>
   updateCouponByCode(code: string, updateData: Partial<ICoupon>): Promise<ICoupon | null>;
   checkCouponisUsed(code: string, userId: string): Promise<boolean>;
