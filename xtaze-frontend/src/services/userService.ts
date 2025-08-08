@@ -28,7 +28,6 @@ const addRefreshInterceptor = (apiInstance: any) => {
         if (!newToken) {
           console.error("Refresh token failed, clearing auth");
           localStorage.removeItem("token");
-          document.cookie = "refreshToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
           throw new Error("Failed to refresh token");
         }
         originalRequest.headers["Authorization"] = `Bearer ${newToken}`;

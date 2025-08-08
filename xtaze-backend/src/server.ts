@@ -1,6 +1,6 @@
 
-import connectDB from "./adapter/db/conectDB";
-import application from './framework/web/app'
+import connectDB from "./infrastructure/db/conectDB";
+import application from './presentation/web/app'
 
 
 const app=application
