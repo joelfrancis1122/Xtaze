@@ -296,7 +296,7 @@ export default function ArtistDetailsPage() {
                         {artist.verificationStatus === "approved" && (
                           <BadgeCheck
                             size={20}
-                            className="ml-2 text-blue-600 fill-blue-600 stroke-white sm:size-30"
+                            className="ml-2 text-blue-600 fill-blue-600 stroke-white sm:size-10"
                             strokeWidth={1.5}
                           />
                         )}
