@@ -17,7 +17,6 @@ export class UploadTrackUseCase {
       listeners: [],
       artists: songUpload.artist,
     };
-
     return await this.trackRepository.save(newTrack);
   }
 }

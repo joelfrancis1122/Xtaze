@@ -1,7 +1,8 @@
 import { NextFunction, Request, Response } from "express";
+import { HttpStatus } from "../../domain/constants/httpStatus";
 import IuserUseCase from "../../domain/usecase/IUserUseCase"
 import AppError from "../../utils/AppError"
-import { HttpStatus } from "../../domain/constants/httpStatus";
+import { MESSAGES } from "../../domain/constants/messages";
 
 
 interface Dependencies {
@@ -22,15 +23,15 @@ export default class UserController {
   async sendOTP(req: Request, res: Response, next: NextFunction) {
     try {
       const { email } = req.body;
-      if (!email) throw new AppError("Email is required", HttpStatus.BAD_REQUEST);
+      if (!email) throw new AppError(MESSAGES.EMAIL_REQUIRED, HttpStatus.BAD_REQUEST);
 
       const result = await this._userUseCase.sendOTP(email);
 
       if (Number(result) === HttpStatus.FORBIDDEN) {
-        throw new AppError("Email address already exists", HttpStatus.FORBIDDEN);
+        throw new AppError(MESSAGES.USER_ALREADY_EXISTS, HttpStatus.FORBIDDEN);
       }
 
-      res.status(HttpStatus.OK).json({ success: true, message: "OTP sent successfully!", result });
+      res.status(HttpStatus.OK).json({ success: true, message: MESSAGES.OTP_DONE, result });
     } catch (error) {
       next(error);
     }
@@ -39,7 +40,7 @@ export default class UserController {
   async verifyOTP(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { otp } = req.body;
-      if (!otp) throw new AppError("OTP is required", HttpStatus.BAD_REQUEST);
+      if (!otp) throw new AppError(MESSAGES.OTP_REQ, HttpStatus.BAD_REQUEST);
 
       const response = await this._userUseCase.verifyOTP(otp);
 
@@ -57,12 +58,12 @@ export default class UserController {
     try {
       const { username, country, gender, year, phone, email, password } = req.body;
       if (!username || !email || !password) {
-        throw new AppError("Username, email, and password are required", HttpStatus.BAD_REQUEST);
+        throw new AppError(MESSAGES.ALL_REQUIRED, HttpStatus.BAD_REQUEST);
       }
 
       const user = await this._userUseCase.registerUser(username, country, gender, year, phone, email, password);
 
-      res.status(HttpStatus.CREATED).json({ success: true, message: "User registered successfully", data: user });
+      res.status(HttpStatus.CREATED).json({ success: true, message: MESSAGES.USER_REG, data: user });
     } catch (error) {
       next(error);
     }
@@ -73,7 +74,7 @@ export default class UserController {
     try {
 
       const { email, password } = req.body;
-      if (!email || !password) throw new AppError("Email and password are required", HttpStatus.BAD_REQUEST);
+      if (!email || !password) throw new AppError(MESSAGES.EMAIL_REQUIRED, HttpStatus.BAD_REQUEST);
 
       const response = await this._userUseCase.login(email, password);
 
@@ -103,7 +104,6 @@ export default class UserController {
   async googleLogin(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { token } = req.body;
-      if (!token) throw new AppError("Google token is required", HttpStatus.BAD_REQUEST);
 
       const response = await this._userUseCase.googleLogin(token);
 
@@ -126,7 +126,6 @@ export default class UserController {
         res.status(HttpStatus.BAD_REQUEST).json(response);
       }
     } catch (error) {
-      console.error("Error with Google signup:", error);
       next(error);
     }
   }
@@ -136,7 +135,7 @@ export default class UserController {
       const refreshToken = req.cookies.refreshToken;
 
       if (!refreshToken) {
-        throw new AppError("No refresh token available in cookie", HttpStatus.UNAUTHORIZED);
+        throw new AppError(MESSAGES.NO_REFRESH_TOKEN, HttpStatus.UNAUTHORIZED);
       }
 
       const response = await this._userUseCase.refresh(refreshToken);
@@ -160,7 +159,6 @@ export default class UserController {
         res.status(HttpStatus.UNAUTHORIZED).json(response);
       }
     } catch (error) {
-      console.error("Refresh Token Error:", error);
       next(error);
     }
   }
@@ -168,11 +166,11 @@ export default class UserController {
   async checkUsername(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { userName } = req.body;
-      if (!userName) throw new AppError("Username is required", HttpStatus.BAD_REQUEST);
+      if (!userName) throw new AppError(MESSAGES.USERNAME_REQUIRED, HttpStatus.BAD_REQUEST);
 
       const available = await this._userUseCase.checkUnique(userName);
 
-      res.status(HttpStatus.OK).json({ success: true, message: "OTP sent successfully!", available });
+      res.status(HttpStatus.OK).json({ success: true, message: MESSAGES.OTP_DONE, available });
 
     } catch (error) {
       next(error);
@@ -182,7 +180,7 @@ export default class UserController {
   async forgotPassword(req: Request, res: Response, next: NextFunction) {
     try {
       const { email } = req.body;
-      if (!email) throw new AppError("Email is required", HttpStatus.BAD_REQUEST);
+      if (!email) throw new AppError(MESSAGES.EMAIL_REQUIRED, HttpStatus.BAD_REQUEST);
 
       const response = await this._userUseCase.forgotPassword(email);
       res.status(HttpStatus.OK).json(response);
@@ -196,11 +194,9 @@ export default class UserController {
     try {
       const { token, formData } = req.body;
       const newPassword = formData
-      if (!token) throw new AppError("token is required", HttpStatus.BAD_REQUEST);
+      if (!token) throw new AppError(MESSAGES.INVALID_TOKEN, HttpStatus.BAD_REQUEST);
       const response = await this._userUseCase.resetPassword(token, newPassword);
       res.status(HttpStatus.OK).json(response);
-      // const response = await this._userUseCase.forgotPassword(email);
-      // res.status(HttpStatus.OK).json(response);
     } catch (error) {
       next(error);
     }
@@ -214,7 +210,7 @@ export default class UserController {
 
 
       if (!userId || !file) {
-        throw new AppError("User ID and image are required", HttpStatus.BAD_REQUEST);
+        throw new AppError(MESSAGES.USER_ID_REQUIRED, HttpStatus.BAD_REQUEST);
       }
 
       const result = await this._userUseCase.uploadProfile(userId, file);
@@ -231,7 +227,7 @@ export default class UserController {
 
 
       if (!userId || !file) {
-        throw new AppError("User ID and file are required", HttpStatus.BAD_REQUEST);
+        throw new AppError(MESSAGES.USER_ID_REQUIRED, HttpStatus.BAD_REQUEST);
       }
 
       const isVideo = file.mimetype.startsWith("video/");
@@ -239,7 +235,6 @@ export default class UserController {
 
       res.status(result.success ? HttpStatus.OK : HttpStatus.BAD_REQUEST).json(result);
     } catch (error) {
-      console.error("Error in uploadBanner:", error);
       next(error);
     }
   }
@@ -250,7 +245,7 @@ export default class UserController {
 
 
       if (!userId || !bio) {
-        throw new AppError("User ID and bio are required", HttpStatus.BAD_REQUEST);
+        throw new AppError(MESSAGES.USER_ID_REQUIRED, HttpStatus.BAD_REQUEST);
       }
 
       const result = await this._userUseCase.updateBio(userId, bio);
@@ -265,7 +260,7 @@ export default class UserController {
       const { userId, priceId, code } = req.body;
 
       if (!userId || !priceId) {
-        throw new AppError("User ID and Price ID are required", HttpStatus.BAD_REQUEST);
+        throw new AppError(MESSAGES.USER_ID_REQUIRED, HttpStatus.BAD_REQUEST);
       }
 
       const session = await this._userUseCase.execute(userId, priceId, code);
@@ -282,13 +277,12 @@ export default class UserController {
 
 
       if (!userId || !trackId) {
-        throw new AppError("User ID and Track ID are required", HttpStatus.BAD_REQUEST);
+        throw new AppError(MESSAGES.USER_ID_REQUIRED, HttpStatus.BAD_REQUEST);
       }
 
       const user = await this._userUseCase.addToLiked(userId as string, trackId);
       res.status(HttpStatus.OK).json({ success: true, user });
     } catch (error) {
-      console.error("Error in toggleLike:", error);
       next(error);
     }
   }
@@ -318,7 +312,6 @@ export default class UserController {
       const track = await this._userUseCase.getPlaylist(id as string, pageNum, limitNum, skip)
       res.json({ success: true, data: track });
     } catch (error) {
-      console.error("Error in getliked:", error);
       next(error);
     }
   }
@@ -330,7 +323,6 @@ export default class UserController {
       const newplaylist = await this._userUseCase.createPlaylist(userId, playlist)
       res.status(HttpStatus.OK).json({ success: true, data: newplaylist });
     } catch (error) {
-      console.error("Error in getliked:", error);
       next(error);
     }
   }
@@ -340,7 +332,6 @@ export default class UserController {
       const data = await this._userUseCase.allAlbums();
      res.status(HttpStatus.OK).json({ data: data });
     } catch (error: unknown) {
-      console.error("Error in all albums controller:", error);
       res.status(HttpStatus.NOT_FOUND).json({ message: (error as Error).message || "Internal server error" });
       next(error);
     }
@@ -351,7 +342,6 @@ export default class UserController {
       const data = await this._userUseCase.albumView(albumId as string);
      res.status(HttpStatus.OK).json({ data: data });
     } catch (error: unknown) {
-      console.error("Error in all albums controller:", error);
       res.status(HttpStatus.NOT_FOUND).json({ message: (error as Error).message || "Internal server error" });
       next(error);
     }
@@ -365,7 +355,6 @@ export default class UserController {
       const playlist = await this._userUseCase.getAllPlaylist(userId as string)
       res.status(HttpStatus.OK).json({ success: true, data: playlist });
     } catch (error) {
-      console.error("Error in playlist:", error);
       next(error);
     }
   }
@@ -375,12 +364,11 @@ export default class UserController {
       const { userId, playlistId, trackId } = req.body
       const playlist = await this._userUseCase.addToPlaylist(userId, playlistId, trackId)
       if (playlist == null) {
-        res.status(HttpStatus.NOT_FOUND).json({ success: false, message: "Track Already Exist" });
+        res.status(HttpStatus.NOT_FOUND).json({ success: false, message: MESSAGES.TRACKS_EXSIST });
 
       }
       res.status(HttpStatus.OK).json({ success: true });
     } catch (error) {
-      console.error("Error in playlist:", error);
       next(error);
     }
   }
@@ -391,7 +379,6 @@ export default class UserController {
 
       res.status(HttpStatus.OK).json({ success: true });
     } catch (error) {
-      console.error("Error in playlist:", error);
       next(error);
     }
   }
@@ -402,7 +389,6 @@ export default class UserController {
 
       res.status(HttpStatus.OK).json({ success: true });
     } catch (error) {
-      console.error("Error in playlist:", error);
       next(error);
     }
   }
@@ -412,7 +398,6 @@ export default class UserController {
       const { id } = req.body
       const file = req.file
       if (!file) {
-        console.error("No file provided for update.");
         return;
       }
 
@@ -420,7 +405,6 @@ export default class UserController {
 
       res.status(HttpStatus.OK).json({ updated, success: true });
     } catch (error) {
-      console.error("Error in playlist:", error);
       next(error);
     }
   }
@@ -430,7 +414,7 @@ export default class UserController {
 
 
       const allBanners = await this._userUseCase.getAllBanners()
-      res.status(HttpStatus.CREATED).json({ success: true, message: "Banner added successfully", data: allBanners });
+      res.status(HttpStatus.CREATED).json({ success: true, message: MESSAGES.BANNER_ADDED_SUCCESS, data: allBanners });
 
     } catch (error) {
       next(error);
@@ -442,7 +426,6 @@ export default class UserController {
     try {
       await this._userUseCase.checkAndUpdateCouponStatus();
     } catch (error: unknown) {
-      console.error("UserController: Error during coupon status check:", error);
       throw error;
     }
   }
@@ -450,7 +433,6 @@ export default class UserController {
     try {
       await this._userUseCase.resetPaymentStatus();
     } catch (error: unknown) {
-      console.error("UserController: Error during coupon status check:", error);
       throw error;
     }
   }
@@ -460,7 +442,6 @@ export default class UserController {
       const history = await this._userUseCase.getSubscriptionHistoryFromStripe();
       res.status(HttpStatus.OK).json({ data: history });
     } catch (error: unknown) {
-      console.error("Error in getSubscriptionHistory controller:", error);
       next(error);
     }
   }
@@ -468,17 +449,11 @@ export default class UserController {
   async handleWebhook(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const signature = req.headers["stripe-signature"] as string;
-      if (!signature) {
-        throw new Error("Missing Stripe signature");
-      }
-
-
       // Pass raw body and signature to use case
       await this._userUseCase.confirmPayment(req.body, signature);
 
       res.status(HttpStatus.OK).json({ received: true });
     } catch (error: unknown) {
-      console.error("Webhook error:", error);
       res.status(HttpStatus.BAD_REQUEST).send(`Webhook Error: ${(error as Error).message}`);
       next(error);
     }
@@ -488,7 +463,6 @@ export default class UserController {
       const tracks = await this._userUseCase.getAllTracks();
       res.status(HttpStatus.OK).json({ data: tracks });
     } catch (error: unknown) {
-      console.error("Error in getSubscriptionHistory controller:", error);
       next(error);
     }
   }
@@ -499,7 +473,6 @@ export default class UserController {
       const tracks = await this._userUseCase.fetchGenreTracks(GenreName as string);
       res.status(HttpStatus.OK).json({ data: tracks });
     } catch (error: unknown) {
-      console.error("Error in fetchGenreTracks controller:", error);
       next(error);
     }
   }
@@ -511,7 +484,6 @@ export default class UserController {
       const updated = await this._userUseCase.becomeArtist(id as string);
       res.status(HttpStatus.OK).json({ data: updated });
     } catch (error: unknown) {
-      console.error("Error in updated controller:", error);
       next(error);
     }
   }
@@ -524,7 +496,6 @@ export default class UserController {
       const data = await this._userUseCase.getArtistByName(username as string);
       res.status(HttpStatus.OK).json({ data: data });
     } catch (error: unknown) {
-      console.error("Error in getUsers controller:", error);
       next(error);
     }
   }
@@ -536,7 +507,6 @@ export default class UserController {
       const data = await this._userUseCase.usernameUpdate(userId as string, username);
       res.status(HttpStatus.OK).json({ data: data });
     } catch (error: unknown) {
-      console.error("Error in getUsers controller:", error);
       next(error);
     }
   }

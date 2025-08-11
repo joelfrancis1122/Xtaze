@@ -131,8 +131,8 @@ export default class ArtistRepository
 
   async increment(trackId: string, id: string): Promise<ITrack | null> {
     try {
-
       const currentMonth = new Date().toISOString().slice(0, 7); //ith engana varum"2025-03"
+      console.log("avinadh",currentMonth)
 
       const track = await Track.findById(trackId);
       if (!track) throw new Error("Track not found");
@@ -153,12 +153,13 @@ export default class ArtistRepository
       }
 
       const rrrr = await Track.updateOne({ _id: trackId }, { $addToSet: { listeners: id } });
+      console.log(rrrr,"basil")
       await track.save();
 
       return track;
     } catch (error: unknown) {
       console.error("Error updating track listeners:", error);
-      throw new Error("Failed to update track listeners");
+      throw new Error("Failed to update track listenersss");
     }
   }
   async saveCard(artistId: string, paymentMethodId: string): Promise<IUser | null> {

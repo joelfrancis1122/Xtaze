@@ -29,5 +29,6 @@ export default interface IAdminUseCase {
     fetchVerification(): Promise<IVerificationRequest | null>
     updateVerificationStatus(status:string,feedback: string | null,id:string) :Promise<IVerificationRequest|null>
 
+
 }
 

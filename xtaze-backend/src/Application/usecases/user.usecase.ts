@@ -1,31 +1,24 @@
 import dotenv from "dotenv";
 import jwt from "jsonwebtoken";
 import IUser from '../../domain/entities/IUser';
-
-import { IUserRepository } from '../../domain/repositories/IUserRepository';
-
-import IOtpService from '../../domain/service/IOtpService'
-
-import IPasswordService from '../../domain/service/IPasswordService';
-
-
-import { uploadImageToCloud, uploadProfileCloud } from '../../infrastructure/service/cloudinary.service';
-
-
-import { OAuth2Client } from "google-auth-library";
-const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
-import Stripe from "stripe";
 import IEmailService from '../../domain/service/IEmailService';
+import IOtpService from '../../domain/service/IOtpService'
+import IPasswordService from '../../domain/service/IPasswordService';
+import Stripe from "stripe";
+import { IUserRepository } from '../../domain/repositories/IUserRepository';
+import { uploadImageToCloud, uploadProfileCloud } from '../../infrastructure/service/cloudinary.service';
+import { OAuth2Client } from "google-auth-library";
 import { IPlaylist } from '../../domain/entities/IPlaylist';
 import { ITrack } from '../../domain/entities/ITrack';
 import { IBanner } from '../../domain/entities/IBanner';
 import { SubscriptionHistory } from '../../domain/entities/ISubscriptionHistory';
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2023-08-16" });
-dotenv.config();
 import { MESSAGES } from '../../domain/constants/messages';
 import { IAlbum } from '../../domain/entities/IAlbum';
+dotenv.config();
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2023-08-16" });
 
-interface useCaseDependencies {
+  interface useCaseDependencies {
   repository: {
     userRepository: IUserRepository
   },
@@ -109,7 +102,7 @@ export default class UserUseCase {
       expiresIn: "1h",
     });
 
-    await this._emailService.sendEmail(email, "Password Reset", token);
+    await this._emailService.sendEmail(email,MESSAGES.PASSWORD_RESET_SUCCESS, token);
 
     return { success: true, message: MESSAGES.RESET_LINK_SENT };
   }
@@ -125,7 +118,7 @@ export default class UserUseCase {
       // Find user
       const user = await this._userRepository.findById(decoded.userId);
       if (!user) {
-        throw new Error("User not found");
+        throw new Error(MESSAGES.USER_NOT_FOUND);
       }
 
       // Use PasswordService to hash the new password
@@ -162,15 +155,14 @@ export default class UserUseCase {
   async login(email: string, password: string): Promise<{ success: boolean; message: string; token?: string; refreshToken?: string; user?: IUser }> {
     const user = await this._userRepository.findByEmail(email);
     if (!user) return { success: false, message: MESSAGES.USER_NOT_FOUND };
-    if (user.role === "admin" || user.role === "artist") return { success: false, message: MESSAGES.USER_LOGIN_ONLY };
+    if (user.role === MESSAGES.ADMIN || user.role === MESSAGES.ARTIST) return { success: false, message: MESSAGES.USER_LOGIN_ONLY };
     if (user.isActive === false) return { success: false, message: MESSAGES.ACCOUNT_SUSPENDED };
 
     const isPasswordValid = await this._passwordService.comparePassword(password, user.password);
     if (!isPasswordValid) throw new Error(MESSAGES.LOGIN_FAILED);
-    console.log("JWT_SECRET at login:", process.env.JWT_SECRET);
 
     const token = jwt.sign(
-      { userId: user._id, email: user.email, role: "user" },
+      { userId: user._id, email: user.email, role: MESSAGES.USER },
       process.env.JWT_SECRET!,
       { expiresIn: "15m" } // Short-lived access token
     );
@@ -197,10 +189,10 @@ export default class UserUseCase {
       });
 
       const payload = ticket.getPayload();
-      if (!payload) throw new Error("Invalid Google token");
+      if (!payload) throw new Error(MESSAGES.GOOGLE_INVALID);
 
       const { email, name, picture } = payload;
-      if (!email || !name) throw new Error("Incomplete Google data");
+      if (!email || !name) throw new Error(MESSAGES.GOOGLE_LOGIN_FAILED);
 
       let user = await this._userRepository.findByEmail(email);
 
@@ -216,13 +208,13 @@ export default class UserUseCase {
         const newUser: IUser = {
           username: name,
           email,
-          password: "qwertyuiopasdfghjkl",
+          password: MESSAGES.RANDOMPASS,
           profilePic: picture || "",
           role: "user",
           isGoogleUser: true, // optionally mark Google signup
           country: "USA", gender: "male", year: 20, phone: 1234567890,
           toObject: function (): IUser {
-            throw new Error('Function not implemented.');
+            throw new Error(MESSAGES.GOOGLE_LOGIN_FAILED);
           }
         };
 
@@ -251,7 +243,6 @@ export default class UserUseCase {
         user: userObj,
       };
     } catch (error) {
-      console.error("Google Login Error:", error);
       return { success: false, message: MESSAGES.GOOGLE_LOGIN_FAILED };
     }
   }
@@ -303,7 +294,6 @@ export default class UserUseCase {
 
       return { success: true, message: MESSAGES.PROFILE_UPDATE_SUCCESS, user: updatedUser };
     } catch (error) {
-      console.error("Error during profile upload:", error);
       return { success: false, message: MESSAGES.ERROR_UPDATING_PROFILE };
     }
 
@@ -320,7 +310,6 @@ export default class UserUseCase {
 
       return { success: true, message: MESSAGES.BANNER_UPDATE_SUCCESS, user: updatedUser, isVideo: isVideo };
     } catch (error) {
-      console.error("Error during Banner upload:", error);
       return { success: false, message: MESSAGES.ERROR_UPDATING_PROFILE };
     }
 
@@ -335,9 +324,8 @@ export default class UserUseCase {
         return { success: false, message: MESSAGES.ERROR_UPDATING_PROFILE };
       }
 
-      return { success: true, message: "Banner updated successfully", data: updatedData };
+      return { success: true, message: MESSAGES.BANNER_UPDATE_SUCCESS, data: updatedData };
     } catch (error) {
-      console.error("Error during Banner upload:", error);
       return { success: false, message: MESSAGES.ERROR_UPDATING_PROFILE };
     }
 
@@ -348,9 +336,9 @@ export default class UserUseCase {
       if (!updated) {
         return { success: false, message: MESSAGES.ERROR_UPDATING_PROFILE };
       }
-      return { success: true, message: "Profile updated successfully", user: updated };
+      return { success: true, message: MESSAGES.PROFILE_UPDATE_SUCCESS, user: updated };
     } catch (error) {
-      console.error("Error during profile upload:", error);
+      console.error(error);
       return { success: false, message: MESSAGES.ERROR_UPDATING_PROFILE };
     }
   }
@@ -402,7 +390,7 @@ export default class UserUseCase {
         return null;
       }
 
-      return user; // Directly return the user object
+      return user; 
     } catch (error) {
       console.error(MESSAGES.ERROR_UPDATING_PROFILE, error);
       throw new Error(MESSAGES.ERROR_UPDATING_PROFILE);
@@ -432,7 +420,7 @@ export default class UserUseCase {
         return null;
       }
 
-      return playlist; // Directly return the user object
+      return playlist; 
     } catch (error) {
       console.error(MESSAGES.ERROR_UPDATING_PROFILE, error);
       throw new Error(MESSAGES.ERROR_UPDATING_PROFILE);
@@ -549,8 +537,8 @@ export default class UserUseCase {
         payment_method_types: ["card", "link"],
         line_items: [{ price: priceId, quantity: 1 }],
         mode: "subscription",
-        success_url: "https://xtaze.fun/success",
-        cancel_url: "https://xtaze.fun/cancel",
+        success_url: MESSAGES.SUCCESS_URL,
+        cancel_url: MESSAGES.CANCEL_URL,
         metadata: {
           userId,
           couponCode: couponCode || "",
@@ -558,7 +546,6 @@ export default class UserUseCase {
         },
       };
 
-      // Handle coupon if provided
       if (couponCode) {
         const coupon = await this._userRepository.findCouponByCode(couponCode);
         if (!coupon) throw new Error(MESSAGES.COUPON_NOT_FOUND);
@@ -567,7 +554,7 @@ export default class UserUseCase {
         const usedUsers = coupon.users ?? [];
 
         if (
-          coupon.status !== "active" ||
+          coupon.status !== MESSAGES.ACTIVE||
           currentUses >= coupon.maxUses ||
           new Date(coupon.expires) < new Date()
         ) {
@@ -610,16 +597,14 @@ export default class UserUseCase {
         const planName = session.metadata?.planName;
 
         if (!userId || !planName) {
-          throw new Error("Missing metadata in session");
+          throw new Error(MESSAGES.MISSING_METADATA);
         }
 
         // Update user subscription
         const updatedUser = await this._userRepository.updateUserSubscription(userId, planName);
         if (!updatedUser) {
-          throw new Error("Failed to update user subscription status");
+          throw new Error(MESSAGES.SUBSCRIPTION_FAILED);
         }
-
-        // Update coupon if used
         if (couponCode) {
           const coupon = await this._userRepository.findCouponByCode(couponCode);
           if (coupon) {
@@ -632,10 +617,8 @@ export default class UserUseCase {
           }
         }
 
-        console.log(`Payment confirmed for user ${userId} with plan ${planName}`);
       }
     } catch (error) {
-      console.error("Error in UserUseCase.confirmPayment:", error);
       throw error;
     }
   }
@@ -648,16 +631,13 @@ export default class UserUseCase {
       if (coupons)
         for (const coupon of coupons) {
           const expirationDate = new Date(coupon.expires);
-          if (expirationDate < currentDate && coupon.status === "active") {
+          if (expirationDate < currentDate && coupon.status === MESSAGES.ACTIVE) {
             await this._userRepository.updateCouponByCode(coupon.code, {
-              status: "expired",
+              status: MESSAGES.EXPIRED,
             });
-            console.log(`Coupon ${coupon.code} expired and status updated to expired`);
           }
         }
-      console.log("Coupon status check completed");
     } catch (error) {
-      console.error("Error in checkAndUpdateCouponStatus:", error);
       throw error;
     }
   }
@@ -672,27 +652,24 @@ export default class UserUseCase {
   }
 
 
-  async getSubscriptionHistoryFromStripe(): Promise<SubscriptionHistory[]> {
+   async getSubscriptionHistoryFromStripe(): Promise<SubscriptionHistory[]> {
     try {
-      // Fetch recent checkout sessions from Stripe
       const sessions = await this._stripe.checkout.sessions.list({
         limit: 50, // Max 100, adjust as needed
         expand: ["data.customer"], // Expand customer for email
       });
 
-      // Filter only completed sessions
       const completedSessions = sessions.data.filter(
         (session) => session.status === "complete"
       );
 
       const history: SubscriptionHistory[] = await Promise.all(
         completedSessions.map(async (session) => {
-          const userId = session.metadata?.userId || "unknown";
+          const userId = session.metadata?.userId || MESSAGES.MY_NAME;
           const planName = session.metadata?.planName || "Unknown Plan";
-          const price = (session.amount_total || 0) / 100; // Convert cents to dollars
-          const purchaseDate = new Date(session.created * 1000).toISOString(); // Convert Unix timestamp
+          const price = (session.amount_total || 0) / 100; 
+          const purchaseDate = new Date(session.created * 1000).toISOString(); 
 
-          // Fetch email from customer if available, or fallback to repository
           let email = (session.customer as Stripe.Customer)?.email || "N/A";
           if (!email || email === "N/A") {
             const user = await this._userRepository.findById(userId);
@@ -709,13 +686,12 @@ export default class UserUseCase {
         })
       );
 
-      // Sort by purchase date descending (most recent first)
       return history.sort((a, b) => new Date(b.purchaseDate).getTime() - new Date(a.purchaseDate).getTime());
     } catch (error) {
-      console.error("Error in getSubscriptionHistoryFromStripe:", error);
       throw error;
     }
   }
+
 
   async getArtistByName(username: string): Promise<IUser | null> {
 

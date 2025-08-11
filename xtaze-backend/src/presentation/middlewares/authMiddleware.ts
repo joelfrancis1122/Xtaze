@@ -42,6 +42,7 @@ const authenticateToken = (req: AuthenticatedRequest, res: Response, next: NextF
 export const authenticateUser = (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
   try {
     authenticateToken(req, res, () => {
+      console.log(req.user?.role,"odi")
       if (req.user?.role !== "user") {
         throw new AppError("Forbidden: User role required", HttpStatus.FORBIDDEN);
       }

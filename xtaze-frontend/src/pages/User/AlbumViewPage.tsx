@@ -37,7 +37,7 @@ const UserAlbumViewPage = () => {
     handleToggleShuffle,
     handleToggleRepeat,
     handleSkipForward,
-  } = useAudioPlayback(songs as unknown as Track[]);
+  } = useAudioPlayback(songs as unknown as  Track[]);
 
   useEffect(() => {
     const fetchSongs = async () => {

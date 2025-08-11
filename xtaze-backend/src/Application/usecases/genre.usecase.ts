@@ -1,5 +1,5 @@
-// import IGenreDependencies from "../domain/IDependencies/IGenreDependencies";
 
+import { MESSAGES } from "../../domain/constants/messages";
 import { IGenre } from "../../domain/entities/IGenre";
 import { IGenreRepository } from "../../domain/repositories/IGenreRepository";
 import IGenreDependencies from "../../infrastructure/repositories/IDependencies/IGenreDependencies";
@@ -26,12 +26,12 @@ export class GenreUseCase {
     const dupe = await this._genreRepository.findDupe(name);
 
     if (dupe) {
-        return { success: false, message: "Genre exists, try another name!" };
+        return { success: false, message: MESSAGES.GENRE_EXISTS };
     }
 
     const data = await this._genreRepository.createGenre(name);
 
-    return { success: true, message: "Genre created successfully!", genre: data ?? undefined };
+    return { success: true, message: MESSAGES.GENRE_SUCCESS, genre: data ?? undefined };
 }
 
 
@@ -39,7 +39,7 @@ export class GenreUseCase {
   async toggleBlockUnblockGenre(id: string): Promise<IGenre | null> {
     const genre = await this._genreRepository.getGenreById(id);
     if (!genre) {
-      throw new Error("Genre not found");
+      throw new Error(MESSAGES.GENRE_NOTFOUND);
     }
 
     // const newStatus = genre.isBlocked==true ? false : true;
@@ -51,10 +51,10 @@ export class GenreUseCase {
   async editGenre(id: string, name: string): Promise<{ success: boolean, message: string, genre?: IGenre }> {
     const dupe = await this._genreRepository.findDupe(name)
     if (dupe) {
-      return { success: false, message: "Genre exisists try another name!" }
+      return { success: false, message: MESSAGES.GENRE_EXISTS }
     }
     const updatedGenre = await this._genreRepository.editGenre(id, name);
-    return { success: true, message: "Genre updated Successfully!", genre: updatedGenre ?? undefined }
+    return { success: true, message: MESSAGES.GENRE_UPDATE, genre: updatedGenre ?? undefined }
 
   }
 

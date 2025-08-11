@@ -13,8 +13,8 @@ import { uploadProfileCloud } from "../service/cloudinary.service";
 import { BaseRepository } from "./BaseRepository";
 
 // export default class AdminRepository implements IAdminRepository {
-export default class AdminRepository extends BaseRepository<IUser> implements IAdminRepository{
-  constructor(){
+export default class AdminRepository extends BaseRepository<IUser> implements IAdminRepository {
+  constructor() {
     super(UserModel)
   }
 
@@ -26,7 +26,7 @@ export default class AdminRepository extends BaseRepository<IUser> implements IA
       throw error
     }
   }
-  
+
   async updateVerificationStatus(status: string, feedback: string | null, id: string): Promise<IVerificationRequest | null> {
     try {
       const updatedVerification = await VerificationModel.findByIdAndUpdate(
@@ -192,6 +192,18 @@ export default class AdminRepository extends BaseRepository<IUser> implements IA
   async fetchVerification(): Promise<IVerificationRequest | null> {
     const verification = await VerificationModel.find();
     return verification as unknown as IVerificationRequest
+  }
+  async findTracks(name:string): Promise<ITrack[] | null> {
+    const tracks = await Track.find({ artists: name});
+    return tracks as unknown as ITrack[]
+  }
+  async findArtist(name: string): Promise<IUser | null> {
+    const artist = await UserModel.findOne({ username: name, role: "artist" });
+    if (artist) {
+      artist.paymentStatus = true;
+      await artist.save();
+    }
+    return artist as unknown as IUser;
   }
 
 

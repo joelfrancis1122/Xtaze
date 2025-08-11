@@ -174,6 +174,7 @@ export const fetchLikedSongs = async (userId: string, songIds: string[]): Promis
 
 // Increment Listeners
 export const incrementListeners = async (trackId: string, id: string): Promise<void> => {
+  console.log("get in")
   const data = await apiCall<{ success: boolean }>(artistApi, HTTP_METHODS.POST, "/incrementListeners", { trackId, id });
   if (!data.success) throw new Error("Failed to increment listeners");
 };

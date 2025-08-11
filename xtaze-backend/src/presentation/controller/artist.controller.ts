@@ -1,7 +1,8 @@
 import { NextFunction, Request, Response } from "express";
+import { HttpStatus } from "../../domain/constants/httpStatus";
 import IArtistUseCase from "../../domain/usecase/IArtistUseCase"
 import AppError from "../../utils/AppError";
-import { HttpStatus } from "../../domain/constants/httpStatus";
+import { MESSAGES } from "../../domain/constants/messages";
 
 interface Dependencies {
   artistUseCase: IArtistUseCase;
@@ -15,21 +16,19 @@ export default class ArtistController {
     this._artistnUseCase = dependencies.artistUseCase;
   }
 
-
-
   async login(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { email, password } = req.body;
       const response = await this._artistnUseCase.login(email, password);
 
       if (!response.success) {
-        throw new AppError(response.message || "Login failed", HttpStatus.BAD_REQUEST); // Use message from use case
+        throw new AppError(response.message || MESSAGES.LOGIN_FAILED, HttpStatus.BAD_REQUEST);
       }
       res.cookie("ArefreshToken", response.ArefreshToken, {
-        httpOnly: true, // Prevent JavaScript access
-        secure: true,   // Required for HTTPS
-        sameSite: "none", // For cross-origin
-        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+        httpOnly: true,
+        secure: true,
+        sameSite: "none",
+        maxAge: 7 * 24 * 60 * 60 * 1000,
         path: "/",
       });
       res.status(HttpStatus.OK).json(response);
@@ -38,32 +37,30 @@ export default class ArtistController {
     }
   }
 
-
   async refreshToken(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const ArefreshToken = req.cookies.ArefreshToken
+      const ArefreshToken = req.cookies.ArefreshToken;
 
-      if (!ArefreshToken) throw new AppError("Refresh token is required", HttpStatus.UNAUTHORIZED);
+      if (!ArefreshToken) throw new AppError(MESSAGES.REFRESH_TOKEN_REQUIRED, HttpStatus.UNAUTHORIZED);
       const response = await this._artistnUseCase.refresh(ArefreshToken);
 
       if (response.success && response.token && response.ArefreshToken) {
         res.cookie("ArefreshToken", response.ArefreshToken, {
-          httpOnly: true, // Prevent JavaScript access
-          secure: true,   // Required for HTTPS
-          sameSite: "none", // For cross-origin
-          maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+          httpOnly: true,
+          secure: true,
+          sameSite: "none",
+          maxAge: 7 * 24 * 60 * 60 * 1000,
           path: "/",
         });
         res.status(HttpStatus.OK).json({
           success: true,
-          message: response.message,
+          message: response.message || MESSAGES.REFRESH_SUCCESS,
           token: response.token,
         });
       } else {
         res.status(HttpStatus.UNAUTHORIZED).json(response);
       }
     } catch (error) {
-      console.error("Refresh Token Error:", error);
       next(error);
     }
   }
@@ -72,12 +69,11 @@ export default class ArtistController {
     try {
       const listArtists = await this._artistnUseCase.listArtists();
 
-      res.status(HttpStatus.OK).json({ success: true, message: "List Of Artists", data: listArtists });
+      res.status(HttpStatus.OK).json({ success: true, message: MESSAGES.LIST_OF_ARTISTS, data: listArtists });
     } catch (error) {
       next(error);
     }
   }
-
 
   async getAllTracksArtist(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
@@ -87,22 +83,24 @@ export default class ArtistController {
       if (userId) {
         tracks = await this._artistnUseCase.listArtistReleases(userId as string);
       }
-      res.status(HttpStatus.OK).json({ success: true, message: "List Of Artists", tracks });
+      res.status(HttpStatus.OK).json({ success: true, message: MESSAGES.ARTIST_TRACKS_LIST_SUCCESS, tracks });
     } catch (error) {
       next(error);
     }
   }
+
   async updateTrackByArtist(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { TrackId } = req.query;
       const { title, artists, genre, album } = req.body;
       if (!TrackId) {
-        res.status(HttpStatus.BAD_REQUEST).json({ success: false, message: "Track ID is required" });
+        res.status(HttpStatus.BAD_REQUEST).json({ success: false, message: MESSAGES.TRACK_ID_REQUIRED });
+        return;
       }
 
       const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
-      const songFile = files?.['fileUrl']?.[0];
-      const imageFile = files?.['img']?.[0];
+      const songFile = files?.["fileUrl"]?.[0];
+      const imageFile = files?.["img"]?.[0];
 
       const genreArray = genre ? genre.split(",").map((g: string) => g.trim()) : [];
       const artistArray = artists ? artists.split(",").map((g: string) => g.trim()) : [];
@@ -117,20 +115,18 @@ export default class ArtistController {
         imageFile
       );
 
-      res.status(HttpStatus.OK).json({ success: true, message: "Track updated successfully", track: updatedTrack });
-
+      res.status(HttpStatus.OK).json({ success: true, message: MESSAGES.TRACK_UPDATED, track: updatedTrack });
     } catch (error) {
       next(error);
     }
   }
 
-
   async incrementListeners(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { trackId, id } = req.body;
-      const track = await this._artistnUseCase.increment(trackId as string, id as string);
+      await this._artistnUseCase.increment(trackId as string, id as string);
 
-      res.status(HttpStatus.OK).json({ success: true, message: "List Of Artists" });
+      res.status(HttpStatus.OK).json({ success: true, message: MESSAGES.LISTENER_INCREMENT_SUCCESS });
     } catch (error) {
       next(error);
     }
@@ -138,12 +134,10 @@ export default class ArtistController {
 
   async uploadTracks(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      // Validate that files exist
       if (!req.files || !("file" in req.files) || !("image" in req.files)) {
-        throw new AppError("Both song and image must be uploaded", HttpStatus.BAD_REQUEST);
+        throw new AppError(MESSAGES.SONG_AND_IMAGE_REQUIRED, HttpStatus.BAD_REQUEST);
       }
 
-      // Extract request data
       const { songName, artist, genre, albumId } = req.body;
       const songFile = (req.files as { [fieldname: string]: Express.Multer.File[] }).file[0];
       const imageFile = (req.files as { [fieldname: string]: Express.Multer.File[] }).image[0];
@@ -153,100 +147,92 @@ export default class ArtistController {
 
       const track = await this._artistnUseCase.trackUpload(songName, artistArray, genreArray, albumId, songFile, imageFile);
       res.status(HttpStatus.CREATED).json({
-        message: "Track uploaded successfully!",
+        message: MESSAGES.TRACK_UPLOAD_SUCCESS,
         track,
       });
     } catch (error) {
-      console.error("Error uploading track:", error);
-      next(error); // Pass error to middleware
+      next(error);
     }
   }
 
   async allAlbums(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const { artistId } = req.query
+      const { artistId } = req.query;
       const data = await this._artistnUseCase.allAlbums(artistId as string);
-      res.status(HttpStatus.OK).json({ data: data });
+      res.status(HttpStatus.OK).json({ message: MESSAGES.ALBUMS_FETCH_SUCCESS, data });
     } catch (error: unknown) {
-      console.error("Error in all albums controller:", error);
-      res.status(HttpStatus.NOT_FOUND).json({ message: (error as Error).message || "Internal server error" });
+      res.status(HttpStatus.NOT_FOUND).json({ message: (error as Error).message || MESSAGES.REFRESH_FAILED });
       next(error);
     }
   }
+
   async albumsongs(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const { albumId } = req.query
+      const { albumId } = req.query;
       const data = await this._artistnUseCase.albumsongs(albumId as string);
-     res.status(HttpStatus.OK).json({ data: data });
+      res.status(HttpStatus.OK).json({ message: MESSAGES.ALBUM_SONGS_FETCH_SUCCESS, data });
     } catch (error: unknown) {
-      console.error("Error in all albums controller:", error);
-      res.status(HttpStatus.NOT_FOUND).json({ message: (error as Error).message || "Internal server error" });
+      res.status(HttpStatus.NOT_FOUND).json({ message: (error as Error).message || MESSAGES.REFRESH_FAILED });
       next(error);
     }
   }
 
   async uploadAlbums(req: Request, res: Response, next: NextFunction): Promise<void> {
-  try {
-    const { artistId, name, description } = req.body;
-    const songFile = (req.files as { [fieldname: string]: Express.Multer.File[] }).coverImage[0];
-    const albums = await this._artistnUseCase.uploadAlbums(artistId as string,name,description,songFile);
-    res.status(HttpStatus.CREATED).json({
-      message: "Albums uploaded successfully",
-      data: albums,
-    });
-  } catch (error: unknown) {
-    console.error("Error in all albums controller:", error);
-    res.status(HttpStatus.NOT_FOUND).json({ message: (error as Error).message || "Internal server error" });
-    next(error);
-  }
-}
-
-
-
-  async statsOfArtist(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const { userId } = req.query
-      const data = await this._artistnUseCase.statsOfArtist(userId as string);
-      res.status(HttpStatus.OK).json({ data: data });
+      const { artistId, name, description } = req.body;
+      const songFile = (req.files as { [fieldname: string]: Express.Multer.File[] }).coverImage[0];
+      const albums = await this._artistnUseCase.uploadAlbums(artistId as string, name, description, songFile);
+      res.status(HttpStatus.CREATED).json({
+        message: MESSAGES.ALBUMS_UPLOAD_SUCCESS,
+        data: albums,
+      });
     } catch (error: unknown) {
-      console.error("Error in getSongImprovements controller:", error);
-      res.status(HttpStatus.NOT_FOUND).json({ message: (error as Error).message || "Internal server error" });
+      res.status(HttpStatus.NOT_FOUND).json({ message: (error as Error).message || MESSAGES.REFRESH_FAILED });
       next(error);
     }
   }
+
+  async statsOfArtist(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { userId } = req.query;
+      const data = await this._artistnUseCase.statsOfArtist(userId as string);
+      res.status(HttpStatus.OK).json({ message: MESSAGES.ARTIST_STATS_FETCH_SUCCESS, data });
+    } catch (error: unknown) {
+      res.status(HttpStatus.NOT_FOUND).json({ message: (error as Error).message || MESSAGES.REFRESH_FAILED });
+      next(error);
+    }
+  }
+
   async saveCard(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const { artistId, paymentMethodId } = req.body
-      const data = await this._artistnUseCase.saveCard(artistId, paymentMethodId);
-      res.status(HttpStatus.OK).json({ success: true });
+      const { artistId, paymentMethodId } = req.body;
+      await this._artistnUseCase.saveCard(artistId, paymentMethodId);
+      res.status(HttpStatus.OK).json({ success: true, message: MESSAGES.CARD_SAVE_SUCCESS });
     } catch (error: unknown) {
-      console.error("Error in getSongImprovements controller:", error);
-      res.status(HttpStatus.NOT_FOUND).json({ message: (error as Error).message || "Internal server error" });
+      res.status(HttpStatus.NOT_FOUND).json({ message: (error as Error).message || MESSAGES.REFRESH_FAILED });
       next(error);
     }
   }
 
   async checkcard(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const { userId } = req.query
+      const { userId } = req.query;
       const data = await this._artistnUseCase.checkcard(userId as string);
-      res.status(HttpStatus.OK).json({ data: data });
+      res.status(HttpStatus.OK).json({ message: MESSAGES.CARD_STATUS_FETCH_SUCCESS, data });
     } catch (error: unknown) {
-      console.error("Error in getSongImprovements controller:", error);
-      res.status(HttpStatus.NOT_FOUND).json({ message: (error as Error).message || "Internal server error" });
+      res.status(HttpStatus.NOT_FOUND).json({ message: (error as Error).message || MESSAGES.REFRESH_FAILED });
       next(error);
     }
   }
 
   async usernameUpdate(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const userId = req.query.id
-      const username = req.body.username
+      const userId = req.query.id;
+      const username = req.body.username;
 
       const data = await this._artistnUseCase.usernameUpdate(userId as string, username);
-      res.status(HttpStatus.OK).json({ data: data });
+      res.status(HttpStatus.OK).json({ message: MESSAGES.USERNAME_UPDATE_SUCCESS, data });
     } catch (error: unknown) {
-      console.error("Error in getUsers controller:", error);
       next(error);
     }
   }
@@ -255,34 +241,31 @@ export default class ArtistController {
     const { artistId } = req.query;
     try {
       const verificationStatus = await this._artistnUseCase.getVerificationStatus(artistId as string);
-      res.status(HttpStatus.OK).json({ success: true, data: verificationStatus });
+      res.status(HttpStatus.OK).json({ success: true, message: MESSAGES.VERIFICATION_STATUS_FETCH_SUCCESS, data: verificationStatus });
     } catch (error: unknown) {
-      console.error("Error in getVerificationStatusController:", error);
-      res.status(HttpStatus.NOT_FOUND).json({ message: (error as Error).message || "failed to fetch verification status" });
+      res.status(HttpStatus.NOT_FOUND).json({ message: (error as Error).message || MESSAGES.REFRESH_FAILED });
     }
   }
+
   async requestVerification(req: Request, res: Response, next: NextFunction): Promise<void> {
     const { artistId } = req.body;
 
     let imageFile: Express.Multer.File | undefined;
 
     if (req.files && !Array.isArray(req.files)) {
-      const imageFiles = req.files['idProof'];
+      const imageFiles = req.files["idProof"];
       imageFile = imageFiles?.[0];
     }
     try {
       if (!artistId || !imageFile) {
-        throw new Error("Artist ID or image file is missing.");
+        throw new Error(MESSAGES.ARTIST_ID_OR_IMAGE_MISSING);
       }
 
+      await this._artistnUseCase.requestVerification(artistId, imageFile);
 
-      const verificationStatus = await this._artistnUseCase.requestVerification(artistId, imageFile);
-
-      res.status(HttpStatus.OK).json({ success: true, message: "Verification request processed." });
+      res.status(HttpStatus.OK).json({ success: true, message: MESSAGES.VERIFICATION_REQUEST_PROCESSED });
     } catch (error: unknown) {
-      console.error("Error in requestVerification:", error);
-      res.status(HttpStatus.NOT_FOUND).json({ success: false, message: (error as Error).message || "Failed to process verification request." });
+      res.status(HttpStatus.NOT_FOUND).json({ success: false, message: (error as Error).message || MESSAGES.REFRESH_FAILED });
     }
   }
-
 }

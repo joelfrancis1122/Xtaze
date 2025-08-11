@@ -10,8 +10,7 @@ import { ICoupon } from "../../domain/entities/ICoupon";
 import AppError from "../../utils/AppError";
 import { MusicMonetization } from "../../domain/entities/IMonetization";
 import { IVerificationRequest } from "../../domain/entities/IVeridicationRequest";
-import UserModel from "../../infrastructure/db/models/UserModel";
-import { Track } from "../../infrastructure/db/models/TrackModel";
+import { MESSAGES } from "../../domain/constants/messages";
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2023-08-16" });
 
 dotenv.config();
@@ -41,21 +40,21 @@ export default class AdminUseCase {
   async login(email: string, password: string): Promise<{ success: boolean; message: string; token?: string; admin?: IUser }> {
     const admin = await this._adminRepository.findByEmail(email);
     if (!admin) {
-      return { success: false, message: "User not found!" };
+      return { success: false, message: MESSAGES.USER_NOT_FOUND };
     }
-    if (admin.role !== "admin") {
-      return { success: false, message: "Only admins are allowed to login!" };
+    if (admin.role !== MESSAGES.ADMIN) {
+      return { success: false, message: MESSAGES.ONLY_ADMIN };
     }
 
     const isPasswordValid = await this._passwordService.comparePassword(password, admin.password);
     if (!isPasswordValid) {
-      return { success: false, message: "Invalid credentials!" };
+      return { success: false, message: MESSAGES.LOGIN_FAILED};
     }
-    const token = jwt.sign({ userId: admin._id, email: admin.email, role: "admin" }, process.env.JWT_SECRET!, { expiresIn: "7d" });
+    const token = jwt.sign({ userId: admin._id, email: admin.email, role: MESSAGES.ADMIN }, process.env.JWT_SECRET!, { expiresIn: "7d" });
 
     return {
       success: true,
-      message: "Login successful!",
+      message: MESSAGES.LOGIN_SUCCESS,
       token,
       admin
     };
@@ -64,7 +63,7 @@ export default class AdminUseCase {
   async toggleBlockUnblockArtist(id: string): Promise<IUser | null> {
     const artist = await this._adminRepository.getArtistById(id);
     if (!artist) {
-      throw new Error("Artist not found");
+      throw new Error(MESSAGES.ARTIST_NOTFOUND);
     }
     const newStatus = !artist.isActive;
 
@@ -105,46 +104,46 @@ export default class AdminUseCase {
 
   async updateCoupon(couponId: string, couponData: ICoupon): Promise<ICoupon | null> {
     if (!couponId) {
-      throw new Error("Coupon ID is required");
+      throw new Error(MESSAGES.MISSING_CRED);
     }
 
     // Validation for provided fields
     if (couponData.code && !couponData.code.trim()) {
-      throw new Error("Coupon code cannot be empty");
+      throw new Error(MESSAGES.COUPON_CODE_EMPTY);
     }
     if (couponData.discountAmount !== undefined) {
       if (couponData.discountAmount < 0) {
-        throw new Error("Discount amount must be 0 or more");
+        throw new Error(MESSAGES.DISCOUNT_AMOUNT_MIN);
       }
       if (couponData.discountAmount > 100) {
-        throw new Error("Discount cannot exceed 100%");
+        throw new Error(MESSAGES.DISCOUNT_AMOUNT_MAX);
       }
     }
     if (couponData.expires) {
       const expiresDate = new Date(couponData.expires);
       if (expiresDate < new Date()) {
-        throw new Error("Expiration date must be future");
+        throw new Error(MESSAGES.EXPIRATION_FUTURE);
       }
       couponData.expires = expiresDate.toISOString(); // Normalize to string
     }
     if (couponData.maxUses !== undefined && couponData.maxUses < 0) {
-      throw new Error("Max uses must be 0 or more");
+      throw new Error(MESSAGES.MAX_USES_MIN);
     }
 
     // Add status: "active" to the update data
     const updatedCouponData: ICoupon = {
       ...couponData,
-      status: "active", // Always set to active
+      status: MESSAGES.ACTIVE, // Always set to active
     };
 
     try {
       const updatedCoupon = await this._adminRepository.updateCoupon(couponId, updatedCouponData);
       if (!updatedCoupon) {
-        throw new Error("Coupon not found");
+        throw new Error(MESSAGES.COUPON_NOT_FOUND);
       }
       return updatedCoupon;
     } catch (error: unknown) {
-      throw new Error((error as Error).message || "Failed to update coupon");
+      throw new Error((error as Error).message );
     }
   }
 
@@ -173,8 +172,7 @@ export default class AdminUseCase {
 
       return { product, price: priceObj };
     } catch (error: unknown) {
-      console.error("Error in UserUseCase.createPlan:", error);
-      throw new AppError("Failed to create subscription plan", 500);
+      throw new AppError(MESSAGES.CREATE_PLAN_FAILED, 500);
     }
   }
   async getPlans(): Promise<{ product: Stripe.Product; price: Stripe.Price }[]> {
@@ -190,8 +188,7 @@ export default class AdminUseCase {
 
       return plans;
     } catch (error: unknown) {
-      console.error("Error in UserUseCase.getPlans:", error);
-      throw new AppError("Failed to fetch subscription plans", 500);
+      throw new AppError(MESSAGES.FETCH_PLANS_FAILED, 500);
     }
   }
   async archivePlan(productId: string): Promise<Stripe.Product> {
@@ -202,11 +199,10 @@ export default class AdminUseCase {
 
       return product;
     } catch (error: any) {
-      console.error("Error in UserUseCase.archivePlan:", error);
-      if (error.type === "StripeInvalidRequestError" && error.code === "resource_missing") {
-        throw new AppError("Product not found", 404);
+      if (error.type === MESSAGES.STRIPE_INVALID && error.code === MESSAGES.ER_CODE_MISSING) {
+        throw new AppError(MESSAGES.PRODUCT_NOT_FOUND, 404);
       }
-      throw new AppError("Failed to archive subscription plan", 500);
+      throw new AppError(MESSAGES.ARCHIVE_PLAN_FAILED, 500);
     }
   }
   async updatePlan(
@@ -250,11 +246,10 @@ export default class AdminUseCase {
 
       return { product, price: activePrice! };
     } catch (error: any) {
-      console.error("Error in UserUseCase.updatePlan:", error);
-      if (error.type === "StripeInvalidRequestError" && error.code === "resource_missing") { 
-        throw new AppError("Product not found", 404);
+      if (error.type === MESSAGES.STRIPE_INVALID && error.code === MESSAGES.ER_CODE_MISSING) { 
+        throw new AppError(MESSAGES.PRODUCT_NOT_FOUND, 404);
       }
-      throw new AppError("Failed to update subscription plan", 500);
+      throw new AppError(MESSAGES.SUBSCRIPTION_FAILED, 500);
     }
   }
   async createCoupon(
@@ -266,33 +261,33 @@ export default class AdminUseCase {
   ): Promise<ICoupon | null> {
     // Validation
     if (!code || discountAmount === undefined || !expires || maxUses === undefined) {
-      throw new Error("All fields (code, discountType, discountAmount, expires, maxUses) are required");
+      throw new Error(MESSAGES.CREATE_COUPON_ALL_REQUIRED);
     }
 
 
 
-    if (typeof discountAmount !== "number" || discountAmount < 0) {
-      throw new Error("discountAmount must be a non-negative number");
+    if (typeof discountAmount !== MESSAGES.NUMBER|| discountAmount < 0) {
+      throw new Error(MESSAGES.DISCOUNT_AMOUNT_INVALID);
     }
 
-    if (typeof maxUses !== "number" || maxUses < 0) {
-      throw new Error("maxUses must be a non-negative number");
+    if (typeof maxUses !== MESSAGES.NUMBER|| maxUses < 0) {
+      throw new Error(MESSAGES.MAX_USES_INVALID);
     }
 
 
 
     if (expires && new Date(expires) < new Date()) {
-      throw new Error("Expiration date must be future");
+      throw new Error(MESSAGES.EXPIRATION_FUTURE);
     }
 
-    if (typeof uses !== "number" || uses < 0) {
-      throw new Error("uses must be a non-negative number");
+    if (typeof uses !== MESSAGES.NUMBER|| uses < 0) {
+      throw new Error(MESSAGES.USES_INVALID);
     }
     const couponData = {
       code,
       discountAmount,
       expires: expires.toISOString(),
-      status: "active",
+      status: MESSAGES.ACTIVE,
       maxUses,
       uses,
     };
@@ -309,14 +304,14 @@ export default class AdminUseCase {
 
 
   async verifyCoupon(code: string): Promise<ICoupon> {
-    if (!code) throw new Error("Coupon code is required");
+    if (!code) throw new Error(MESSAGES.COUPON_CODE_REQUIRED);
     const coupon = await this._adminRepository.findCouponByCode(code);
-    if (!coupon) throw new Error("Invalid coupon");
+    if (!coupon) throw new Error(MESSAGES.INVALID_COUPON);
     if (!coupon.uses) {
       coupon.uses = 0
     }
-    if (coupon.status !== "active" || coupon.uses >= coupon.maxUses || new Date(coupon.expires) < new Date()) {
-      throw new Error("Coupon is expired");
+    if (coupon.status !== MESSAGES.ACTIVE || coupon.uses >= coupon.maxUses || new Date(coupon.expires) < new Date()) {
+      throw new Error(MESSAGES.COUPON_EXPIRED);
     }
     return coupon;
   }
@@ -348,15 +343,15 @@ export default class AdminUseCase {
 
   async artistPayout(artistName: string): Promise<{ success: boolean; sessionUrl: string }> {
     try {
-      const artist = await UserModel.findOne({ username: artistName, role: "artist" });
+      const artist = await this._adminRepository.findArtist(artistName as string)
      
-      if (!artist) throw new Error("Artist not found");
+      if (!artist) throw new Error(MESSAGES.ARTIST_NOTFOUND);
 
       const paymentMethodId = artist.stripePaymentMethodId;
-      if (!paymentMethodId) throw new Error("Artist has no payment method linked");
+      if (!paymentMethodId) throw new Error(MESSAGES.ARTIST_NO_PAYMENT_METHOD);
 
-      const tracks = await Track.find({ artists: artistName });
-      if (!tracks.length) throw new Error("No tracks found for artist");
+      const tracks = await this._adminRepository.findTracks(artistName as string)
+      if (!tracks) throw new Error(MESSAGES.NO_TRACKS_FOUND);
 
       const revenuePerPlay = 0.50;
       const currentMonth = new Date().toISOString().slice(0, 7);
@@ -365,12 +360,9 @@ export default class AdminUseCase {
         return sum + monthlyPlays * revenuePerPlay;
       }, 0);
 
-      if (monthlyRevenue <= 0) throw new Error("No revenue to payout for this month");
+      if (monthlyRevenue <= 0) throw new Error(MESSAGES.NO_REVENUE);
 
       const amount = Math.round(monthlyRevenue * 100); 
-      artist.paymentStatus = true;
-      await artist.save()
-
       const session = await stripe.checkout.sessions.create({
         payment_method_types: ["card"],
         line_items: [
@@ -381,22 +373,20 @@ export default class AdminUseCase {
                 name: `Payout for ${artistName}`,
                 description: `Earnings for ${currentMonth}`,
               },
-              unit_amount: amount, // Amount in cents
+              unit_amount: amount, 
             },
             quantity: 1,
           },
         ],
         mode: "payment",
-        success_url: "https://xtaze.fun/admin/payoutSuccess?artistName=" + encodeURIComponent(artistName),
-        cancel_url: "https://xtaze.fun/admin/payoutCancel",
+        success_url: MESSAGES.FINAL_SUCCESS_URL+ encodeURIComponent(artistName),
+        cancel_url: MESSAGES.FINAL_CANCEL_URL,
         metadata: { artistName, amount: amount.toString() }, // Track artist details
       });
 
-      console.log(`Checkout Session created for ${artistName}, URL: ${session.url}`);
-      return { success: true, sessionUrl: session.url! }; // Return URL for redirect
+      return { success: true, sessionUrl: session.url! }; 
     } catch (error: unknown) {
-      console.error("Error in artistPayout:", error);
-      throw new Error((error as Error).message || "Failed to create payout session");
+      throw new Error((error as Error).message );
     }
   }
 }

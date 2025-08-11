@@ -1,8 +1,9 @@
 import { NextFunction, Request, Response } from "express";
+import { HttpStatus } from "../../domain/constants/httpStatus";
 import IGenreUseCase from "../../domain/usecase/IGenreUseCase";
 import IuserUseCase from "../../domain/usecase/IUserUseCase";
-import { HttpStatus } from "../../domain/constants/httpStatus";
 import AppError from "../../utils/AppError";
+import { MESSAGES } from "../../domain/constants/messages";
 
 
 interface Dependencies {
@@ -23,7 +24,7 @@ export default class GenreController {
   async listGenre(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const listGenre = await this._genreUseCase.listGenre();
-      res.status(HttpStatus.OK).json({ success: true, message: "List Of Genre", data: listGenre });
+      res.status(HttpStatus.OK).json({ success: true, message:MESSAGES.GENRE_LIST, data: listGenre });
     } catch (error) {
       next(error);
     }
@@ -42,7 +43,7 @@ export default class GenreController {
 
       res.status(HttpStatus.OK).json({
         success: true,
-        message: "List of Active Genres",
+        message: MESSAGES.GENRE_LIST,
         data: listActiveGenres,
         artist,
       });
@@ -58,12 +59,11 @@ export default class GenreController {
 
       const genre = await this._genreUseCase.createGenre(name);
       if (!genre.success) {
-        throw new AppError(genre.message || "Failed to create genre", HttpStatus.BAD_REQUEST); // Use message from use case
+        throw new AppError(genre.message, HttpStatus.BAD_REQUEST); // Use message from use case
       }
 
       res.status(HttpStatus.CREATED).json({ success: true, message: genre.message, data: genre.genre });
     } catch (error) {
-      console.error("❌ Error in createGenre:", error);
       next(error);
     }
   }
@@ -73,7 +73,7 @@ export default class GenreController {
       const { id } = req.params;
 
       const updatedGenre = await this._genreUseCase.toggleBlockUnblockGenre(id);
-      res.status(HttpStatus.OK).json({ success: true, message: "Genre status updated", data: updatedGenre });
+      res.status(HttpStatus.OK).json({ success: true, message: MESSAGES.GENRE_UPDATE, data: updatedGenre });
     } catch (error) {
       next(error);
     }
@@ -87,10 +87,10 @@ export default class GenreController {
       const editedGenre = await this._genreUseCase.editGenre(id, name);
 
       if (typeof editedGenre === "string") {
-        throw new AppError(editedGenre, HttpStatus.BAD_REQUEST); // Use message from use case
+        throw new AppError(editedGenre, HttpStatus.BAD_REQUEST); 
       }
 
-      res.status(HttpStatus.OK).json({ success: true, message: "Genre status updated", data: editedGenre });
+      res.status(HttpStatus.OK).json({ success: true, message:MESSAGES.GENRE_UPDATE, data: editedGenre });
     } catch (error) {
       console.log(error);
       next(error); 

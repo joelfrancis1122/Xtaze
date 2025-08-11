@@ -52,7 +52,7 @@ export default class ArtistUseCase {
       return { success: false, message: MESSAGES.LOGIN_FAILED };
     }
     const token = jwt.sign(
-      { userId: artist._id, email: artist.email, role: "artist" },
+      { userId: artist._id, email: artist.email, role: MESSAGES.ARTIST },
       process.env.JWT_SECRET!,
       { expiresIn: "30M" } // Short-lived access token
     );
@@ -63,7 +63,7 @@ export default class ArtistUseCase {
     );
     return {
       success: true,
-      message: "Login successful!",
+      message: MESSAGES.LOGIN_SUCCESS,
       token,
       ArefreshToken,
       artist
@@ -73,11 +73,11 @@ export default class ArtistUseCase {
     try {
       const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET!) as { userId: string };
       const user = await this._userRepository.findById(decoded.userId);
-      if (!user) return { success: false, message: "User not found" };
-      if (user.isActive === false) return { success: false, message: "Your account is suspended!" };
+      if (!user) return { success: false, message: MESSAGES.USER_NOT_FOUND };
+      if (user.isActive === false) return { success: false, message: MESSAGES.ACCOUNT_SUSPENDED };
 
       const newToken = jwt.sign(
-        { userId: user._id, email: user.email, role: "artist" },
+        { userId: user._id, email: user.email, role: MESSAGES.ARTIST},
         process.env.JWT_SECRET!,
         { expiresIn: "30m" }
       );
@@ -94,7 +94,6 @@ export default class ArtistUseCase {
         ArefreshToken: newRefreshToken,
       };
     } catch (error) {
-      console.error("Refresh Token Error:", error);
       return { success: false, message: MESSAGES.INVALID_REFRESH_TOKEN };
     }
   }
