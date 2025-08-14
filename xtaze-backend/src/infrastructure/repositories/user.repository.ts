@@ -17,16 +17,23 @@ export default class UserRepository extends BaseRepository<IUser> implements IUs
     super(UserModel);
   }
 
+  // async add(userData: IUser): Promise<IUser> {
+  //   try {
+  //     const user = await UserModel.create(userData)
+  //     return user as unknown as IUser
+  //   } catch (error) {
+  //     throw error
+  //   }
+  // }
+
   async add(userData: IUser): Promise<IUser> {
     try {
-      const user = await UserModel.create(userData)
-      return user as unknown as IUser
-    } catch (error) {
-      throw error
+      return await this.create(userData);
+    } catch (err) {
+      throw err
     }
   }
- 
-   
+
   async resetPaymentStatus(): Promise<void> {
     try {
       const result = await UserModel.updateMany(
@@ -42,9 +49,9 @@ export default class UserRepository extends BaseRepository<IUser> implements IUs
   async updatePassword(user: IUser): Promise<IUser> {
     try {
       const updatedUser = await UserModel.findByIdAndUpdate(
-        user._id, // Find user by ID
-        { $set: user }, // Update with new data
-        { new: true, runValidators: true } // Return updated document & validate
+        user._id, 
+        { $set: user }, 
+        { new: true, runValidators: true } 
       );
       return updatedUser as unknown as IUser
 
@@ -91,7 +98,6 @@ export default class UserRepository extends BaseRepository<IUser> implements IUs
         { profilePic: pic },
         { new: true, runValidators: true }
       ).lean();
-
       return updatedUser as IUser | null;
     } catch (error) {
       console.log(error);
@@ -170,16 +176,16 @@ export default class UserRepository extends BaseRepository<IUser> implements IUs
   }
 
 
-    async allAlbums(): Promise<IAlbum[] | null> {
-      const albumDocs = await AlbumModel.find().lean();
-      if (!albumDocs) {
-        return null;
-      }
-      return albumDocs as unknown as IAlbum[];
+  async allAlbums(): Promise<IAlbum[] | null> {
+    const albumDocs = await AlbumModel.find().lean();
+    if (!albumDocs) {
+      return null;
     }
+    return albumDocs as unknown as IAlbum[];
+  }
 
-    async albumView(albumId:string): Promise<IAlbum | null> {
-   const album = await AlbumModel.findOne({ _id: albumId });
+  async albumView(albumId: string): Promise<IAlbum | null> {
+    const album = await AlbumModel.findOne({ _id: albumId });
     if (!album) {
       return null;
     }

@@ -480,7 +480,7 @@ export default class UserController {
   async becomeArtist(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { id } = req.body
-
+      console.log("came")
       const updated = await this._userUseCase.becomeArtist(id as string);
       res.status(HttpStatus.OK).json({ data: updated });
     } catch (error: unknown) {

@@ -82,6 +82,7 @@ const apiCall = async <T>(
     throw error;
   }
 };
+
 export const checkUsername = async (username: string): Promise<boolean> => {
   const data = await apiCall<{ success: boolean; available: boolean }>(userApi, HTTP_METHODS.POST, "/checkUsername", { userName: username });
   if (!data.success) throw new Error("Failed to check username");
@@ -278,7 +279,7 @@ export const updatePlaylistName = async (id: string, playlistName: string): Prom
 // Become Artist
 export const becomeArtist = async (id: string): Promise<UserSignupData> => {
   const data = await apiCall<{ success: boolean; data: UserSignupData }>(userApi, HTTP_METHODS.PUT, "/becomeArtist", { id });
-  if (!data.success) throw new Error("Failed to become artist");
+
   return data.data;
 };
 

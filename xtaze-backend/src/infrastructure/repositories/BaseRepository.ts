@@ -2,7 +2,7 @@ import { Model } from "mongoose";
 import { IBaseRepository } from "../../domain/repositories/IBaseRepository";
 
 export class BaseRepository<T> implements IBaseRepository<T> {
-  protected model: Model<any>; // Not Model<T>, to avoid conflicts
+  protected model: Model<any>; 
 
   constructor(model: Model<any>) {
     this.model = model;
