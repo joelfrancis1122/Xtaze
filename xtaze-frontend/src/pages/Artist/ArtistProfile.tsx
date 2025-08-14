@@ -11,7 +11,7 @@ import { saveArtistData } from "../../redux/artistSlice";
 import { Button } from "../../components/ui/button";
 import { Card } from "../../components/ui/card";
 import { getVerificationStatus, requestVerification, updateArtistBanner, updateArtistBio, updateArtistUsername, uploadProfileImage } from "../../services/artistService";
-import { fetchArtistTracks } from "../../services/userService";
+import { fetchArtistTracks } from "../../services/adminService";
 
 interface Track {
   _id: string;

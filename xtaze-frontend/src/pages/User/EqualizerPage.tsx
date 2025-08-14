@@ -44,7 +44,6 @@ export default function EqualizerPage() {
     jazz: [3, 3, 2, 1, 0, 1, 2, 2, 1, 0],
   };
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-
   const [equalizerValues, setEqualizerValues] = useState(() => {
     const saved = localStorage.getItem("equalizerValues");
     return saved ? JSON.parse(saved) : bands.map((band) => band.defaultValue);
@@ -56,14 +55,13 @@ export default function EqualizerPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const { currentTrack, isPlaying, isShuffled, isRepeating } = useSelector((state: RootState) => state.audio);
-
   const {
     handlePlay: baseHandlePlay,
     handleSkipBack,
     handleSkipForward,
     handleToggleShuffle,
     handleToggleRepeat,
-  } = useAudioPlayback([]); // Pass an empty array since we're not fetching tracks here
+  } = useAudioPlayback([]);
 
   const toggleModal = () => {
     setIsModalOpen((prevState) => !prevState);
@@ -85,9 +83,9 @@ export default function EqualizerPage() {
 
     audio.crossOrigin = "anonymous";
     if (!audio.src && currentTrack) {
-      audio.src = currentTrack.fileUrl; 
+      audio.src = currentTrack.fileUrl;
     } else if (!audio.src) {
-      audio.src = "/music/test.mp3"; 
+      audio.src = "/music/test.mp3";
       audio.loop = true;
     }
 
@@ -103,11 +101,8 @@ export default function EqualizerPage() {
     updateEqualizer(equalizerValues);
   }, [equalizerValues]);
 
-
-
-
   useEffect(() => {
-    localStorage.setItem("activePreset", activePreset);
+    localStorage.setItem("activePreset", JSON.stringify(activePreset));
   }, [activePreset]);
 
   const applyPreset = (presetName: keyof typeof presets | "custom") => {
@@ -127,21 +122,24 @@ export default function EqualizerPage() {
     setActivePreset("custom");
   };
 
-
-
   const resetEqualizerSettings = () => {
     setEqualizerValues(presets.flat);
     setActivePreset("flat");
     resetEqualizer();
   };
 
-  // ApexCharts configuration with proper typing
   const chartOptions: ApexCharts.ApexOptions = {
     chart: {
       type: "area",
       height: 130,
       background: "#000000",
       toolbar: { show: false },
+      zoom: { enabled: false }, // Disable zoom
+      selection: { enabled: false }, // Disable selection
+      events: {
+        click: undefined, // Disable click events
+        mouseMove: undefined, // Disable mouse move events
+      },
     },
     stroke: {
       curve: "smooth",
@@ -241,7 +239,7 @@ export default function EqualizerPage() {
                 ))}
               </div>
             </div>
-            <div className="w-full h-[150px] mb-10 bg-var(--foreground) !important rounded-lg border border-[#1f2937] relative">
+            <div className="w-full h-[150px] mb-10 bg-var(--foreground) !important rounded-lg border border-[#1f2937] relative" style={{ touchAction: "none" }}>
               <div className="p-2 pb-6">
                 <ReactApexChart
                   options={chartOptions}

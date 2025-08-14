@@ -10,6 +10,19 @@ import { HTTP_METHODS } from "../constants/httpMethods";
 import { IAlbum } from "../pages/User/types/IAlbums";
 
 const addRefreshInterceptor = (apiInstance: any) => {
+  apiInstance.interceptors.request.use(
+    (config: any) => {
+      const token = localStorage.getItem("token");
+      if (token) {
+        config.headers = config.headers || {};
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+      return config;
+    },
+    (error: any) => Promise.reject(error)
+  );
+
+  // Response Interceptor
   apiInstance.interceptors.response.use(
     (response: { data: any; status: number; headers: any }) => {
       const newToken = response.data?.token || response.headers["authorization"]?.replace("Bearer ", "");
@@ -22,7 +35,6 @@ const addRefreshInterceptor = (apiInstance: any) => {
       const originalRequest = error.config;
       if (error.response?.status === 401 && !originalRequest._retry) {
         originalRequest._retry = true;
-
         const response = await userApi.post("/refresh", {}, { withCredentials: true });
         const newToken = response.data.token;
         if (!newToken) {

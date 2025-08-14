@@ -8,6 +8,19 @@ import { HTTP_METHODS } from "../constants/httpMethods";
 import { IAlbum } from "../pages/User/types/IAlbums";
 
 const addRefreshInterceptor = (apiInstance: any) => {
+  apiInstance.interceptors.request.use(
+    (config: any) => {
+      const token = localStorage.getItem("artistToken");
+      if (token) {
+        config.headers = config.headers || {};
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+      return config;
+    },
+    (error: any) => Promise.reject(error)
+  );
+
+  // Response Interceptor
   apiInstance.interceptors.response.use(
     (response: { data: any; status: number; headers: any }) => {
       const newToken = response.data?.token || response.headers["authorization"]?.replace("Bearer ", "");
@@ -20,18 +33,29 @@ const addRefreshInterceptor = (apiInstance: any) => {
       const originalRequest = error.config;
       if (error.response?.status === 401 && !originalRequest._retry) {
         originalRequest._retry = true;
-        console.log("Calling artist refresh token due to 401");
-
-        const response = await artistApi.post("/refresh", {}, { withCredentials: true });
-        const newToken = response.data.token;
-        if (!newToken) {
-          console.error("Artist refresh token failed, clearing auth");
+        originalRequest._retryCount = (originalRequest._retryCount || 0) + 1;
+        if (originalRequest._retryCount > 3) {
+          console.error("Max retry limit reached, clearing auth");
           localStorage.removeItem("artistToken");
-          throw new Error("Failed to refresh token");
+          throw new Error("Failed to refresh token after multiple attempts");
         }
-
-        originalRequest.headers["Authorization"] = `Bearer ${newToken}`;
-        return apiInstance(originalRequest);
+        try {
+          console.log("Calling artist refresh token due to 401");
+          const response = await artistApi.post("/refresh", {}, { withCredentials: true });
+          const newToken = response.data.token;
+          if (!newToken) {
+            console.error("Artist refresh token failed, clearing auth");
+            localStorage.removeItem("artistToken");
+            throw new Error("Failed to refresh token");
+          }
+          localStorage.setItem("artistToken", newToken);
+          originalRequest.headers["Authorization"] = `Bearer ${newToken}`;
+          return apiInstance(originalRequest);
+        } catch (refreshError) {
+          console.error("Refresh error:", refreshError);
+          localStorage.removeItem("artistToken");
+          throw refreshError;
+        }
       }
       return Promise.reject(error);
     }
@@ -64,14 +88,10 @@ const apiCall = async <T>(
   instance: any,
   method: typeof HTTP_METHODS[keyof typeof HTTP_METHODS],
   url: string,
-  data?: any,
-  token?: string
+  data?: any
 ): Promise<T> => {
   try {
-    const response = await instance[method](url, data, {
-      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-      withCredentials: true,
-    });
+    const response = await instance[method](url, data, { withCredentials: true });
     if (!response.data) throw new Error(`Failed to ${method} ${url}`);
     return response.data as T;
   } catch (error: any) {
@@ -95,9 +115,7 @@ export const fetchArtistTracks = async (artistId: string): Promise<any[]> => {
   const data = await apiCall<{ success: boolean; tracks: any[]; message?: string }>(
     artistApi,
     HTTP_METHODS.GET,
-    `/getAllTracksArtist?userId=${artistId}`,
-    undefined,
-  
+    `/getAllTracksArtist?userId=${artistId}`
   );
   if (!data.success) throw new Error(data.message || "Failed to fetch artist tracks");
   return data.tracks;
