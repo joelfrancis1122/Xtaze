@@ -8,7 +8,7 @@ import { PopularTracks } from "./adminComponents/popular-tracks"
 import { PopularArtists } from "./adminComponents/popular-artists"
 import "../../styles/zashboard.css"
 import Sidebar from "./adminComponents/aside-side"
-import { fetchArtists, fetchSubscriptionHistory, listActiveArtists } from "../../services/adminService"
+import {fetchSubscriptionHistory, listActiveArtists } from "../../services/adminService"
 
 interface Subscription {
   email: string;

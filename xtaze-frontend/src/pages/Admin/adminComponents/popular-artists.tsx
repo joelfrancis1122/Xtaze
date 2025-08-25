@@ -9,17 +9,6 @@ interface Artist {
   isActive: boolean;
 }
 
-interface PlayHistory {
-  month: string;
-  plays: number;
-}
-
-interface Track {
-  _id: string;
-  title: string;
-  listeners: string[];
-  playHistory: PlayHistory[];
-}
 
 interface ArtistWithListeners extends Artist {
   monthlyListeners: number;
