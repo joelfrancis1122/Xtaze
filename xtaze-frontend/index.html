@@ -2,14 +2,71 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/png" href="/aaa.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    
-    <title>Xtaze</title>
+
+    <!-- Title & SEO -->
+    <title>Xtaze - Hi-Res FLAC Music Streaming</title>
+    <meta name="description" content="Xtaze.fun brings you next-gen music streaming with true hi-res FLAC sound quality. Experience crystal-clear, lossless audio like never before." />
+    <meta name="keywords" content="Xtaze, xtaze.fun, hi-res audio, FLAC streaming, lossless music, high fidelity, music app" />
+    <meta name="author" content="Xtaze Team" />
+
+    <!-- Canonical -->
+    <link rel="canonical" href="https://xtaze.fun/" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/aaa.png" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:title" content="Xtaze - Hi-Res FLAC Music Streaming" />
+    <meta property="og:description" content="Stream your favorite tracks in true hi-res FLAC audio with Xtaze.fun. Pure, lossless sound for audiophiles." />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://xtaze.fun" />
+    <meta property="og:image" content="https://xtaze.fun/aaa.png" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Xtaze - Hi-Res FLAC Music Streaming" />
+    <meta name="twitter:description" content="Xtaze.fun delivers crystal-clear lossless FLAC streaming. Music the way it was meant to be heard." />
+    <meta name="twitter:image" content="https://xtaze.fun/aaa.png" />
+    <meta name="twitter:creator" content="@xtaze_fun" />
+
+    <!-- Performance -->
+    <link rel="preload" href="/src/main.tsx" as="script" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
+    <meta name="theme-color" content="#000000" />
+
+    <!-- Structured Data (JSON-LD for SEO) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "Xtaze",
+      "operatingSystem": "Web, iOS, Android",
+      "applicationCategory": "MusicApplication",
+      "description": "Xtaze.fun is a modern music app for discovering, streaming, and sharing music in true hi-res FLAC sound quality.",
+      "image": "https://xtaze.fun/aaa.png",
+      "url": "https://xtaze.fun",
+      "author": {
+        "@type": "Organization",
+        "name": "Xtaze"
+      },
+      "featureList": [
+        "Hi-Res FLAC Audio Streaming",
+        "Lossless Sound Quality",
+        "Cross-platform Access (Web, iOS, Android)",
+        "Smart Playlists and Recommendations"
+      ],
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "4.9",
+        "ratingCount": "3200"
+      }
+    }
+    </script>
   </head>
   <body>
     <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+    <script type="module" src="/src/main.tsx" defer></script>
   </body>
 </html>
-

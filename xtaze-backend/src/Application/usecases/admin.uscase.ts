@@ -4,21 +4,13 @@ import dotenv from "dotenv";
 import Stripe from "stripe";
 import { IAdminRepository } from "../../domain/repositories/IAdminRepository";
 import IPasswordService from "../../domain/service/IPasswordService";
-import { IBanner } from "../../domain/entities/IBanner";
-import IUser from "../../domain/entities/IUser";
 import { ICoupon } from "../../domain/entities/ICoupon";
 import AppError from "../../utils/AppError";
-import { MusicMonetization } from "../../domain/entities/IMonetization";
-import { IVerificationRequest } from "../../domain/entities/IVeridicationRequest";
 import { MESSAGES } from "../../domain/constants/messages";
 import { ITrack } from "../../domain/entities/ITrack";
 import TYPES from "../../domain/constants/types";
-import { IUserRepository } from "../../domain/repositories/IUserRepository";
-import IOtpService from "../../domain/service/IOtpService";
-import IEmailService from "../../domain/service/IEmailService";
 import { injectable } from "inversify";
 import { inject } from "inversify";
-import AdminRepository from "../../infrastructure/repositories/admin.repository";
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2023-08-16" });
 
 dotenv.config();
@@ -45,7 +37,7 @@ dotenv.config();
 //     });
 //   }
 
-  @injectable()
+@injectable()
 export default class UserUseCase {
   private _adminRepository: IAdminRepository
   private _passwordService: IPasswordService
@@ -55,7 +47,7 @@ export default class UserUseCase {
     @inject(TYPES.AdminRepository) adminRepository: IAdminRepository,
     @inject(TYPES.PasswordService) passwordService: IPasswordService,
   ) {
-     this._adminRepository = adminRepository
+    this._adminRepository = adminRepository
     this._passwordService = passwordService;
     this.stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
       apiVersion: "2023-08-16",
@@ -63,47 +55,35 @@ export default class UserUseCase {
   }
 
 
-  async login(email: string, password: string): Promise<{ success: boolean; message: string; token?: string; admin?: IUser }> {
-    const admin = await this._adminRepository.findByEmail(email);
-    if (!admin) {
-      return { success: false, message: MESSAGES.USER_NOT_FOUND };
-    }
-    if (admin.role !== MESSAGES.ADMIN) {
-      return { success: false, message: MESSAGES.ONLY_ADMIN };
-    }
+  async login(email: string, password: string) {
+    try{
 
-    const isPasswordValid = await this._passwordService.comparePassword(password, admin.password);
-    if (!isPasswordValid) {
-      return { success: false, message: MESSAGES.LOGIN_FAILED};
+      const admin = await this._adminRepository.findByEmail(email);
+      if (!admin) return { success: false, message: MESSAGES.USER_NOT_FOUND };
+      if (admin.role !== MESSAGES.ADMIN) return { success: false, message: MESSAGES.ONLY_ADMIN };
+      const isPasswordValid = await this._passwordService.comparePassword(password, admin.password);
+      if (!isPasswordValid) return { success: false, message: MESSAGES.LOGIN_FAILED };
+      const token = jwt.sign({ userId: admin._id, email: admin.email, role: MESSAGES.ADMIN }, process.env.JWT_SECRET!, { expiresIn: "7d" });
+      return { success: true, message: MESSAGES.LOGIN_SUCCESS, token, admin };
+    }catch(err){
+      
     }
-    const token = jwt.sign({ userId: admin._id, email: admin.email, role: MESSAGES.ADMIN }, process.env.JWT_SECRET!, { expiresIn: "7d" });
-
-    return {
-      success: true,
-      message: MESSAGES.LOGIN_SUCCESS,
-      token,
-      admin
-    };
   }
 
-  async toggleBlockUnblockArtist(id: string): Promise<IUser | null> {
+  async toggleBlockUnblockArtist(id: string) {
     const artist = await this._adminRepository.getArtistById(id);
-    if (!artist) {
-      throw new Error(MESSAGES.ARTIST_NOTFOUND);
-    }
+    if (!artist)throw new Error(MESSAGES.ARTIST_NOTFOUND);
     const newStatus = !artist.isActive;
-
     return await this._adminRepository.updateArtistStatus(id, newStatus);
   }
 
   async addBanner(title: string, description: string, action: string, isActive: boolean, createdBy: string, file: Express.Multer.File) {
-
     const addBanner = await this._adminRepository.createBanner(title, description, action, isActive, createdBy, file)
     return addBanner;
-
   }
-  
-   async getAllTracks(): Promise<ITrack[] | null> {
+
+
+  async getAllTracks() {
     try {
       const tracks = await this._adminRepository.getAllTracks();
       if (!tracks) {
@@ -116,38 +96,38 @@ export default class UserUseCase {
       throw new Error(MESSAGES.ERROR_UPDATING_PROFILE);
     }
   }
-    async listArtistReleases(userId: string): Promise<ITrack[]> {
-  
-      return await this._adminRepository.getAllTracksByArtist(userId) as ITrack[];
-  
-    }
-  async getAllBanners(): Promise<IBanner[] | null> {
+  async listArtistReleases(userId: string) {
+
+    return await this._adminRepository.getAllTracksByArtist(userId) as ITrack[];
+
+  }
+  async getAllBanners() {
     const banners = await this._adminRepository.getAllBanners()
     return banners;
 
   }
-  async deleteBanner(id: string): Promise<IBanner | null> {
+  async deleteBanner(id: string) {
     const banners = await this._adminRepository.findBanner(id)
     return banners;
 
   }
-  async updateBanner(id: string, title: string, description: string, action: string, isActive: boolean, file: Express.Multer.File): Promise<IBanner | null> {
+  async updateBanner(id: string, title: string, description: string, action: string, isActive: boolean, file: Express.Multer.File) {
     const banners = await this._adminRepository.findBannerforUpdate(id, title, description, action, isActive, file)
     return banners;
 
   }
-  async getCoupons(): Promise<ICoupon[] | null> {
+  async getCoupons() {
     const coupons = await this._adminRepository.getCoupons()
     return coupons;
   }
-  async deleteCoupon(couponId: string): Promise<ICoupon | null> {
+  async deleteCoupon(couponId: string) {
     const coupons = await this._adminRepository.deleteCoupon(couponId)
     return coupons;
   }
 
 
 
-  async updateCoupon(couponId: string, couponData: ICoupon): Promise<ICoupon | null> {
+  async updateCoupon(couponId: string, couponData: ICoupon) {
     if (!couponId) {
       throw new Error(MESSAGES.MISSING_CRED);
     }
@@ -169,16 +149,15 @@ export default class UserUseCase {
       if (expiresDate < new Date()) {
         throw new Error(MESSAGES.EXPIRATION_FUTURE);
       }
-      couponData.expires = expiresDate.toISOString(); // Normalize to string
+      couponData.expires = expiresDate.toISOString();
     }
     if (couponData.maxUses !== undefined && couponData.maxUses < 0) {
       throw new Error(MESSAGES.MAX_USES_MIN);
     }
 
-    // Add status: "active" to the update data
     const updatedCouponData: ICoupon = {
       ...couponData,
-      status: MESSAGES.ACTIVE, // Always set to active
+      status: MESSAGES.ACTIVE,
     };
 
     try {
@@ -188,7 +167,7 @@ export default class UserUseCase {
       }
       return updatedCoupon;
     } catch (error: unknown) {
-      throw new Error((error as Error).message );
+      throw new Error((error as Error).message);
     }
   }
 
@@ -197,20 +176,18 @@ export default class UserUseCase {
   async createPlan(
     name: string,
     description: string,
-    price: number, // In dollars, e.g., 10.00
+    price: number,
     interval: "month" | "year"
-  ): Promise<{ product: Stripe.Product; price: Stripe.Price }> {
+  ) {
     try {
-      // Create the product in Stripe
       const product = await this.stripe.products.create({
         name,
         description,
       });
 
-      // Create the price for the product
       const priceObj = await this.stripe.prices.create({
         product: product.id,
-        unit_amount: Math.round(price * 100), // Convert to cents, e.g., 10.00 → 1000
+        unit_amount: Math.round(price * 100), //10.00 → 1000
         currency: "usd",
         recurring: { interval },
       });
@@ -220,7 +197,7 @@ export default class UserUseCase {
       throw new AppError(MESSAGES.CREATE_PLAN_FAILED, 500);
     }
   }
-  async getPlans(): Promise<{ product: Stripe.Product; price: Stripe.Price }[]> {
+  async getPlans() {
     try {
       const products = await this.stripe.products.list({ limit: 100, active: true });
       const prices = await this.stripe.prices.list({ limit: 100 });
@@ -236,7 +213,7 @@ export default class UserUseCase {
       throw new AppError(MESSAGES.FETCH_PLANS_FAILED, 500);
     }
   }
-  async archivePlan(productId: string): Promise<Stripe.Product> {
+  async archivePlan(productId: string) {
     try {
       const product = await this.stripe.products.update(productId, {
         active: false,
@@ -256,7 +233,7 @@ export default class UserUseCase {
     description: string,
     price: number, // In dollars
     interval: "month" | "year"
-  ): Promise<{ product: Stripe.Product; price: Stripe.Price }> {
+  ) {
     try {
       // Update the product
       const product = await this.stripe.products.update(productId, {
@@ -291,7 +268,7 @@ export default class UserUseCase {
 
       return { product, price: activePrice! };
     } catch (error: any) {
-      if (error.type === MESSAGES.STRIPE_INVALID && error.code === MESSAGES.ER_CODE_MISSING) { 
+      if (error.type === MESSAGES.STRIPE_INVALID && error.code === MESSAGES.ER_CODE_MISSING) {
         throw new AppError(MESSAGES.PRODUCT_NOT_FOUND, 404);
       }
       throw new AppError(MESSAGES.SUBSCRIPTION_FAILED, 500);
@@ -303,7 +280,7 @@ export default class UserUseCase {
     expires: Date,
     maxUses: number,
     uses: number
-  ): Promise<ICoupon | null> {
+  ) {
     // Validation
     if (!code || discountAmount === undefined || !expires || maxUses === undefined) {
       throw new Error(MESSAGES.CREATE_COUPON_ALL_REQUIRED);
@@ -311,11 +288,11 @@ export default class UserUseCase {
 
 
 
-    if (typeof discountAmount !== MESSAGES.NUMBER|| discountAmount < 0) {
+    if (typeof discountAmount !== MESSAGES.NUMBER || discountAmount < 0) {
       throw new Error(MESSAGES.DISCOUNT_AMOUNT_INVALID);
     }
 
-    if (typeof maxUses !== MESSAGES.NUMBER|| maxUses < 0) {
+    if (typeof maxUses !== MESSAGES.NUMBER || maxUses < 0) {
       throw new Error(MESSAGES.MAX_USES_INVALID);
     }
 
@@ -325,7 +302,7 @@ export default class UserUseCase {
       throw new Error(MESSAGES.EXPIRATION_FUTURE);
     }
 
-    if (typeof uses !== MESSAGES.NUMBER|| uses < 0) {
+    if (typeof uses !== MESSAGES.NUMBER || uses < 0) {
       throw new Error(MESSAGES.USES_INVALID);
     }
     const couponData = {
@@ -348,7 +325,7 @@ export default class UserUseCase {
 
 
 
-  async verifyCoupon(code: string): Promise<ICoupon> {
+  async verifyCoupon(code: string) {
     if (!code) throw new Error(MESSAGES.COUPON_CODE_REQUIRED);
     const coupon = await this._adminRepository.findCouponByCode(code);
     if (!coupon) throw new Error(MESSAGES.INVALID_COUPON);
@@ -362,44 +339,44 @@ export default class UserUseCase {
   }
 
 
-  async getMusicMonetization(page: number,limit: number): Promise<{data: MusicMonetization[];pagination: {currentPage: number;totalPages: number;totalItems: number;}}> {
+  async getMusicMonetization(page: number, limit: number) {
 
-    const tracks = await this._adminRepository.getMusicMonetization(page,limit)
+    const tracks = await this._adminRepository.getMusicMonetization(page, limit)
     return tracks
   }
-  
-  
-  async getUsersByIds(userIds:string[]): Promise<IUser[]|null> {
+
+
+  async getUsersByIds(userIds: string[]) {
 
     const users = await this._adminRepository.getUsersByIds(userIds)
     return users
 
   }
-  async updateVerificationStatus(status:string,feedback: string | null,id:string) :Promise<IVerificationRequest|null> {
+  async updateVerificationStatus(status: string, feedback: string | null, id: string) {
 
-    const updated = await this._adminRepository.updateVerificationStatus(status,feedback,id)
+    const updated = await this._adminRepository.updateVerificationStatus(status, feedback, id)
     return updated
 
   }
 
-  async fetchVerification(page:number,limit:number): Promise<{data:IVerificationRequest[],pagination: { total: number; page: number; limit: number; totalPages: number }}> {
+  async fetchVerification(page: number, limit: number) {
 
-   const {data,total}= await this._adminRepository.fetchVerification(page,limit);
-      return {
-    data,
-    pagination: {
-      total,
-      page,
-      limit,
-      totalPages: Math.ceil(total / limit),
-    },
+    const { data, total } = await this._adminRepository.fetchVerification(page, limit);
+    return {
+      data,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    }
   }
-}
 
-  async artistPayout(artistName: string): Promise<{ success: boolean; sessionUrl: string }> {
+  async artistPayout(artistName: string) {
     try {
       const artist = await this._adminRepository.findArtist(artistName as string)
-     
+
       if (!artist) throw new Error(MESSAGES.ARTIST_NOTFOUND);
 
       const paymentMethodId = artist.stripePaymentMethodId;
@@ -417,7 +394,7 @@ export default class UserUseCase {
 
       if (monthlyRevenue <= 0) throw new Error(MESSAGES.NO_REVENUE);
 
-      const amount = Math.round(monthlyRevenue * 100); 
+      const amount = Math.round(monthlyRevenue * 100);
       const session = await stripe.checkout.sessions.create({
         payment_method_types: ["card"],
         line_items: [
@@ -428,24 +405,24 @@ export default class UserUseCase {
                 name: `Payout for ${artistName}`,
                 description: `Earnings for ${currentMonth}`,
               },
-              unit_amount: amount, 
+              unit_amount: amount,
             },
             quantity: 1,
           },
         ],
         mode: "payment",
-        success_url: MESSAGES.FINAL_SUCCESS_URL+ encodeURIComponent(artistName),
+        success_url: MESSAGES.FINAL_SUCCESS_URL + encodeURIComponent(artistName),
         cancel_url: MESSAGES.FINAL_CANCEL_URL,
         metadata: { artistName, amount: amount.toString() }, // Track artist details
       });
 
-      return { success: true, sessionUrl: session.url! }; 
+      return { success: true, sessionUrl: session.url! };
     } catch (error: unknown) {
-      throw new Error((error as Error).message );
+      throw new Error((error as Error).message);
     }
   }
 }
-  
-  
+
+
 
 
