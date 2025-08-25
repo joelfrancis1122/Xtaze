@@ -16,10 +16,11 @@ export default interface IArtistUseCase {
     albumsongs(userId:string): Promise<IAlbum|null>
     uploadAlbums(artistId:string,name:string,description:string,image?:Express.Multer.File): Promise<IAlbum|null>
 
-    listArtists(): Promise<IUser[]>
-    listArtistReleases(userId: string): Promise<ITrack[]>
+    listArtists(page: number,limit: number): Promise<{data:IUser[];pagination   :{total:number,page:number,limit:number,totalpages:number}}>
+    listActiveArtists(page: number,limit: number): Promise<{data:IUser[];pagination   :{total:number,page:number,limit:number,totalpages:number}}>
+    listArtistReleases(userId: string,page:number,limit:number): Promise<{data:ITrack[];pagination:{total:number,page:number,limit:number;totalPages:number}}>
     increment(trackId: string,id:string): Promise<ITrack | null>
-    statsOfArtist(userId: string): Promise<ArtistMonetization[]>
+    statsOfArtist(userId: string,page: number,limit: number): Promise<{data:ArtistMonetization[];   pagination: {total: number;page: number;limit: number;totalPages: number;};}>
     saveCard(artistId: string, paymentMethodId: string): Promise<IUser | null>;
     checkcard(artistId: string): Promise<IUser | null>;
     requestVerification(artistId:string,imageFile: Express.Multer.File): Promise<IVerificationStatusResponse|null>

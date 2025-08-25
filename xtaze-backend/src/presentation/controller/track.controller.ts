@@ -10,6 +10,7 @@ import { MESSAGES } from "../../domain/constants/messages";
 const trackRepository = new TrackRepository();
 const userRepository = new UserRepository();
 const uploadTrackUseCase = new UploadTrackUseCase(trackRepository);
+
 export const uploadTrack = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     if (!req.files || !("song" in req.files) || !("image" in req.files)) {

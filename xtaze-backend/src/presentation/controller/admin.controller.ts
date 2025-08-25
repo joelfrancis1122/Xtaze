@@ -2,18 +2,19 @@ import { NextFunction, Request, Response } from "express";
 import IAdminUseCase from "../../domain/usecase/IAdminUseCase";
 import { HttpStatus } from "../../domain/constants/httpStatus";
 import AppError from "../../utils/AppError";
-import { MESSAGES } from "../../domain/constants/messages"; // <-- Import
+import { MESSAGES } from "../../domain/constants/messages";
+import { injectable } from "inversify";
+import { inject } from "inversify";
+import TYPES from "../../domain/constants/types";
 
-interface Dependencies {
-  adminUseCase: IAdminUseCase;
-}
-
+@injectable()
 export default class AdminController {
   private _adminUseCase: IAdminUseCase;
 
-  constructor(dependencies: Dependencies) {
-    this._adminUseCase = dependencies.adminUseCase;
+  constructor(@inject(TYPES.AdminUseCase) adminUseCase: IAdminUseCase) {
+    this._adminUseCase = adminUseCase;
   }
+
 
   async login(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
@@ -230,8 +231,14 @@ export default class AdminController {
 
   async getMusicMonetization(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const monetizationData = await this._adminUseCase.getMusicMonetization();
-      res.status(HttpStatus.OK).json({ data: monetizationData });
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 10;
+      const monetizationData = await this._adminUseCase.getMusicMonetization(page, limit);
+      res.status(HttpStatus.OK).json({
+        success: true,
+        data: monetizationData.data,
+        pagination: monetizationData.pagination,
+      });
     } catch (error: unknown) {
       next(error);
     }
@@ -259,13 +266,35 @@ export default class AdminController {
 
   async fetchVerification(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const verification = await this._adminUseCase.fetchVerification();
+      const page = Number(req.query.page) || 1;
+      const limit = Number(req.query.limit) || 10;
+      const verification = await this._adminUseCase.fetchVerification(page, limit);
       res.status(HttpStatus.OK).json({ success: true, message: MESSAGES.VERIFICATION_LIST, data: verification });
     } catch (error) {
       next(error);
     }
   }
+  async getAllTracksArtist(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { userId } = req.query;
+      let tracks = null;
+      if (userId) {
+        tracks = await this._adminUseCase.listArtistReleases(userId as string);
+      }
+      res.status(HttpStatus.OK).json({ success: true, message: MESSAGES.ARTIST_TRACKS_LIST_SUCCESS, tracks });
+    } catch (error) {
+      next(error);
+    }
+  }
 
+  async fetchAllTrack(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const tracks = await this._adminUseCase.getAllTracks();
+      res.status(HttpStatus.OK).json({ data: tracks });
+    } catch (error: unknown) {
+      next(error);
+    }
+  }
   async updateVerificationStatus(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { status, feedback } = req.body;

@@ -12,7 +12,7 @@ interface Verification {
 }
 
 interface Artist {
-    _id: string; // Verification record ID
+    _id: string;
     artistId: string;
     username: string;
     email: string;
@@ -22,7 +22,8 @@ interface Artist {
 export default function AdminAnalytics() {
     const [artists, setArtists] = useState<Artist[]>([]);
     const token = localStorage.getItem("adminToken");
-
+    const [page, setPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
     useEffect(() => {
         const fetchData = async () => {
             if (!token) {
@@ -31,19 +32,34 @@ export default function AdminAnalytics() {
             }
 
             try {
-                const verificationData = await fetchAllArtistsVerification();
+                const response = await fetchAllArtistsVerification(page, 7);
+
+                // ✅ Correctly access the data and pagination
+                const verificationData = response.data;
+                const totalPagesFromAPI = response.pagination.totalPages;
+
+                setTotalPages(totalPagesFromAPI);
 
                 if (!verificationData || verificationData.length === 0) {
                     setArtists([]);
                     return;
                 }
 
-                const artistIds = verificationData.map((item: { artistId: any; }) => item.artistId);
+                const artistIds = verificationData.map((item: { artistId: string }) => item.artistId);
                 const userDetails = await fetchUserDetails(artistIds);
-
-                const mergedData = verificationData
-                    .sort((a: { submittedAt: string | number | Date; }, b: { submittedAt: string | number | Date; }) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime())
-                    .map((verification: { artistId: string; _id: any; status: any; idProof: any; feedback: any; updatedAt: any }) => {
+                const mergedData: Artist[] = verificationData
+                    .sort((a: { submittedAt: string }, b: { submittedAt: string }) =>
+                        new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime()
+                    )
+                    .map((verification: {
+                        _id: string;
+                        artistId: string;
+                        status: "pending" | "approved" | "rejected" | "unsubmitted";
+                        idProof?: string;
+                        feedback?: string | null;
+                        reviewedAt?: string | null;
+                        submittedAt: string;
+                    }) => {
                         const user = userDetails.find((u) => u._id === verification.artistId);
                         return {
                             _id: verification._id,
@@ -52,25 +68,28 @@ export default function AdminAnalytics() {
                             email: user?.email || "N/A",
                             verification: {
                                 status: verification.status,
-                      idProof: verification.idProof,
-                      feedback: verification.feedback,
-                      updatedAt: verification.updatedAt, // optional, if you want to show this too
-                    },
-                  };
-                });
-              
+                                idProof: verification.idProof,
+                                feedback: verification.feedback,
+                                updatedAt: verification.reviewedAt,
+                            },
+                        };
+                    });
+
+
                 setArtists(mergedData);
             } catch (error) {
                 console.error("Error fetching data:", error);
                 toast.error("Failed to load artist data.");
             }
         };
+
         fetchData();
-    }, [token]);
+    }, [token, page]); // ✅ page dependency included
+
 
     const handleVerify = async (verificationId: string, status: "approved" | "rejected", feedback: string | null = null) => {
         try {
-            const updatedVerification = await updateVerificationStatus(status, feedback, verificationId );
+            const updatedVerification = await updateVerificationStatus(status, feedback, verificationId);
             if (updatedVerification) {
                 setArtists((prevArtists) =>
                     prevArtists.map((artist) =>
@@ -114,26 +133,26 @@ export default function AdminAnalytics() {
                                         <td className="py-2 text-white">{artist.verification.status}</td>
                                         <td className="py-2">
                                             {artist.verification.idProof ? (
-                                               <div className="relative group inline-block">
-                                               <a
-                                                 href={artist.verification.idProof}
-                                                 target="_blank"
-                                                 className="text-blue-400 underline font-medium transition duration-200"
-                                               >
-                                                 View ID
-                                               </a>
-                                             
-                                               <div className="absolute top-8 left-1/2 -translate-x-1/2 z-50 hidden group-hover:block">
-                                                 <div className="relative rounded-xl shadow-2xl backdrop-blur-md bg-white/5 border border-white/20 overflow-hidden transition-transform duration-300 transform group-hover:scale-100 scale-95">
-                                                   <img
-                                                     src={artist.verification.idProof}
-                                                     alt="ID Preview"
-                                                     className="max-w-sm max-h-72 object-contain rounded-xl"
-                                                   />
-                                                 </div>
-                                               </div>
-                                             </div>
-                                             
+                                                <div className="relative group inline-block">
+                                                    <a
+                                                        href={artist.verification.idProof}
+                                                        target="_blank"
+                                                        className="text-blue-400 underline font-medium transition duration-200"
+                                                    >
+                                                        View ID
+                                                    </a>
+
+                                                    <div className="absolute top-8 left-1/2 -translate-x-1/2 z-50 hidden group-hover:block">
+                                                        <div className="relative rounded-xl shadow-2xl backdrop-blur-md bg-white/5 border border-white/20 overflow-hidden transition-transform duration-300 transform group-hover:scale-100 scale-95">
+                                                            <img
+                                                                src={artist.verification.idProof}
+                                                                alt="ID Preview"
+                                                                className="max-w-sm max-h-72 object-contain rounded-xl"
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                </div>
+
                                             ) : (
                                                 "N/A"
                                             )}
@@ -164,6 +183,30 @@ export default function AdminAnalytics() {
                         </table>
                     )}
                 </Card>
+                <div className="flex justify-between items-center mt-4">
+                    <Button
+                        disabled={page === 1}
+                        onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
+                        className="px-4 py-2 bg-[#2f2f2f] hover:bg-black"
+                    >
+                        Previous
+                    </Button>
+
+                    <span className="text-gray-400">
+                        Page {page} of {totalPages}
+                    </span>
+
+                    <Button
+                        disabled={page === totalPages || totalPages === 0} // ✅ correct check
+                        onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
+                        className="mr-35 px-6 py-2 bg-[#2f2f2f] hover:bg-black"
+                    >
+                        Next
+                    </Button>
+
+
+                </div>
+
             </main>
         </div>
     );

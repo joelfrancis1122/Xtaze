@@ -34,69 +34,60 @@ export default function AdminMusicMonetizationPage() {
   const [expandedArtist, setExpandedArtist] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize] = useState(7);
+  const [totalPages, setTotalPages] = useState(1);
   useEffect(() => {
-    const fetchMonetizationDataAsync = async () => {
-      try {
-        setLoading(true);
-        const rawData = await fetchMonetizationData();
+  const fetchMonetizationDataAsync = async () => {
+    try {
+      setLoading(true);
+      const { data: rawData } = await fetchMonetizationData(1, 1000); 
+      // fetch a big chunk (or all), since we’ll paginate by artist on frontend
 
-        const groupedData = rawData.reduce((acc: { [key: string]: ArtistData }, song: MusicMonetization) => {
-          if (!acc[song.artistName]) {
-            acc[song.artistName] = {
-              artistName: song.artistName,
-              totalPlays: 0,
-              monthlyPlays: 0,
-              totalRevenue: 0,
-              monthlyRevenue: 0,
-              songs: [],
-              paymentStatus: song.paymentStatus || false,
-            };
-          }
-          acc[song.artistName].totalPlays += song.totalPlays;
-          acc[song.artistName].monthlyPlays += song.monthlyPlays;
-          acc[song.artistName].totalRevenue += song.totalRevenue;
-          acc[song.artistName].monthlyRevenue += song.monthlyRevenue;
-          acc[song.artistName].songs.push({ ...song, paymentStatus: song.paymentStatus || false });
-          return acc;
-        }, {});
+      const groupedData = rawData.reduce((acc: { [key: string]: ArtistData }, song: MusicMonetization) => {
+        if (!acc[song.artistName]) {
+          acc[song.artistName] = {
+            artistName: song.artistName,
+            totalPlays: 0,
+            monthlyPlays: 0,
+            totalRevenue: 0,
+            monthlyRevenue: 0,
+            songs: [],
+            paymentStatus: song.paymentStatus || false,
+          };
+        }
+        acc[song.artistName].totalPlays += song.totalPlays;
+        acc[song.artistName].monthlyPlays += song.monthlyPlays;
+        acc[song.artistName].totalRevenue += song.totalRevenue;
+        acc[song.artistName].monthlyRevenue += song.monthlyRevenue;
+        acc[song.artistName].songs.push({ ...song, paymentStatus: song.paymentStatus || false });
+        return acc;
+      }, {});
 
-        setArtists(Object.values(groupedData));
-        setError(null);
-      } catch (err: any) {
-        toast.error(err.message || "Failed to load monetization data");
-        setError("Failed to load monetization data");
-      } finally {
-        setLoading(false);
-      }
-    };
+      const artistArray = Object.values(groupedData);
 
-    fetchMonetizationDataAsync();
+      setTotalPages(Math.ceil(artistArray.length / pageSize));
 
-    // Handle success redirect
-    const params = new URLSearchParams(location.search);
-    const artistName = params.get("artistName");
-    if (artistName && location.pathname === "/admin/payoutSuccess") {
-      setArtists((prev) =>
-        prev.map((artist) =>
-          artist.artistName === artistName
-            ? {
-                ...artist,
-                paymentStatus: true,
-                songs: artist.songs.map((song) => ({ ...song, paymentStatus: true })),
-              }
-            : artist
-        )
-      );
-      const monthlyRevenue = artists.find((a) => a.artistName === artistName)?.monthlyRevenue;
-      toast.success(`$${monthlyRevenue?.toFixed(2)} paid for ${artistName} via Stripe Checkout`);
-      // Redirect is handled in AdminPayoutSuccessPage, so no need here
+      // Slice the artists according to currentPage
+      const start = (currentPage - 1) * pageSize;
+      const end = start + pageSize;
+      setArtists(artistArray.slice(start, end));
+
+      setError(null);
+    } catch (err: any) {
+      toast.error(err.message || "Failed to load monetization data");
+      setError("Failed to load monetization data");
+    } finally {
+      setLoading(false);
     }
-  }, [location]);
+  };
+
+  fetchMonetizationDataAsync();
+}, [currentPage, pageSize, location]);
 
   const handlePayArtist = async (artistName: string) => {
     try {
-      const sessionUrl = await initiateArtistPayout(artistName, );
+      const sessionUrl = await initiateArtistPayout(artistName,);
       if (sessionUrl) {
         window.location.href = sessionUrl;
       }
@@ -181,11 +172,10 @@ export default function AdminMusicMonetizationPage() {
                           handlePayArtist(artist.artistName);
                         }}
                         disabled={artist.paymentStatus === true}
-                        className={`flex items-center gap-1 px-3 py-1 rounded-md transition ${
-                          artist.paymentStatus
+                        className={`flex items-center gap-1 px-3 py-1 rounded-md transition ${artist.paymentStatus
                             ? "bg-gray-600 text-gray-400 cursor-not-allowed"
                             : "bg-green-700 hover:bg-green-600 text-white"
-                        }`}
+                          }`}
                       >
                         <DollarSign className="h-4 w-4" />
                         {artist.paymentStatus ? "Paid" : "Transfer"}
@@ -229,7 +219,31 @@ export default function AdminMusicMonetizationPage() {
             </div>
           )}
         </div>
+        <div className="flex justify-center items-center gap-4 mt-4">
+          <button
+            disabled={currentPage === 1}
+            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+            className={`px-4 py-2 rounded-lg ${currentPage === 1 ? "bg-gray-600 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"
+              } text-white`}
+          >
+            Prev
+          </button>
+
+          <span className="text-white">
+            Page {currentPage} of {totalPages}
+          </span>
+
+          <button
+            disabled={currentPage === totalPages}
+            onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+            className={`px-4 py-2 rounded-lg ${currentPage === totalPages ? "bg-gray-600 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"
+              } text-white`}
+          >
+            Next
+          </button>
+        </div>
       </div>
+
     </div>
   );
 }

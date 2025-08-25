@@ -16,6 +16,8 @@ export interface IUserRepository {
   getupdatedArtist: (userId: string) => Promise<IUser | null>;
   updateUserSubscription: (userId: string, planName: string) => Promise<IUser | null>;
   findById(userId: string): Promise<IUser | null>;
+  getAllArtistsP(page: number, limit: number): Promise<{ data: IUser[], total: number }>;
+
   updatePassword(user: IUser): Promise<IUser | null>;
   addToLiked(userId: string, trackId: string): Promise<IUser | null>;
   createPlaylist(_id: string, newplaylist: IPlaylist): Promise<IPlaylist | null>;
@@ -31,13 +33,16 @@ export interface IUserRepository {
   checkCouponisUsed(code: string, userId: string): Promise<boolean>;
   getCoupons(): Promise<ICoupon[] | null>
   getAllTracks(): Promise<ITrack[] | null>
-  fetchGenreTracks(GenreName:string): Promise<ITrack[] | null>
-  becomeArtist(id:string):  Promise<IUser|null> 
+  increment(trackId: string, id: string): Promise<ITrack | null>
+  getAllTracksByArtist(userId: string, page: number, limit: number): Promise<{ data: ITrack[]; total: number }>
+
+  fetchGenreTracks(GenreName: string): Promise<ITrack[] | null>
+  becomeArtist(id: string): Promise<IUser | null>
   resetPaymentStatus(): Promise<void>
-  getArtistByName(username:string):  Promise<IUser|null> 
-  usernameUpdate(userId:string,username:string): Promise<IUser|null>
-  getliked(songIds:string,userId:string): Promise<ITrack[]|null>
-  allAlbums(): Promise<IAlbum[]|null>
-  albumView(albumId:string): Promise<IAlbum|null>
+  getArtistByName(username: string): Promise<IUser | null>
+  usernameUpdate(userId: string, username: string): Promise<IUser | null>
+  getliked(songIds: string, userId: string): Promise<ITrack[] | null>
+  allAlbums(): Promise<IAlbum[] | null>
+  albumView(albumId: string): Promise<IAlbum | null>
 
 }

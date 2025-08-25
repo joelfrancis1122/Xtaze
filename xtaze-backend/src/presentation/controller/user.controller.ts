@@ -4,20 +4,35 @@ import IuserUseCase from "../../domain/usecase/IUserUseCase"
 import AppError from "../../utils/AppError"
 import { MESSAGES } from "../../domain/constants/messages";
 
+import { inject, injectable } from "inversify";
+import TYPES from "../../domain/constants/types";
+// interface Dependencies {
+//   userUseCase: IuserUseCase;
+// }
 
-interface Dependencies {
-  userUseCase: IuserUseCase;
-}
+// export default class UserController {
+//   private _userUseCase: IuserUseCase;  // space for toy maker 
 
+//   constructor(dependencies: Dependencies) { // boss gives the toy maker here 
+//     this._userUseCase = dependencies.userUseCase; //gets toy maker
+//   }
+@injectable()
 export default class UserController {
-  private _userUseCase: IuserUseCase;  // space for toy maker 
+  private _userUseCase: IuserUseCase;
 
-  constructor(dependencies: Dependencies) { // boss gives the toy maker here 
-    this._userUseCase = dependencies.userUseCase; //gets toy maker
-
+  constructor(@inject(TYPES.UserUseCase) userUseCase: IuserUseCase) {
+    this._userUseCase = userUseCase;
   }
 
-
+  async incrementListeners(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { trackId, id } = req.body;
+      await this._userUseCase.increment(trackId as string, id as string);
+      res.status(HttpStatus.OK).json({ success: true, message: MESSAGES.LISTENER_INCREMENT_SUCCESS });
+    } catch (error) {
+      next(error);
+    }
+  }
 
 
   async sendOTP(req: Request, res: Response, next: NextFunction) {
@@ -30,7 +45,6 @@ export default class UserController {
       if (Number(result) === HttpStatus.FORBIDDEN) {
         throw new AppError(MESSAGES.USER_ALREADY_EXISTS, HttpStatus.FORBIDDEN);
       }
-
       res.status(HttpStatus.OK).json({ success: true, message: MESSAGES.OTP_DONE, result });
     } catch (error) {
       next(error);
@@ -100,6 +114,8 @@ export default class UserController {
       next(error);
     }
   }
+
+  
 
   async googleLogin(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
@@ -239,6 +255,16 @@ export default class UserController {
     }
   }
 
+  async listArtists(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const page = Number(req.query.page) || 1;
+      const limit = Number(req.query.limit) || 100;
+      const listArtists = await this._userUseCase.listArtists(page, limit);
+      res.status(HttpStatus.OK).json({ success: true, message: MESSAGES.LIST_OF_ARTISTS, data: listArtists.data });
+    } catch (error) {
+      next(error);
+    }
+  }
   async updateBio(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { userId, bio } = req.body;
@@ -487,6 +513,30 @@ export default class UserController {
       next(error);
     }
   }
+
+async getAllTracksArtist(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { userId, page = 1, limit = 10 } = req.query;
+
+    if (!userId) {
+      res.status(HttpStatus.BAD_REQUEST).json({ success: false, message: "User ID is required" });
+      return;
+    }
+
+    const pageNum = Number(page) || 1;   
+    const limitNum = Number(limit) || 10;
+
+    const tracks = await this._userUseCase.listArtistReleases(userId as string, pageNum, limitNum);
+
+    res.status(HttpStatus.OK).json({
+      success: true,
+      message: MESSAGES.ARTIST_TRACKS_LIST_SUCCESS,
+      tracks: tracks?.data ?? [],
+    });
+  } catch (error) {
+    next(error);
+  }
+}
 
 
   async username(req: Request, res: Response, next: NextFunction): Promise<void> {

@@ -11,31 +11,57 @@ import AppError from "../../utils/AppError";
 import { MusicMonetization } from "../../domain/entities/IMonetization";
 import { IVerificationRequest } from "../../domain/entities/IVeridicationRequest";
 import { MESSAGES } from "../../domain/constants/messages";
+import { ITrack } from "../../domain/entities/ITrack";
+import TYPES from "../../domain/constants/types";
+import { IUserRepository } from "../../domain/repositories/IUserRepository";
+import IOtpService from "../../domain/service/IOtpService";
+import IEmailService from "../../domain/service/IEmailService";
+import { injectable } from "inversify";
+import { inject } from "inversify";
+import AdminRepository from "../../infrastructure/repositories/admin.repository";
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2023-08-16" });
 
 dotenv.config();
 
-interface useCaseDependencies {
-  repository: {
-    adminRepository: IAdminRepository
-  },
-  service: {
-    passwordService: IPasswordService
-  }
-}
+// interface useCaseDependencies {
+//   repository: {
+//     adminRepository: IAdminRepository
+//   },
+//   service: {
+//     passwordService: IPasswordService
+//   }
+// }
 
-export default class AdminUseCase {
+// export default class AdminUseCase {
+//   private _adminRepository: IAdminRepository
+//   private _passwordService: IPasswordService
+//   private stripe: Stripe;
+
+//   constructor(dependencies: useCaseDependencies) {
+//     this._adminRepository = dependencies.repository.adminRepository
+//     this._passwordService = dependencies.service.passwordService
+//     this.stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+//       apiVersion: "2023-08-16",
+//     });
+//   }
+
+  @injectable()
+export default class UserUseCase {
   private _adminRepository: IAdminRepository
   private _passwordService: IPasswordService
   private stripe: Stripe;
 
-  constructor(dependencies: useCaseDependencies) {
-    this._adminRepository = dependencies.repository.adminRepository
-    this._passwordService = dependencies.service.passwordService
+  constructor(
+    @inject(TYPES.AdminRepository) adminRepository: IAdminRepository,
+    @inject(TYPES.PasswordService) passwordService: IPasswordService,
+  ) {
+     this._adminRepository = adminRepository
+    this._passwordService = passwordService;
     this.stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
       apiVersion: "2023-08-16",
     });
   }
+
 
   async login(email: string, password: string): Promise<{ success: boolean; message: string; token?: string; admin?: IUser }> {
     const admin = await this._adminRepository.findByEmail(email);
@@ -76,6 +102,25 @@ export default class AdminUseCase {
     return addBanner;
 
   }
+  
+   async getAllTracks(): Promise<ITrack[] | null> {
+    try {
+      const tracks = await this._adminRepository.getAllTracks();
+      if (!tracks) {
+        return null
+      }
+      return tracks
+
+    } catch (error) {
+      console.error(MESSAGES.ERROR_UPDATING_PROFILE, error);
+      throw new Error(MESSAGES.ERROR_UPDATING_PROFILE);
+    }
+  }
+    async listArtistReleases(userId: string): Promise<ITrack[]> {
+  
+      return await this._adminRepository.getAllTracksByArtist(userId) as ITrack[];
+  
+    }
   async getAllBanners(): Promise<IBanner[] | null> {
     const banners = await this._adminRepository.getAllBanners()
     return banners;
@@ -317,12 +362,13 @@ export default class AdminUseCase {
   }
 
 
-  async getMusicMonetization(): Promise<MusicMonetization[] | null> {
+  async getMusicMonetization(page: number,limit: number): Promise<{data: MusicMonetization[];pagination: {currentPage: number;totalPages: number;totalItems: number;}}> {
 
-    const tracks = await this._adminRepository.getMusicMonetization()
+    const tracks = await this._adminRepository.getMusicMonetization(page,limit)
     return tracks
-
   }
+  
+  
   async getUsersByIds(userIds:string[]): Promise<IUser[]|null> {
 
     const users = await this._adminRepository.getUsersByIds(userIds)
@@ -336,10 +382,19 @@ export default class AdminUseCase {
 
   }
 
-  async fetchVerification(): Promise<IVerificationRequest | null> {
+  async fetchVerification(page:number,limit:number): Promise<{data:IVerificationRequest[],pagination: { total: number; page: number; limit: number; totalPages: number }}> {
 
-    return await this._adminRepository.fetchVerification();
+   const {data,total}= await this._adminRepository.fetchVerification(page,limit);
+      return {
+    data,
+    pagination: {
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    },
   }
+}
 
   async artistPayout(artistName: string): Promise<{ success: boolean; sessionUrl: string }> {
     try {

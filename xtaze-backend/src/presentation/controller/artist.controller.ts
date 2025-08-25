@@ -3,19 +3,17 @@ import { HttpStatus } from "../../domain/constants/httpStatus";
 import IArtistUseCase from "../../domain/usecase/IArtistUseCase"
 import AppError from "../../utils/AppError";
 import { MESSAGES } from "../../domain/constants/messages";
+import { injectable } from "inversify";
+import TYPES from "../../domain/constants/types";
+import { inject } from "inversify";
 
-interface Dependencies {
-  artistUseCase: IArtistUseCase;
-}
-
-
+@injectable()
 export default class ArtistController {
-  private _artistnUseCase: IArtistUseCase;
+  private _artistnUseCase: IArtistUseCase
 
-  constructor(dependencies: Dependencies) {
-    this._artistnUseCase = dependencies.artistUseCase;
+  constructor(@inject(TYPES.ArtistUseCase) artistUseCase: IArtistUseCase) {
+    this._artistnUseCase = artistUseCase;
   }
-
   async login(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { email, password } = req.body;
@@ -67,7 +65,23 @@ export default class ArtistController {
 
   async listArtists(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const listArtists = await this._artistnUseCase.listArtists();
+      const page = Number(req.query.page) || 1;
+      const limit = Number(req.query.limit) || 10;
+
+      const listArtists = await this._artistnUseCase.listArtists(page, limit);
+
+      res.status(HttpStatus.OK).json({ success: true, message: MESSAGES.LIST_OF_ARTISTS, data: listArtists });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async listActiveArtists(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const page = Number(req.query.page) || 1;
+      const limit = Number(req.query.limit) || 10;
+
+      const listArtists = await this._artistnUseCase.listActiveArtists(page, limit);
 
       res.status(HttpStatus.OK).json({ success: true, message: MESSAGES.LIST_OF_ARTISTS, data: listArtists });
     } catch (error) {
@@ -77,11 +91,13 @@ export default class ArtistController {
 
   async getAllTracksArtist(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const { userId } = req.query;
+      const { userId, page = 1, limit = 10 } = req.query;
 
+      const pageNum = Number(page) || 1;
+      const limitNum = Number(limit) || 10;
       let tracks = null;
       if (userId) {
-        tracks = await this._artistnUseCase.listArtistReleases(userId as string);
+        tracks = await this._artistnUseCase.listArtistReleases(userId as string, pageNum, limitNum);
       }
       res.status(HttpStatus.OK).json({ success: true, message: MESSAGES.ARTIST_TRACKS_LIST_SUCCESS, tracks });
     } catch (error) {
@@ -194,9 +210,11 @@ export default class ArtistController {
 
   async statsOfArtist(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
+      const page = Number(req.query.page) || 1;
+      const limit = Number(req.query.limit) || 10;
       const { userId } = req.query;
-      const data = await this._artistnUseCase.statsOfArtist(userId as string);
-      res.status(HttpStatus.OK).json({ message: MESSAGES.ARTIST_STATS_FETCH_SUCCESS, data });
+      const data = await this._artistnUseCase.statsOfArtist(userId as string, page, limit);
+      res.status(HttpStatus.OK).json({ message: MESSAGES.ARTIST_STATS_FETCH_SUCCESS, data: data.data, pagination: data.pagination });
     } catch (error: unknown) {
       res.status(HttpStatus.NOT_FOUND).json({ message: (error as Error).message || MESSAGES.REFRESH_FAILED });
       next(error);

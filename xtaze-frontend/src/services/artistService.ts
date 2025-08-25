@@ -111,15 +111,43 @@ export const loginArtist = async (email: string,password: string,dispatch: Retur
   dispatch(saveArtistData(data.artist));
 };
 
-export const fetchArtistTracks = async (artistId: string): Promise<any[]> => {
-  const data = await apiCall<{ success: boolean; tracks: any[]; message?: string }>(
+// artistService.ts
+type PaginatedResponse<T> = {
+  data: T[];
+  pagination: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+};
+
+export const fetchArtistTracks = async (
+  artistId: string,
+  page = 1,
+  limit = 10
+): Promise<PaginatedResponse<any>> => {
+  const data = await apiCall<{
+    success: boolean;
+    tracks: {
+      data: any[];
+      pagination: {
+        total: number;
+        page: number;
+        limit: number;
+        totalPages: number;
+      };
+    };
+    message?: string;
+  }>(
     artistApi,
     HTTP_METHODS.GET,
-    `/getAllTracksArtist?userId=${artistId}`
+    `/getAllTracksArtist?userId=${artistId}&page=${page}&limit=${limit}`
   );
-  if (!data.success) throw new Error(data.message || "Failed to fetch artist tracks");
-  return data.tracks;
+
+  return data.tracks; 
 };
+
 
 export const fetchActiveGenres = async (artistId: string): Promise<{ artist: any; genres: IGenre[] }> => {
   console.log("Fetching active genres with:", { artistId});
@@ -326,23 +354,38 @@ export const requestVerification = async (artistId: string,formData: FormData): 
 
 
 
-export const fetchSongEarnings = async (artistId: string): Promise<any[]> => {
-  console.log("Fetching song earnings with:", { artistId });
-  const data = await apiCall<{ data: any[] }>(
+type SongStat = {
+  trackId: string;
+  trackName: string;
+  totalPlays: number;
+  monthlyPlays: number;
+};
+
+export const fetchSongEarnings = async (
+  artistId: string,
+  page: number,
+  limit: number
+): Promise<{ data: (SongStat & { totalEarnings: number; monthlyEarnings: number })[]; totalPages: number }> => {
+  const res = await apiCall<PaginatedResponse<SongStat>>(
     artistApi,
     HTTP_METHODS.GET,
-    `/statsOfArtist?userId=${artistId}`,
-    undefined,
+    `/statsOfArtist?userId=${artistId}&page=${page}&limit=${limit}`,
+    undefined
   );
-  return data.data.map((song: any) => ({
-    trackId: song.trackId,
-    trackName: song.trackName,
-    totalPlays: song.totalPlays,
-    monthlyPlays: song.monthlyPlays,
-    totalEarnings: song.totalPlays * 0.50, // Assuming revenuePerPlay = 0.50
-    monthlyEarnings: song.monthlyPlays * 0.50,
+console.log(res,"nath")
+  const mappedData = res.data.map((song) => ({
+    ...song,
+    totalEarnings: song.totalPlays * 0.5,
+    monthlyEarnings: song.monthlyPlays * 0.5,
   }));
+
+  return {
+    data: mappedData,
+    totalPages: res.pagination.totalPages,
+  };
 };
+
+
 
 export const updateArtistUsername = async (
   id: string, 

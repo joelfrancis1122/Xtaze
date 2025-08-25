@@ -64,6 +64,33 @@ export default class AdminRepository extends BaseRepository<IUser> implements IA
     }
   }
 
+  async getAllTracks(): Promise<ITrack[] | null> {
+    try {
+
+      const track = await Track.find();
+      return track
+    } catch (error: unknown) {
+      throw new Error((error as Error).message || "Failed to check coupon usage");
+    }
+  }
+
+  async getAllTracksByArtist(userId: string): Promise<ITrack[]> {
+    try {
+
+      const artist = await UserModel.findById({ _id: userId });
+      if (!artist) {
+        throw new Error("Artist not found");
+      }
+
+      const tracks = await Track.find({ artists: { $regex: new RegExp(`^${artist.username}$`, "i") } });
+      return tracks;
+    } catch (error) {
+      console.error("Error fetching tracks:", error);
+      throw new Error("Failed to fetch tracks");
+    }
+  }
+
+
 
   async getArtistById(id: string): Promise<IUser | null> {
     return await UserModel.findById(id);
@@ -189,12 +216,18 @@ export default class AdminRepository extends BaseRepository<IUser> implements IA
     const coupon = await CouponModel.findOne({ code });
     return coupon ? coupon.toObject() as ICoupon : null;
   }
-  async fetchVerification(): Promise<IVerificationRequest | null> {
-    const verification = await VerificationModel.find();
-    return verification as unknown as IVerificationRequest
+  async fetchVerification(page: number, limit: number):  Promise<{data:IVerificationRequest[],total:number}>{
+    const skip = (page - 1) * limit;
+    const [data, total] = await Promise.all([
+      VerificationModel.find().skip(skip).limit(limit).lean(),
+      VerificationModel.countDocuments()
+    ])
+
+    return { data, total }
+
   }
-  async findTracks(name:string): Promise<ITrack[] | null> {
-    const tracks = await Track.find({ artists: name});
+  async findTracks(name: string): Promise<ITrack[] | null> {
+    const tracks = await Track.find({ artists: name });
     return tracks as unknown as ITrack[]
   }
   async findArtist(name: string): Promise<IUser | null> {
@@ -210,15 +243,24 @@ export default class AdminRepository extends BaseRepository<IUser> implements IA
 
 
 
-  async getMusicMonetization(): Promise<MusicMonetization[]> {
+  async getMusicMonetization(page: number, limit: number): Promise<{
+    data: MusicMonetization[]; pagination: { currentPage: number; totalPages: number; totalItems: number };
+  }> {
     try {
       const artists = await UserModel.find({ role: "artist" });
       const artistNames = artists.map((artist) => artist.username);
+      const skip = (page - 1) * limit;
 
-      const tracks = await Track.find({ artists: { $in: artistNames } });
+      const [tracks, totalItems] = await Promise.all([
+        Track.find({ artists: { $in: artistNames } })
+          .skip(skip)
+          .limit(limit),
+        Track.countDocuments({ artists: { $in: artistNames } }),
+      ]);
 
       const revenuePerPlay = 0.50;
       const currentMonth = new Date().toISOString().slice(0, 7); // e.g., "2025-03"
+
 
       const monetizationData: MusicMonetization[] = await Promise.all(
         tracks.map(async (track) => {
@@ -231,7 +273,6 @@ export default class AdminRepository extends BaseRepository<IUser> implements IA
             createdAt?: Date;
           };
 
-          // Fetch the artist's details for this track
           const artist = await UserModel.findOne({ username: typedTrack.artists[0] });
 
           const monthlyPlays = typedTrack.playHistory?.find((h) => h.month === currentMonth)?.plays || 0;
@@ -250,8 +291,16 @@ export default class AdminRepository extends BaseRepository<IUser> implements IA
           };
         })
       );
+      console.log(monetizationData, "adi")
 
-      return monetizationData.sort((a, b) => b.totalPlays - a.totalPlays);
+      return {
+        data: monetizationData.sort((a, b) => b.totalPlays - a.totalPlays),
+        pagination: {
+          currentPage: page,
+          totalPages: Math.ceil(totalItems / limit),
+          totalItems,
+        },
+      }
     } catch (error: unknown) {
       console.error("Error in getMusicMonetization:", error);
       throw new Error((error as Error).message || "Failed to fetch music monetization data");

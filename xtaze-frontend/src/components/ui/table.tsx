@@ -5,13 +5,14 @@ export const Table = ({ className, ...props }: React.HTMLAttributes<HTMLTableEle
   <table className={cn("w-full border-collapse", className)} {...props} />
 );
 
-export const TableHead = ({ className, ...props }: React.HTMLAttributes<HTMLTableSectionElement>) => (
-  <thead className={cn("bg-black-100", className)} {...props} />
+export const TableHeader = ({ className, ...props }: React.HTMLAttributes<HTMLTableSectionElement>) => (
+  <thead className={cn("bg-black text-white", className)} {...props} />
 );
 
-export const TableHeader = ({ className, ...props }: React.ThHTMLAttributes<HTMLTableCellElement>) => (
-  <th className={cn("border-b px-4 py-2 text-left text-gray-700", className)} {...props} />
+export const TableHead = ({ className, ...props }: React.ThHTMLAttributes<HTMLTableCellElement>) => (
+  <th className={cn("border-b px-4 py-2 text-left", className)} {...props} />
 );
+
 
 export const TableBody = ({ className, ...props }: React.HTMLAttributes<HTMLTableSectionElement>) => (
   <tbody className={cn(className)} {...props} />

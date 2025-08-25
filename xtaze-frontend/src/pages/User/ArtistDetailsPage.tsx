@@ -68,13 +68,19 @@ export default function ArtistDetailsPage() {
       try {
         setLoading(true);
         const fetchedTracks = await fetchArtistTracks(artistId);
+        console.log(fetchedTracks, "huhh")
         if (fetchedTracks.length > 0) {
           const artistUsername = fetchedTracks[0].artists[0];
+          console.log(artistUsername, "ambi")
           const userResponse = await fetchUserByUsername(artistUsername);
           const verificationRecords = await fetchAllArtistsVerification();
-          const verificationRecord = verificationRecords.find((record: { artistId: string; }) => record.artistId === artistId);
+          console.log(verificationRecords.data, "ambi2sss2s")
+          const verificationRecord = verificationRecords.data.find(
+            (record: { artistId: string }) => record.artistId === artistId
+          ); console.log(artistUsername, "ambi23s")
           const verificationStatus = verificationRecord ? verificationRecord.status : "unsubmitted";
-          
+
+          console.log(artistUsername, "ambis")
           const artistData: Artist = {
             id: artistId,
             name: artistUsername,
@@ -96,6 +102,7 @@ export default function ArtistDetailsPage() {
           setError("No tracks found for this artist");
         }
       } catch (err: any) {
+        console.log(err)
         setError("Failed to load artist details or tracks");
       } finally {
         setLoading(false);
@@ -109,7 +116,7 @@ export default function ArtistDetailsPage() {
       setLikedSongs(new Set(user.likedSongs.map(String)));
     }
   }, [user?.likedSongs]);
-
+console.log(tracks,"adi adi adi")
   const totalListeners = tracks.reduce((sum, track) => sum + (track.listeners?.length || 0), 0);
 
   const handlePlay = (track: Track) => {

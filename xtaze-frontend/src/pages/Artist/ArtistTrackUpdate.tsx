@@ -1,6 +1,5 @@
 
 import { useEffect, useState, useRef } from "react";
-import axios from "axios";
 import { useSelector } from "react-redux";
 import { RootState } from "../../store/store";
 import { Play, Pause, Edit2, Save, X, ChevronDown } from "lucide-react";
@@ -11,11 +10,10 @@ import ArtistSidebar from "./artistComponents/artist-aside";
 import { toast } from "sonner";
 import { IGenre } from "../User/types/IGenre";
 import { IAlbum } from "../User/types/IAlbums";
-import { fetchActiveGenres, fetchAlbums, updateTrackByArtist } from "../../services/artistService";
+import { fetchActiveGenres, fetchAlbums, fetchArtistTracks, updateTrackByArtist } from "../../services/artistService";
 import { saveArtistData } from "../../redux/artistSlice";
 import { useDispatch } from "react-redux";
 
-// Define the Song interface (aligned with backend)
 interface Song {
   _id: string;
   title: string;
@@ -37,8 +35,9 @@ export function ArtistSongUpdatePage() {
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const user = useSelector((state: RootState) => state.artist.signupData);
-  const baseUrl = import.meta.env.VITE_BASE_URL;
-
+  const [page, setPage] = useState(1);
+  const [limit] = useState(5);
+  const [totalPages, setTotalPages] = useState(1);
   // Inject CSS for dark theme
   useEffect(() => {
     const styles = `
@@ -52,39 +51,36 @@ export function ArtistSongUpdatePage() {
     document.head.appendChild(styleSheet);
 
     return () => {
-      document.head.removeChild(styleSheet); // Cleanup on unmount
+      document.head.removeChild(styleSheet); 
     };
   }, []);
 
   // Fetch songs on mount
   useEffect(() => {
-    const fetchSongs = async () => {
-      const token = localStorage.getItem("artistToken");
-      if (!token || !user?._id) {
-        console.error("Token or User ID not found. Please login.");
-        return;
-      }
-      try {
-        const response = await axios.get<{
-          success: boolean;
-          tracks?: Song[];
-          message?: string;
-        }>(`${baseUrl}/artist/getAllTracksArtist?userId=${user._id}`, {
-          headers: { "Authorization": `Bearer ${token}` },
-        });
-        if (response.data.success && Array.isArray(response.data.tracks)) {
-          setTopSongs(response.data.tracks);
-        } else {
-          console.error("Failed to fetch tracks:", response.data.message);
-          setTopSongs([]);
-        }
-      } catch (error) {
-        console.error("Error fetching tracks:", error);
+  const fetchSongs = async () => {
+    if (!token || !user?._id) {
+      toast.error("Please log in to fetch tracks.");
+      return;
+    }
+    try {
+      const response = await fetchArtistTracks(user._id, page, limit);
+      console.log(response.data,"akhil")
+      if (Array.isArray(response.data)) {
+        setTopSongs(response.data);
+        setTotalPages(response.pagination.totalPages);
+      } else {
         setTopSongs([]);
+        toast.error("No tracks found.");
       }
-    };
-    fetchSongs();
-  }, [user?._id]);
+    } catch (error: any) {
+      console.error("Error fetching tracks:", error);
+      toast.error(error.message || "Error fetching tracks.");
+      setTopSongs([]);
+    }
+  };
+
+  fetchSongs();
+}, [user?._id, page, limit]);
 
   // Play/Pause functionality
   const handlePlayPause = (song: Song) => {
@@ -132,7 +128,7 @@ export function ArtistSongUpdatePage() {
 
 
   // Handle text input changes
-  const handleInputChange = (  e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setEditedSong((prev) => ({ ...prev, [name]: value }));
   };
@@ -151,49 +147,49 @@ export function ArtistSongUpdatePage() {
   const dispatch = useDispatch();
 
   // Save updated song
- const saveSong = async () => {
-  if (!editingSongId || !editedSong._id) return;
+  const saveSong = async () => {
+    if (!editingSongId || !editedSong._id) return;
 
-  const token = localStorage.getItem("artistToken");
-  if (!token) {
-    toast.error("No authentication token found. Please login.");
-    return;
-  }
+    const token = localStorage.getItem("artistToken");
+    if (!token) {
+      toast.error("No authentication token found. Please login.");
+      return;
+    }
 
-  try {
-    const songData = {
-      title: editedSong.title || "",
-      artists: Array.isArray(editedSong.artists)
-        ? editedSong.artists
-        : (editedSong.artists
+    try {
+      const songData = {
+        title: editedSong.title || "",
+        artists: Array.isArray(editedSong.artists)
+          ? editedSong.artists
+          : (editedSong.artists
             ? String(editedSong.artists).split(",").map(a => a.trim())
             : []),
-      genre: Array.isArray(editedSong.genre)
-        ? editedSong.genre
-        : (editedSong.genre ? String(editedSong.genre).split(",").map(g => g.trim()) : []),
-      albumId: editedSong.albumId || "", 
-      img: imageFile || undefined,
-      fileUrl: audioFile || undefined,
-    };
+        genre: Array.isArray(editedSong.genre)
+          ? editedSong.genre
+          : (editedSong.genre ? String(editedSong.genre).split(",").map(g => g.trim()) : []),
+        albumId: editedSong.albumId || "",
+        img: imageFile || undefined,
+        fileUrl: audioFile || undefined,
+      };
 
-    const updatedTrack = await updateTrackByArtist(editingSongId, songData);
+      const updatedTrack = await updateTrackByArtist(editingSongId, songData);
 
-    setTopSongs((prev) =>
-      prev.map((song) =>
-        song._id === editingSongId ? { ...song, ...updatedTrack } : song
-      )
-    );
+      setTopSongs((prev) =>
+        prev.map((song) =>
+          song._id === editingSongId ? { ...song, ...updatedTrack } : song
+        )
+      );
 
-    setEditingSongId(null);
-    setEditedSong({});
-    setImageFile(null);
-    setAudioFile(null);
-    toast.success("Song updated successfully!");
-  } catch (error: any) {
-    console.error("Error updating song:", error);
-    toast.error(error?.message || "An error occurred while updating the song.");
-  }
-};
+      setEditingSongId(null);
+      setEditedSong({});
+      setImageFile(null);
+      setAudioFile(null);
+      toast.success("Song updated successfully!");
+    } catch (error: any) {
+      console.error("Error updating song:", error);
+      toast.error(error?.message || "An error occurred while updating the song.");
+    }
+  };
 
   // Cancel editing
   const cancelEditing = () => {
@@ -202,11 +198,11 @@ export function ArtistSongUpdatePage() {
     setImageFile(null);
     setAudioFile(null);
   };
-    const artist = useSelector((state: RootState) => state.artist.signupData);
+  const artist = useSelector((state: RootState) => state.artist.signupData);
   const token = localStorage.getItem("artistToken");
 
-    const [genres, setGenres] = useState<IGenre[]>([]);
-    const [albums, setAlbums] = useState<IAlbum[]>([]);
+  const [genres, setGenres] = useState<IGenre[]>([]);
+  const [albums, setAlbums] = useState<IAlbum[]>([]);
   useEffect(() => {
     const fetchData = async () => {
       if (!token || !artist?._id) {
@@ -260,40 +256,41 @@ export function ArtistSongUpdatePage() {
                   <th className="px-4 py-2 text-center text-sm font-semibold border-b">Actions</th>
                 </tr>
               </thead>
-              <TableBody>
-                {topSongs.length > 0 ? (
-                  topSongs.map((song) => {
-                    const isPlaying = playingSongId === song._id;
-                    return (
-                      <TableRow key={song._id} className="hover:bg-gray-700">
-                        <TableCell>
-                          <button onClick={() => handlePlayPause(song)} className="p-1">
-                            {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-                          </button>
-                        </TableCell>
-                        <TableCell className="text-xs md:text-sm font-medium">{song.title}</TableCell>
-                        <TableCell className="text-xs md:text-sm text-center">
-                          {song.listeners.length.toLocaleString()}
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <button
-                            onClick={() => startEditing(song)}
-                            className="p-1 text-blue-400 hover:text-blue-300"
-                          >
-                            <Edit2 className="h-4 w-4" />
-                          </button>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={4} className="text-center text-xs md:text-sm py-4">
-                      No tracks available.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
+         <TableBody>
+  {topSongs && topSongs.length > 0 ? (
+    topSongs.map((song) => {
+      const isPlaying = playingSongId === song._id;
+      return (
+        <TableRow key={song._id} className="hover:bg-gray-700">
+          <TableCell>
+            <button onClick={() => handlePlayPause(song)} className="p-1">
+              {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+            </button>
+          </TableCell>
+          <TableCell className="text-xs md:text-sm font-medium">{song.title}</TableCell>
+          <TableCell className="text-xs md:text-sm text-center">
+            {(song.listeners?.length || 0).toLocaleString()}
+          </TableCell>
+          <TableCell className="text-center">
+            <button
+              onClick={() => startEditing(song)}
+              className="p-1 text-blue-400 hover:text-blue-300"
+            >
+              <Edit2 className="h-4 w-4" />
+            </button>
+          </TableCell>
+        </TableRow>
+      );
+    })
+  ) : (
+    <TableRow>
+      <TableCell colSpan={4} className="text-center text-xs md:text-sm py-4">
+        No tracks available.
+      </TableCell>
+    </TableRow>
+  )}
+</TableBody>
+
             </Table>
           </Card>
 
@@ -392,7 +389,7 @@ export function ArtistSongUpdatePage() {
                       </option>
                     ))}
                   </select>
-                
+
                 </div>
               </div>
               <div className="flex justify-end gap-2 mt-6">
@@ -411,6 +408,25 @@ export function ArtistSongUpdatePage() {
               </div>
             </Card>
           )}
+        <div className="flex justify-between items-center mt-4">
+  <Button
+    disabled={page === 1}
+    onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
+  >
+    Previous
+  </Button>
+
+  <span className="text-gray-400">
+    Page {page} of {totalPages}
+  </span>
+
+  <Button
+    disabled={page === totalPages || totalPages === 0}
+    onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
+  >
+    Next
+  </Button>
+</div>
         </main>
       </div>
     </div>

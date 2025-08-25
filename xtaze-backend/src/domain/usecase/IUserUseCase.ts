@@ -19,7 +19,8 @@ export default interface IuserUseCase{
     createPlaylist(_id: string,newplaylist:IPlaylist): Promise<IPlaylist | null>;
     getAllPlaylist(userId: string): Promise<IPlaylist[] | null>;
     getPlaylist(id:string,pageNum:number,limitNum:number,skip:number):Promise<{ tracks: ITrack[]; total: number } | null> 
-
+    increment(trackId: string,id:string): Promise<ITrack | null>
+    listArtists(page: number,limit: number): Promise<{data:IUser[];pagination   :{total:number,page:number,limit:number,totalpages:number}}>
     refresh(refreshToken: string): Promise<{ success: boolean; message: string; token?: string; refreshToken?:string;user?: IUser |null}>;
     uploadProfile(userID:string,file:Express.Multer.File): Promise<{ success: boolean; message: string }>
     uploadBanner(userID:string,file:Express.Multer.File,isVideo:boolean): Promise<{ success: boolean; message: string }>
@@ -44,5 +45,6 @@ export default interface IuserUseCase{
     getliked(songIds:string,userId:string): Promise<ITrack[]|null>
     allAlbums(): Promise<IAlbum[]|null>
     albumView(albumId:string): Promise<IAlbum|null>
+    listArtistReleases(userId: string,page:number,limit:number): Promise<{data:ITrack[];pagination:{total:number,page:number,limit:number;totalPages:number}}>
 
 }

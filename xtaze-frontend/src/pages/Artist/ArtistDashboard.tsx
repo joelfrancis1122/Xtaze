@@ -8,7 +8,7 @@ import { TopSongsTable } from "./artistComponents/top-songs-table";
 import ArtistSidebar from "./artistComponents/artist-aside";
 import { useSelector } from "react-redux";
 import { RootState } from "../../store/store";
-import { fetchArtistTracks } from "../../services/adminService";
+import { fetchArtistTracks } from "../../services/artistService";
 
 interface PlayHistory {
   month: string;
@@ -35,21 +35,21 @@ const ArtistDashboard = () => {
 
       try {
         const tracks = await fetchArtistTracks(user._id);
-
-        if (!tracks || tracks.length === 0) {
+        console.log(tracks,"ava")
+        if (!tracks || tracks.data.length === 0) {
           setMostListenedSong("None");
           setTotalSongs("0");
           return;
         }
 
         // Calculate Total Number of Songs
-        const totalSongsCount = tracks.length;
+        const totalSongsCount = tracks.data.length;
         setTotalSongs(totalSongsCount.toLocaleString());
 
         // Calculate Most Listened Song (based on total plays)
         let maxPlays = 0;
         let mostListened = "None";
-        tracks.forEach((track) => {
+        tracks.data.forEach((track) => {
           const trackPlays = track.playHistory.reduce(
             (sum: number, entry: PlayHistory) => sum + entry.plays,
             0
@@ -70,21 +70,6 @@ const ArtistDashboard = () => {
     fetchMetrics();
   }, [user?._id]);
 
-  // useEffect(() => {
-  //   const styles = `
-  //     body, * {
-  //       background-color: var(--background) !important; /* Dark background */
-  //     }
-  //   `;
-  //   const styleSheet = document.createElement("style");
-  //   styleSheet.type = "text/css";
-  //   styleSheet.innerText = styles;
-  //   document.head.appendChild(styleSheet);
-
-  //   return () => {
-  //     document.head.removeChild(styleSheet); // Cleanup on unmount
-  //   };
-  // }, []);
 
   return (
     <div className="min-h-screen bg-black text-white">

@@ -13,8 +13,9 @@ import {
   YAxis,
 } from "recharts";
 import { RootState } from "../../../store/store";
-import { fetchArtistTracks, fetchUserDetails } from "../../../services/adminService";
+import {fetchUserDetails } from "../../../services/adminService";
 import { aggregateDemographics } from "../../../utils/demographics";
+import { fetchArtistTracks } from "../../../services/artistService";
 
 // Define the structure for chart data
 interface ChartData {
@@ -46,7 +47,7 @@ export function DemographicsChart() {
         
         // Collect all unique listener IDs
         const listenerIds = Array.from(
-          new Set(tracks.flatMap((track) => track.listeners))
+          new Set(tracks.data.flatMap((track) => track.listeners))
         );
         
         if (listenerIds.length === 0) {

@@ -6,8 +6,8 @@ import { cn } from "../../../lib/utils";
 import { useNavigate } from "react-router-dom";
 import { IconEye, IconEyeOff } from "@tabler/icons-react";
 import { useDispatch, useSelector } from "react-redux";
-import { RootState } from "../../store/store"; // Adjust path
-import { loginAdmin } from "../../services/adminService"; // Adjust path
+import { RootState } from "../../store/store"; 
+import { loginAdmin } from "../../services/adminService"; 
 
 const AdminLogin = () => {
   const navigate = useNavigate();

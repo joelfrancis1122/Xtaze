@@ -15,10 +15,8 @@ export interface UploadSongResponse {
 export const uploadSongToCloud = async (file: Express.Multer.File): Promise<UploadSongResponse> => {
   try {
     if (!file || !file.buffer) throw new Error("No file provided");
-
     let metadata;
     try {
-      // Use the required module
       metadata = await musicMetadata.parseBuffer(file.buffer, file.mimetype || "audio/mpeg");
     } catch (metadataError) {
       console.error("❌ Metadata parsing error:", metadataError);

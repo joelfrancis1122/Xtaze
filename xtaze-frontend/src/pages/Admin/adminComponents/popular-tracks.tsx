@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from "react";
-import { fetchAllTrack } from "../../../services/userService";
+import { fetchAllTrack } from "../../../services/adminService";
 
 interface Track {
   title: string;

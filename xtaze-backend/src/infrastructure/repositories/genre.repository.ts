@@ -12,10 +12,17 @@ export class GenreRepository extends BaseRepository<IGenre> implements IGenreRep
   async createGenre(name: string): Promise<IGenre> {
     return await GenreModel.create({name})
   }
+async getAllGenres(page: number, limit: number): Promise<{ data: IGenre[]; total: number }> {
+  const skip = (page - 1) * limit;
 
-  async getAllGenres(): Promise<IGenre[]> {
-    return await GenreModel.find().sort({ createdAt: -1 });
-  }
+  const [data, total] = await Promise.all([
+    GenreModel.find().sort({ createdAt: -1 }).skip(skip).limit(limit).lean(),
+    GenreModel.countDocuments(),
+  ]);
+
+  return { data, total };
+}
+
   async getAllActiveGenres(): Promise<IGenre[]> {
     return await GenreModel.find({isBlocked:false}).sort({ createdAt: -1 });
   }

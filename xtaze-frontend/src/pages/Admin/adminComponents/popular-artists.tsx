@@ -1,133 +1,151 @@
-
 import { useEffect, useState } from "react";
-import { fetchArtists } from "../../../services/adminService";
-import { fetchArtistTracks } from "../../../services/adminService"; // Assuming this is available
+import { listActiveArtists, fetchArtistTracks } from "../../../services/adminService";
 
 interface Artist {
-    id: string;
-    name: string;
-    role: string;
-    image: string;
-    isActive: boolean;
+  id: string;
+  name: string;
+  role: string;
+  image: string;
+  isActive: boolean;
 }
 
 interface PlayHistory {
-    month: string;
-    plays: number;
+  month: string;
+  plays: number;
 }
 
 interface Track {
-    _id: string;
-    title: string;
-    listeners: string[];
-    playHistory: PlayHistory[];
+  _id: string;
+  title: string;
+  listeners: string[];
+  playHistory: PlayHistory[];
 }
 
 interface ArtistWithListeners extends Artist {
-    monthlyListeners: number;
+  monthlyListeners: number;
 }
-
 export function PopularArtists() {
-    const [topArtists, setTopArtists] = useState<ArtistWithListeners[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+  const [allArtists, setAllArtists] = useState<ArtistWithListeners[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const limit = 5;
 
-    useEffect(() => {
-        const fetchTopArtists = async () => {
+  useEffect(() => {
+    const fetchTopArtists = async () => {
+      try {
+        setLoading(true);
+        const token = localStorage.getItem("adminToken");
+        if (!token) throw new Error("No token found. Please login.");
+
+        // ✅ fetch all artists instead of just page 5
+        const { data: artistList } = await listActiveArtists(1, 9999); 
+
+        const filtered = artistList.filter((artist) => artist.role === "artist");
+
+        function getRecentMonths(count: number): string[] {
+          const now = new Date();
+          return Array.from({ length: count }, (_, i) => {
+            const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+            return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+          });
+        }
+        const relevantMonths = getRecentMonths(2);
+
+        const artistsWithListeners: ArtistWithListeners[] = await Promise.all(
+          filtered.map(async (artist) => {
             try {
-                const token = localStorage.getItem("adminToken");
-                if (!token) {
-                    throw new Error("No token found. Please login.");
-                }
+              const tracks = await fetchArtistTracks(artist.id);
+              const listenersSet = new Set<string>();
 
-                // Fetch all artists
-                const artists = await fetchArtists();
-
-                // Filter for artists only (exclude other roles if needed)
-                const artistList = artists.filter((artist: Artist) => artist.role === "artist");
-
-                // Calculate monthly listeners for each artist
-                const artistsWithListeners: ArtistWithListeners[] = await Promise.all(
-                    artistList.map(async (artist: Artist) => {
-                        try {
-                            const tracks = await fetchArtistTracks(artist.id );
-                            const relevantMonths = ["2025-06", "2025-07"];
-                            const listenersSet = new Set<string>();
-                            tracks.forEach((track: Track) => {
-                                const hasRecentPlays = track.playHistory.some((entry) =>
-                                    relevantMonths.includes(entry.month)
-                                );
-                                if (hasRecentPlays) {
-                                    track.listeners.forEach((listener) => listenersSet.add(listener));
-                                }
-                            });
-                            return {
-                                ...artist,
-                                monthlyListeners: listenersSet.size,
-                            };
-                        } catch (err) {
-                            console.error(`Error fetching tracks for artist ${artist.name}:`, err);
-                            return { ...artist, monthlyListeners: 0 };
-                        }
-                    })
+              tracks.forEach((track) => {
+                const hasRecentPlays = track.playHistory.some((entry) =>
+                  relevantMonths.includes(entry.month)
                 );
-                // Sort by monthly listeners and take top 5
-                const sortedArtists = artistsWithListeners
-                    .sort((a, b) => b.monthlyListeners - a.monthlyListeners)
-                    .slice(0, 5);
+                if (hasRecentPlays) {
+                  track.listeners.forEach((listener) => listenersSet.add(listener));
+                }
+              });
 
-                setTopArtists(sortedArtists);
-                setLoading(false);
-            } catch (err) {
-                console.error("Error fetching top artists:", err);
-                setError("Failed to load top artists. Please try again.");
-                setLoading(false);
+              return { ...artist, monthlyListeners: listenersSet.size };
+            } catch {
+              return { ...artist, monthlyListeners: 0 };
             }
-        };
+          })
+        );
 
-        fetchTopArtists();
-    }, []);
+        // ✅ sort globally once
+        const sorted = artistsWithListeners.sort(
+          (a, b) => b.monthlyListeners - a.monthlyListeners
+        );
 
-    if (loading) {
-        return <div className="text-center text-white">Loading...</div>;
-    }
+        setAllArtists(sorted);
+        setLoading(false);
+      } catch (err) {
+        setError("Failed to load top artists. Please try again.");
+        setLoading(false);
+      }
+    };
 
-    if (error) {
-        return <div className="text-center text-red-500">{error}</div>;
-    }
+    fetchTopArtists();
+  }, []);
 
-    return (
-        <table className="w-full border-separate border-spacing-y-1">
-            {/* Table Header */}
-            <thead className="bg-gray-900 text-white">
-                <tr>
-                    <th className="px-4 py-2 text-left text-sm font-semibold border-b">Artist</th>
-                    <th className="px-4 py-2 text-center text-sm font-semibold border-b">Monthly Listeners</th>
-                </tr>
-            </thead>
+  const totalPages = Math.ceil(allArtists.length / limit);
+  const paginatedArtists = allArtists.slice((page - 1) * limit, page * limit);
 
-            {/* Table Body */}
-            <tbody>
-                {topArtists.map((artist, index) => (
-                    <tr key={index} className="border-b">
-                        <td className="px-4 py-2 text-sm">
-                            <div className="flex items-center gap-2">
-                                <img
-                                    src={artist.image}
-                                    alt={artist.name || "Default Avatar"}
-                                    className="h-8 w-8 rounded-full object-cover transition-transform duration-200 hover:scale-150"
-                                  
-                                />
+  if (loading) return <div className="text-center text-white">Loading...</div>;
+  if (error) return <div className="text-center text-red-500">{error}</div>;
 
-                                {artist.name}
-                            </div>
-                        </td>
-                        <td className="px-4 py-2 text-center text-sm">
-                            {artist.monthlyListeners.toLocaleString()}
-                        </td>
-                    </tr>
-                ))}
-            </tbody>
-        </table>
-    );
+  return (
+    <div className="space-y-4">
+      <table className="w-full border-separate border-spacing-y-1">
+        <thead className="bg-gray-900 text-white">
+          <tr>
+            <th className="px-4 py-2 text-left text-sm font-semibold border-b">Artist</th>
+            <th className="px-4 py-2 text-center text-sm font-semibold border-b">Monthly Listeners</th>
+          </tr>
+        </thead>
+        <tbody>
+          {paginatedArtists.map((artist, index) => (
+            <tr key={index} className="border-b">
+              <td className="px-4 py-2 text-sm">
+                <div className="flex items-center gap-2">
+                  <img
+                    src={artist.image}
+                    alt={artist.name || "Default Avatar"}
+                    className="h-8 w-8 rounded-full object-cover transition-transform duration-200 hover:scale-150"
+                  />
+                  {artist.name}
+                </div>
+              </td>
+              <td className="px-4 py-2 text-center text-sm">
+                {artist.monthlyListeners.toLocaleString()}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      {/* Pagination Controls */}
+      <div className="flex justify-center items-center gap-4 mt-4">
+        <button
+          onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
+          disabled={page === 1}
+          className="px-3 py-1 bg-gray-800 text-white rounded disabled:opacity-50"
+        >
+          Previous
+        </button>
+        <span className="text-white">
+          Page {page} of {totalPages}
+        </span>
+        <button
+          onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
+          disabled={page === totalPages}
+          className="px-3 py-1 bg-gray-800 text-white rounded disabled:opacity-50"
+        >
+          Next
+        </button>
+      </div>
+    </div>
+  );
 }

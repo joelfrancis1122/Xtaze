@@ -11,29 +11,28 @@ import { ArtistMonetization, MusicMonetization } from "../../domain/entities/IMo
 import { IVerificationStatusResponse } from "../../domain/entities/IVerificationStatusResponse ";
 import { MESSAGES } from "../../domain/constants/messages";
 import { IAlbum } from "../../domain/entities/IAlbum";
+import { injectable } from "inversify";
+import { inject } from "inversify";
+import TYPES from "../../domain/constants/types";
+
+import ArtistRepository from "../../infrastructure/repositories/artist.repository";
 dotenv.config();
-
-interface useCaseDependencies {
-  repository: {
-    artistRepository: IArtistRepository
-    userRepository: IUserRepository
-  },
-  service: {
-    passwordService: IPasswordService
-  }
-}
-
+@injectable()
 export default class ArtistUseCase {
-  private _userRepository: IUserRepository
-  private _artistRepository: IArtistRepository
-  private _passwordService: IPasswordService
+  private _artistRepository: IArtistRepository;
+  private _passwordService: IPasswordService;
+  private _userRepository: IUserRepository;
 
-  constructor(dependencies: useCaseDependencies) {
-    this._artistRepository = dependencies.repository.artistRepository
-    this._passwordService = dependencies.service.passwordService
-    this._userRepository = dependencies.repository.userRepository
-
+  constructor(
+    @inject(TYPES.ArtistRepository) artistRepository: IArtistRepository,
+    @inject(TYPES.PasswordService) passwordService: IPasswordService,
+    @inject(TYPES.UserRepository) userRepository: IUserRepository,
+  ) {
+    this._artistRepository = artistRepository;
+    this._passwordService = passwordService;
+    this._userRepository = userRepository;
   }
+
 
   async login(email: string, password: string): Promise<{ success: boolean; message: string; token?: string; ArefreshToken?: string; artist?: IUser }> {
     const artist = await this._artistRepository.findByEmail(email);
@@ -77,7 +76,7 @@ export default class ArtistUseCase {
       if (user.isActive === false) return { success: false, message: MESSAGES.ACCOUNT_SUSPENDED };
 
       const newToken = jwt.sign(
-        { userId: user._id, email: user.email, role: MESSAGES.ARTIST},
+        { userId: user._id, email: user.email, role: MESSAGES.ARTIST },
         process.env.JWT_SECRET!,
         { expiresIn: "30m" }
       );
@@ -132,10 +131,32 @@ export default class ArtistUseCase {
   }
 
 
-  async listArtists(): Promise<IUser[]> {
-    return await this._artistRepository.getAllArtists() as IUser[];
-
+  async listArtists(page: number, limit: number): Promise<{ data: IUser[]; pagination: { total: number, page: number, limit: number, totalpages: number } }> {
+    const { data, total } = await this._artistRepository.getAllArtistsP(page, limit);
+    return {
+      data,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalpages: Math.ceil(total / limit)
+      }
+    }
   }
+
+  async listActiveArtists(page: number, limit: number): Promise<{ data: IUser[]; pagination: { total: number, page: number, limit: number, totalpages: number } }> {
+    const { data, total } = await this._artistRepository.listActiveArtists(page, limit);
+    return {
+      data,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalpages: Math.ceil(total / limit)
+      }
+    }
+  }
+
   async albumsongs(id: string): Promise<IAlbum | null> {
     const album = await this._artistRepository.albumsongs(id) as IAlbum;
     const tracks = await this._artistRepository.findTracksByIds(album.tracks);
@@ -145,9 +166,20 @@ export default class ArtistUseCase {
     } as unknown as IAlbum;
   }
 
-  async listArtistReleases(userId: string): Promise<ITrack[]> {
-
-    return await this._artistRepository.getAllTracksByArtist(userId) as ITrack[];
+  async listArtistReleases(userId: string, page: number, limit: number): Promise<{
+    data: ITrack[]
+    pagination: { total: number; page: number; limit: number; totalPages: number };
+  }> {
+    const { data, total } = await this._artistRepository.getAllTracksByArtist(userId, page, limit)
+    return {
+      data,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit)
+      }
+    }
 
   }
   async increment(trackId: string, id: string): Promise<ITrack | null> {
@@ -174,10 +206,22 @@ export default class ArtistUseCase {
     return await this._artistRepository.uploadAlbum(newAlbum);
   }
 
-  async statsOfArtist(userId: string): Promise<ArtistMonetization[]> {
+  async statsOfArtist(userId: string, page: number, limit: number): Promise<{
+    data: ArtistMonetization[],
+    pagination: { total: number; page: number; limit: number; totalPages: number };
 
-    return await this._artistRepository.statsOfArtist(userId);
+  }> {
 
+    const { data, total } = await this._artistRepository.statsOfArtist(userId, page, limit);
+    return {
+      data,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
 
   }
   async saveCard(artistId: string, paymentMethodId: string): Promise<IUser | null> {

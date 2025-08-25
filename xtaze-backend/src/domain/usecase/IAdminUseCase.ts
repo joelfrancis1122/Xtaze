@@ -23,11 +23,13 @@ export default interface IAdminUseCase {
     deleteCoupon(couponId: string): Promise<ICoupon | null>
     updateCoupon(couponId: string, updateData: ICoupon): Promise<ICoupon | null>
     verifyCoupon(code: string): Promise<ICoupon | null>
-    getMusicMonetization(): Promise<MusicMonetization[] | null>
+    getMusicMonetization(page: number,limit: number): Promise<{data: MusicMonetization[];pagination: {currentPage: number;totalPages: number;totalItems: number}}>;
     artistPayout(artistName: string): Promise<{ success: boolean; payoutId?: string }>
     getUsersByIds(userIds: string[]): Promise<IUser[] | null>
-    fetchVerification(): Promise<IVerificationRequest | null>
-    updateVerificationStatus(status:string,feedback: string | null,id:string) :Promise<IVerificationRequest|null>
+    fetchVerification(page:number,lmit:number): Promise<{data:IVerificationRequest[];pagination:{total:number,page:number,limit:number}}>
+    updateVerificationStatus(status: string, feedback: string | null, id: string): Promise<IVerificationRequest | null>
+    listArtistReleases(userId: string): Promise<ITrack[]>
+    getAllTracks(): Promise<ITrack[] | null>
 
 
 }

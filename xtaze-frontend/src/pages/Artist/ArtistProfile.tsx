@@ -11,7 +11,7 @@ import { saveArtistData } from "../../redux/artistSlice";
 import { Button } from "../../components/ui/button";
 import { Card } from "../../components/ui/card";
 import { getVerificationStatus, requestVerification, updateArtistBanner, updateArtistBio, updateArtistUsername, uploadProfileImage } from "../../services/artistService";
-import { fetchArtistTracks } from "../../services/adminService";
+import { fetchArtistTracks } from "../../services/artistService";
 
 interface Track {
   _id: string;
@@ -45,39 +45,43 @@ export default function ArtistProfile() {
   const [tracks, setTracks] = useState<Track[]>([]);
   const [verification, setVerification] = useState<VerificationStatus>({ status: "unsubmitted" });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-
+ const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [limit] = useState(5);
   const token = localStorage.getItem("artistToken");
+useEffect(() => {
+  if (!token) {
+    console.error("No token found. Please login.");
+    navigate("/artist");
+    return;
+  }
 
-  useEffect(() => {
-    if (!token) {
-      console.error("No token found. Please login.");
-      navigate("/artist");
-      return;
+  const fetchData = async () => {
+    if (!user?._id) return;
+
+    try {
+      const fetchedTracks = await fetchArtistTracks(user._id, page, limit);
+
+      const mappedTracks = fetchedTracks.data.map((track) => ({
+        _id: track._id,
+        title: track.title,
+        listeners: track.playHistory ?? [],
+      }));
+
+      setTracks(mappedTracks);
+      setTotalPages(fetchedTracks.pagination.totalPages);
+
+      const verificationData = await getVerificationStatus(user._id);
+      setVerification(verificationData || { status: "unsubmitted" });
+    } catch (error: any) {
+      console.error("Error fetching data:", error);
+      setTracks([]);
+      toast.error("Failed to load profile data.");
     }
+  };
 
-    const fetchData = async () => {
-      if (!user?._id) return;
-
-      try {
-        const fetchedTracks = await fetchArtistTracks(user._id);
-        const mappedTracks = fetchedTracks.map((track: any) => ({
-          _id: track._id,
-          title: track.title,
-          listeners: track.listeners ?? []
-        }));
-        setTracks(mappedTracks);
-
-        const verificationData = await getVerificationStatus(user._id);
-        setVerification(verificationData || { status: "unsubmitted" });
-      } catch (error: any) {
-        console.error("Error fetching data:", error);
-        setTracks([]);
-        toast.error("Failed to load profile data.");
-      }
-    };
-
-    fetchData();
-  }, [navigate, user?._id, token]);
+  fetchData();
+}, [navigate, user?._id, token, page, limit]);
 
   useEffect(() => {
     setUsernameText(user?.username || "");
@@ -457,6 +461,25 @@ export default function ArtistProfile() {
                 )}
               </div>
             </Card>
+<div className="flex justify-between items-center mt-4">
+  <Button
+    disabled={page === 1}
+    onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
+  >
+    Previous
+  </Button>
+
+  <span className="text-gray-400">
+    Page {page} of {totalPages}
+  </span>
+
+  <Button
+    disabled={page === totalPages || totalPages === 0}
+    onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
+  >
+    Next
+  </Button>
+</div>
 
             {/* Verification Process Section */}
             <Card className="p-6 bg-black border border-white">

@@ -7,7 +7,7 @@ import { Ban, CheckCircle, Plus, Edit, Save } from "lucide-react";
 import Sidebar from "./adminComponents/aside-side";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
-import { fetchGenres, addGenre, toggleBlockGenre, updateGenre } from "../../services/adminService"; // Adjust path
+import { fetchGenres, addGenre, toggleBlockGenre, updateGenre } from "../../services/adminService";
 
 interface Genre {
   _id: string;
@@ -20,11 +20,32 @@ export default function GenreManagement() {
   const [newGenre, setNewGenre] = useState<string>("");
   const [editingGenreId, setEditingGenreId] = useState<string | null>(null);
   const [editedGenreName, setEditedGenreName] = useState<string>("");
-  useEffect(() => {
-    fetchGenres()
-      .then((genres) => setGenres(genres))
-      .catch((err) => console.error("Error fetching genres:", err));
-  }, []);
+
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  // useEffect(() => {
+  //   fetchGenres()
+  //     .then((genres) => setGenres(genres))
+  //     .catch((err) => console.error("Error fetching genres:", err));
+  // }, []);
+
+  
+useEffect(() => {
+  const fetchData = async () => {
+    try {
+      const res = await fetchGenres(page, 10);
+
+      setGenres(res.data);
+      
+      setTotalPages(res.pagination.totalPages);
+    } catch (err) {
+      console.error("Error fetching genres:", err);
+    }
+  };
+
+  fetchData();
+}, [page]);
+
 
   const handleAddGenre = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -103,7 +124,12 @@ export default function GenreManagement() {
               type="text"
               placeholder="Enter genre name"
               value={newGenre}
-              onChange={(e) => setNewGenre(e.target.value)}
+              onChange={(e) => {
+                if (e.target.value.length <= 15) {
+
+                  setNewGenre(e.target.value.trim())
+                }
+              }}
               className="border p-2 rounded-md w-full bg-[#111111] border-gray-600 text-white"
             />
             <Button onClick={handleAddGenre} className="bg-[#2f2f2f] hover:bg-black">
@@ -119,7 +145,7 @@ export default function GenreManagement() {
                 <TableCell className="text-left p-4 mt-7">Genre Name</TableCell>
                 <TableCell className="text-left p-4 ">Status</TableCell>
                 <TableCell className="text-left p-4 "></TableCell>
-                <TableCell className="text-left p-4 ">Actions</TableCell>
+                <TableCell className="text-left p-2 ">Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -130,7 +156,13 @@ export default function GenreManagement() {
                       <input
                         type="text"
                         value={editedGenreName}
-                        onChange={(e) => setEditedGenreName(e.target.value)}
+                        onChange={(e) => {
+                          if (e.target.value.length <= 15) {
+
+                            setEditedGenreName(e.target.value.trim())
+                          }
+                        }}
+
                         className="border p-2 rounded-md w-[200px] bg-[#222222] border-gray-600 text-white focus:outline-none focus:ring-2 focus:ring-white-500"
                       />
                     ) : (
@@ -188,6 +220,28 @@ export default function GenreManagement() {
               ))}
             </TableBody>
           </Table>
+          <div className="flex justify-between items-center mt-4">
+            <Button
+              disabled={page === 1}
+              onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
+              className="px-4 py-2 bg-[#2f2f2f] hover:bg-black"
+            >
+              Previous
+            </Button>
+
+            <span className="text-gray-400">
+              Page {page} of {totalPages}
+            </span>
+
+            <Button
+              disabled={page === totalPages}
+              onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
+              className=" mr-35 px-6 py-2 bg-[#2f2f2f] hover:bg-black"
+            >
+              Next
+            </Button>
+          </div>
+
         </Card>
       </div>
     </div>

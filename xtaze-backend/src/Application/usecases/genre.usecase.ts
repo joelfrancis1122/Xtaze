@@ -1,22 +1,51 @@
 
+import { injectable } from "inversify";
 import { MESSAGES } from "../../domain/constants/messages";
 import { IGenre } from "../../domain/entities/IGenre";
 import { IGenreRepository } from "../../domain/repositories/IGenreRepository";
 import IGenreDependencies from "../../infrastructure/repositories/IDependencies/IGenreDependencies";
+import { inject } from "inversify";
+import TYPES from "../../domain/constants/types";
 
 
 
+// export class GenreUseCase {
+
+//   private _genreRepository: IGenreRepository
+//   constructor(dependencies: IGenreDependencies) {
+//     this._genreRepository = dependencies.repository.GenreRepository
+
+//   }
+
+@injectable()
 export class GenreUseCase {
+  private _genreRepository: IGenreRepository;
 
-  private _genreRepository: IGenreRepository
-  constructor(dependencies: IGenreDependencies) {
-    this._genreRepository = dependencies.repository.GenreRepository
-
+  constructor(
+    @inject(TYPES.GenreRepository) genreRepository: IGenreRepository
+  ) {
+    this._genreRepository = genreRepository;
   }
 
-  async listGenre(): Promise<IGenre[]> {
-    return await this._genreRepository.getAllGenres() as IGenre[];
+
+  async listGenre(page: number, limit: number): Promise<{
+    data: IGenre[];
+    pagination: { total: number; page: number; limit: number; totalPages: number };
+  }> {
+
+    const { data, total } = await this._genreRepository.getAllGenres(page, limit);
+    return {
+      data,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   }
+
+
   async listActiveGenres(): Promise<IGenre[]> {
     return await this._genreRepository.getAllActiveGenres() as IGenre[];
   }
@@ -26,13 +55,13 @@ export class GenreUseCase {
     const dupe = await this._genreRepository.findDupe(name);
 
     if (dupe) {
-        return { success: false, message: MESSAGES.GENRE_EXISTS };
+      return { success: false, message: MESSAGES.GENRE_EXISTS };
     }
 
     const data = await this._genreRepository.createGenre(name);
 
     return { success: true, message: MESSAGES.GENRE_SUCCESS, genre: data ?? undefined };
-}
+  }
 
 
 

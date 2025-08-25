@@ -1,18 +1,16 @@
 import express, { NextFunction, Request, Response } from "express";
 import UserController from "../../../presentation/controller/user.controller";
-import userDependencies from "../../dependencies/user.dependencies";
 import upload from "../../middlewares/uploadMiddleware";
 import { authenticateUser } from "../../middlewares/authMiddleware";
-import artistDependencies from "../../dependencies/artist.dependencies";
 import ArtistController from "../../../presentation/controller/artist.controller";
-import adminDependencies from "../../dependencies/admin.dependencies";
 import AdminController from "../../../presentation/controller/admin.controller";
+import container from "../../../domain/constants/inversify.config";
 
 const router = express.Router();
     
-const userController = new UserController(userDependencies)
-const artistController = new ArtistController(artistDependencies)
-const adminController = new AdminController(adminDependencies)
+const artistController = container.get<ArtistController>(ArtistController)
+const adminController = container.get<AdminController>(AdminController)
+const userController = container.get<UserController>(UserController);
 
 router.post("/checkUsername", (req: Request, res: Response, next: NextFunction) => userController.checkUsername(req, res, next));
 router.post("/forgotPassword", (req: Request, res: Response, next: NextFunction) => userController.forgotPassword(req, res, next));
@@ -33,8 +31,8 @@ router.post("/getliked",authenticateUser,(req:Request,res:Response,next:NextFunc
 router.put("/updateImagePlaylist", authenticateUser,upload.single("imageUpload"),(req:Request,res:Response,next:NextFunction)=>userController.updateImagePlaylist(req,res,next))
 router.get("/getTracksInPlaylist",authenticateUser,(req:Request,res:Response,next:NextFunction)=>userController.getTracksInPlaylist(req,res,next))
 router.post("/updateBanner",authenticateUser, upload.single("coverImage"),(req:Request,res:Response,next:NextFunction)=>userController.uploadBanner(req,res,next))
-router.get("/listArtists",authenticateUser,(req:Request,res:Response,next:NextFunction)=>artistController.listArtists(req,res,next))
-router.get("/getAllTracksArtist",authenticateUser,(req:Request,res:Response,next:NextFunction)=>artistController.getAllTracksArtist(req,res,next))
+router.get("/listArtists",authenticateUser,(req:Request,res:Response,next:NextFunction)=>userController.listArtists(req,res,next))
+router.get("/getAllTracksArtist",authenticateUser,(req:Request,res:Response,next:NextFunction)=>userController.getAllTracksArtist(req,res,next))
 router.get("/username",authenticateUser,(req:Request,res:Response,next:NextFunction)=>userController.username(req,res,next))
 router.get("/fetchAllArtistsVerification",authenticateUser,(req:Request,res:Response,next:NextFunction)=>adminController.fetchVerification(req,res,next))
 router.put("/usersName",authenticateUser,(req:Request,res:Response,next:NextFunction)=>userController.usernameUpdate(req,res,next))
@@ -51,6 +49,7 @@ router.get("/banners",authenticateUser,(req:Request,res:Response,next:NextFuncti
 
 router.get("/fetchAllTrack",authenticateUser,(req:Request,res:Response,next:NextFunction)=>userController.fetchAllTrack(req,res,next))
 router.get("/fetchGenreTracks",authenticateUser,(req:Request,res:Response,next:NextFunction)=>userController.fetchGenreTracks(req,res,next))
+router.post("/incrementListeners",authenticateUser,(req:Request,res:Response,next:NextFunction)=>artistController.incrementListeners(req,res,next))
 
 router.put("/becomeArtist",authenticateUser,(req:Request,res:Response,next:NextFunction)=>userController.becomeArtist(req,res,next))
 

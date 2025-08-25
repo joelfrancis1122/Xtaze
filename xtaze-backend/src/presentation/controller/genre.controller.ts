@@ -4,27 +4,45 @@ import IGenreUseCase from "../../domain/usecase/IGenreUseCase";
 import IuserUseCase from "../../domain/usecase/IUserUseCase";
 import AppError from "../../utils/AppError";
 import { MESSAGES } from "../../domain/constants/messages";
+import { injectable } from "inversify";
+import { inject } from "inversify";
+import TYPES from "../../domain/constants/types";
 
 
-interface Dependencies {
-  GenreUseCase: IGenreUseCase;
-  UserUseCase: IuserUseCase;
-}
+// interface Dependencies {
+//   GenreUseCase: IGenreUseCase;
+//   UserUseCase: IuserUseCase;
+// }
 
+// export default class GenreController {
+//   private _genreUseCase: IGenreUseCase;
+//   private _userUseCase: IuserUseCase;
+
+//   constructor(dependencies: Dependencies) {
+//     this._genreUseCase = dependencies.GenreUseCase;
+//     this._userUseCase = dependencies.UserUseCase;
+//   }
+
+  
+@injectable()
 export default class GenreController {
   private _genreUseCase: IGenreUseCase;
   private _userUseCase: IuserUseCase;
 
-  constructor(dependencies: Dependencies) {
-    this._genreUseCase = dependencies.GenreUseCase;
-    this._userUseCase = dependencies.UserUseCase;
+  constructor(
+    @inject(TYPES.GenreUseCase) genreUseCase: IGenreUseCase,
+    @inject(TYPES.UserUseCase) userUseCase: IuserUseCase
+  ) {
+    this._genreUseCase = genreUseCase;
+    this._userUseCase = userUseCase;
   }
-
-  
   async listGenre(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const listGenre = await this._genreUseCase.listGenre();
-      res.status(HttpStatus.OK).json({ success: true, message:MESSAGES.GENRE_LIST, data: listGenre });
+      const page = Number(req.query.page) || 1;
+      const limit = Number(req.query.limit) || 10;
+
+      const listGenre = await this._genreUseCase.listGenre(page, limit);
+      res.status(HttpStatus.OK).json({ success: true, message: MESSAGES.GENRE_LIST, data: listGenre });
     } catch (error) {
       next(error);
     }
@@ -40,7 +58,6 @@ export default class GenreController {
       if (artistId) {
         artist = await this._userUseCase.getUpdatedArtist(artistId);
       }
-
       res.status(HttpStatus.OK).json({
         success: true,
         message: MESSAGES.GENRE_LIST,
@@ -87,13 +104,13 @@ export default class GenreController {
       const editedGenre = await this._genreUseCase.editGenre(id, name);
 
       if (typeof editedGenre === "string") {
-        throw new AppError(editedGenre, HttpStatus.BAD_REQUEST); 
+        throw new AppError(editedGenre, HttpStatus.BAD_REQUEST);
       }
 
-      res.status(HttpStatus.OK).json({ success: true, message:MESSAGES.GENRE_UPDATE, data: editedGenre });
+      res.status(HttpStatus.OK).json({ success: true, message: MESSAGES.GENRE_UPDATE, data: editedGenre });
     } catch (error) {
       console.log(error);
-      next(error); 
+      next(error);
     }
   }
 }

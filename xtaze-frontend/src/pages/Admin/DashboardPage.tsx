@@ -8,7 +8,7 @@ import { PopularTracks } from "./adminComponents/popular-tracks"
 import { PopularArtists } from "./adminComponents/popular-artists"
 import "../../styles/zashboard.css"
 import Sidebar from "./adminComponents/aside-side"
-import { fetchArtists, fetchSubscriptionHistory } from "../../services/adminService"
+import { fetchArtists, fetchSubscriptionHistory, listActiveArtists } from "../../services/adminService"
 
 interface Subscription {
   email: string;
@@ -40,9 +40,9 @@ export default function Page() {
       
       const fetchTotalArtists = async () => {
         try {
-          const artists = await fetchArtists();
+          const artists = await listActiveArtists();
           // Count valid artists (those with role === "artist" and active)
-          const artistCount = artists.filter(artist => artist.role === "artist" && artist.isActive).length;
+          const artistCount = artists.data.filter(artist => artist.role === "artist" && artist.isActive).length;
           setTotalArtists(artistCount);
         } catch (err) {
           console.error("Error fetching total artists:", err);

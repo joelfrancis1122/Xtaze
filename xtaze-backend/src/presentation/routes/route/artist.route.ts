@@ -1,14 +1,14 @@
 import express, { NextFunction, Request, Response } from "express";
 import ArtistController from "../../../presentation/controller/artist.controller";
-import artistDependencies from "../../dependencies/artist.dependencies";
 import upload from "../../middlewares/uploadMiddleware";
 import GenreController from "../../../presentation/controller/genre.controller";
-import genreDependencies from "../../dependencies/genre.dependencies";
 import { authenticateArtist, authenticateUser } from "../../middlewares/authMiddleware";
+import container from "../../../domain/constants/inversify.config";
 
 
-const artistController = new ArtistController(artistDependencies)
-const genreController = new GenreController(genreDependencies)
+const artistController = container.get<ArtistController>(ArtistController)
+const genreController = container.get<GenreController>(GenreController);
+
 const router = express.Router();
 
 

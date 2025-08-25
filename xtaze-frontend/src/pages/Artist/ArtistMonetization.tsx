@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { ChevronLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { Card } from "../../components/ui/card"; // Adjust path
-import ArtistSidebar from "./artistComponents/artist-aside"; // Adjust path
+import { Card } from "../../components/ui/card";
+import ArtistSidebar from "./artistComponents/artist-aside";
 import { RootState } from "../../store/store";
 import { useSelector } from "react-redux";
 import { Elements, CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
@@ -10,7 +10,7 @@ import { loadStripe } from "@stripe/stripe-js";
 import { toast } from "sonner";
 import { checkCardStatus, fetchSongEarnings, saveCard } from "../../services/artistService";
 
-// Load Stripe outside the component
+// ✅ Stripe setup
 const stripePromise = loadStripe("pk_test_51QuvsvQV9aXBcHmZPYCW1A2NRrd5mrEffAOVJMFOlrYDOl9fmb028A85ZE9WfxKMdNgTTA5MYoG4ZwCUQzHVydZj00eBUQVOo9");
 
 interface SongEarnings {
@@ -22,6 +22,7 @@ interface SongEarnings {
   monthlyEarnings: number;
 }
 
+// ✅ Card Input Component
 const CardInput = ({ artistId, onCardSaved }: { artistId: string; onCardSaved: () => void }) => {
   const stripe = useStripe();
   const elements = useElements();
@@ -39,13 +40,13 @@ const CardInput = ({ artistId, onCardSaved }: { artistId: string; onCardSaved: (
       const { paymentMethod, error } = await stripe.createPaymentMethod({
         type: "card",
         card: cardElement,
-        billing_details: { name: artistId }, // Use artistId or fetch username if needed
+        billing_details: { name: artistId },
       });
 
       if (error) throw new Error(error.message);
 
       await saveCard(artistId, paymentMethod!.id);
-      onCardSaved(); // Update parent state
+      onCardSaved();
       toast.success("Card saved successfully!");
     } catch (err: any) {
       toast.error(err.message || "Failed to save card");
@@ -68,53 +69,44 @@ const CardInput = ({ artistId, onCardSaved }: { artistId: string; onCardSaved: (
   );
 };
 
+// ✅ Main Page
 export default function ArtistMonetizePage() {
   const navigate = useNavigate();
   const [songs, setSongs] = useState<SongEarnings[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [hasCard, setHasCard] = useState(false);
+
+  // 🔑 Pagination state
+  const [page, setPage] = useState(1);
+  const [limit] = useState(5);
+  const [totalPages, setTotalPages] = useState(1);
+
   const user = useSelector((state: RootState) => state.artist.signupData);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        // Fetch song earnings
-        if (!user) {
-          return
-        }
-        const songData = await fetchSongEarnings(user._id);
-        setSongs(songData);
+        if (!user) return;
+
+        const { data, totalPages } = await fetchSongEarnings(user._id, page, limit);
+        console.log(data,"dasss",totalPages)
+        setSongs(data);
+        setTotalPages(totalPages);
+
         const cardStatus = await checkCardStatus(user._id);
         setHasCard(cardStatus);
       } catch (err) {
         console.error(err);
-        setError("no data awailable");
+        setError("No data available");
       } finally {
         setLoading(false);
       }
     };
 
     fetchData();
-
-    // Apply dark theme
-    const styleSheet = document.createElement("style");
-    styleSheet.type = "text/css";
-    styleSheet.innerText = `
-      body, * {
-        background-color: var(--background) !important;
-      }
-    `;
-    document.head.appendChild(styleSheet);
-
-    return () => {
-      if (styleSheet.parentNode) {
-        document.head.removeChild(styleSheet);
-      }
-    };
-  }, [user?._id]);
-
+  }, [user?._id, page, limit]);
 
   const handleCardSaved = () => {
     setHasCard(true);
@@ -171,7 +163,7 @@ export default function ArtistMonetizePage() {
             </Card>
           )}
 
-          {/* Songs Table */}
+          {/* Songs Table with Pagination */}
           {loading ? (
             <p className="text-gray-400 text-center py-4">Loading song data...</p>
           ) : error ? (
@@ -199,7 +191,27 @@ export default function ArtistMonetizePage() {
                     <span className="text-gray-400">${song.monthlyEarnings.toFixed(2)}</span>
                   </div>
                 ))}
+              </div>
 
+              {/* ✅ Pagination Controls */}
+              <div className="flex justify-center items-center gap-2 mt-4">
+                <button
+                  disabled={page === 1}
+                  onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
+                  className="px-3 py-1 bg-gray-700 rounded disabled:opacity-50"
+                >
+                  Previous
+                </button>
+                <span className="text-sm">
+                  Page {page} of {totalPages}
+                </span>
+                <button
+                  disabled={page === totalPages}
+                  onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
+                  className="px-3 py-1 bg-gray-700 rounded disabled:opacity-50"
+                >
+                  Next
+                </button>
               </div>
             </Card>
           ) : (

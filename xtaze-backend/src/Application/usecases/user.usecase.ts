@@ -14,38 +14,41 @@ import { IBanner } from '../../domain/entities/IBanner';
 import { SubscriptionHistory } from '../../domain/entities/ISubscriptionHistory';
 import { MESSAGES } from '../../domain/constants/messages';
 import { IAlbum } from '../../domain/entities/IAlbum';
+import { injectable } from "inversify";
+import { inject } from "inversify";
+import TYPES from "../../domain/constants/types";
 dotenv.config();
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2023-08-16" });
 
-  interface useCaseDependencies {
-  repository: {
-    userRepository: IUserRepository
-  },
-  service: {
-    PasswordService: IPasswordService,
-    OtpService: IOtpService;
-    EmailService: IEmailService;
-  }
-}
-
+@injectable()
 export default class UserUseCase {
-  private _userRepository: IUserRepository //space for storage box 
-  private _passwordService: IPasswordService // space for painting brush 
-  private _otpService: IOtpService; // space for another tool
+  private _userRepository: IUserRepository;
+  private _passwordService: IPasswordService;
+  private _otpService: IOtpService;
   private _emailService: IEmailService;
   private _stripe: Stripe;
 
-  constructor(dependencies: useCaseDependencies) { // boss giving the toys here 
-    this._userRepository = dependencies.repository.userRepository // got the storage box 
-    this._passwordService = dependencies.service.PasswordService // got the paint brush 
-    this._otpService = dependencies.service.OtpService;
-    this._emailService = dependencies.service.EmailService;
+  constructor(
+    @inject(TYPES.UserRepository) userRepository: IUserRepository,
+    @inject(TYPES.PasswordService) passwordService: IPasswordService,
+    @inject(TYPES.OtpService) otpService: IOtpService,
+    @inject(TYPES.EmailService) emailService: IEmailService
+  ) {
+    this._userRepository = userRepository;
+    this._passwordService = passwordService;
+    this._otpService = otpService;
+    this._emailService = emailService;
     this._stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
       apiVersion: "2023-08-16",
     });
   }
 
+  async increment(trackId: string, id: string): Promise<ITrack | null> {
+
+    return await this._userRepository.increment(trackId, id);
+
+  }
   async registerUser(username: string, country: string, gender: string, year: number, phone: number, email: string, password: string): Promise<IUser> {
 
     const [existingUserByEmail] = await Promise.all([
@@ -102,7 +105,7 @@ export default class UserUseCase {
       expiresIn: "1h",
     });
 
-    await this._emailService.sendEmail(email,MESSAGES.PASSWORD_RESET_SUCCESS, token);
+    await this._emailService.sendEmail(email, MESSAGES.PASSWORD_RESET_SUCCESS, token);
 
     return { success: true, message: MESSAGES.RESET_LINK_SENT };
   }
@@ -152,6 +155,35 @@ export default class UserUseCase {
 
   }
 
+  async listArtists(page: number, limit: number): Promise<{ data: IUser[]; pagination: { total: number, page: number, limit: number, totalpages: number } }> {
+    const { data, total } = await this._userRepository.getAllArtistsP(page, limit);
+    return {
+      data,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalpages: Math.ceil(total / limit)
+      }
+    }
+  }
+
+  async listArtistReleases(userId: string, page: number, limit: number): Promise<{
+    data: ITrack[]
+    pagination: { total: number; page: number; limit: number; totalPages: number };
+  }> {
+    const { data, total } = await this._userRepository.getAllTracksByArtist(userId, page, limit)
+    return {
+      data,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit)
+      }
+    }
+
+  }
   async login(email: string, password: string): Promise<{ success: boolean; message: string; token?: string; refreshToken?: string; user?: IUser }> {
     const user = await this._userRepository.findByEmail(email);
     if (!user) return { success: false, message: MESSAGES.USER_NOT_FOUND };
@@ -390,7 +422,7 @@ export default class UserUseCase {
         return null;
       }
 
-      return user; 
+      return user;
     } catch (error) {
       console.error(MESSAGES.ERROR_UPDATING_PROFILE, error);
       throw new Error(MESSAGES.ERROR_UPDATING_PROFILE);
@@ -420,7 +452,7 @@ export default class UserUseCase {
         return null;
       }
 
-      return playlist; 
+      return playlist;
     } catch (error) {
       console.error(MESSAGES.ERROR_UPDATING_PROFILE, error);
       throw new Error(MESSAGES.ERROR_UPDATING_PROFILE);
@@ -554,7 +586,7 @@ export default class UserUseCase {
         const usedUsers = coupon.users ?? [];
 
         if (
-          coupon.status !== MESSAGES.ACTIVE||
+          coupon.status !== MESSAGES.ACTIVE ||
           currentUses >= coupon.maxUses ||
           new Date(coupon.expires) < new Date()
         ) {
@@ -652,7 +684,7 @@ export default class UserUseCase {
   }
 
 
-   async getSubscriptionHistoryFromStripe(): Promise<SubscriptionHistory[]> {
+  async getSubscriptionHistoryFromStripe(): Promise<SubscriptionHistory[]> {
     try {
       const sessions = await this._stripe.checkout.sessions.list({
         limit: 50, // Max 100, adjust as needed
@@ -667,8 +699,8 @@ export default class UserUseCase {
         completedSessions.map(async (session) => {
           const userId = session.metadata?.userId || MESSAGES.MY_NAME;
           const planName = session.metadata?.planName || "Unknown Plan";
-          const price = (session.amount_total || 0) / 100; 
-          const purchaseDate = new Date(session.created * 1000).toISOString(); 
+          const price = (session.amount_total || 0) / 100;
+          const purchaseDate = new Date(session.created * 1000).toISOString();
 
           let email = (session.customer as Stripe.Customer)?.email || "N/A";
           if (!email || email === "N/A") {

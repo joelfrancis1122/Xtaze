@@ -13,10 +13,10 @@ import { BaseRepository } from "./BaseRepository";
 // export default class ArtistRepository implements IArtistRepository {
 export default class ArtistRepository
   extends BaseRepository<IUser> implements IArtistRepository {
- 
-    constructor() {
+
+  constructor() {
     super(UserModel); // ee modelne base classilek pass
- 
+
   }
 
 
@@ -93,6 +93,54 @@ export default class ArtistRepository
     return await UserModel.find({ role: { $ne: "admin" } });
   }
 
+  async getAllArtistsP(
+    page: number,
+    limit: number
+  ): Promise<{ data: IUser[]; total: number }> {
+    const skip = (page - 1) * limit;
+
+    const [artists, total] = await Promise.all([
+      UserModel.find({ role: { $ne: "admin" } })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      UserModel.countDocuments({ role: { $ne: "admin" } }),
+    ]);
+
+    const data: IUser[] = artists.map((artist: any) => ({
+      ...artist,
+      _id: artist._id.toString(),
+    }));
+
+    return { data, total };
+  }
+  async listActiveArtists(
+    page: number,
+    limit: number
+  ): Promise<{ data: IUser[]; total: number }> {
+    const skip = (page - 1) * limit;
+
+    const query = { role: { $nin: ["admin", "user"] } };
+
+    const [artists, total] = await Promise.all([
+      UserModel.find(query)
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      UserModel.countDocuments(query),
+    ]);
+
+    const data: IUser[] = artists.map((artist: any) => ({
+      ...artist,
+      _id: artist._id.toString(),
+    }));
+
+    return { data, total };
+  }
+
+
+
+
   async allAlbums(userId: string): Promise<IAlbum[] | null> {
     return await AlbumModel.find({ artistId: userId });
   }
@@ -111,17 +159,32 @@ export default class ArtistRepository
   }
 
 
-
-  async getAllTracksByArtist(userId: string): Promise<ITrack[]> {
+  async getAllTracksByArtist(
+    userId: string,
+    page: number,
+    limit: number
+  ): Promise<{ data: ITrack[]; total: number }> {
     try {
+      const skip = (page - 1) * limit;
 
-      const artist = await UserModel.findById({ _id: userId });
+      // Step 1: Find artist
+      const artist = await UserModel.findById(userId);
       if (!artist) {
         throw new Error("Artist not found");
       }
 
-      const tracks = await Track.find({ artists: { $regex: new RegExp(`^${artist.username}$`, "i") } });
-      return tracks;
+      const query = { artists: artist.username };
+      const [data, total] = await Promise.all([
+        Track.find(query)
+          .sort({ createdAt: -1 })
+          .skip(skip)
+          .limit(limit)
+          .lean(),
+
+        Track.countDocuments(query),
+      ]);
+
+      return { data, total };
     } catch (error) {
       console.error("Error fetching tracks:", error);
       throw new Error("Failed to fetch tracks");
@@ -132,7 +195,6 @@ export default class ArtistRepository
   async increment(trackId: string, id: string): Promise<ITrack | null> {
     try {
       const currentMonth = new Date().toISOString().slice(0, 7); //ith engana varum"2025-03"
-      console.log("avinadh",currentMonth)
 
       const track = await Track.findById(trackId);
       if (!track) throw new Error("Track not found");
@@ -153,12 +215,11 @@ export default class ArtistRepository
       }
 
       const rrrr = await Track.updateOne({ _id: trackId }, { $addToSet: { listeners: id } });
-      console.log(rrrr,"basil")
+      console.log(rrrr, "basil")
       await track.save();
 
       return track;
     } catch (error: unknown) {
-      console.error("Error updating track listeners:", error);
       throw new Error("Failed to update track listenersss");
     }
   }
@@ -227,42 +288,63 @@ export default class ArtistRepository
   }
 
 
-  async statsOfArtist(userId: string): Promise<ArtistMonetization[]> {
-    try {
-      const artist = await UserModel.findById(userId);
-      if (!artist) {
-        throw new Error("Artist not found");
-      }
-
-      const tracks = await Track.find({
-        artists: { $regex: new RegExp(`^${artist.username}$`, "i") }
-      });
-
-      const currentMonth = new Date().toISOString().slice(0, 7); // e.g., "2025-03"
-
-      const monetizationData: ArtistMonetization[] = tracks
-        .map((track) => {
-          const typedTrack = track as ITrack;
-
-          // ✅ Corrected total plays calculation
-          const totalPlays = typedTrack.playHistory?.reduce((sum, h) => sum + h.plays, 0) || 0;
-
-          // Extract only the current month's plays
-          const monthlyPlays = typedTrack.playHistory?.find((h) => h.month === currentMonth)?.plays || 0;
-
-          return {
-            trackName: typedTrack.title,
-            totalPlays, // ✅ Now correctly sums all months' plays
-            monthlyPlays, // Only current month plays
-            lastUpdated: typedTrack?.createdAt?.toISOString() || "",
-          };
-        })
-        .sort((a, b) => b.totalPlays - a.totalPlays);
-
-      return monetizationData;
-    } catch (error: unknown) {
-      console.error("Error in statsOfArtist:", error);
-      throw new Error((error as Error).message || "Failed to fetch artist stats");
+async statsOfArtist(
+  userId: string,
+  page: number,
+  limit: number
+): Promise<{ data: ArtistMonetization[]; total: number }> {
+  try {
+    const artist = await UserModel.findById(userId);
+    if (!artist) {
+      throw new Error("Artist not found");
     }
+
+    const skip = (page - 1) * limit;
+
+    const [tracks, total] = await Promise.all([
+      Track.find({
+        artists: { $regex: new RegExp(`^${artist.username}$`, "i") },
+      })
+        .skip(skip)
+        .limit(limit),
+
+      Track.countDocuments({
+        artists: { $regex: new RegExp(`^${artist.username}$`, "i") },
+      }),
+    ]);
+
+    const currentMonth = new Date().toISOString().slice(0, 7); // e.g. "2025-08"
+
+    const monetizationData: ArtistMonetization[] = tracks
+      .map((track) => {
+        const typedTrack = track as ITrack;
+
+        // ✅ Total plays across all months
+        const totalPlays =
+          typedTrack.playHistory?.reduce((sum, h) => sum + h.plays, 0) || 0;
+
+        // ✅ Only current month plays
+        const monthlyPlays =
+          typedTrack.playHistory?.find((h) => h.month === currentMonth)?.plays ||
+          0;
+
+        return {
+          trackName: typedTrack.title,
+          totalPlays,
+          monthlyPlays,
+          lastUpdated: typedTrack?.createdAt?.toISOString() || "",
+        };
+      })
+      .sort((a, b) => b.totalPlays - a.totalPlays);
+
+    return {
+      data: monetizationData,
+      total,
+    };
+  } catch (error: unknown) {
+    console.error("Error in statsOfArtist:", error);
+    throw new Error((error as Error).message || "Failed to fetch artist stats");
   }
+}
+
 }

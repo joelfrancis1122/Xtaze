@@ -1,15 +1,16 @@
 import { useDispatch } from "react-redux";
 import { saveAdminData } from "../redux/adminSlice";
-import { adminApi, artistApi } from "../api/axios";
+import { adminApi } from "../api/axios";
 import { IBanner } from "../pages/User/types/IBanner";
 import { Artist } from "../pages/User/types/IArtist";
 import { IGenre } from "../pages/User/types/IGenre";
 import { Track } from "../pages/User/types/ITrack";
 import { Coupon } from "../pages/User/types/ICoupon";
-import {  SubscriptionPlan } from "../pages/User/types/IStripe";
+import { SubscriptionPlan } from "../pages/User/types/IStripe";
 import { MusicMonetization } from "../pages/User/types/IMonetization";
 import { ListenerUser } from "../pages/User/types/IListenerUser";
 import { HTTP_METHODS } from "../constants/httpMethods";
+import { ApiResponse } from "../pages/User/types/IApiResponse";
 
 const apiCall = async <T>(
   instance: any,
@@ -29,14 +30,14 @@ const apiCall = async <T>(
     if (!response.data) throw new Error(`Failed to ${method} ${url}`);
     return response.data as T;
   } catch (error: any) {
-    
+
     console.error(`Error in ${method} ${url}:`, error);
     throw error;
   }
 };
 
 
-export const loginAdmin = async (email: string,password: string,dispatch: ReturnType<typeof useDispatch>): Promise<void> => {
+export const loginAdmin = async (email: string, password: string, dispatch: ReturnType<typeof useDispatch>): Promise<void> => {
   const data = await apiCall<{ success: boolean; token: string; admin: any; message?: string }>(
     adminApi,
     HTTP_METHODS.POST,
@@ -47,38 +48,112 @@ export const loginAdmin = async (email: string,password: string,dispatch: Return
   localStorage.setItem("adminToken", data.token);
   dispatch(saveAdminData(data.admin));
 };
+export type PaginatedResponse<T> = {
+  data: T[];
+  pagination: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+};
+export type BackendArtistsResponse = {
+  data: {
+    _id: string;
+    username: string;
+    role: string;
+    profilePic?: string;
+    isActive: boolean;
+  }[];
+  pagination: { 
+    total: number;
+    page: number;
+    limit: number;
+    totalpages: number;
+  };
+};
 
-export const fetchArtists = async (): Promise<Artist[]> => {
+export const fetchArtists = async (
+  page = 1,
+  limit = 10
+): Promise<PaginatedResponse<Artist>> => {
   try {
-    const data = await apiCall<{ success: boolean; data: any[]; message?: string }>(
+    const res = await apiCall<ApiResponse<BackendArtistsResponse>>(
       adminApi,
       HTTP_METHODS.GET,
-      "/listUsers",
-      undefined,
+      `/listUsers?page=${page}&limit=${limit}`,
+      undefined
     );
-    if (!data.success) throw new Error(data.message || "Failed to fetch artists");
-    return data.data.map((artist: any) => ({
+
+    if (!res.success) throw new Error(res.message || "Failed to fetch artists");
+console.log(res.data,"sssssss")
+    const mappedArtists: Artist[] = res.data.data.map((artist) => ({
       id: artist._id,
       name: artist.username,
       role: artist.role,
-      image: artist.profilePic ,
-      isActive: artist.isActive ? true : false,
+      image: artist.profilePic!,
+      isActive: !!artist.isActive,
     }));
+
+    return {
+      data: mappedArtists,
+      pagination: {
+        total: res.data.pagination.total,
+        page: res.data.pagination.page,
+        limit: res.data.pagination.limit,
+        totalPages: res.data.pagination.totalpages,
+      },
+    };
   } catch (error) {
     console.error("Fetch artists error:", error);
     throw error;
   }
 };
 
+export const listActiveArtists = async (
+  page = 1,
+  limit = 10
+): Promise<PaginatedResponse<Artist>> => {
+  try {
+    const res = await apiCall<ApiResponse<BackendArtistsResponse>>(
+      adminApi,
+      HTTP_METHODS.GET,
+      `/listActiveArtists?page=${page}&limit=${limit}`,
+      undefined
+    );
+
+    if (!res.success) throw new Error(res.message || "Failed to fetch artists");
+console.log(res.data,"sii")
+    const mappedArtists: Artist[] = res.data.data.map((artist) => ({
+      id: artist._id,
+      name: artist.username,
+      role: artist.role,
+      image: artist.profilePic!,
+      isActive: !!artist.isActive,
+    }));
+
+    return {
+      data: mappedArtists,
+      pagination: {
+        total: res.data.pagination.total,
+        page: res.data.pagination.page,
+        limit: res.data.pagination.limit,
+        totalPages: res.data.pagination.totalpages,
+      },
+    };
+  } catch (error) {
+    console.error("Fetch artists error:", error);
+    throw error;
+  }
+};
 
 export const fetchArtistTracks = async (userId: string,): Promise<Track[]> => {
   try {
     const data = await apiCall<{ success: boolean; tracks?: Track[]; message?: string }>(
-      artistApi,
+      adminApi,
       HTTP_METHODS.GET,
       `/getAllTracksArtist?userId=${userId}`,
       undefined,
-      // token
     );
     if (!data.success || !Array.isArray(data.tracks)) {
       throw new Error(data.message || "Failed to fetch artist tracks");
@@ -90,21 +165,38 @@ export const fetchArtistTracks = async (userId: string,): Promise<Track[]> => {
   }
 };
 
-export const toggleBlockArtist = async (id: string,currentStatus: boolean,): Promise<boolean> => {
+export const toggleBlockArtist = async (id: string, currentStatus: boolean,): Promise<boolean> => {
   const newStatus = !currentStatus;
   const data = await apiCall<{ success: boolean; message?: string }>(
     adminApi,
     HTTP_METHODS.PATCH,
     `/toggleBlock/${id}`,
     { status: newStatus },
-    
+
   );
   if (!data.success) throw new Error(data.message || "Failed to toggle artist status");
   return newStatus;
 };
 
-export const fetchGenres = async (): Promise<IGenre[]> => {
-  const data = await apiCall<{ data: IGenre[] }>(adminApi, HTTP_METHODS.GET, "/genreList", undefined);
+
+
+export const fetchGenres = async (
+  page = 1,
+  limit = 10
+): Promise<PaginatedResponse<IGenre>> => {
+  const response = await apiCall<ApiResponse<PaginatedResponse<IGenre>>>(
+    adminApi,
+    HTTP_METHODS.GET,
+    `/genreList?page=${page}&limit=${limit}`,
+    undefined
+  );
+
+  return response.data;
+};
+
+
+export const fetchAllTrack = async (): Promise<Track[]> => {
+  const data = await apiCall<{ success: boolean; data: Track[] }>(adminApi, HTTP_METHODS.GET, "/fetchAllTrack", undefined);
   return data.data;
 };
 
@@ -116,7 +208,6 @@ export const addGenre = async (name: string,): Promise<IGenre> => {
     HTTP_METHODS.POST,
     "/genreCreate",
     { name },
-    
   );
   return data.data;
 };
@@ -125,13 +216,13 @@ export const toggleBlockGenre = async (id: string): Promise<void> => {
   await apiCall<{ success: boolean }>(adminApi, HTTP_METHODS.PUT, `/genreToggleBlockUnblock/${id}`, {});
 };
 
+
 export const updateGenre = async (id: string, name: string): Promise<{ success: boolean; message: string }> => {
   const data = await apiCall<{ data: { success: boolean; message: string } }>(
     adminApi,
     HTTP_METHODS.PUT,
     `/genreUpdate/${id}`,
     { name },
-    
   );
   return data.data;
 };
@@ -143,7 +234,7 @@ export const fetchBanners = async (): Promise<IBanner[]> => {
 
 export const createBanner = async (
   banner: { title: string; description: string; file?: File; action: string; isActive: boolean; createdBy: string },
-  
+
 ): Promise<IBanner> => {
   const formData = new FormData();
   formData.append("title", banner.title);
@@ -159,7 +250,7 @@ export const createBanner = async (
 export const updateBanner = async (
   id: string,
   banner: { title: string; description: string; file?: File; action: string; isActive: boolean },
-  
+
 ): Promise<IBanner> => {
   const formData = new FormData();
   formData.append("title", banner.title);
@@ -184,7 +275,7 @@ export const fetchUserDetails = async (userIds: string[]): Promise<ListenerUser[
       HTTP_METHODS.POST,
       "/getUsersByIds",
       { userIds },
-      
+
     );
 
     return data.data;
@@ -216,7 +307,7 @@ export const fetchSubscriptionHistory = async (): Promise<any> => {
       HTTP_METHODS.GET,
       "/stripe/subscription-history",
       undefined,
-      
+
     );
     return data.data;
   } catch (error: any) {
@@ -249,7 +340,7 @@ export const updateCoupon = async (id: string, couponData: { code: string; disco
       HTTP_METHODS.PUT,
       `/coupons?id=${id}`,
       couponData,
-      
+
     );
     return data.data;
   } catch (error: any) {
@@ -265,38 +356,43 @@ export const deleteCoupon = async (id: string): Promise<void> => {
       HTTP_METHODS.DELETE,
       `/coupons?id=${id}`,
       undefined,
-      
+
     );
   } catch (error: any) {
     console.error("Error deleting coupon:", error);
     throw new Error(error.response?.data?.message || "Failed to delete coupon");
   }
 };
-
-export const fetchMonetizationData = async (): Promise<MusicMonetization[]> => {
+export const fetchMonetizationData = async (
+  page: number,
+  limit: number
+): Promise<{ data: MusicMonetization[]; pagination: { currentPage: number; totalPages: number; totalItems: number } }> => {
   try {
-    const data = await apiCall<{ data: MusicMonetization[] }>(
+    const response = await apiCall<{
+      data: MusicMonetization[];
+      pagination: { currentPage: number; totalPages: number; totalItems: number };
+    }>(
       adminApi,
       HTTP_METHODS.GET,
-      "/music/monetization",
-      undefined,
-      
+      `/music/monetization?page=${page}&limit=${limit}`
     );
-    return data.data || [];
+    console.log(response,"joelllll")
+    return response;
   } catch (error: any) {
     console.error("Error fetching monetization data:", error);
     throw new Error(error.response?.data?.message || "Failed to fetch monetization data");
   }
 };
 
-export const initiateArtistPayout = async (artistName: string, ): Promise<string> => {
+
+export const initiateArtistPayout = async (artistName: string,): Promise<string> => {
   try {
     const data = await apiCall<{ data: { sessionUrl: string } }>(
       adminApi,
       HTTP_METHODS.POST,
       "/artistPayout",
       { artistName },
-      
+
     );
     return data.data.sessionUrl;
   } catch (error: any) {
@@ -382,14 +478,15 @@ export const archiveSubscriptionPlan = async (productId: string,): Promise<void>
     throw new Error(error.response?.data?.message || "Failed to archive subscription plan");
   }
 };
-export const fetchAllArtistsVerification = async (): Promise<any> => {
+export const fetchAllArtistsVerification = async (page=1,limit=10): Promise<any> => {
   try {
     const response = await apiCall<{ data: any }>(
       adminApi,
       HTTP_METHODS.GET,
-      `/fetchAllArtistsVerification`,
+      `/fetchAllArtistsVerification?page=${page}&limit=${limit}`,
       undefined,
     );
+    console.log(response,"glammmmyyyyyyyy")
     return response.data
   } catch (error: any) {
     console.error("Error archiving verification plan:", error);
@@ -410,7 +507,7 @@ export const updateVerificationStatus = async (
       HTTP_METHODS.PUT,
       `/updateVerificationStatus?id=${id}`,
       { status, feedback },
-      
+
     );
     return response;
   } catch (error) {

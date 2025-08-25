@@ -9,9 +9,11 @@ export interface IArtistRepository {
   upload: (data: ITrack) => Promise<ITrack | null>;
   updateTrackByArtist: (data: ITrack, TrackId: string) => Promise<ITrack | null>;
   getAllArtists(): Promise<IUser[]>;
-  getAllTracksByArtist(userId: string): Promise<ITrack[]>
+  getAllArtistsP(page:number,limit:number): Promise<{data:IUser[],total:number}>;
+  listActiveArtists(page:number,limit:number): Promise<{data:IUser[],total:number}>;
+  getAllTracksByArtist(userId: string,page:number,limit:number): Promise<{data:ITrack[];total:number}>
   increment(trackId: string, id: string): Promise<ITrack | null>
-  statsOfArtist(userId: string): Promise<ArtistMonetization[]>
+  statsOfArtist(userId: string,page:number,limit:number): Promise<{data:ArtistMonetization[];total:number}>
   saveCard(artistId: string, paymentMethodId: string): Promise<IUser | null>;
   checkcard(artistId: string): Promise<IUser | null>;
   getVerificationStatus(artistId: string): Promise<IVerificationRequest | null>;

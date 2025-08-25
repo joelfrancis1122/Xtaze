@@ -1,11 +1,11 @@
 // cron/cronJobs.ts
 import cron from "node-cron";
 import UserController from "../../../presentation/controller/user.controller";
-import userDependencies from "../../dependencies/user.dependencies";
+import container from "../../../domain/constants/inversify.config";
 
 export function setupCronJobs() {
-  const userController = new UserController(userDependencies); // Pass full dependencies object
 
+  const userController = container.get<UserController>(UserController)
 
   cron.schedule("0 0 * * * *", async () => {
     try {

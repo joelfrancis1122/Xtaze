@@ -19,11 +19,12 @@ export interface IAdminRepository {
   deleteCoupon(couponId: string): Promise<ICoupon | null>
   updateCoupon(couponId: string, updateData: ICoupon): Promise<ICoupon | null>
   findCouponByCode(code: string): Promise<ICoupon | null>
-
-  getMusicMonetization(): Promise<MusicMonetization[] | null>
+  getAllTracksByArtist(userId: string): Promise<ITrack[]>
+  getAllTracks(): Promise<ITrack[] | null>
+  getMusicMonetization(page: number, limit: number): Promise<{data: MusicMonetization[]; pagination: { currentPage: number; totalPages: number; totalItems: number }}>
   StripefindByname(artistName: string): Promise<string | null>;
   getUsersByIds(userIds: string[]): Promise<IUser[] | null>;
-  fetchVerification(): Promise<IVerificationRequest | null>
+  fetchVerification(page:number,limit:number): Promise<{data:IVerificationRequest[],total:number} >
   updateVerificationStatus(status: string, feedback: string | null, id: string): Promise<IVerificationRequest | null>
   findArtist(name: string): Promise<IUser | null>
   findTracks(name: string): Promise<ITrack[] | null>

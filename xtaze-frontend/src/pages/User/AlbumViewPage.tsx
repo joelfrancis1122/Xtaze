@@ -65,7 +65,7 @@ const UserAlbumViewPage = () => {
       audio.pause();
       dispatch(setIsPlaying(false));
     } else {
-      audio.pause(); // Pause any existing playback
+      audio.pause(); 
       audio.src = song.fileUrl;
       audio.play().catch((error) => {
         toast.error("Error playing song: " + error.message);

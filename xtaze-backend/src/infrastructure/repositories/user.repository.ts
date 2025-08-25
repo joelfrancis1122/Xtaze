@@ -45,13 +45,45 @@ export default class UserRepository extends BaseRepository<IUser> implements IUs
     }
   }
 
+  async increment(trackId: string, id: string): Promise<ITrack | null> {
+    try {
+      const currentMonth = new Date().toISOString().slice(0, 7); //ith engana varum"2025-03"
+      console.log("avinadh", currentMonth)
 
+      const track = await Track.findById(trackId);
+      if (!track) throw new Error("Track not found");
+
+      if (!track.listeners) {
+        track.listeners = [];
+      }
+      if (!track.playHistory) {
+        track.playHistory = [];
+      }
+
+      const monthIndex = track.playHistory.findIndex((h) => h.month === currentMonth);
+
+      if (monthIndex === -1) {
+        track.playHistory.push({ month: currentMonth, plays: 1 });
+      } else {
+        track.playHistory[monthIndex].plays += 1;
+      }
+
+      const rrrr = await Track.updateOne({ _id: trackId }, { $addToSet: { listeners: id } });
+      console.log(rrrr, "basil")
+      await track.save();
+
+      return track;
+    } catch (error: unknown) {
+      console.error("Error updating track listeners:", error);
+      throw new Error("Failed to update track listenersss");
+    }
+  }
   async updatePassword(user: IUser): Promise<IUser> {
     try {
       const updatedUser = await UserModel.findByIdAndUpdate(
-        user._id, 
-        { $set: user }, 
-        { new: true, runValidators: true } 
+        user._id,
+        { $set: user },
+        { new: true, runValidators: true }
       );
       return updatedUser as unknown as IUser
 
@@ -120,6 +152,47 @@ export default class UserRepository extends BaseRepository<IUser> implements IUs
   }
 
 
+
+  async getAllArtistsP(
+    page: number,
+    limit: number
+  ): Promise<{ data: IUser[]; total: number }> {
+    const skip = (page - 1) * limit;
+
+    const [artists, total] = await Promise.all([
+      UserModel.find({ role: { $ne: "admin" } })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      UserModel.countDocuments({ role: { $ne: "admin" } }),
+    ]);
+
+    const data: IUser[] = artists.map((artist: any) => ({
+      ...artist,
+      _id: artist._id.toString(),
+    }));
+
+    return { data, total };
+  }
+  async listActiveArtists(
+    page: number,
+    limit: number
+  ): Promise<{ data: IUser[]; total: number }> {
+    const skip = (page - 1) * limit;
+    const query = { role: { $nin: ["admin", "user"] } };
+    const [artists, total] = await Promise.all([
+      UserModel.find(query)
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      UserModel.countDocuments(query),
+    ]);
+    const data: IUser[] = artists.map((artist: any) => ({
+      ...artist,
+      _id: artist._id.toString(),
+    }));
+    return { data, total };
+  }
 
   async uploadBanner(userId: string, BannerPicUrl: string): Promise<IUser | null> {
     try {
@@ -402,6 +475,41 @@ export default class UserRepository extends BaseRepository<IUser> implements IUs
 
     return data
   }
+
+
+
+  async getAllTracksByArtist(
+    userId: string,
+    page: number,
+    limit: number
+  ): Promise<{ data: ITrack[]; total: number }> {
+    try {
+      const skip = (page - 1) * limit;
+
+      // Step 1: Find artist
+      const artist = await UserModel.findById(userId);
+      if (!artist) {
+        throw new Error("Artist not found");
+      }
+
+      const query = { artists: artist.username };
+      const [data, total] = await Promise.all([
+        Track.find(query)
+          .sort({ createdAt: -1 })
+          .skip(skip)
+          .limit(limit)
+          .lean(),
+
+        Track.countDocuments(query),
+      ]);
+
+      return { data, total };
+    } catch (error) {
+      console.error("Error fetching tracks:", error);
+      throw new Error("Failed to fetch tracks");
+    }
+  }
+
 
   async findCouponByCode(code: string): Promise<ICoupon | null> {
     const coupon = await CouponModel.findOne({ code });

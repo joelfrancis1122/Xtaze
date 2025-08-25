@@ -7,11 +7,9 @@ export default function AdminPayoutCancelPage() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Extract artistName from URL parameters
   const params = new URLSearchParams(location.search);
   const artistName = params.get("artistName") || "Unknown Artist";
 
-  // Notify user of cancellation (no useEffect needed unless you want a redirect)
   toast.error(`Payout for ${artistName} was canceled.`);
 
   return (

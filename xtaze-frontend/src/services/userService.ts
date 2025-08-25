@@ -1,5 +1,5 @@
 import { useDispatch } from "react-redux";
-import { adminApi, artistApi, deezerApi, providerApi, userApi } from "../api/axios";
+import { adminApi, deezerApi, providerApi, userApi } from "../api/axios";
 import { Track } from "../pages/User/types/ITrack";
 import { saveSignupData } from "../redux/userSlice";
 import { Playlist } from "../pages/User/types/IPlaylist";
@@ -188,7 +188,7 @@ export const fetchLikedSongs = async (userId: string, songIds: string[]): Promis
 // Increment Listeners
 export const incrementListeners = async (trackId: string, id: string): Promise<void> => {
   console.log("get in")
-  const data = await apiCall<{ success: boolean }>(artistApi, HTTP_METHODS.POST, "/incrementListeners", { trackId, id });
+  const data = await apiCall<{ success: boolean }>(userApi, HTTP_METHODS.POST, "/incrementListeners", { trackId, id });
   if (!data.success) throw new Error("Failed to increment listeners");
 };
 
@@ -343,7 +343,8 @@ export const verifyCoupon = async (code: string): Promise<any> => {
 // Fetch Artists
 export const fetchArtists = async (): Promise<Artist[]> => {
   const data = await apiCall<{ success: boolean; data: any[] }>(userApi, HTTP_METHODS.GET, "/listArtists");
-  if (!data.success) throw new Error("Failed to fetch artists");
+  // if (!data.success) throw new Error("Failed to fetch artists");
+  console.log(data.data,"amrutha ")
   return data.data.map((artist: any) => ({
     id: artist._id,
     name: artist.username,
@@ -356,8 +357,9 @@ export const fetchArtists = async (): Promise<Artist[]> => {
 // Fetch Artist Tracks
 export const fetchArtistTracks = async (artistId: string): Promise<Track[]> => {
   const data = await apiCall<{ success: boolean; tracks: Track[] }>(userApi, HTTP_METHODS.GET, `/getAllTracksArtist?userId=${artistId}`);
-  if (!data.success) throw new Error("Failed to fetch artist tracks");
+  console.log(data.tracks,"sssss")
   return data.tracks;
+  if (!data.success) throw new Error("Failed to fetch artist tracks");
 };
 
 // Fetch User by Username

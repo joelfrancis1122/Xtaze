@@ -10,7 +10,7 @@ import {
   YAxis,
 } from "recharts";
 import { RootState } from "../../../store/store";
-import { fetchArtistTracks } from "../../../services/adminService";
+import { fetchArtistTracks } from "../../../services/artistService";
 
 interface PlayHistory {
   month: string; // e.g., "2025-01"
@@ -42,7 +42,7 @@ export function MonthlyListenersChart() {
       try {
         const tracks = await fetchArtistTracks(user._id);
 
-        if (!tracks || tracks.length === 0) {
+        if (!tracks || tracks.data.length === 0) {
           setData([]);
           setIsLoading(false);
           return;
@@ -50,7 +50,7 @@ export function MonthlyListenersChart() {
 
         // Aggregate play history by month
         const monthlyData: { [key: string]: number } = {};
-        tracks.forEach((track: Track) => {
+        tracks.data.forEach((track: Track) => {
           track.playHistory.forEach(({ month, plays }) => {
             monthlyData[month] = (monthlyData[month] || 0) + plays;
           });

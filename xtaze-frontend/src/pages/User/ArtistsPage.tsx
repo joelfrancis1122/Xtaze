@@ -43,6 +43,7 @@ export default function ArtistPage() {
       try {
         setLoading(true);
         const allArtists = await fetchArtists();
+        console.log(allArtists,"joel")
         const artistList = allArtists.filter((artist: Artist) => artist.role === "artist");
         setArtists(artistList);
         setError(null);
