@@ -5,38 +5,15 @@ import Stripe from "stripe";
 import { IAdminRepository } from "../../domain/repositories/IAdminRepository";
 import IPasswordService from "../../domain/service/IPasswordService";
 import { ICoupon } from "../../domain/entities/ICoupon";
+import { ITrack } from "../../domain/entities/ITrack";
 import AppError from "../../utils/AppError";
 import { MESSAGES } from "../../domain/constants/messages";
-import { ITrack } from "../../domain/entities/ITrack";
 import TYPES from "../../domain/constants/types";
 import { injectable } from "inversify";
 import { inject } from "inversify";
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2023-08-16" });
 
 dotenv.config();
-
-// interface useCaseDependencies {
-//   repository: {
-//     adminRepository: IAdminRepository
-//   },
-//   service: {
-//     passwordService: IPasswordService
-//   }
-// }
-
-// export default class AdminUseCase {
-//   private _adminRepository: IAdminRepository
-//   private _passwordService: IPasswordService
-//   private stripe: Stripe;
-
-//   constructor(dependencies: useCaseDependencies) {
-//     this._adminRepository = dependencies.repository.adminRepository
-//     this._passwordService = dependencies.service.passwordService
-//     this.stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-//       apiVersion: "2023-08-16",
-//     });
-//   }
-
 @injectable()
 export default class UserUseCase {
   private _adminRepository: IAdminRepository
@@ -66,7 +43,7 @@ export default class UserUseCase {
       const token = jwt.sign({ userId: admin._id, email: admin.email, role: MESSAGES.ADMIN }, process.env.JWT_SECRET!, { expiresIn: "7d" });
       return { success: true, message: MESSAGES.LOGIN_SUCCESS, token, admin };
     }catch(err){
-      
+
     }
   }
 
@@ -132,7 +109,6 @@ export default class UserUseCase {
       throw new Error(MESSAGES.MISSING_CRED);
     }
 
-    // Validation for provided fields
     if (couponData.code && !couponData.code.trim()) {
       throw new Error(MESSAGES.COUPON_CODE_EMPTY);
     }
@@ -235,28 +211,25 @@ export default class UserUseCase {
     interval: "month" | "year"
   ) {
     try {
-      // Update the product
       const product = await this.stripe.products.update(productId, {
         name,
         description,
       });
 
-      // Get existing prices for this product
       const existingPrices = await this.stripe.prices.list({ product: productId });
       const activePrice = existingPrices.data.find((p) => p.active);
 
-      // If price or interval changed, create new price and deactivate old one
       const newUnitAmount = Math.round(price * 100);
       if (
         !activePrice ||
         activePrice.unit_amount !== newUnitAmount ||
         activePrice.recurring?.interval !== interval
       ) {
-        // Deactivate old price if it exists
+   
         if (activePrice) {
           await this.stripe.prices.update(activePrice.id, { active: false });
         }
-        // Create new price
+       
         const newPrice = await this.stripe.prices.create({
           product: productId,
           unit_amount: newUnitAmount,
@@ -413,7 +386,7 @@ export default class UserUseCase {
         mode: "payment",
         success_url: MESSAGES.FINAL_SUCCESS_URL + encodeURIComponent(artistName),
         cancel_url: MESSAGES.FINAL_CANCEL_URL,
-        metadata: { artistName, amount: amount.toString() }, // Track artist details
+        metadata: { artistName, amount: amount.toString() },
       });
 
       return { success: true, sessionUrl: session.url! };

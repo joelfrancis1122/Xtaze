@@ -44,12 +44,12 @@ export default class UserUseCase {
     });
   }
 
-  async increment(trackId: string, id: string): Promise<ITrack | null> {
+  async increment(trackId: string, id: string) {
 
     return await this._userRepository.increment(trackId, id);
 
   }
-  async registerUser(username: string, country: string, gender: string, year: number, phone: number, email: string, password: string): Promise<IUser> {
+  async registerUser(username: string, country: string, gender: string, year: number, phone: number, email: string, password: string) {
 
     const [existingUserByEmail] = await Promise.all([
       this._userRepository.findByEmail(email),
@@ -78,9 +78,9 @@ export default class UserUseCase {
     return userData;
   }
 
-  async sendOTP(email: string): Promise<string> {
+  async sendOTP(email: string) {
 
-    const findEmail = await this._userRepository.findByEmail(email) //using the storage 
+    const findEmail = await this._userRepository.findByEmail(email)
 
     if (findEmail) {
       return "403"
@@ -90,12 +90,12 @@ export default class UserUseCase {
 
 
 
-  async checkUnique(username: string): Promise<boolean> {
+  async checkUnique(username: string) {
     const user = await this._userRepository.findByUsername(username);
     return user === null;
   }
 
-  async forgotPassword(email: string): Promise<{ success: boolean; message: string }> {
+  async forgotPassword(email: string) {
     const user = await this._userRepository.findByEmail(email);
     if (!user) {
       throw new Error(MESSAGES.USER_NOT_FOUND);
@@ -110,24 +110,19 @@ export default class UserUseCase {
     return { success: true, message: MESSAGES.RESET_LINK_SENT };
   }
 
-  async resetPassword(token: string, password: string): Promise<{ success: boolean; message: string }> {
-    // Create an instance of PasswordService
+  async resetPassword(token: string, password: string) {
 
     try {
-      // Verify JWT token
       const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { userId: string };
       if (!decoded) {
       }
-      // Find user
       const user = await this._userRepository.findById(decoded.userId);
       if (!user) {
         throw new Error(MESSAGES.USER_NOT_FOUND);
       }
 
-      // Use PasswordService to hash the new password
       const hashedPassword = await this._passwordService.hashPassword(password);
 
-      // Update user's password
       user.password = hashedPassword;
       await this._userRepository.updatePassword(user);
 
@@ -136,12 +131,12 @@ export default class UserUseCase {
         message: MESSAGES.PASSWORD_RESET_SUCCESS
       };
     } catch (error) {
-      throw error; // You might want to handle this more specifically based on your needs
+      throw error;
     }
   }
 
 
-  async verifyOTP(otp: string): Promise<{ success: boolean; message: string }> {
+  async verifyOTP(otp: string) {
     const isStore = await this._otpService.isEmpty()
     if (isStore) {
       return { success: false, message: MESSAGES.OTP_EXPIRED };
@@ -155,7 +150,7 @@ export default class UserUseCase {
 
   }
 
-  async listArtists(page: number, limit: number): Promise<{ data: IUser[]; pagination: { total: number, page: number, limit: number, totalpages: number } }> {
+  async listArtists(page: number, limit: number) {
     const { data, total } = await this._userRepository.getAllArtistsP(page, limit);
     return {
       data,
@@ -168,10 +163,7 @@ export default class UserUseCase {
     }
   }
 
-  async listArtistReleases(userId: string, page: number, limit: number): Promise<{
-    data: ITrack[]
-    pagination: { total: number; page: number; limit: number; totalPages: number };
-  }> {
+  async listArtistReleases(userId: string, page: number, limit: number) {
     const { data, total } = await this._userRepository.getAllTracksByArtist(userId, page, limit)
     return {
       data,
@@ -184,7 +176,7 @@ export default class UserUseCase {
     }
 
   }
-  async login(email: string, password: string): Promise<{ success: boolean; message: string; token?: string; refreshToken?: string; user?: IUser }> {
+  async login(email: string, password: string) {
     const user = await this._userRepository.findByEmail(email);
     if (!user) return { success: false, message: MESSAGES.USER_NOT_FOUND };
     if (user.role === MESSAGES.ADMIN || user.role === MESSAGES.ARTIST) return { success: false, message: MESSAGES.USER_LOGIN_ONLY };
@@ -213,7 +205,7 @@ export default class UserUseCase {
     };
   }
 
-  async googleLogin(Token: string): Promise<{ success: boolean; message: string; token?: string; refreshToken?: string; user?: IUser | null }> {
+  async googleLogin(Token: string) {
     try {
       const ticket = await client.verifyIdToken({
         idToken: Token,
@@ -233,7 +225,6 @@ export default class UserUseCase {
       }
 
       if (!user) {
-        // Split name
         const [firstName, ...rest] = name.split(" ");
         const lastName = rest.join(" ");
 
@@ -243,7 +234,7 @@ export default class UserUseCase {
           password: MESSAGES.RANDOMPASS,
           profilePic: picture || "",
           role: "user",
-          isGoogleUser: true, // optionally mark Google signup
+          isGoogleUser: true,
           country: "USA", gender: "male", year: 20, phone: 1234567890,
           toObject: function (): IUser {
             throw new Error(MESSAGES.GOOGLE_LOGIN_FAILED);
@@ -280,7 +271,7 @@ export default class UserUseCase {
   }
 
 
-  async refresh(refreshToken: string): Promise<{ success: boolean; message: string; token?: string; refreshToken?: string }> {
+  async refresh(refreshToken: string) {
     try {
       const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET!) as { userId: string };
       const user = await this._userRepository.findById(decoded.userId);
@@ -311,7 +302,7 @@ export default class UserUseCase {
   }
 
 
-  async uploadProfile(userId: string, file: Express.Multer.File): Promise<{ success: boolean; message: string, user?: IUser }> {
+  async uploadProfile(userId: string, file: Express.Multer.File) {
     try {
       const cloudinaryResponse = await uploadProfileCloud(file);
 
@@ -330,7 +321,7 @@ export default class UserUseCase {
     }
 
   }
-  async uploadBanner(userId: string, file: Express.Multer.File, isVideo: boolean): Promise<{ success: boolean; message: string, user?: IUser, isVideo?: boolean }> {
+  async uploadBanner(userId: string, file: Express.Multer.File, isVideo: boolean) {
     try {
       const cloudinaryResponse = await uploadProfileCloud(file);
 
@@ -346,7 +337,7 @@ export default class UserUseCase {
     }
 
   }
-  async updateImagePlaylist(id: string, file: Express.Multer.File): Promise<{ success: boolean; message: string, data?: IPlaylist }> {
+  async updateImagePlaylist(id: string, file: Express.Multer.File) {
     try {
       const cloudinaryResponse = await uploadImageToCloud(file);
 
@@ -362,7 +353,7 @@ export default class UserUseCase {
     }
 
   }
-  async updateBio(userId: string, bio: string): Promise<{ success: boolean; message: string, user?: IUser }> {
+  async updateBio(userId: string, bio: string) {
     try {
       const updated = await this._userRepository.updateBio(userId, bio);
       if (!updated) {
@@ -375,17 +366,17 @@ export default class UserUseCase {
     }
   }
 
-  async allAlbums(): Promise<IAlbum[] | null> {
+  async allAlbums() {
     const albums = await this._userRepository.allAlbums() as IAlbum[];
     return albums;
   }
-  async albumView(albumId: string): Promise<IAlbum | null> {
+  async albumView(albumId: string) {
     const albums = await this._userRepository.albumView(albumId) as IAlbum;
     return albums;
   }
 
 
-  async usernameUpdate(userId: string, username: string): Promise<IUser | null> {
+  async usernameUpdate(userId: string, username: string) {
     try {
       const updated = await this._userRepository.usernameUpdate(userId, username);
 
@@ -402,7 +393,7 @@ export default class UserUseCase {
   }
 
 
-  async getliked(songIds: string, userId: string): Promise<ITrack[] | null> {
+  async getliked(songIds: string, userId: string) {
     try {
       const liked = await this._userRepository.getliked(songIds, userId)
       return liked
@@ -414,7 +405,7 @@ export default class UserUseCase {
 
 
 
-  async addToLiked(userId: string, trackId: string): Promise<IUser | null> {
+  async addToLiked(userId: string, trackId: string) {
     try {
       const user = await this._userRepository.addToLiked(userId, trackId);
 
@@ -429,7 +420,7 @@ export default class UserUseCase {
     }
   }
 
-  async addToPlaylist(userId: string, playlistId: string, trackId: string): Promise<IPlaylist | null> {
+  async addToPlaylist(userId: string, playlistId: string, trackId: string) {
     try {
       const user = await this._userRepository.addToPlaylist(userId, trackId, playlistId);
       if (!user) {
@@ -444,7 +435,7 @@ export default class UserUseCase {
   }
 
 
-  async createPlaylist(_id: string, newplaylist: IPlaylist): Promise<IPlaylist | null> {
+  async createPlaylist(_id: string, newplaylist: IPlaylist) {
     try {
       const playlist = await this._userRepository.createPlaylist(_id, newplaylist);
 
@@ -458,7 +449,7 @@ export default class UserUseCase {
       throw new Error(MESSAGES.ERROR_UPDATING_PROFILE);
     }
   }
-  async getAllPlaylist(userId: string): Promise<IPlaylist[] | null> {
+  async getAllPlaylist(userId: string) {
     try {
       const playlist = await this._userRepository.findByCreator(userId);
 
@@ -472,7 +463,7 @@ export default class UserUseCase {
       throw new Error(MESSAGES.ERROR_UPDATING_PROFILE);
     }
   }
-  async getPlaylist(id: string, pageNum: number, limitNum: number, skip: number): Promise<{ tracks: ITrack[]; total: number } | null> {
+  async getPlaylist(id: string, pageNum: number, limitNum: number, skip: number) {
     try {
       const playlist = await this._userRepository.getPlaylist(id, pageNum, limitNum, skip);
 
@@ -486,7 +477,7 @@ export default class UserUseCase {
       throw new Error(MESSAGES.ERROR_UPDATING_PROFILE);
     }
   }
-  async deletePlaylist(id: string): Promise<IPlaylist | null> {
+  async deletePlaylist(id: string) {
     try {
       const playlist = await this._userRepository.deletePlaylist(id);
       if (!playlist) {
@@ -499,7 +490,7 @@ export default class UserUseCase {
       throw new Error(MESSAGES.ERROR_DELETING_PLAYLIST);
     }
   }
-  async updateNamePlaylist(id: string, playlistName: string): Promise<IPlaylist | null> {
+  async updateNamePlaylist(id: string, playlistName: string) {
     try {
       const playlist = await this._userRepository.updateNamePlaylist(id, playlistName);
       if (!playlist) {
@@ -512,7 +503,7 @@ export default class UserUseCase {
       throw new Error(MESSAGES.ERROR_UPDATING_PROFILE);
     }
   }
-  async getAllTracks(): Promise<ITrack[] | null> {
+  async getAllTracks() {
     try {
       const tracks = await this._userRepository.getAllTracks();
       if (!tracks) {
@@ -525,7 +516,7 @@ export default class UserUseCase {
       throw new Error(MESSAGES.ERROR_UPDATING_PROFILE);
     }
   }
-  async fetchGenreTracks(GenreName: string): Promise<ITrack[] | null> {
+  async fetchGenreTracks(GenreName: string) {
     try {
       const tracks = await this._userRepository.fetchGenreTracks(GenreName);
       if (!tracks) {
@@ -538,7 +529,7 @@ export default class UserUseCase {
       throw new Error(MESSAGES.ERROR_UPDATING_PROFILE);
     }
   }
-  async resetPaymentStatus(): Promise<void> {
+  async resetPaymentStatus() {
     try {
       await this._userRepository.resetPaymentStatus();
 
@@ -549,10 +540,10 @@ export default class UserUseCase {
   }
 
 
-  async getUpdatedArtist(artistId: string): Promise<IUser | null> {
+  async getUpdatedArtist(artistId: string) {
     return await this._userRepository.getupdatedArtist(artistId);
   }
-  async execute(userId: string, priceId: string, couponCode?: string): Promise<Stripe.Checkout.Session> {
+  async execute(userId: string, priceId: string, couponCode?: string) {
     try {
       const user = await this._userRepository.findById(userId);
       if (!user) {
@@ -616,7 +607,7 @@ export default class UserUseCase {
 
 
 
-  async confirmPayment(rawBody: Buffer, signature: string): Promise<void> {
+  async confirmPayment(rawBody: Buffer, signature: string) {
     try {
       const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET as string;
 
@@ -656,7 +647,7 @@ export default class UserUseCase {
   }
 
 
-  async checkAndUpdateCouponStatus(): Promise<void> {
+  async checkAndUpdateCouponStatus() {
     try {
       const coupons = await this._userRepository.getCoupons();
       const currentDate = new Date();
@@ -674,17 +665,17 @@ export default class UserUseCase {
     }
   }
 
-  async getAllBanners(): Promise<IBanner[] | null> {
+  async getAllBanners() {
     const banners = await this._userRepository.getAllBanners()
     return banners;
 
   }
-  async becomeArtist(id: string): Promise<IUser | null> {
+  async becomeArtist(id: string) {
     return await this._userRepository.becomeArtist(id)
   }
 
 
-  async getSubscriptionHistoryFromStripe(): Promise<SubscriptionHistory[]> {
+  async getSubscriptionHistoryFromStripe() {
     try {
       const sessions = await this._stripe.checkout.sessions.list({
         limit: 50, // Max 100, adjust as needed
@@ -725,7 +716,7 @@ export default class UserUseCase {
   }
 
 
-  async getArtistByName(username: string): Promise<IUser | null> {
+  async getArtistByName(username: string) {
 
     const users = await this._userRepository.getArtistByName(username)
     return users

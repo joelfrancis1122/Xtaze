@@ -28,10 +28,7 @@ export class GenreUseCase {
   }
 
 
-  async listGenre(page: number, limit: number): Promise<{
-    data: IGenre[];
-    pagination: { total: number; page: number; limit: number; totalPages: number };
-  }> {
+  async listGenre(page: number, limit: number){
 
     const { data, total } = await this._genreRepository.getAllGenres(page, limit);
     return {
@@ -46,12 +43,12 @@ export class GenreUseCase {
   }
 
 
-  async listActiveGenres(): Promise<IGenre[]> {
+  async listActiveGenres(){
     return await this._genreRepository.getAllActiveGenres() as IGenre[];
   }
 
 
-  async createGenre(name: string): Promise<{ success: boolean, message: string, genre?: IGenre }> {
+  async createGenre(name: string) {
     const dupe = await this._genreRepository.findDupe(name);
 
     if (dupe) {
@@ -65,7 +62,7 @@ export class GenreUseCase {
 
 
 
-  async toggleBlockUnblockGenre(id: string): Promise<IGenre | null> {
+  async toggleBlockUnblockGenre(id: string){
     const genre = await this._genreRepository.getGenreById(id);
     if (!genre) {
       throw new Error(MESSAGES.GENRE_NOTFOUND);
@@ -77,7 +74,7 @@ export class GenreUseCase {
   }
 
 
-  async editGenre(id: string, name: string): Promise<{ success: boolean, message: string, genre?: IGenre }> {
+  async editGenre(id: string, name: string){
     const dupe = await this._genreRepository.findDupe(name)
     if (dupe) {
       return { success: false, message: MESSAGES.GENRE_EXISTS }

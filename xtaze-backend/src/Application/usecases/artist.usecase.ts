@@ -34,7 +34,7 @@ export default class ArtistUseCase {
   }
 
 
-  async login(email: string, password: string): Promise<{ success: boolean; message: string; token?: string; ArefreshToken?: string; artist?: IUser }> {
+  async login(email: string, password: string){
     const artist = await this._artistRepository.findByEmail(email);
     if (!artist) {
       return { success: false, message: MESSAGES.USER_NOT_FOUND };
@@ -68,7 +68,7 @@ export default class ArtistUseCase {
       artist
     };
   }
-  async refresh(refreshToken: string): Promise<{ success: boolean; message: string; token?: string; ArefreshToken?: string }> {
+  async refresh(refreshToken: string){
     try {
       const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET!) as { userId: string };
       const user = await this._userRepository.findById(decoded.userId);
@@ -97,7 +97,7 @@ export default class ArtistUseCase {
     }
   }
 
-  async trackUpload(songName: string, artist: string[], genre: string[], albumId: string, songFile: Express.Multer.File, imageFile: Express.Multer.File): Promise<ITrack | null> {
+  async trackUpload(songName: string, artist: string[], genre: string[], albumId: string, songFile: Express.Multer.File, imageFile: Express.Multer.File){
     const data = { title: songName, artists: artist, genre: genre, albumId, fileUrl: songFile, img: imageFile }
     const songUpload = await uploadSongToCloud(songFile);
     const imageUpload = await uploadImageToCloud(imageFile);
@@ -114,7 +114,7 @@ export default class ArtistUseCase {
   }
 
   async updateTrackByArtist(TrackId: string, songName: string, artist: string[], genre: string[], albumId: string, songFile?: Express.Multer.File, imageFile?: Express.Multer.File
-  ): Promise<ITrack | null> {
+  ) {
     const songUpload = songFile ? await uploadSongToCloud(songFile) : null;
     const imageUpload = imageFile ? await uploadImageToCloud(imageFile) : null;
 
@@ -131,7 +131,7 @@ export default class ArtistUseCase {
   }
 
 
-  async listArtists(page: number, limit: number): Promise<{ data: IUser[]; pagination: { total: number, page: number, limit: number, totalpages: number } }> {
+  async listArtists(page: number, limit: number){
     const { data, total } = await this._artistRepository.getAllArtistsP(page, limit);
     return {
       data,
@@ -144,7 +144,7 @@ export default class ArtistUseCase {
     }
   }
 
-  async listActiveArtists(page: number, limit: number): Promise<{ data: IUser[]; pagination: { total: number, page: number, limit: number, totalpages: number } }> {
+  async listActiveArtists(page: number, limit: number){
     const { data, total } = await this._artistRepository.listActiveArtists(page, limit);
     return {
       data,
@@ -157,7 +157,7 @@ export default class ArtistUseCase {
     }
   }
 
-  async albumsongs(id: string): Promise<IAlbum | null> {
+  async albumsongs(id: string) {
     const album = await this._artistRepository.albumsongs(id) as IAlbum;
     const tracks = await this._artistRepository.findTracksByIds(album.tracks);
     return {
@@ -166,10 +166,7 @@ export default class ArtistUseCase {
     } as unknown as IAlbum;
   }
 
-  async listArtistReleases(userId: string, page: number, limit: number): Promise<{
-    data: ITrack[]
-    pagination: { total: number; page: number; limit: number; totalPages: number };
-  }> {
+  async listArtistReleases(userId: string, page: number, limit: number) {
     const { data, total } = await this._artistRepository.getAllTracksByArtist(userId, page, limit)
     return {
       data,
@@ -182,17 +179,17 @@ export default class ArtistUseCase {
     }
 
   }
-  async increment(trackId: string, id: string): Promise<ITrack | null> {
+  async increment(trackId: string, id: string) {
 
     return await this._artistRepository.increment(trackId, id);
 
   }
-  async allAlbums(userid: string,): Promise<IAlbum[] | null> {
+  async allAlbums(userid: string) {
 
     return await this._artistRepository.allAlbums(userid as string);
 
   }
-  async uploadAlbums(artistId: string, name: string, description: string, image?: Express.Multer.File): Promise<IAlbum | null> {
+  async uploadAlbums(artistId: string, name: string, description: string, image?: Express.Multer.File){
     const imageUpload = image ? await uploadImageToCloud(image) : null;
 
     const newAlbum: IAlbum = {
@@ -206,11 +203,7 @@ export default class ArtistUseCase {
     return await this._artistRepository.uploadAlbum(newAlbum);
   }
 
-  async statsOfArtist(userId: string, page: number, limit: number): Promise<{
-    data: ArtistMonetization[],
-    pagination: { total: number; page: number; limit: number; totalPages: number };
-
-  }> {
+  async statsOfArtist(userId: string, page: number, limit: number){
 
     const { data, total } = await this._artistRepository.statsOfArtist(userId, page, limit);
     return {
@@ -224,19 +217,19 @@ export default class ArtistUseCase {
     };
 
   }
-  async saveCard(artistId: string, paymentMethodId: string): Promise<IUser | null> {
+  async saveCard(artistId: string, paymentMethodId: string){
 
     return await this._artistRepository.saveCard(artistId, paymentMethodId);
 
 
   }
-  async checkcard(artistId: string): Promise<IUser | null> {
+  async checkcard(artistId: string){
 
     return await this._artistRepository.checkcard(artistId);
   }
 
 
-  async usernameUpdate(userId: string, username: string): Promise<IUser | null> {
+  async usernameUpdate(userId: string, username: string){
     try {
       const updated = await this._userRepository.usernameUpdate(userId, username);
 
@@ -254,7 +247,7 @@ export default class ArtistUseCase {
 
 
 
-  async getVerificationStatus(artistId: string): Promise<IVerificationStatusResponse | null> {
+  async getVerificationStatus(artistId: string){
 
     const verification = await this._artistRepository.getVerificationStatus(artistId);
     if (!verification) {
@@ -269,7 +262,7 @@ export default class ArtistUseCase {
     };
   }
 
-  async requestVerification(artistId: string, imageFile: Express.Multer.File): Promise<IVerificationStatusResponse | null> {
+  async requestVerification(artistId: string, imageFile: Express.Multer.File){
     const imageUpload = imageFile ? await uploadIdproofCloud(imageFile) : null;
     if (!imageUpload) return null
     let image = imageUpload.secure_url
