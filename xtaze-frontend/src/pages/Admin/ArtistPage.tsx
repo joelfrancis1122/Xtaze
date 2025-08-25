@@ -21,7 +21,6 @@ export default function ArtistList() {
   const loadArtists = async () => {
     try {
       const res = await fetchArtists(page, 10);
-      console.log(res,"lat")
       setArtists(res.data);        
       setTotalPages(res.pagination.totalPages);
     } catch (error: any) {

@@ -82,7 +82,6 @@ export default function OTPVerification() {
       navigate("/home");
       navigate("/home");
     } catch (error: any) {
-      console.log(error, "error in console");
       toast.error(error.response.data.message || "Failed to verify OTP.");
     } finally {
       setIsSubmitting(false);

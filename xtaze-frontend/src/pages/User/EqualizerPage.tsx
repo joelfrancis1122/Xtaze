@@ -115,7 +115,6 @@ export default function EqualizerPage() {
   };
 
   const handleSliderChange = (index: number, value: string) => {
-    console.log("Slider moved:", index, value);
     const newValues = [...equalizerValues];
     newValues[index] = Number(value);
     setEqualizerValues(newValues);

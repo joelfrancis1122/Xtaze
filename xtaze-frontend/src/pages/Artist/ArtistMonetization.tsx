@@ -91,7 +91,6 @@ export default function ArtistMonetizePage() {
         if (!user) return;
 
         const { data, totalPages } = await fetchSongEarnings(user._id, page, limit);
-        console.log(data,"dasss",totalPages)
         setSongs(data);
         setTotalPages(totalPages);
 

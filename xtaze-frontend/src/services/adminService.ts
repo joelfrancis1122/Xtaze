@@ -86,7 +86,6 @@ export const fetchArtists = async (
     );
 
     if (!res.success) throw new Error(res.message || "Failed to fetch artists");
-console.log(res.data,"sssssss")
     const mappedArtists: Artist[] = res.data.data.map((artist) => ({
       id: artist._id,
       name: artist.username,
@@ -123,7 +122,6 @@ export const listActiveArtists = async (
     );
 
     if (!res.success) throw new Error(res.message || "Failed to fetch artists");
-console.log(res.data,"sii")
     const mappedArtists: Artist[] = res.data.data.map((artist) => ({
       id: artist._id,
       name: artist.username,
@@ -376,7 +374,6 @@ export const fetchMonetizationData = async (
       HTTP_METHODS.GET,
       `/music/monetization?page=${page}&limit=${limit}`
     );
-    console.log(response,"joelllll")
     return response;
   } catch (error: any) {
     console.error("Error fetching monetization data:", error);
@@ -486,7 +483,6 @@ export const fetchAllArtistsVerification = async (page=1,limit=10): Promise<any>
       `/fetchAllArtistsVerification?page=${page}&limit=${limit}`,
       undefined,
     );
-    console.log(response,"glammmmyyyyyyyy")
     return response.data
   } catch (error: any) {
     console.error("Error archiving verification plan:", error);

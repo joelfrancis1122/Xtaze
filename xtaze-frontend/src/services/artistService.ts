@@ -72,7 +72,6 @@ export const refreshToken = async (): Promise<string | null> => {
     const newToken = response.data.token;
     if (newToken) {
       localStorage.setItem("artistToken", newToken);
-      console.log("New artist token:", newToken);
       return newToken;
     }
     return null;
@@ -150,7 +149,6 @@ export const fetchArtistTracks = async (
 
 
 export const fetchActiveGenres = async (artistId: string): Promise<{ artist: any; genres: IGenre[] }> => {
-  console.log("Fetching active genres with:", { artistId});
   const data = await apiCall<{ success: boolean; data: IGenre[]; artist: any; message?: string }>(
     artistApi,
     HTTP_METHODS.GET,
@@ -278,7 +276,6 @@ export const updateArtistBanner = async (artistId: string, base64Banner: string)
 };
 
 export const updateArtistBio = async (artistId: string, bio: string,): Promise<any> => {
-  console.log("Updating artist bio with:", { artistId });
   const data = await apiCall<{ success: boolean; user?: any; message?: string }>(
     userApi,
     HTTP_METHODS.PUT,
@@ -291,7 +288,6 @@ export const updateArtistBio = async (artistId: string, bio: string,): Promise<a
 };
 
 export const checkCardStatus = async (artistId: string): Promise<boolean> => {
-  console.log("Checking card status with:", { artistId });
   const data = await apiCall<{ data: { stripePaymentMethodId: string } }>(
     artistApi,
     HTTP_METHODS.GET,
@@ -299,7 +295,6 @@ export const checkCardStatus = async (artistId: string): Promise<boolean> => {
     undefined,
     
   );
-  console.log("Card status response:", data);
   return !!data.data.stripePaymentMethodId; 
 };
 
@@ -319,7 +314,6 @@ export const saveCard = async (artistId: string, paymentMethodId: string): Promi
 
 
 export const getVerificationStatus = async (artistId: string): Promise<VerificationStatus> => {
-  console.log("Fetching verification status for:", { artistId});
   try {
     const response = await apiCall<{ success: boolean; data: VerificationStatus }>(
       artistApi,
@@ -372,7 +366,6 @@ export const fetchSongEarnings = async (
     `/statsOfArtist?userId=${artistId}&page=${page}&limit=${limit}`,
     undefined
   );
-console.log(res,"nath")
   const mappedData = res.data.map((song) => ({
     ...song,
     totalEarnings: song.totalPlays * 0.5,

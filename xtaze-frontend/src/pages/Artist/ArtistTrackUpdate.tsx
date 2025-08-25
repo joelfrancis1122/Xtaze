@@ -64,7 +64,6 @@ export function ArtistSongUpdatePage() {
     }
     try {
       const response = await fetchArtistTracks(user._id, page, limit);
-      console.log(response.data,"akhil")
       if (Array.isArray(response.data)) {
         setTopSongs(response.data);
         setTotalPages(response.pagination.totalPages);

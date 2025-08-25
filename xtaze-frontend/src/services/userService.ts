@@ -187,7 +187,6 @@ export const fetchLikedSongs = async (userId: string, songIds: string[]): Promis
 
 // Increment Listeners
 export const incrementListeners = async (trackId: string, id: string): Promise<void> => {
-  console.log("get in")
   const data = await apiCall<{ success: boolean }>(userApi, HTTP_METHODS.POST, "/incrementListeners", { trackId, id });
   if (!data.success) throw new Error("Failed to increment listeners");
 };
@@ -344,7 +343,6 @@ export const verifyCoupon = async (code: string): Promise<any> => {
 export const fetchArtists = async (): Promise<Artist[]> => {
   const data = await apiCall<{ success: boolean; data: any[] }>(userApi, HTTP_METHODS.GET, "/listArtists");
   // if (!data.success) throw new Error("Failed to fetch artists");
-  console.log(data.data,"amrutha ")
   return data.data.map((artist: any) => ({
     id: artist._id,
     name: artist.username,
@@ -357,7 +355,6 @@ export const fetchArtists = async (): Promise<Artist[]> => {
 // Fetch Artist Tracks
 export const fetchArtistTracks = async (artistId: string): Promise<Track[]> => {
   const data = await apiCall<{ success: boolean; tracks: Track[] }>(userApi, HTTP_METHODS.GET, `/getAllTracksArtist?userId=${artistId}`);
-  console.log(data.tracks,"sssss")
   return data.tracks;
   if (!data.success) throw new Error("Failed to fetch artist tracks");
 };
