@@ -48,7 +48,7 @@ export default function Home() {
   // Audio context setup
   useEffect(() => {
     if (!audioContext) return;
-
+    console.log(likedTracks)
     const resumeAudioContext = () => {
       if (audioContext && audioContext.state === "suspended") {
         audioContext.resume().then(() => console.log("AudioContext resumed"));
