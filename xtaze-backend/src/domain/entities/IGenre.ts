@@ -1,6 +1,6 @@
 export interface IGenre {
-    name: string;
-    createdAt?: Date;
-    isBlocked:Boolean;
-  }
-  
+  name: string;
+  createdAt?: Date;
+  isBlocked: boolean; 
+}
+

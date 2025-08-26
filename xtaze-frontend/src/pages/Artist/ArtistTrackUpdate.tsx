@@ -15,7 +15,7 @@ import { saveArtistData } from "../../redux/artistSlice";
 import { useDispatch } from "react-redux";
 
 interface Song {
-  _id: string;
+  id: string;
   title: string;
   fileUrl: string;
   listeners: string[];
@@ -58,12 +58,13 @@ export function ArtistSongUpdatePage() {
   // Fetch songs on mount
   useEffect(() => {
   const fetchSongs = async () => {
-    if (!token || !user?._id) {
+    if (!token || !user?.id) {
       toast.error("Please log in to fetch tracks.");
       return;
     }
     try {
-      const response = await fetchArtistTracks(user._id, page, limit);
+      const response = await fetchArtistTracks(user.id, page, limit);
+      console.log(response,"ssss")
       if (Array.isArray(response.data)) {
         setTopSongs(response.data);
         setTotalPages(response.pagination.totalPages);
@@ -79,14 +80,15 @@ export function ArtistSongUpdatePage() {
   };
 
   fetchSongs();
-}, [user?._id, page, limit]);
+}, [user?.id, page, limit]);
 
   // Play/Pause functionality
   const handlePlayPause = (song: Song) => {
     if (!audioRef.current) {
       audioRef.current = new Audio(song.fileUrl);
     }
-    if (playingSongId === song._id) {
+    console.log(playingSongId,song,"asiasidiasidasidis")
+    if (playingSongId === song.id) {
       audioRef.current.pause();
       setPlayingSongId(null);
     } else {
@@ -96,11 +98,10 @@ export function ArtistSongUpdatePage() {
       }
       audioRef.current.src = song.fileUrl;
       audioRef.current.play().catch((error) => console.error("Error playing audio:", error));
-      setPlayingSongId(song._id);
+      setPlayingSongId(song.id);
     }
   };
 
-  // Cleanup audio on unmount
   useEffect(() => {
     return () => {
       if (audioRef.current) {
@@ -112,9 +113,9 @@ export function ArtistSongUpdatePage() {
 
   // Start editing a song
   const startEditing = (song: Song) => {
-    setEditingSongId(song._id);
+    setEditingSongId(song.id);
     setEditedSong({
-      _id: song._id,
+      id: song.id,
       title: song.title,
       artists: song.artists ?? [],
       genre: song.genre ?? [],
@@ -147,7 +148,7 @@ export function ArtistSongUpdatePage() {
 
   // Save updated song
   const saveSong = async () => {
-    if (!editingSongId || !editedSong._id) return;
+    if (!editingSongId || !editedSong.id) return;
 
     const token = localStorage.getItem("artistToken");
     if (!token) {
@@ -175,7 +176,7 @@ export function ArtistSongUpdatePage() {
 
       setTopSongs((prev) =>
         prev.map((song) =>
-          song._id === editingSongId ? { ...song, ...updatedTrack } : song
+          song.id === editingSongId ? { ...song, ...updatedTrack } : song
         )
       );
 
@@ -204,18 +205,21 @@ export function ArtistSongUpdatePage() {
   const [albums, setAlbums] = useState<IAlbum[]>([]);
   useEffect(() => {
     const fetchData = async () => {
-      if (!token || !artist?._id) {
+      console.log("tooororo", artist)
+      if (!token || !artist?.id) {
         toast.error("Please log in to fetch genres and albums.");
         return;
       }
 
       try {
         const [genreResponse, albumResponse] = await Promise.all([
-          fetchActiveGenres(artist._id),
-          fetchAlbums(artist._id),
+          fetchActiveGenres(artist.id),
+          fetchAlbums(artist.id),
         ]);
+
         setGenres(genreResponse.genres);
         setAlbums(albumResponse);
+        console.log(genreResponse,albumResponse,"adi adi ad iad i")
         dispatch(saveArtistData(genreResponse.artist));
       } catch (error: any) {
         toast.error(error.message || "Error fetching data. Please try again.");
@@ -223,7 +227,7 @@ export function ArtistSongUpdatePage() {
     };
 
     fetchData();
-  }, [artist?._id, token, dispatch]);
+  }, [artist?.id, token, dispatch]);
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -258,9 +262,9 @@ export function ArtistSongUpdatePage() {
          <TableBody>
   {topSongs && topSongs.length > 0 ? (
     topSongs.map((song) => {
-      const isPlaying = playingSongId === song._id;
+      const isPlaying = playingSongId === song.id;
       return (
-        <TableRow key={song._id} className="hover:bg-gray-700">
+        <TableRow key={song.id} className="hover:bg-gray-700">
           <TableCell>
             <button onClick={() => handlePlayPause(song)} className="p-1">
               {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
@@ -357,7 +361,7 @@ export function ArtistSongUpdatePage() {
                       Select Genre
                     </option>
                     {genres.map((genre) => (
-                      <option key={genre._id} value={genre.name}>
+                      <option key={genre.id} value={genre.name}>
                         {genre.name}
                       </option>
                     ))}
@@ -381,9 +385,9 @@ export function ArtistSongUpdatePage() {
                     className="w-full p-2 bg-gray-800 border border-gray-700 rounded text-white text-sm"
                     aria-describedby="albumId-desc"
                   >
-                    <option value="">No Album</option>
+                    {/* <option value="">No Album</option> */}
                     {albums.map((album) => (
-                      <option key={album._id} value={album._id}>
+                      <option key={album.id} value={album.id}>
                         {album.name}
                       </option>
                     ))}

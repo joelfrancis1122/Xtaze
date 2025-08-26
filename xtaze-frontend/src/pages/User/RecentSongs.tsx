@@ -39,7 +39,7 @@ export default function RecentSongsPage() {
   useEffect(() => {
     const getRecentSongs = async () => {
       const token = localStorage.getItem("token");
-      if (!token || !user?._id) {
+      if (!token || !user?.id) {
         setRecentSongs([]);
         setTracks([]);
         setLoading(false);
@@ -58,7 +58,7 @@ export default function RecentSongsPage() {
       }
 
       try {
-        const { tracks } = await fetchTracks(user._id, user.premium || "Free");
+        const { tracks } = await fetchTracks(user.id, user.premium || "Free");
 
         const sortedRecentSongs = [...storedSongs].sort((a, b) => 
           new Date(b.playedAt).getTime() - new Date(a.playedAt).getTime()
@@ -67,7 +67,7 @@ export default function RecentSongsPage() {
         const recentTracks = sortedRecentSongs
           .map(recentSong => {
             const matchedTrack = tracks.find(track => 
-              track._id === recentSong.id || track.fileUrl === recentSong.id
+              track.id === recentSong.id || track.fileUrl === recentSong.id
             );
             if (matchedTrack) {
               return {
@@ -104,10 +104,10 @@ export default function RecentSongsPage() {
     };
 
     getRecentSongs();
-  }, [user?._id, user?.premium, navigate, dispatch, isShuffled, shuffleIndices.length]);
+  }, [user?.id, user?.premium, navigate, dispatch, isShuffled, shuffleIndices.length]);
 
   useEffect(() => {
-    if (!user?._id) {
+    if (!user?.id) {
       navigate("/", { replace: true });
     }
   }, [user, navigate]);

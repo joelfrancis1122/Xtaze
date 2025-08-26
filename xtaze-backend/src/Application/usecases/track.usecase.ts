@@ -1,22 +1,39 @@
-import { ITrack } from "../../domain/entities/ITrack";
+// application/usecases/TrackUseCase.ts
 import { ITrackRepository } from "../../domain/repositories/ITrackRepository";
-import { uploadImageToCloud, uploadSongToCloud } from "../../infrastructure/service/cloudinary.service";
+import { injectable, inject } from "inversify";
+import TYPES from "../../domain/constants/types";
+import ITrackUseCase from "../../domain/usecase/ITrackUsecase";
+import { TrackDTO } from "../dtos/TrackDTO";
+import { TrackMapper } from "../mappers/TrackMapper";
 
-export class UploadTrackUseCase {
-  constructor(private trackRepository: ITrackRepository) {}
+@injectable()
+export class TrackUseCase implements ITrackUseCase {
+  private _trackRepository: ITrackRepository;
 
-  async execute(data: {songFile: Express.Multer.File;imageFile: Express.Multer.File}): Promise<ITrack> {
-    const songUpload = await uploadSongToCloud(data.songFile);
-    const imageUpload = await uploadImageToCloud(data.imageFile);
-    const newTrack: ITrack = {
-      title: songUpload.title,
-      genre: songUpload.genre,
-      albumId: songUpload.album,
-      fileUrl: songUpload.secure_url,
-      img: imageUpload.secure_url,
+  constructor(@inject(TYPES.TrackRepository) trackRepository: ITrackRepository) {
+    this._trackRepository = trackRepository;
+  }
+
+  async uploadTrack(songFile: Express.Multer.File, imageFile: Express.Multer.File): Promise<TrackDTO> {
+    const track = {
+      title: songFile.originalname,
+      fileUrl: songFile.path,
+      img: imageFile.path,
+      genre: [],
+      albumId: "",
+      artists: [],
       listeners: [],
-      artists: songUpload.artist,
+      playHistory: [],
+      createdAt: new Date(),
     };
-    return await this.trackRepository.save(newTrack);
+
+    const savedTrack = await this._trackRepository.save(track);
+    return TrackMapper.toDTO(savedTrack);
+  }
+
+  async getAllTracks(): Promise<TrackDTO[] | null> {
+    const tracks = await this._trackRepository.getAll();
+    if (!tracks) return null;
+    return TrackMapper.toDTOs(tracks);
   }
 }

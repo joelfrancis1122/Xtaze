@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
-import { RootState } from "../../store/store"; // Adjust path
+import { RootState } from "../../store/store";
 import { Trash2, Edit, Plus, Save } from "lucide-react";
 import { toast } from "sonner";
 import Sidebar from "./adminComponents/aside-side";
@@ -9,7 +9,7 @@ import { createBanner, deleteBanner, fetchBanners, updateBanner } from "../../se
 import { IBanner } from "../User/types/IBanner";
 
 interface UserSignupData {
-  _id?: string;
+  id?: string;
   role?: string;
 }
 
@@ -35,6 +35,7 @@ export default function AdminBannerManagement() {
         const token = localStorage.getItem("adminToken");
         if (!token) throw new Error("No token found");
         const fetchedBanners = await fetchBanners();
+        console.log(fetchedBanners, "sadhauksdaydsk")
         setBanners(fetchedBanners);
       } catch (error) {
         console.error("Error fetching banners:", error);
@@ -51,16 +52,20 @@ export default function AdminBannerManagement() {
     e.preventDefault();
     try {
       const token = localStorage.getItem("adminToken");
-      if (!token || !user?._id) throw new Error("Authentication required");
+      console.log(user, "authh")
+      if (!token) throw new Error("Authentication required");
+      console.log(newBanner, "this is newbanner ")
       const createdBanner = await createBanner(
+
         {
+
+          id: newBanner.id,
           title: newBanner.title || "",
           description: newBanner.description || "",
           file: newBanner.file,
           action: newBanner.action || "/discover",
           isActive: newBanner.isActive ?? true,
-          createdBy: user._id,
-        }, 
+        },
       );
       setBanners([...banners, createdBanner]);
       setNewBanner({ title: "", description: "", action: "/discover", isActive: true });
@@ -78,18 +83,22 @@ export default function AdminBannerManagement() {
     try {
       const token = localStorage.getItem("adminToken");
       if (!token) throw new Error("Authentication required");
+      if (!editingBanner.id) {
+        throw new Error("Cannot update banner without an ID");
+      }
+
       const updatedBanner = await updateBanner(
-        editingBanner._id,
+        editingBanner.id,
         {
           title: editingBanner.title,
           description: editingBanner.description,
           file: editingFile || undefined,
           action: editingBanner.action,
           isActive: editingBanner.isActive,
-        },
-        
+        }
       );
-      setBanners(banners.map(b => (b._id === updatedBanner._id ? updatedBanner : b)));
+
+      setBanners(banners.map(b => (b.id === updatedBanner.id ? updatedBanner : b)));
       setEditingBanner(null);
       setEditingFile(null);
       toast.success("Banner updated successfully");
@@ -100,13 +109,13 @@ export default function AdminBannerManagement() {
   };
 
   // Delete banner
-  const handleDelete = async (_id: string) => {
+  const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this banner?")) return;
     try {
       const token = localStorage.getItem("adminToken");
       if (!token) throw new Error("Authentication required");
-      await deleteBanner(_id);
-      setBanners(banners.filter(b => b._id !== _id));
+      await deleteBanner(id);
+      setBanners(banners.filter(b => b.id !== id));
       toast.success("Banner deleted successfully");
     } catch (error) {
       console.error("Error deleting banner:", error);
@@ -184,9 +193,9 @@ export default function AdminBannerManagement() {
                 </tr>
               </thead>
               <tbody>
-                {banners.map(banner => (
-                  <tr key={banner._id} className="border-b border-gray-600">
-                    <td className="p-2">{banner._id}</td>
+                {banners.map((banner, index) => (
+                  <tr key={banner.id} className="border-b border-gray-600">
+                    <td className="p-2">{index + 1}</td>
                     <td className="p-2">{banner.title}</td>
                     <td className="p-2">{banner.description}</td>
                     <td className="p-2">
@@ -205,7 +214,7 @@ export default function AdminBannerManagement() {
                         <Edit size={16} />
                       </button>
                       <button
-                        onClick={() => handleDelete(banner._id)}
+                        onClick={() => handleDelete(banner.id!)}
                         className="p-1 bg-red-600 hover:bg-red-700 rounded"
                       >
                         <Trash2 size={16} />
@@ -244,8 +253,8 @@ export default function AdminBannerManagement() {
                 accept="image/*"
                 onChange={e => setEditingFile(e.target.files?.[0] || null)}
                 className="p-2 bg-gray-800 rounded border border-gray-600 w-full mb-4 text-gray-400"
-                required
-             />
+
+              />
               {editingBanner.imageUrl && !editingFile && (
                 <img
                   src={editingBanner.imageUrl}

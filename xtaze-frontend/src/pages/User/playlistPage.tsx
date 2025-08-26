@@ -56,7 +56,7 @@ export default function PlaylistsPage() {
 
     try {
       const createdPlaylist = await createPlaylists(userId || "unknown", newPlaylist);
-      if (!createdPlaylist._id) {
+      if (!createdPlaylist.id) {
         throw new Error("Playlist ID missing from response");
       }
       setPlaylists([...playlists, createdPlaylist]);
@@ -119,8 +119,8 @@ export default function PlaylistsPage() {
           {playlists.length > 0 ? (
             playlists.map((playlist) => (
               <div
-                key={playlist._id}
-                onClick={() => navigate(`/playlist/${userId}/${playlist._id}`)}
+                key={playlist.id}
+                onClick={() => navigate(`/playlist/${userId}/${playlist.id}`)}
                 className="group relative flex flex-col bg-gray-900 p-3 sm:p-4 rounded-lg shadow-lg hover:bg-gray-800 active:bg-gray-800 transition-colors duration-200 cursor-pointer box-content"
               >
                 <div className="relative w-full h-32 sm:h-40 overflow-hidden rounded-md">

@@ -32,7 +32,7 @@ export function MonthlyListenersChart() {
     const fetchPlayHistory = async () => {
       const token = localStorage.getItem("artistToken");
 
-      if (!token || !user?._id) {
+      if (!token || !user?.id) {
         console.error("Token or User ID not found. Please login.");
         setData([]);
         setIsLoading(false);
@@ -40,7 +40,7 @@ export function MonthlyListenersChart() {
       }
 
       try {
-        const tracks = await fetchArtistTracks(user._id);
+        const tracks = await fetchArtistTracks(user.id);
 
         if (!tracks || tracks.data.length === 0) {
           setData([]);
@@ -77,7 +77,7 @@ export function MonthlyListenersChart() {
     };
 
     fetchPlayHistory();
-  }, [user?._id]);
+  }, [user?.id]);
 
   return (
     <div

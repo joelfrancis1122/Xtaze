@@ -1,3 +1,4 @@
+import { TrackMapper } from "../../Application/mappers/TrackMapper";
 import { IAlbum } from "../../domain/entities/IAlbum";
 import { IBanner } from "../../domain/entities/IBanner";
 import { ICoupon } from "../../domain/entities/ICoupon";
@@ -44,40 +45,40 @@ export default class UserRepository extends BaseRepository<IUser> implements IUs
       throw error
     }
   }
+  async increment(trackId: string, userId: string) {
+    const trackDoc = await Track.findById(trackId);
 
-  async increment(trackId: string, id: string): Promise<ITrack | null> {
-    try {
-      const currentMonth = new Date().toISOString().slice(0, 7); //ith engana varum"2025-03"
-      console.log("avinadh", currentMonth)
+    if (!trackDoc) return null;
 
-      const track = await Track.findById(trackId);
-      if (!track) throw new Error("Track not found");
+    // Ensure defaults
+    trackDoc.listeners = trackDoc.listeners || [];
+    trackDoc.playHistory = trackDoc.playHistory || [];
 
-      if (!track.listeners) {
-        track.listeners = [];
-      }
-      if (!track.playHistory) {
-        track.playHistory = [];
-      }
+    const currentMonth = new Date().toISOString().slice(0, 7);
+    const monthIndex = trackDoc.playHistory.findIndex(
+      (h) => h.month === currentMonth
+    );
 
-      const monthIndex = track.playHistory.findIndex((h) => h.month === currentMonth);
-
-      if (monthIndex === -1) {
-        track.playHistory.push({ month: currentMonth, plays: 1 });
-      } else {
-        track.playHistory[monthIndex].plays += 1;
-      }
-
-      const rrrr = await Track.updateOne({ _id: trackId }, { $addToSet: { listeners: id } });
-      console.log(rrrr, "basil")
-      await track.save();
-
-      return track;
-    } catch (error: unknown) {
-      console.error("Error updating track listeners:", error);
-      throw new Error("Failed to update track listenersss");
+    if (monthIndex === -1) {
+      trackDoc.playHistory.push({ month: currentMonth, plays: 1 });
+    } else {
+      trackDoc.playHistory[monthIndex].plays += 1;
     }
+
+    // ✅ Add listener without 
+    await Track.updateOne(
+      { _id: trackId },
+      { $addToSet: { listeners: userId } }
+    );
+
+    // Save updated document
+    await trackDoc.save();
+
+    // ✅ Convert Mongoose doc -> Plain object -> DTO
+    const plainTrack = { ...trackDoc.toObject(), _id: trackDoc._id.toString() };
+    return TrackMapper.toDTO(plainTrack);
   }
+
   async updatePassword(user: IUser): Promise<IUser> {
     try {
       const updatedUser = await UserModel.findByIdAndUpdate(
@@ -239,9 +240,10 @@ export default class UserRepository extends BaseRepository<IUser> implements IUs
 
   async getliked(songIds: string, userId: string) {
     try {
-      const user = await UserModel.findById(userId);
+      console.log(songIds,"omsam")
       const tracks = await Track.find({ _id: { $in: songIds } });
-      return tracks
+      console.log(tracks,"insnae")
+      return tracks as any
     } catch (error) {
       console.error("Error in getliked:", error);
       return null
@@ -368,7 +370,7 @@ export default class UserRepository extends BaseRepository<IUser> implements IUs
       // Fetch the fully saved playlist (ensuring all fields, including _id, are included)
       const completePlaylist = await PlaylistModel.findById(savedPlaylist._id).lean();
 
-      return completePlaylist as IPlaylist;
+      return completePlaylist as any;
     } catch (error) {
       console.error("Error creating playlist:", error);
       return null;
@@ -381,12 +383,12 @@ export default class UserRepository extends BaseRepository<IUser> implements IUs
       const playlistid = trackId
       const trackid = playlistId
       const playlist = await PlaylistModel.findOne({ createdBy: userId, _id: playlistid });
-
+console.log(trackid,playlistid,"ahca")
       if (!playlist) {
         console.error("Playlist not found or does not belong to user");
         return null;
       }
-
+console.log(trackId,playlist,"aiiiii")
       playlist.tracks = playlist.tracks || [];
       // Add the track to the playlist if it's not already present
       if (!playlist.tracks.includes(trackid)) {
@@ -396,6 +398,7 @@ export default class UserRepository extends BaseRepository<IUser> implements IUs
       }
 
       // Save the updated playlist
+      console.log(playlist,"achar")
       const updatedPlaylist = await playlist.save();
       return updatedPlaylist as IPlaylist;
     } catch (error) {
@@ -472,8 +475,10 @@ export default class UserRepository extends BaseRepository<IUser> implements IUs
   }
   async getAllBanners(): Promise<IBanner[] | null> {
     const data = await BannerModel.find({ isActive: true }).lean()
-
-    return data
+    return data.map((banner: any) => ({
+      ...banner,
+      _id: banner._id.toString(),
+    }));
   }
 
 

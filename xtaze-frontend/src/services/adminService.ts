@@ -59,13 +59,13 @@ export type PaginatedResponse<T> = {
 };
 export type BackendArtistsResponse = {
   data: {
-    _id: string;
+    id: string;
     username: string;
     role: string;
     profilePic?: string;
     isActive: boolean;
   }[];
-  pagination: { 
+  pagination: {
     total: number;
     page: number;
     limit: number;
@@ -87,7 +87,7 @@ export const fetchArtists = async (
 
     if (!res.success) throw new Error(res.message || "Failed to fetch artists");
     const mappedArtists: Artist[] = res.data.data.map((artist) => ({
-      id: artist._id,
+      id: artist.id,
       name: artist.username,
       role: artist.role,
       image: artist.profilePic!,
@@ -123,7 +123,7 @@ export const listActiveArtists = async (
 
     if (!res.success) throw new Error(res.message || "Failed to fetch artists");
     const mappedArtists: Artist[] = res.data.data.map((artist) => ({
-      id: artist._id,
+      id: artist.id,
       name: artist.username,
       role: artist.role,
       image: artist.profilePic!,
@@ -227,30 +227,48 @@ export const updateGenre = async (id: string, name: string): Promise<{ success: 
 
 export const fetchBanners = async (): Promise<IBanner[]> => {
   const data = await apiCall<{ data: IBanner[] }>(adminApi, HTTP_METHODS.GET, "/banners/all", undefined);
+  console.log(data, "ass")
   return data.data;
 };
-
 export const createBanner = async (
-  banner: { title: string; description: string; file?: File; action: string; isActive: boolean; createdBy: string },
-
+  banner: {
+    id?: string;
+    title: string;
+    description: string;
+    file?: File;
+    action: string;
+    isActive: boolean;
+    // createdBy: string;
+  }
 ): Promise<IBanner> => {
   const formData = new FormData();
+
+  if (banner.id) formData.append("id", banner.id);
   formData.append("title", banner.title);
   formData.append("description", banner.description);
   if (banner.file) formData.append("image", banner.file);
   formData.append("action", banner.action);
   formData.append("isActive", String(banner.isActive));
-  formData.append("createdBy", banner.createdBy);
-  const data = await apiCall<{ data: IBanner }>(adminApi, HTTP_METHODS.POST, "/banners", formData);
+  // formData.append("createdBy", banner.createdBy);
+
+  const data = await apiCall<{ data: IBanner }>(
+    adminApi,
+    HTTP_METHODS.POST,
+    "/banners",
+    formData
+  );
+
   return data.data;
 };
 
+
 export const updateBanner = async (
   id: string,
-  banner: { title: string; description: string; file?: File; action: string; isActive: boolean },
+  banner: { id?:string,title: string; description: string; file?: File; action: string; isActive: boolean },
 
 ): Promise<IBanner> => {
   const formData = new FormData();
+  if (banner.id) formData.append("id", banner.id);
   formData.append("title", banner.title);
   formData.append("description", banner.description);
   if (banner.file) formData.append("image", banner.file);
@@ -367,14 +385,31 @@ export const fetchMonetizationData = async (
 ): Promise<{ data: MusicMonetization[]; pagination: { currentPage: number; totalPages: number; totalItems: number } }> => {
   try {
     const response = await apiCall<{
-      data: MusicMonetization[];
+      data: any[]; // raw response
       pagination: { currentPage: number; totalPages: number; totalItems: number };
     }>(
       adminApi,
       HTTP_METHODS.GET,
       `/music/monetization?page=${page}&limit=${limit}`
     );
-    return response;
+
+    // Map raw API response to MusicMonetization
+    const normalizedData: MusicMonetization[] = response.data.map((item) => ({
+      trackId: item.trackId,
+      trackName: item.trackName,
+      artistName: item.artistName,
+      totalPlays: item.totalPlays,
+      monthlyPlays: item.monthlyPlays ?? 0, // safe fallback
+      totalRevenue: item.totalRevenue ?? 0,
+      monthlyRevenue: item.monthlyRevenue ?? 0,
+      lastUpdated: item.lastUpdated ?? new Date().toISOString(),
+      paymentStatus: item.paymentStatus ?? false,
+    }));
+
+    return {
+      data: normalizedData,
+      pagination: response.pagination,
+    };
   } catch (error: any) {
     console.error("Error fetching monetization data:", error);
     throw new Error(error.response?.data?.message || "Failed to fetch monetization data");
@@ -475,7 +510,7 @@ export const archiveSubscriptionPlan = async (productId: string,): Promise<void>
     throw new Error(error.response?.data?.message || "Failed to archive subscription plan");
   }
 };
-export const fetchAllArtistsVerification = async (page=1,limit=10): Promise<any> => {
+export const fetchAllArtistsVerification = async (page = 1, limit = 10): Promise<any> => {
   try {
     const response = await apiCall<{ data: any }>(
       adminApi,

@@ -45,43 +45,43 @@ export default function ArtistProfile() {
   const [tracks, setTracks] = useState<Track[]>([]);
   const [verification, setVerification] = useState<VerificationStatus>({ status: "unsubmitted" });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
- const [page, setPage] = useState(1);
+  const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [limit] = useState(5);
   const token = localStorage.getItem("artistToken");
-useEffect(() => {
-  if (!token) {
-    console.error("No token found. Please login.");
-    navigate("/artist");
-    return;
-  }
-
-  const fetchData = async () => {
-    if (!user?._id) return;
-
-    try {
-      const fetchedTracks = await fetchArtistTracks(user._id, page, limit);
-
-      const mappedTracks = fetchedTracks.data.map((track) => ({
-        _id: track._id,
-        title: track.title,
-        listeners: track.playHistory ?? [],
-      }));
-
-      setTracks(mappedTracks);
-      setTotalPages(fetchedTracks.pagination.totalPages);
-
-      const verificationData = await getVerificationStatus(user._id);
-      setVerification(verificationData || { status: "unsubmitted" });
-    } catch (error: any) {
-      console.error("Error fetching data:", error);
-      setTracks([]);
-      toast.error("Failed to load profile data.");
+  useEffect(() => {
+    if (!token) {
+      console.error("No token found. Please login.");
+      navigate("/artist");
+      return;
     }
-  };
 
-  fetchData();
-}, [navigate, user?._id, token, page, limit]);
+    const fetchData = async () => {
+      if (!user?.id) return;
+
+      try {
+        const fetchedTracks = await fetchArtistTracks(user.id, page, limit);
+
+        const mappedTracks = fetchedTracks.data.map((track) => ({
+          _id: track._id,
+          title: track.title,
+          listeners: track.playHistory ?? [],
+        }));
+
+        setTracks(mappedTracks);
+        setTotalPages(fetchedTracks.pagination.totalPages);
+
+        const verificationData = await getVerificationStatus(user.id);
+        setVerification(verificationData || { status: "unsubmitted" });
+      } catch (error: any) {
+        console.error("Error fetching data:", error);
+        setTracks([]);
+        toast.error("Failed to load profile data.");
+      }
+    };
+
+    fetchData();
+  }, [navigate, user?.id, token, page, limit]);
 
   useEffect(() => {
     setUsernameText(user?.username || "");
@@ -160,18 +160,18 @@ useEffect(() => {
   };
 
   const uploadCroppedMedia = async (mediaData: string, field: "profileImage" | "coverImage") => {
-    if (!user?._id || !token) {
+    if (!user?.id || !token) {
       toast.error("User ID or token not found.");
       return;
     }
 
     try {
       if (field === "profileImage") {
-        const updatedUser = await uploadProfileImage(user._id, mediaData);
+        const updatedUser = await uploadProfileImage(user.id, mediaData);
         dispatch(saveArtistData(updatedUser));
         toast.success("Profile picture updated!");
       } else {
-        const updatedUser = await updateArtistBanner(user._id, mediaData);
+        const updatedUser = await updateArtistBanner(user.id, mediaData);
         dispatch(saveArtistData(updatedUser));
         setCroppedCoverMedia(updatedUser.banner);
         toast.success("Banner updated!");
@@ -188,13 +188,13 @@ useEffect(() => {
       return;
     }
 
-    if (!user?._id || !token) {
+    if (!user?.id || !token) {
       toast.error("User ID or token not found.");
       return;
     }
 
     try {
-      const updatedUser = await updateArtistBio(user._id, bioText);
+      const updatedUser = await updateArtistBio(user.id, bioText);
       dispatch(saveArtistData(updatedUser));
       setIsEditingBio(false);
       toast.success("Bio updated successfully!");
@@ -214,13 +214,13 @@ useEffect(() => {
       return;
     }
 
-    if (!user?._id || !token) {
+    if (!user?.id || !token) {
       toast.error("User ID or token not found.");
       return;
     }
 
     try {
-      const updatedUser = await updateArtistUsername(user._id, usernameText);
+      const updatedUser = await updateArtistUsername(user.id, usernameText);
       dispatch(saveArtistData(updatedUser));
       setIsEditingUsername(false);
       toast.success("Username updated successfully!");
@@ -238,7 +238,7 @@ useEffect(() => {
   };
 
   const handleVerificationSubmit = async () => {
-    if (!selectedFile || !user?._id || !token) {
+    if (!selectedFile || !user?.id || !token) {
       toast.error("Please select an ID proof file or check login status.");
       return;
     }
@@ -249,7 +249,7 @@ useEffect(() => {
     formData.append("idProof", selectedFile);
 
     try {
-      await requestVerification(user._id, formData);
+      await requestVerification(user.id, formData);
       setVerification({ status: "pending" });
       toast.success("Verification request submitted!");
       setSelectedFile(null);
@@ -461,25 +461,25 @@ useEffect(() => {
                 )}
               </div>
             </Card>
-<div className="flex justify-between items-center mt-4">
-  <Button
-    disabled={page === 1}
-    onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
-  >
-    Previous
-  </Button>
+            <div className="flex justify-between items-center mt-4">
+              <Button
+                disabled={page === 1}
+                onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
+              >
+                Previous
+              </Button>
 
-  <span className="text-gray-400">
-    Page {page} of {totalPages}
-  </span>
+              <span className="text-gray-400">
+                Page {page} of {totalPages}
+              </span>
 
-  <Button
-    disabled={page === totalPages || totalPages === 0}
-    onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
-  >
-    Next
-  </Button>
-</div>
+              <Button
+                disabled={page === totalPages || totalPages === 0}
+                onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
+              >
+                Next
+              </Button>
+            </div>
 
             {/* Verification Process Section */}
             <Card className="p-6 bg-black border border-white">

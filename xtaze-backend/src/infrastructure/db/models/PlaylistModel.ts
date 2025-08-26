@@ -1,7 +1,7 @@
 import { Schema, Document, model } from "mongoose";
 import { IPlaylist } from "../../../domain/entities/IPlaylist";
 
-export interface IPlaylistDocument extends IPlaylist, Document {}
+export interface IPlaylistDocument extends Omit<IPlaylist, "_id">, Document {}
 
 const PlaylistSchema = new Schema<IPlaylistDocument>(
   {

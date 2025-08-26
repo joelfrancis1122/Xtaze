@@ -33,7 +33,7 @@ export function DemographicsChart() {
     const fetchDemographics = async () => {
       const token = localStorage.getItem("artistToken");
 
-      if (!token || !user?._id) {
+      if (!token || !user?.id) {
         console.error("Token or User ID not found. Please login.");
         setGenderData([]);
         setAgeData([]);
@@ -42,10 +42,8 @@ export function DemographicsChart() {
       }
 
       try {
-        // Fetch artist's tracks
-        const tracks = await fetchArtistTracks(user._id);
-        
-        // Collect all unique listener IDs
+        const tracks = await fetchArtistTracks(user.id);
+          console.log(tracks,'achi ',tracks)
         const listenerIds = Array.from(
           new Set(tracks.data.flatMap((track) => track.listeners))
         );
@@ -62,7 +60,6 @@ export function DemographicsChart() {
         
         // Aggregate demographics
         const { genderData, ageData, countryData } = aggregateDemographics(users);
-        
         setGenderData(genderData);
         setAgeData(ageData);
         setCountryData(countryData);
@@ -75,7 +72,7 @@ export function DemographicsChart() {
     };
 
     fetchDemographics();
-  }, [user?._id]);
+  }, [user?.id]);
 
   // Define color palettes for each chart
   const genderColors = ["#FF6B6B", "#4ECDC4", "#45B7D1"];

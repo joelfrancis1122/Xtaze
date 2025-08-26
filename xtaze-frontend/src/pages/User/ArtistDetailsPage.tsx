@@ -72,9 +72,10 @@ export default function ArtistDetailsPage() {
           const artistUsername = fetchedTracks[0].artists[0];
           const userResponse = await fetchUserByUsername(artistUsername);
           const verificationRecords = await fetchAllArtistsVerification();
+
           const verificationRecord = verificationRecords.data.find(
-            (record: { artistId: string }) => record.artistId === artistId
-          ); 
+            (record: { userId: string }) => record.userId === artistId
+          );
           const verificationStatus = verificationRecord ? verificationRecord.status : "unsubmitted";
 
           const artistData: Artist = {
@@ -88,10 +89,11 @@ export default function ArtistDetailsPage() {
             verificationStatus,
           };
           setArtist(artistData);
+          console.log(fetchedTracks, "achuuuuu")
           setTracks(fetchedTracks);
           setError(null);
-          if (user?._id) {
-            const fetchedPlaylists = await getMyplaylist(user._id);
+          if (user?.id) {
+            const fetchedPlaylists = await getMyplaylist(user.id);
             setPlaylists(fetchedPlaylists);
           }
         } else {
@@ -104,7 +106,7 @@ export default function ArtistDetailsPage() {
       }
     };
     loadArtistDetails();
-  }, [artistId, user?._id]);
+  }, [artistId, user?.id]);
 
   useEffect(() => {
     if (user?.likedSongs) {
@@ -130,13 +132,14 @@ export default function ArtistDetailsPage() {
 
   const handleLike = async (trackId: string) => {
     const token = localStorage.getItem("token");
-    if (!token || !trackId || !user?._id) {
+    console.log(trackId, user?.id, "asdasd")
+    if (!token || !trackId || !user?.id) {
       toast.error("Please log in to like songs");
       return;
     }
     const isCurrentlyLiked = likedSongs.has(trackId);
     try {
-      const updatedUser = await toggleLike(user._id, trackId);
+      const updatedUser = await toggleLike(user.id, trackId);
       dispatch(saveSignupData(updatedUser));
       setLikedSongs((prev) => {
         const newLiked = new Set(prev);
@@ -156,13 +159,13 @@ export default function ArtistDetailsPage() {
 
   const handleAddToPlaylist = async (trackId: string, playlistId: string) => {
     const token = localStorage.getItem("token");
-    if (!token || !user?._id) {
+    if (!token || !user?.id) {
       toast.error("Please log in to add to playlist");
       return;
     }
     try {
-      await addTrackToPlaylist(user._id, playlistId, trackId);
-      const playlist = playlists.find((p) => p._id === playlistId);
+      await addTrackToPlaylist(user.id, playlistId, trackId);
+      const playlist = playlists.find((p) => p.id === playlistId);
       toast.success(`Added to ${playlist.title}`);
       setDropdownTrackId(null);
     } catch (error: any) {
@@ -172,7 +175,7 @@ export default function ArtistDetailsPage() {
 
   const handleAddToQueue = (track: Track) => {
     const queueEntry = {
-      id: track._id,
+      id: track.id,
       title: track.title,
       artists: track.artists,
       fileUrl: track.fileUrl,
@@ -327,7 +330,7 @@ export default function ArtistDetailsPage() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-6 overflow-hidden">
                     {tracks.map((track) => (
                       <div
-                        key={track._id}
+                        key={track.id}
                         className="group bg-[#1d1d1d] rounded-lg p-3 sm:p-4 hover:bg-[#242424] active:bg-[#242424] transition-colors duration-200 flex flex-col box-content"
                       >
                         <div className="w-full h-[180px] sm:h-[200px] flex flex-col mb-2 sm:mb-3">
@@ -366,20 +369,20 @@ export default function ArtistDetailsPage() {
                               className="p-2 hover:bg-[#333333] active:bg-[#333333] rounded-full text-white"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                setDropdownTrackId(dropdownTrackId === track._id ? null : track._id);
+                                setDropdownTrackId(dropdownTrackId === track.id ? null : track.id);
                               }}
                             >
                               <Plus size={20} />
                             </button>
-                            {dropdownTrackId === track._id && (
+                            {dropdownTrackId === track.id && (
                               <div className="absolute left-auto right-0 mt-8 w-40 sm:w-48 bg-[#242424] rounded-md shadow-lg z-20">
                                 <ul className="py-1">
                                   {playlists.length > 0 ? (
                                     playlists.map((playlist) => (
                                       <li
-                                        key={playlist._id}
+                                        key={playlist.id}
                                         className="px-3 sm:px-4 py-1 sm:py-2 hover:bg-[#333333] cursor-pointer text-sm sm:text-base text-white"
-                                        onClick={() => handleAddToPlaylist(track._id, playlist._id)}
+                                        onClick={() => handleAddToPlaylist(track.id, playlist.id)}
                                       >
                                         {playlist.title}
                                       </li>
@@ -393,10 +396,10 @@ export default function ArtistDetailsPage() {
                               </div>
                             )}
                             <button
-                              onClick={() => handleLike(track._id)}
-                              className={`p-2 hover:bg-[#333333] active:bg-[#333333] rounded-full ${likedSongs.has(track._id) ? "text-red-500" : "text-white"}`}
+                              onClick={() => handleLike(track.id)}
+                              className={`p-2 hover:bg-[#333333] active:bg-[#333333] rounded-full ${likedSongs.has(track.id) ? "text-red-500" : "text-white"}`}
                             >
-                              <Heart size={20} fill={likedSongs.has(track._id) ? "currentColor" : "none"} />
+                              <Heart size={20} fill={likedSongs.has(track.id) ? "currentColor" : "none"} />
                             </button>
                             <button
                               className="p-2 hover:bg-[#333333] active:bg-[#333333] rounded-full text-white"

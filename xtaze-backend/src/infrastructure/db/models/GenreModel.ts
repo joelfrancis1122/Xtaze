@@ -3,7 +3,7 @@ import { Schema, Document, model } from "mongoose";
 export interface IGenreDocument extends Document {
   name: string;
   createdAt: Date;
-  isBlocked:Boolean;
+  isBlocked:boolean;
 }
 
 const GenreSchema = new Schema<IGenreDocument>({

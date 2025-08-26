@@ -12,7 +12,7 @@ interface PlayHistory {
 }
 
 interface Song {
-  _id: string;
+  id: string;
   title: string;
   fileUrl: string;
   playHistory?: PlayHistory[];
@@ -29,16 +29,20 @@ export function TopSongsTable() {
   const user = useSelector((state: RootState) => state.artist.signupData);
 
   useEffect(() => {
+          console.log(playingSongId,topSongs,"its sname")
+
     const fetchSongs = async () => {
       const token = localStorage.getItem("artistToken");
-      if (!token || !user?._id) {
+      console.log(token,user,'asdasda')
+      if (!token || !user?.id) {
         setError("Token or User ID not found. Please login.");
         setTopSongs([]);
         return;
       }
 
       try {
-        const { data, pagination } = await fetchArtistTracks(user._id, page, limit);
+        const { data, pagination } = await fetchArtistTracks(user.id, page, limit);
+        console.log(data,"sss")
         setTopSongs(data || []);
         setTotalPages(pagination?.totalPages || 1);
       } catch (error) {
@@ -49,26 +53,32 @@ export function TopSongsTable() {
     };
 
     fetchSongs();
-  }, [user?._id, page, limit]);
+  }, [user?.id, page, limit]);
+const handlePlayPause = (song: Song) => {
+  // Initialize audio if not yet created
+  if (!audioRef.current) {
+    audioRef.current = new Audio(song.fileUrl);
+    audioRef.current.play().catch(console.error);
+    setPlayingSongId(song.id);
+    return;
+  }
 
-  const handlePlayPause = (song: Song) => {
-    if (!audioRef.current) {
-      audioRef.current = new Audio(song.fileUrl);
-    }
+  // If clicking the currently playing song
+  if (playingSongId === song.id) {
+    audioRef.current.pause();
+    setPlayingSongId(null);
+    return;
+  }
 
-    if (playingSongId === song._id) {
-      audioRef.current.pause();
-      setPlayingSongId(null);
-    } else {
-      if (playingSongId !== null && audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current.currentTime = 0;
-      }
-      audioRef.current.src = song.fileUrl;
-      audioRef.current.play().catch(console.error);
-      setPlayingSongId(song._id);
-    }
-  };
+  // Switching to a different song
+  audioRef.current.pause();
+  audioRef.current.currentTime = 0;
+  audioRef.current.src = song.fileUrl; // Reuse same Audio object
+  audioRef.current.play().catch(console.error);
+  setPlayingSongId(song.id);
+};
+
+
 
   useEffect(() => {
     return () => {
@@ -96,11 +106,11 @@ export function TopSongsTable() {
 
         <TableBody>
           {topSongs.length > 0 ? (
-            topSongs.map((song) => (
-              <TableRow key={song._id} className="text-lg">
+            topSongs.map((song,index) => (
+              <TableRow key={index} className="text-lg">
                 <TableCell className="py-4">
                   <button onClick={() => handlePlayPause(song)}>
-                    {playingSongId === song._id ? (
+                    {playingSongId === song.id ? (
                       <Pause className="h-5 w-5" />
                     ) : (
                       <Play className="h-5 w-5" />

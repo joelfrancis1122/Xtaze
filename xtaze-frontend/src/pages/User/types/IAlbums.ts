@@ -1,5 +1,5 @@
 export interface IAlbum {
-  _id: string;
+  id: string;
   name: string;
   description?: string;
   coverImage?: string;
@@ -8,7 +8,7 @@ export interface IAlbum {
 }
 export interface ISong {
   playHistory: never[];
-  _id: string;
+  id: string;
   title: string;
   artists: string[];
   genre: string[];

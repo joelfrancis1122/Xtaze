@@ -133,6 +133,7 @@ export const loginUser = async (email: string, password: string, dispatch: Retur
   const data = await apiCall<{ success: boolean; token: string; user: UserSignupData }>(userApi, HTTP_METHODS.POST, "/login", { email, password });
   if (!data.success) throw new Error("Failed to login");
   localStorage.setItem("token", data.token);
+  console.log("tosss",data.user)
   dispatch(saveSignupData(data.user));
 };
 
@@ -175,12 +176,14 @@ export const fetchGenreTracks = async (genre: string): Promise<Track[]> => {
 
 // Fetch Liked Songs
 export const fetchLikedSongs = async (userId: string, songIds: string[]): Promise<Track[]> => {
+  console.log(userId,"kitttyyy",songIds)
   const data = await apiCall<{ success: boolean; tracks: Track[] }>(
     userApi,
     HTTP_METHODS.POST,
     `/getliked?userId=${userId}`,
     { songIds }
   );
+  console.log(data,"sss")
   if (!data.success) throw new Error("Failed to fetch liked songs");
   return data.tracks;
 };
@@ -236,6 +239,7 @@ export const createPlaylists = async (userId: string, playlistData: Partial<Play
 // Get My Playlists
 export const getMyplaylist = async (userId: string): Promise<Playlist[]> => {
   const data = await apiCall<{ success: boolean; data: Playlist[] }>(userApi, HTTP_METHODS.GET, `/getPlaylist?userId=${userId}`);
+  console.log(data,"sdadsad",userId)
   if (!data.success) throw new Error("Failed to get playlists");
   return data.data;
 };
@@ -247,6 +251,7 @@ export const getMyAlbums = async (): Promise<IAlbum[]> => {
 export const fetchAlbumSongs = async (albumId:string): Promise<IAlbum> => {
   const data = await apiCall<{ success: boolean; data: IAlbum }>(userApi, HTTP_METHODS.GET, `/albumsongs?albumId=${albumId}`
   );
+  console.log(data,"sassasasass")
   // if (!data.success) throw new Error("Failed to get Albums");
   return data.data;
 };
@@ -258,6 +263,7 @@ export const fetchPlaylistTracks = async (id: string, page: number = 1, limit: n
     HTTP_METHODS.GET,
     `/getTracksInPlaylist?id=${id}&page=${page}&limit=${limit}`
   );
+  console.log(data,"sugian",id)
   if (!data.success) throw new Error("Failed to fetch playlist tracks");
   return data.data;
 };
@@ -271,6 +277,7 @@ export const fetchBanners = async (): Promise<IBanner[]> => {
 
 // Add Track to Playlist
 export const addTrackToPlaylist = async (userId: string, playlistId: string, trackId: string): Promise<void> => {
+  console.log(trackId,"achar")
   const data = await apiCall<{ success: boolean }>(userApi, HTTP_METHODS.POST, "/addToPlaylist", { userId, playlistId, trackId });
   if (!data.success) throw new Error("Failed to add track to playlist");
 };
@@ -343,8 +350,9 @@ export const verifyCoupon = async (code: string): Promise<any> => {
 export const fetchArtists = async (): Promise<Artist[]> => {
   const data = await apiCall<{ success: boolean; data: any[] }>(userApi, HTTP_METHODS.GET, "/listArtists");
   // if (!data.success) throw new Error("Failed to fetch artists");
+  console.log(data,"new")
   return data.data.map((artist: any) => ({
-    id: artist._id,
+    id: artist.id,
     name: artist.username,
     role: artist.role,
     image: artist.profilePic,
@@ -369,8 +377,8 @@ export const fetchUserByUsername = async (username: string): Promise<any> => {
 // Fetch All Artists Verification
 export const fetchAllArtistsVerification = async (): Promise<any> => {
   const data = await apiCall<{ success: boolean; data: any }>(userApi, HTTP_METHODS.GET, "/fetchAllArtistsVerification");
-  if (!data.success) throw new Error("Failed to fetch artist verifications");
   return data.data;
+  if (!data.success) throw new Error("Failed to fetch artist verifications");
 };
 
 // Update Username

@@ -4,7 +4,7 @@ import { ICoupon } from "../entities/ICoupon";
 import { MusicMonetization } from "../entities/IMonetization";
 import { ITrack } from "../entities/ITrack";
 import IUser from "../entities/IUser";
-import { IVerificationRequest } from "../entities/IVeridicationRequest";
+import { IVerificationRequest } from "../entities/IVerificationRequest";
 
 export interface IAdminRepository {
   findByEmail: (email: string) => Promise<IUser | null>;

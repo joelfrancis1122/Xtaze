@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Card } from "../../components/ui/card";
 import Sidebar from "./adminComponents/aside-side";
-import { fetchAllArtistsVerification, fetchUserDetails, updateVerificationStatus } from "../../services/adminService";
+import { fetchAllArtistsVerification, updateVerificationStatus } from "../../services/adminService";
 import { Button } from "../../components/ui/button";
 
 interface Verification {
@@ -12,18 +12,18 @@ interface Verification {
 }
 
 interface Artist {
-    _id: string;
+    id: string;
     artistId: string;
     username: string;
-    email: string;
     verification: Verification;
 }
 
 export default function AdminAnalytics() {
     const [artists, setArtists] = useState<Artist[]>([]);
-    const token = localStorage.getItem("adminToken");
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
+    const token = localStorage.getItem("adminToken");
+
     useEffect(() => {
         const fetchData = async () => {
             if (!token) {
@@ -34,49 +34,30 @@ export default function AdminAnalytics() {
             try {
                 const response = await fetchAllArtistsVerification(page, 7);
 
-                // ✅ Correctly access the data and pagination
                 const verificationData = response.data;
-                const totalPagesFromAPI = response.pagination.totalPages;
-
-                setTotalPages(totalPagesFromAPI);
+                setTotalPages(response.pagination.totalPages);
 
                 if (!verificationData || verificationData.length === 0) {
                     setArtists([]);
                     return;
                 }
 
-                const artistIds = verificationData.map((item: { artistId: string }) => item.artistId);
-                const userDetails = await fetchUserDetails(artistIds);
-                const mergedData: Artist[] = verificationData
+                const mappedData: Artist[] = verificationData
                     .sort((a: { submittedAt: string }, b: { submittedAt: string }) =>
                         new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime()
                     )
-                    .map((verification: {
-                        _id: string;
-                        artistId: string;
-                        status: "pending" | "approved" | "rejected" | "unsubmitted";
-                        idProof?: string;
-                        feedback?: string | null;
-                        reviewedAt?: string | null;
-                        submittedAt: string;
-                    }) => {
-                        const user = userDetails.find((u) => u._id === verification.artistId);
-                        return {
-                            _id: verification._id,
-                            artistId: verification.artistId,
-                            username: user?.username || "Unknown",
-                            email: user?.email || "N/A",
-                            verification: {
-                                status: verification.status,
-                                idProof: verification.idProof,
-                                feedback: verification.feedback,
-                                updatedAt: verification.reviewedAt,
-                            },
-                        };
-                    });
+                    .map((verification: any) => ({
+                        _id: verification._id,
+                        artistId: verification.artistId,
+                        username: verification.username ?? "Unknown",
+                        verification: {
+                            status: verification.status,
+                            idProof: verification.documentUrl,
+                            feedback: verification.feedback,
+                        },
+                    }));
 
-
-                setArtists(mergedData);
+                setArtists(mappedData);
             } catch (error) {
                 console.error("Error fetching data:", error);
                 toast.error("Failed to load artist data.");
@@ -84,16 +65,24 @@ export default function AdminAnalytics() {
         };
 
         fetchData();
-    }, [token, page]); // ✅ page dependency included
+    }, [token, page]);
 
-
-    const handleVerify = async (verificationId: string, status: "approved" | "rejected", feedback: string | null = null) => {
+    const handleVerify = async (
+        verificationId: string,
+        status: "approved" | "rejected",
+        feedback: string | null = null
+    ) => {
         try {
-            const updatedVerification = await updateVerificationStatus(status, feedback, verificationId);
+            const updatedVerification = await updateVerificationStatus(
+                status,
+                feedback,
+                verificationId
+            );
+
             if (updatedVerification) {
-                setArtists((prevArtists) =>
-                    prevArtists.map((artist) =>
-                        artist._id === verificationId
+                setArtists((prev) =>
+                    prev.map((artist) =>
+                        artist.id === verificationId
                             ? { ...artist, verification: { ...artist.verification, status, feedback } }
                             : artist
                     )
@@ -111,7 +100,10 @@ export default function AdminAnalytics() {
             <Sidebar />
             <main className="p-6 lg:ml-64">
                 <Card className="bg-black border border-white p-5">
-                    <h1 className="text-2xl font-bold text-white mb-6">Artist Verification Analytics</h1>
+                    <h1 className="text-2xl font-bold text-white mb-6">
+                        Artist Verification Analytics
+                    </h1>
+
                     {artists.length === 0 ? (
                         <p className="text-white">Loading artists or no artists found...</p>
                     ) : (
@@ -119,7 +111,6 @@ export default function AdminAnalytics() {
                             <thead>
                                 <tr className="border-b border-white">
                                     <th className="py-2 text-white">Artist Name</th>
-                                    <th className="py-2 text-white">Email</th>
                                     <th className="py-2 text-white">Status</th>
                                     <th className="py-2 text-white">ID Proof</th>
                                     <th className="py-2 text-white">Actions</th>
@@ -127,9 +118,8 @@ export default function AdminAnalytics() {
                             </thead>
                             <tbody>
                                 {artists.map((artist) => (
-                                    <tr key={artist._id} className="border-b border-gray-700">
+                                    <tr key={artist.id} className="border-b border-gray-700">
                                         <td className="py-2 text-white">{artist.username}</td>
-                                        <td className="py-2 text-white">{artist.email}</td>
                                         <td className="py-2 text-white">{artist.verification.status}</td>
                                         <td className="py-2">
                                             {artist.verification.idProof ? (
@@ -141,7 +131,6 @@ export default function AdminAnalytics() {
                                                     >
                                                         View ID
                                                     </a>
-
                                                     <div className="absolute top-8 left-1/2 -translate-x-1/2 z-50 hidden group-hover:block">
                                                         <div className="relative rounded-xl shadow-2xl backdrop-blur-md bg-white/5 border border-white/20 overflow-hidden transition-transform duration-300 transform group-hover:scale-100 scale-95">
                                                             <img
@@ -152,7 +141,6 @@ export default function AdminAnalytics() {
                                                         </div>
                                                     </div>
                                                 </div>
-
                                             ) : (
                                                 "N/A"
                                             )}
@@ -161,15 +149,16 @@ export default function AdminAnalytics() {
                                             {artist.verification.status === "pending" && (
                                                 <>
                                                     <Button
-                                                        className="bg-[#0d1e00] hover:bg-[#1b2414]" onClick={() => handleVerify(artist._id, "approved")}
+                                                        className="bg-[#0d1e00] hover:bg-[#1b2414]"
+                                                        onClick={() => handleVerify(artist.id, "approved")}
                                                     >
                                                         Approve
                                                     </Button>
-
                                                     <Button
-                                                        className="ml-4 bg-[#380000] hover:bg-[#241111]" onClick={() => {
+                                                        className="ml-4 bg-[#380000] hover:bg-[#241111]"
+                                                        onClick={() => {
                                                             const feedback = prompt("Enter rejection feedback (optional):");
-                                                            handleVerify(artist._id, "rejected", feedback);
+                                                            handleVerify(artist.id, "rejected", feedback);
                                                         }}
                                                     >
                                                         Reject
@@ -183,6 +172,7 @@ export default function AdminAnalytics() {
                         </table>
                     )}
                 </Card>
+
                 <div className="flex justify-between items-center mt-4">
                     <Button
                         disabled={page === 1}
@@ -191,22 +181,17 @@ export default function AdminAnalytics() {
                     >
                         Previous
                     </Button>
-
                     <span className="text-gray-400">
                         Page {page} of {totalPages}
                     </span>
-
                     <Button
-                        disabled={page === totalPages || totalPages === 0} // ✅ correct check
+                        disabled={page === totalPages || totalPages === 0}
                         onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
-                        className="mr-35 px-6 py-2 bg-[#2f2f2f] hover:bg-black"
+                        className="px-6 py-2 bg-[#2f2f2f] hover:bg-black"
                     >
                         Next
                     </Button>
-
-
                 </div>
-
             </main>
         </div>
     );

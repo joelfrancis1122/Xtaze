@@ -1,5 +1,5 @@
 export interface ITrack {
-  id?: string;
+  _id?: string;   
   title: string;
   genre: string[];
   albumId: string;
@@ -8,5 +8,5 @@ export interface ITrack {
   createdAt?: Date;
   listeners?: string[];
   artists: string[];
-  playHistory?: { month: string; plays: number,paymentStatus?:boolean }[];
+  playHistory?: { month: string; plays: number; paymentStatus?: boolean }[];
 }

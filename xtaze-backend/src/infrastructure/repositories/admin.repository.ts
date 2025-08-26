@@ -2,7 +2,7 @@ import { IBanner } from "../../domain/entities/IBanner";
 import { ICoupon } from "../../domain/entities/ICoupon";
 import { MusicMonetization } from "../../domain/entities/IMonetization";
 import IUser from "../../domain/entities/IUser";
-import { IVerificationRequest } from "../../domain/entities/IVeridicationRequest";
+import { IVerificationRequest } from "../../domain/entities/IVerificationRequest";
 import { IAdminRepository } from "../../domain/repositories/IAdminRepository";
 import BannerModel from "../db/models/BannerModel";
 import { CouponModel } from "../db/models/CouponModel";
@@ -27,14 +27,18 @@ export default class AdminRepository extends BaseRepository<IUser> implements IA
     }
   }
 
-  async updateVerificationStatus(status: string, feedback: string | null, id: string): Promise<IVerificationRequest | null> {
+  async updateVerificationStatus(
+    status: string,
+    feedback: string | null,
+    id: string
+  ): Promise<IVerificationRequest | null> {
     try {
       const updatedVerification = await VerificationModel.findByIdAndUpdate(
         id,
         {
           status,
           feedback,
-          reviewedAt: new Date().toISOString(),
+          reviewedAt: new Date(),
         },
         { new: true }
       );
@@ -43,12 +47,13 @@ export default class AdminRepository extends BaseRepository<IUser> implements IA
         return null;
       }
 
-      return updatedVerification;
+      return updatedVerification.toObject() as IVerificationRequest;
     } catch (error) {
       console.error("Error updating verification status:", error);
       throw error;
     }
   }
+
 
   async getUsersByIds(userIds: string[]): Promise<IUser[] | null> {
     try {
@@ -117,18 +122,18 @@ export default class AdminRepository extends BaseRepository<IUser> implements IA
     const url = getBannerURl.secure_url.toString()
     const banner = new BannerModel({ title, description, imageUrl: url, action, createdBy, isActive })
 
-    return await banner.save()
+    return await banner.save() as any
   }
   async getAllBanners(): Promise<IBanner[] | null> {
     const data = await BannerModel.find()
 
-    return data
+    return data as any
   }
 
   async findBanner(id: string): Promise<IBanner | null> {
     const data = await BannerModel.findByIdAndDelete(id)
 
-    return data
+    return data as any
   }
 
 
@@ -204,7 +209,7 @@ export default class AdminRepository extends BaseRepository<IUser> implements IA
         throw new Error("Banner not found or failed to update");
       }
 
-      return updatedBanner;
+      return updatedBanner as any
     } catch (error) {
       console.error("Error updating banner:", error);
       throw new Error("Failed to update banner");
@@ -216,16 +221,38 @@ export default class AdminRepository extends BaseRepository<IUser> implements IA
     const coupon = await CouponModel.findOne({ code });
     return coupon ? coupon.toObject() as ICoupon : null;
   }
-  async fetchVerification(page: number, limit: number):  Promise<{data:IVerificationRequest[],total:number}>{
+  async fetchVerification(
+    page: number,
+    limit: number
+  ): Promise<{ data: (IVerificationRequest & { username?: string })[]; total: number }> {
     const skip = (page - 1) * limit;
-    const [data, total] = await Promise.all([
-      VerificationModel.find().skip(skip).limit(limit).lean(),
-      VerificationModel.countDocuments()
-    ])
 
-    return { data, total }
+    const [rawData, total] = await Promise.all([
+      VerificationModel.find()
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      VerificationModel.countDocuments(),
+    ]);
+    const artistIds = rawData.map((v) => v.artistId);
 
+    const users = await UserModel.find({ _id: { $in: artistIds }, role: "artist" })
+      .select("username _id")
+      .lean();
+    const usersMap: Record<string, string> = {};
+    users.forEach((u: any) => {
+      usersMap[u._id.toString()] = u.username;
+    });
+
+    const data: (IVerificationRequest & { username?: string })[] = rawData.map((doc: any) => ({
+      ...doc,
+      _id: doc._id?.toString(),
+      username: usersMap[doc.artistId] ?? "Unknown",
+    }));
+
+    return { data, total };
   }
+
   async findTracks(name: string): Promise<ITrack[] | null> {
     const tracks = await Track.find({ artists: name });
     return tracks as unknown as ITrack[]
@@ -241,57 +268,47 @@ export default class AdminRepository extends BaseRepository<IUser> implements IA
 
 
 
-
-
-  async getMusicMonetization(page: number, limit: number): Promise<{
-    data: MusicMonetization[]; pagination: { currentPage: number; totalPages: number; totalItems: number };
-  }> {
+  async getMusicMonetization(page: number, limit: number) {
     try {
-      const artists = await UserModel.find({ role: "artist" });
-      const artistNames = artists.map((artist) => artist.username);
-      const skip = (page - 1) * limit;
+      const revenuePerPlay = 0.5;
+      const currentMonth = new Date().toISOString().slice(0, 7);
 
-      const [tracks, totalItems] = await Promise.all([
-        Track.find({ artists: { $in: artistNames } })
-          .skip(skip)
-          .limit(limit),
-        Track.countDocuments({ artists: { $in: artistNames } }),
-      ]);
+      const tracks = await Track.find()
+        .skip((page - 1) * limit)
+        .limit(limit);
 
-      const revenuePerPlay = 0.50;
-      const currentMonth = new Date().toISOString().slice(0, 7); // e.g., "2025-03"
+      const totalItems = await Track.countDocuments();
 
-
-      const monetizationData: MusicMonetization[] = await Promise.all(
+      const monetizationData = await Promise.all(
         tracks.map(async (track) => {
-          const typedTrack = track as {
-            _id: string;
-            title: string;
-            artists: string[];
-            listeners?: string[];
-            playHistory?: { month: string; plays: number }[];
-            createdAt?: Date;
-          };
+          const totalPlays =
+            track.playHistory?.reduce((sum, h) => sum + h.plays, 0) || 0;
 
-          const artist = await UserModel.findOne({ username: typedTrack.artists[0] });
+          const monthlyPlays =
+            track.playHistory?.find((h) => h.month === currentMonth)?.plays || 0;
 
-          const monthlyPlays = typedTrack.playHistory?.find((h) => h.month === currentMonth)?.plays || 0;
-          const totalPlays = typedTrack.playHistory?.reduce((sum, h) => sum + h.plays, 0) || 0;
+          let paymentStatus = false;
+          let artistName = "";
+
+          if (track.artists?.[0]) {
+            const artist = await UserModel.findOne({ username: track.artists[0] });
+            artistName = artist?.username || track.artists[0];
+            paymentStatus = artist?.paymentStatus ?? false;
+          }
 
           return {
-            trackId: typedTrack._id.toString(),
-            trackName: typedTrack.title,
-            artistName: typedTrack.artists[0] || "Unknown Artist",
+            trackId: track._id?.toString() || "",
+            trackName: track.title,
+            artistName,
             totalPlays,
             monthlyPlays,
-            paymentStatus: artist?.paymentStatus ?? false,
             totalRevenue: totalPlays * revenuePerPlay,
             monthlyRevenue: monthlyPlays * revenuePerPlay,
-            lastUpdated: typedTrack.createdAt ? typedTrack.createdAt.toISOString() : "",
+            lastUpdated: track.createdAt ? track.createdAt.toISOString() : "",
+            paymentStatus,
           };
         })
       );
-      console.log(monetizationData, "adi")
 
       return {
         data: monetizationData.sort((a, b) => b.totalPlays - a.totalPlays),
@@ -300,10 +317,11 @@ export default class AdminRepository extends BaseRepository<IUser> implements IA
           totalPages: Math.ceil(totalItems / limit),
           totalItems,
         },
-      }
-    } catch (error: unknown) {
+      };
+    } catch (error: any) {
       console.error("Error in getMusicMonetization:", error);
-      throw new Error((error as Error).message || "Failed to fetch music monetization data");
+      throw new Error(error.message || "Failed to fetch music monetization data");
     }
   }
+
 }

@@ -92,26 +92,35 @@ export default function Home() {
       }
 
       try {
+        if (!user || !user.id) {
+          setTracks([]);
+          setLikedTracks([]);
+          setPlaylists([]);
+          setLoading(false);
+          return;
+        }
+
         const { tracks: fetchedTracks, user: updatedUser } = await fetchTracks(
-          user?._id || "",
-          user?.premium || "Free"
+          user.id,
+          user.premium || "Free"
         );
+        console.log(fetchedTracks,"siinei")
         setTracks(fetchedTracks);
 
         if (updatedUser && JSON.stringify(updatedUser) !== JSON.stringify(user)) {
-          dispatch(saveSignupData(updatedUser));
+          // dispatch(saveSignupData(updatedUser));
         }
 
-        if (user?.likedSongs && user.likedSongs.length > 0) {
-          const liked = await fetchLikedSongs(user._id || "", user.likedSongs);
+        if (user.likedSongs && user.likedSongs.length > 0) {
+          const liked = await fetchLikedSongs(user.id || "", user.likedSongs);
           setLikedTracks(liked);
         } else {
           setLikedTracks([]);
         }
-        console.log(likedSongs, likedTracks);
-        const fetchedPlaylists = await getMyplaylist((user?._id) as string);
+
+        const fetchedPlaylists = await getMyplaylist(user.id);
         setPlaylists(fetchedPlaylists);
-        
+
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
@@ -120,7 +129,7 @@ export default function Home() {
     };
 
     getTracksAndLikedSongsAndPlaylists();
-  }, [dispatch, user?._id, user?.premium]);
+  }, [dispatch, user?.id, user?.premium]);
 
   useEffect(() => {
     if (user?.premium !== "Free" && tracks.length > 0 && randomIndex === null) {
@@ -154,17 +163,17 @@ export default function Home() {
 
   const handleIncrementListeners = async (trackId: string) => {
     const token = localStorage.getItem("token");
-    if (!token || !trackId || !user?._id) return;
+    if (!token || !trackId || !user?.id) return;
 
     try {
-      await incrementListeners(trackId, user._id);
+      await incrementListeners(trackId, user.id);
 
       setTracks((prevTracks) =>
         prevTracks.map((track) =>
-          track._id === trackId
+          track.id === trackId
             ? {
                 ...track,
-                listeners: [...(track.listeners || []), user._id].filter(Boolean) as string[],
+                listeners: [...(track.listeners || []), user.id].filter(Boolean) as string[],
               }
             : track
         )
@@ -176,18 +185,18 @@ export default function Home() {
 
   const handlePlay = (track: Track) => {
     baseHandlePlay(track);
-    if (currentTrack?.fileUrl !== track.fileUrl && !playedSongs.has(track._id || track.fileUrl)) {
-      handleIncrementListeners(track._id || track.fileUrl);
-      setPlayedSongs((prev) => new Set(prev).add(track._id || track.fileUrl));
+    if (currentTrack?.fileUrl !== track.fileUrl && !playedSongs.has(track.id || track.fileUrl)) {
+      handleIncrementListeners(track.id || track.fileUrl);
+      setPlayedSongs((prev) => new Set(prev).add(track.id || track.fileUrl));
     }
   };
 
   const handleLike = async (trackId: string) => {
     const token = localStorage.getItem("token");
-    if (!token || !trackId || !user?._id) return;
+    if (!token || !trackId || !user?.id) return;
     const isCurrentlyLiked = likedSongs.has(trackId);
     try {
-      const updatedUser = await toggleLike(user._id, trackId);
+      const updatedUser = await toggleLike(user?.id, trackId);
       dispatch(saveSignupData(updatedUser));
       setLikedSongs((prev) => {
         const newLiked = new Set(prev);
@@ -205,15 +214,16 @@ export default function Home() {
     }
   };
 
-  const handleAddToPlaylist = async (trackId: string, playlistId: string) => {
+  const handleAddToPlaylist = async (track: string, playlistId: string) => {
+    console.log(track,"ith thanne ")
     const token = localStorage.getItem("token");
-    if (!token || !user?._id) {
+    if (!token || !user?.id) {
       toast.error("Please log in to add to playlist");
       return;
     }
     try {
-      await addTrackToPlaylist(user._id, playlistId, trackId);
-      const playlist = playlists.find((p) => p._id === playlistId);
+      await addTrackToPlaylist(user.id, playlistId, track);
+      const playlist = playlists.find((p) => p.id === playlistId);
       if (!playlist) throw new Error("Playlist not found");
       toast.success(`Added to ${playlist.title}`);
       setDropdownTrackId(null);
@@ -225,7 +235,7 @@ export default function Home() {
 
   const handleAddToQueue = (track: Track) => {
     const queueEntry: QueueTrack = {
-      id: track._id || track.fileUrl,
+      id: track.id || track.fileUrl,
       title: track.title,
       artists: track.artists,
       fileUrl: track.fileUrl,
@@ -370,7 +380,7 @@ const filteredTracks = tracks.filter((track) => {
                   >
                     {banners.map((banner) => (
                       <div
-                        key={banner._id}
+                        key={banner.id}
                         className="min-w-full w-full flex-shrink-0 relative cursor-pointer"
                       >
                         <img
@@ -455,21 +465,21 @@ const filteredTracks = tracks.filter((track) => {
                             className="p-1 hover:bg-[#333333] rounded-full"
                             onClick={(e) => {
                               e.stopPropagation();
-                              setDropdownTrackId(dropdownTrackId === track._id ? null : track._id);
+                              setDropdownTrackId(dropdownTrackId === track.id ? null : track.id);
                             }}
                           >
                             <Plus size={16} />
                           </button>
-                          {dropdownTrackId === track._id && (
+                          {dropdownTrackId === track.id && (
                             <div className="absolute left-0 mt-8 w-48 bg-[#242424] rounded-md shadow-lg z-20">
                               <ul className="py-1">
                                 {playlists.length > 0 ? (
                                   playlists.map((playlist) => (
                                     <li
-                                      key={playlist._id}
+                                      key={playlist.id}
                                       className="px-4 py-2 hover:bg-[#333333] cursor-pointer text-white"
                                       onClick={() =>
-                                        handleAddToPlaylist(track._id || track.fileUrl, playlist._id as string)
+                                        handleAddToPlaylist(track.id, playlist.id as string)
                                       }
                                     >
                                       {playlist.title}
@@ -483,12 +493,12 @@ const filteredTracks = tracks.filter((track) => {
                             </div>
                           )}
                           <button
-                            onClick={() => handleLike(track._id || track.fileUrl)}
-                            className={`p-1 hover:bg-[#333333] rounded-full ${likedSongs.has(track._id || track.fileUrl) ? "text-red-500" : "text-white"}`}
+                            onClick={() => handleLike(track.id || track.fileUrl)}
+                            className={`p-1 hover:bg-[#333333] rounded-full ${likedSongs.has(track.id || track.fileUrl) ? "text-red-500" : "text-white"}`}
                           >
                             <Heart
                               size={16}
-                              fill={likedSongs.has(track._id || track.fileUrl) ? "currentColor" : "none"}
+                              fill={likedSongs.has(track.id || track.fileUrl) ? "currentColor" : "none"}
                             />
                           </button>
                           <button
@@ -627,21 +637,21 @@ const filteredTracks = tracks.filter((track) => {
                             className="p-1 hover:bg-[#333333] rounded-full"
                             onClick={(e) => {
                               e.stopPropagation();
-                              setDropdownTrackId(dropdownTrackId === track._id ? null : track._id);
+                              setDropdownTrackId(dropdownTrackId === track.id ? null : track.id);
                             }}
                           >
                             <Plus size={16} />
                           </button>
-                          {dropdownTrackId === track._id && (
+                          {dropdownTrackId === track.id && (
                             <div className="absolute left-0 mt-8 w-48 bg-[#242424] rounded-md shadow-lg z-20">
                               <ul className="py-1">
                                 {playlists.length > 0 ? (
                                   playlists.map((playlist) => (
                                     <li
-                                      key={playlist._id}
+                                      key={playlist.id}
                                       className="px-4 py-2 hover:bg-[#333333] cursor-pointer text-white"
                                       onClick={() =>
-                                        handleAddToPlaylist(track._id || track.fileUrl, playlist._id as string)
+                                        handleAddToPlaylist(track.id , playlist.id as string)
                                       }
                                     >
                                       {playlist.title}
@@ -652,7 +662,7 @@ const filteredTracks = tracks.filter((track) => {
                                 )}
                                 {/* <li
                                   className="px-4 py-2 hover:bg-[#333333] cursor-pointer text-white border-t border-gray-700"
-                                  onClick={() => navigate(`/playlists/${user?._id}`)}
+                                  onClick={() => navigate(`/playlists/${user.id}`)}
                                 >
                                   Create New Playlist
                                 </li> */}
@@ -660,12 +670,12 @@ const filteredTracks = tracks.filter((track) => {
                             </div>
                           )}
                           <button
-                            onClick={() => handleLike(track._id || track.fileUrl)}
-                            className={`p-1 hover:bg-[#333333] rounded-full ${likedSongs.has(track._id || track.fileUrl) ? "text-red-500" : "text-white"}`}
+                            onClick={() => handleLike(track.id || track.fileUrl)}
+                            className={`p-1 hover:bg-[#333333] rounded-full ${likedSongs.has(track.id || track.fileUrl) ? "text-red-500" : "text-white"}`}
                           >
                             <Heart
                               size={16}
-                              fill={likedSongs.has(track._id || track.fileUrl) ? "currentColor" : "none"}
+                              fill={likedSongs.has(track.id || track.fileUrl) ? "currentColor" : "none"}
                             />
                           </button>
                           <button

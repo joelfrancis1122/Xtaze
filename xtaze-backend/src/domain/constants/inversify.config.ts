@@ -63,6 +63,11 @@ import GenreController from "../../presentation/controller/genre.controller";
 import UserController from "../../presentation/controller/user.controller";
 import ArtistController from "../../presentation/controller/artist.controller";
 import AdminController from "../../presentation/controller/admin.controller"; // make sure you have this
+import ITrackUseCase from "../usecase/ITrackUsecase";
+import { TrackUseCase } from "../../Application/usecases/track.usecase";
+import { ITrackRepository } from "../repositories/ITrackRepository";
+import { TrackRepository } from "../../infrastructure/repositories/track.repository";
+import TrackController from "../../presentation/controller/track.controller";
 
 const container = new Container();
 
@@ -71,6 +76,8 @@ container.bind<GenreRepository>(TYPES.GenreRepository).to(GenreRepository);
 container.bind<UserRepository>(TYPES.UserRepository).to(UserRepository);
 container.bind<ArtistRepository>(TYPES.ArtistRepository).to(ArtistRepository);
 container.bind<AdminRepository>(TYPES.AdminRepository).to(AdminRepository);
+container.bind<ITrackRepository>(TYPES.TrackRepository).to(TrackRepository);
+
 
 // ------------------ Services ------------------
 container.bind<EmailService>(TYPES.EmailService).to(EmailService);
@@ -82,11 +89,15 @@ container.bind<GenreUseCase>(TYPES.GenreUseCase).to(GenreUseCase);
 container.bind<UserUseCase>(TYPES.UserUseCase).to(UserUseCase);
 container.bind<ArtistUseCase>(TYPES.ArtistUseCase).to(ArtistUseCase);
 container.bind<AdminUseCase>(TYPES.AdminUseCase).to(AdminUseCase);
+container.bind<ITrackUseCase>(TYPES.TrackUseCase).to(TrackUseCase);
 
 // ------------------ Controllers ------------------
 container.bind<GenreController>(GenreController).toSelf();
 container.bind<UserController>(UserController).toSelf();
 container.bind<ArtistController>(ArtistController).toSelf();
 container.bind<AdminController>(AdminController).toSelf();
+container.bind<TrackController>(TrackController).toSelf();
 
 export default container;
+
+

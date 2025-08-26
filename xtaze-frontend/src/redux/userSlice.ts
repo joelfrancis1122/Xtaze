@@ -4,7 +4,7 @@ import storage from "redux-persist/lib/storage";
 
 interface UserState {
   signupData: {
-    _id?:string;
+    id?:string;
     username: string;
     country: string;
     gender: string;

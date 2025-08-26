@@ -1,4 +1,4 @@
-import { UploadTrackUseCase } from "../../Application/usecases/track.usecase";
+import { UploadTrackUseCase } from "../../Application/usecases/uploadtrack.usecase";
 import { TrackRepository } from "../../infrastructure/repositories/track.repository";
 
 const trackRepository = new TrackRepository();

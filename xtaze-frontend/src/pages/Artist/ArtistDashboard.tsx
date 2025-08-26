@@ -26,7 +26,7 @@ const ArtistDashboard = () => {
     const fetchMetrics = async () => {
       const token = localStorage.getItem("artistToken");
 
-      if (!token || !user?._id) {
+      if (!token || !user?.id) {
         console.error("Token or User ID not found. Please login.");
         setMostListenedSong("None");
         setTotalSongs("0");
@@ -34,7 +34,7 @@ const ArtistDashboard = () => {
       }
 
       try {
-        const tracks = await fetchArtistTracks(user._id);
+        const tracks = await fetchArtistTracks(user.id);
         if (!tracks || tracks.data.length === 0) {
           setMostListenedSong("None");
           setTotalSongs("0");
@@ -67,7 +67,7 @@ const ArtistDashboard = () => {
     };
 
     fetchMetrics();
-  }, [user?._id]);
+  }, [user?.id]);
 
 
   return (

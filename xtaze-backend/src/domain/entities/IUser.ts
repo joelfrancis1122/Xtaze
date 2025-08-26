@@ -1,4 +1,3 @@
-import { ObjectId } from "mongoose";
 
 export default interface IUser {
   toObject?: () => IUser;

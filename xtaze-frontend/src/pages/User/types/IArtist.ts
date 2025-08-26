@@ -9,7 +9,7 @@ export interface Artist {
 // src/types/Artist.ts
 
 export interface ArtistS {
-  _id: string;
+  id: string;
   username: string;
   country: string;
   gender: string;

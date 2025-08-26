@@ -4,3 +4,4 @@ export interface ITrackRepository {
   save(track: ITrack): Promise<ITrack>;
   getAll(): Promise<ITrack[]>;
 }
+

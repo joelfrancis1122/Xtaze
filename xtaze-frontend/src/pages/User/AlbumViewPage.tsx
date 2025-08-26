@@ -61,7 +61,7 @@ const UserAlbumViewPage = () => {
   }, [albumId]);
 
   const togglePlay = (song: ISong) => {
-    if (currentTrack?._id === song._id && isPlaying) {
+    if (currentTrack?.id === song.id && isPlaying) {
       audio.pause();
       dispatch(setIsPlaying(false));
     } else {
@@ -229,11 +229,11 @@ const UserAlbumViewPage = () => {
               >
                 {songs.map((song, index) => (
                   <div
-                    key={song._id}
+                    key={song.id}
                     role="listitem"
                     className={cn(
                       "flex items-center bg-gray-800/50 border border-gray-700 rounded-lg p-4 hover:bg-gray-800/80 transition-all duration-300 group",
-                      currentTrack?._id === song._id && isPlaying && "ring-2 ring-gold-400"
+                      currentTrack?.id === song.id && isPlaying && "ring-2 ring-gold-400"
                     )}
                   >
                     <span className="w-8 text-sm text-gray-400 font-medium">
@@ -256,12 +256,12 @@ const UserAlbumViewPage = () => {
                         className="absolute inset-0 flex items-center justify-center bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-md"
                         onClick={() => togglePlay(song)}
                         aria-label={
-                          currentTrack?._id === song._id && isPlaying
+                          currentTrack?.id === song.id && isPlaying
                             ? `Pause ${song.title}`
                             : `Play ${song.title}`
                         }
                       >
-                        {currentTrack?._id === song._id && isPlaying ? (
+                        {currentTrack?.id === song.id && isPlaying ? (
                           <Pause className="h-6 w-6 text-white" />
                         ) : (
                           <Play className="h-6 w-6 text-white" />
@@ -278,16 +278,16 @@ const UserAlbumViewPage = () => {
                       size="sm"
                       className={cn(
                         "text-gold-400 hover:text-gold-500",
-                        currentTrack?._id === song._id && isPlaying && "text-gold-500"
+                        currentTrack?.id === song.id && isPlaying && "text-gold-500"
                       )}
                       onClick={() => togglePlay(song)}
                       aria-label={
-                        currentTrack?._id === song._id && isPlaying
+                        currentTrack?.id === song.id && isPlaying
                           ? `Pause ${song.title}`
                           : `Play ${song.title}`
                       }
                     >
-                      {currentTrack?._id === song._id && isPlaying ? (
+                      {currentTrack?.id === song.id && isPlaying ? (
                         <Pause className="h-5 w-5" />
                       ) : (
                         <Play className="h-5 w-5" />

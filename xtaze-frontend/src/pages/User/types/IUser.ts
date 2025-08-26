@@ -1,5 +1,5 @@
 export interface UserSignupData {
-    _id?: string;
+    id?: string;
     username: string;
     country: string;
     gender: string;

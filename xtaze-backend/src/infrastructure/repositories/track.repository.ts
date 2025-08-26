@@ -10,10 +10,10 @@ import { BaseRepository } from "./BaseRepository";
   }
   async save(track: ITrack): Promise<ITrack> {
     const newTrack = new Track(track);
-    return await newTrack.save();
+    return await newTrack.save() as any
   }
 
   async getAll(): Promise<ITrack[]> {
-    return await Track.find().sort({ createdAt: -1 });
+    return await Track.find().sort({ createdAt: -1 }) as any
   }
 }

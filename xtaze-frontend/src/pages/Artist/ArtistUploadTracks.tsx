@@ -109,7 +109,7 @@ const navigate = useNavigate()
 
   const handleAlbumSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!token || !artist?._id) {
+    if (!token || !artist?.id) {
       toast.error("Please log in to create an album.");
       return;
     }
@@ -120,7 +120,7 @@ const navigate = useNavigate()
 
     setIsCreatingAlbum(true);
     try {
-      const newAlbum = await createAlbum({ ...albumData, artistId: artist._id });
+      const newAlbum = await createAlbum({ ...albumData, artistId: artist.id });
       setAlbums((prev) => [...prev, newAlbum]);
       toast.success("Album created successfully");
       setAlbumData({ name: "", description: "", coverImage: null });
@@ -134,27 +134,30 @@ const navigate = useNavigate()
   };
 
   useEffect(() => {
+    console.log(artist,"artistdata")
     const fetchData = async () => {
-      if (!token || !artist?._id) {
+      if (!token || !artist?.id) {
         toast.error("Please log in to fetch genres and albums.");
         return;
       }
 
       try {
         const [genreResponse, albumResponse] = await Promise.all([
-          fetchActiveGenres(artist._id),
-          fetchAlbums(artist._id),
+          fetchActiveGenres(artist.id),
+          fetchAlbums(artist.id),
         ]);
         setGenres(genreResponse.genres);
         setAlbums(albumResponse);
-        dispatch(saveArtistData(genreResponse.artist));
+        console.log(artist,"odi odi odi",genreResponse)
+        // dispatch(saveArtistData(genreResponse.artist));
+        console.log(artist,"od")
       } catch (error: any) {
         toast.error(error.message || "Error fetching data. Please try again.");
       }
     };
 
     fetchData();
-  }, [artist?._id, token, dispatch]);
+  }, [artist?.id, token, dispatch]);
 
   return (
       <div className="min-h-screen bg-black text-white">
@@ -300,7 +303,7 @@ const navigate = useNavigate()
                     Select Genre
                   </option>
                   {genres.map((genre) => (
-                    <option key={genre._id} value={genre.name}>
+                    <option key={genre.id} value={genre.name}>
                       {genre.name}
                     </option>
                   ))}
@@ -319,9 +322,9 @@ const navigate = useNavigate()
                   className="bg-gray-800 text-white border border-gray-700 rounded-lg p-2 w-full"
                   aria-describedby="albumId-desc"
                 >
-                  <option value="">No Album</option>
+                  {/* <option value="">No Album</option> */}
                   {albums.map((album) => (
-                    <option key={album._id} value={album._id}>
+                    <option key={album.id} value={album.id}>
                       {album.name}
                     </option>
                   ))}
@@ -385,11 +388,11 @@ const navigate = useNavigate()
               >
                 {albums.map((album) => (
                 <div
-    key={album._id}
+    key={album.id}
     role="button"
     aria-label={`View songs for ${album.name}`}
     className="block cursor-pointer"
-    onClick={() => navigate(`/artist/albums/${album._id}`)}
+    onClick={() => navigate(`/artist/albums/${album.id}`)}
   >
     <div className="bg-gray-800 border border-gray-700 rounded-lg p-4 flex flex-col space-y-2 hover:bg-gray-700 transition-colors duration-200">
       <div className="w-full h-32 bg-gray-700 rounded-md overflow-hidden">

@@ -22,6 +22,7 @@ const TYPES = {
   GenreRepository: Symbol.for("GenreRepository"),
   ArtistRepository: Symbol.for("ArtistRepository"),
   AdminRepository: Symbol.for("AdminRepository"),
+  TrackRepository: Symbol.for("TrackRepository"),
 
   // services
   EmailService: Symbol.for("EmailService"),
@@ -33,12 +34,16 @@ const TYPES = {
   GenreUseCase: Symbol.for("GenreUseCase"),
   ArtistUseCase: Symbol.for("ArtistUseCase"),
   AdminUseCase: Symbol.for("AdminUseCase"),
+  TrackUseCase: Symbol.for("TrackUseCase"),
 
   // controllers
   UserController: Symbol.for("UserController"),
   GenreController: Symbol.for("GenreController"),
   ArtistController: Symbol.for("ArtistController"),
   AdminController: Symbol.for("AdminController"),
+  TrackController: Symbol.for("TrackController")
 };
+
+
 
 export default TYPES;

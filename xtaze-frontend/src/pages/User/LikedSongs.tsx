@@ -16,7 +16,7 @@ import { DragDropContext, Droppable, Draggable, DropResult } from "react-beautif
 import { useAudioPlayback } from "./userComponents/audioPlayback";
 
 interface UserSignupData {
-  _id?: string;
+  id?: string;
   username: string;
   country: string;
   gender: string;
@@ -76,7 +76,7 @@ export default function LikedSongsPage() {
   useEffect(() => {
     const getLikedSongs = async () => {
       const token = localStorage.getItem("token");
-      if (!token || !user?._id || !user?.likedSongs || user.likedSongs.length === 0) {
+      if (!token || !user?.id || !user?.likedSongs || user.likedSongs.length === 0) {
         setLikedSongs([]);
         setLoading(false);
         return;
@@ -89,11 +89,11 @@ export default function LikedSongsPage() {
       }
 
       try {
-        const tracks = await fetchLikedSongs(user._id, user.likedSongs);
+        const tracks = await fetchLikedSongs(user.id, user.likedSongs);
         const sortedTracks = user.likedSongs
           .slice()
           .reverse()
-          .map((trackId) => tracks.find((track) => track._id === trackId))
+          .map((trackId) => tracks.find((track) => track.id === trackId))
           .filter((track): track is Track => !!track);
         setLikedSongs(sortedTracks);
       } catch (error) {
@@ -103,13 +103,13 @@ export default function LikedSongsPage() {
       }
     };
 
-    if (user?._id) {
+    if (user?.id) {
       getLikedSongs();
     }
-  }, [user?._id, user?.likedSongs, navigate]);
+  }, [user?.id, user?.likedSongs, navigate]);
 
   useEffect(() => {
-    if (!user?._id) {
+    if (!user?.id) {
       navigate("/", { replace: true });
     }
   }, [user, navigate]);
@@ -139,15 +139,15 @@ export default function LikedSongsPage() {
 
   const handleUnlike = async (trackId: string) => {
     const token = localStorage.getItem("token");
-    if (!token || !trackId || !user?._id) {
+    if (!token || !trackId || !user?.id) {
       toast.error("Unable to unlike song. Please log in again.");
       return;
     }
 
     try {
-      const updatedUser = await toggleLike(user._id, trackId);
+      const updatedUser = await toggleLike(user.id, trackId);
       dispatch(saveSignupData(updatedUser));
-      setLikedSongs((prev) => prev.filter((song) => song._id !== trackId));
+      setLikedSongs((prev) => prev.filter((song) => song.id !== trackId));
       toast.success("Song removed from liked songs!");
     } catch (error) {
       console.error("Error unliking song:", error);
@@ -163,7 +163,7 @@ export default function LikedSongsPage() {
     reorderedSongs.splice(result.destination.index, 0, movedSong);
 
     setLikedSongs(reorderedSongs);
-    console.log("New order:", reorderedSongs.map((song) => song._id).reverse());
+    console.log("New order:", reorderedSongs.map((song) => song.id).reverse());
   };
 
   return (
@@ -220,7 +220,7 @@ export default function LikedSongsPage() {
                   {(provided) => (
                     <div {...provided.droppableProps} ref={provided.innerRef}>
                       {likedSongs.map((song, index) => (
-                        <Draggable key={song._id} draggableId={song._id} index={index}>
+                        <Draggable key={song.id} draggableId={song.id} index={index}>
                           {(provided) => (
                             <div
                               ref={provided.innerRef}
@@ -273,7 +273,7 @@ export default function LikedSongsPage() {
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    handleUnlike(song._id);
+                                    handleUnlike(song.id);
                                   }}
                                   title="Unlike this song"
                                   className="p-2 rounded-full hover:bg-[#333333] active:bg-[#333333] transition-colors duration-200 box-content"

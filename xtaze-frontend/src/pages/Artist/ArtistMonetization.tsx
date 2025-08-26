@@ -83,18 +83,19 @@ export default function ArtistMonetizePage() {
   const [totalPages, setTotalPages] = useState(1);
 
   const user = useSelector((state: RootState) => state.artist.signupData);
-
+  console.log("user",user)
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
         if (!user) return;
 
-        const { data, totalPages } = await fetchSongEarnings(user._id, page, limit);
+        const { data, totalPages } = await fetchSongEarnings(user.id, page, limit);
+        console.log(data,totalPages,"achar")
         setSongs(data);
         setTotalPages(totalPages);
 
-        const cardStatus = await checkCardStatus(user._id);
+        const cardStatus = await checkCardStatus(user.id);
         setHasCard(cardStatus);
       } catch (err) {
         console.error(err);
@@ -105,7 +106,7 @@ export default function ArtistMonetizePage() {
     };
 
     fetchData();
-  }, [user?._id, page, limit]);
+  }, [user?.id, page, limit]);
 
   const handleCardSaved = () => {
     setHasCard(true);
@@ -157,7 +158,7 @@ export default function ArtistMonetizePage() {
             <Card className="mt-6 p-6">
               <h2 className="text-lg font-semibold mb-4">Add Card Details</h2>
               <Elements stripe={stripePromise}>
-                <CardInput artistId={user?._id || ""} onCardSaved={handleCardSaved} />
+                <CardInput artistId={user?.id || ""} onCardSaved={handleCardSaved} />
               </Elements>
             </Card>
           )}

@@ -119,7 +119,7 @@ const AlbumSongsPage = () => {
 
                       className="bg-gold-400 text-navy-900 hover:bg-gold-500 font-semibold px-6 py-3 shadow-1xl hover:shadow-2xl transition-all duration-300"
                       onClick={() => {
-                        if (songs[0]) togglePlay(songs[0]._id, songs[0].fileUrl);
+                        if (songs[0]) togglePlay(songs[0].id, songs[0].fileUrl);
                       }}
                       aria-label={`Play album ${album.name}`}
                     >
@@ -153,11 +153,11 @@ const AlbumSongsPage = () => {
               >
                 {songs.map((song, index) => (
                   <div
-                    key={song._id}
+                    key={song.id}
                     role="listitem"
                     className={cn(
                       "flex items-center bg-gray-800/50 border border-gray-700 rounded-lg p-4 hover:bg-gray-800/80 transition-all duration-300",
-                      currentPlayingId === song._id && "ring-2 ring-gold-400"
+                      currentPlayingId === song.id && "ring-2 ring-gold-400"
                     )}
                   >
                     <span className="w-8 text-sm text-gray-400 font-medium">
@@ -193,23 +193,23 @@ const AlbumSongsPage = () => {
                       size="sm"
                       className={cn(
                         "text-gold-400 hover:text-gold-500",
-                        currentPlayingId === song._id && "text-gold-500"
+                        currentPlayingId === song.id && "text-gold-500"
                       )}
-                      onClick={() => togglePlay(song._id, song.fileUrl)}
+                      onClick={() => togglePlay(song.id, song.fileUrl)}
                       aria-label={
-                        currentPlayingId === song._id
+                        currentPlayingId === song.id
                           ? `Pause ${song.title}`
                           : `Play ${song.title}`
                       }
                     >
-                      {currentPlayingId === song._id ? (
+                      {currentPlayingId === song.id ? (
                         <Pause className="h-5 w-5" />
                       ) : (
                         <Play className="h-5 w-5" />
                       )}
                     </Button>
                     <audio
-                      ref={(el) => (audioRefs.current[song._id] = el)}
+                      ref={(el) => (audioRefs.current[song.id] = el)}
                       className="hidden"
                       onEnded={() => setCurrentPlayingId(null)}
                     />

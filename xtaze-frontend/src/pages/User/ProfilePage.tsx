@@ -95,7 +95,7 @@ export default function Home() {
       setCroppedImage(cropped);
       setShowCropper(false);
       try {
-        const updatedUser = await uploadProfileImage(user?._id || "", cropped);
+        const updatedUser = await uploadProfileImage(user?.id || "", cropped);
         dispatch(saveSignupData(updatedUser));
         toast.success("Profile picture updated!");
       } catch (error) {
@@ -105,7 +105,7 @@ export default function Home() {
   };
 
   const handleUpdateUsername = async () => {
-    if (!user?._id || !token) {
+    if (!user?.id || !token) {
       toast.error("Please log in to update username");
       return;
     }
@@ -114,7 +114,7 @@ export default function Home() {
       return;
     }
     try {
-      const updatedUser = await updateUsername(user._id, newUsername);
+      const updatedUser = await updateUsername(user.id, newUsername);
       dispatch(saveSignupData(updatedUser));
       setIsEditingUsername(false);
       toast.success("Username updated successfully!");
@@ -133,13 +133,13 @@ export default function Home() {
     );
     if (!confirm) return;
 
-    if (!user?._id) {
+    if (!user?.id) {
       toast.error("Please log in to become an artist");
       return;
     }
 
     try {
-      await becomeArtist(user._id);
+      await becomeArtist(user.id);
       dispatch(clearSignupData());
       toast.success("You are now an Artist!");
     } catch (error) {

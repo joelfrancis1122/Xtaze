@@ -5,7 +5,7 @@ import IUser from "../entities/IUser";
 import { ICoupon } from "../entities/ICoupon";
 import { ITrack } from "../entities/ITrack";
 import { MusicMonetization } from "../entities/IMonetization";
-import { IVerificationRequest } from "../entities/IVeridicationRequest";
+import { IVerificationRequest } from "../entities/IVerificationRequest";
 
 export default interface IAdminUseCase {
     login(email: string, password: string): Promise<{ success: boolean; message: string; token?: string; user?: IUser }>;

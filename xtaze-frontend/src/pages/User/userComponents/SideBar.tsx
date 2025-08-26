@@ -106,7 +106,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                   Albums
                 </a>
                 <a
-                  onClick={() => navigate(`/playlist/${signupData?._id}`)}
+                  onClick={() => navigate(`/playlist/${signupData?.id}`)}
                   className="text-gray-300 hover:text-white block transition-colors"
                 >
                   Playlists

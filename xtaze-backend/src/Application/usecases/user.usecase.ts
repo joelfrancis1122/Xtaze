@@ -9,14 +9,20 @@ import { IUserRepository } from '../../domain/repositories/IUserRepository';
 import { uploadImageToCloud, uploadProfileCloud } from '../../infrastructure/service/cloudinary.service';
 import { OAuth2Client } from "google-auth-library";
 import { IPlaylist } from '../../domain/entities/IPlaylist';
-import { ITrack } from '../../domain/entities/ITrack';
-import { IBanner } from '../../domain/entities/IBanner';
 import { SubscriptionHistory } from '../../domain/entities/ISubscriptionHistory';
 import { MESSAGES } from '../../domain/constants/messages';
 import { IAlbum } from '../../domain/entities/IAlbum';
 import { injectable } from "inversify";
 import { inject } from "inversify";
 import TYPES from "../../domain/constants/types";
+import { IArtist } from "../../domain/entities/IArtist";
+import { ArtistMapper } from "../mappers/ArtistMapper";
+import { UserMapper } from "../mappers/UserMapper";
+import { TrackMapper } from "../mappers/TrackMapper";
+import { AlbumDTO } from "../dtos/AlbumDTO";
+import { AlbumMapper } from "../mappers/ALbumMapper";
+import { PlaylistMapper } from "../mappers/PlaylistMapper";
+import { PlaylistDTO } from "../dtos/PlaylistDTO";
 dotenv.config();
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2023-08-16" });
@@ -49,20 +55,21 @@ export default class UserUseCase {
     return await this._userRepository.increment(trackId, id);
 
   }
-  async registerUser(username: string, country: string, gender: string, year: number, phone: number, email: string, password: string) {
-
-    const [existingUserByEmail] = await Promise.all([
-      this._userRepository.findByEmail(email),
-    ]);
-
-    if (existingUserByEmail) {
-
-      throw new Error(MESSAGES.USER_ALREADY_EXISTS);
-    }
+  async registerUser(
+    username: string,
+    country: string,
+    gender: string,
+    year: number,
+    phone: number,
+    email: string,
+    password: string
+  ) {
+    const existingUser = await this._userRepository.findByEmail(email);
+    if (existingUser) throw new Error(MESSAGES.USER_ALREADY_EXISTS);
 
     const hashedPassword = await this._passwordService.hashPassword(password);
 
-    const user = {
+    const user: IUser = {
       username,
       country,
       gender,
@@ -73,9 +80,8 @@ export default class UserUseCase {
       toObject: function () { return { ...this }; }
     };
 
-    const userData = await this._userRepository.add(user);
-
-    return userData;
+    const savedUser = await this._userRepository.add(user);
+    return UserMapper.toDTO(savedUser);
   }
 
   async sendOTP(email: string) {
@@ -153,20 +159,15 @@ export default class UserUseCase {
   async listArtists(page: number, limit: number) {
     const { data, total } = await this._userRepository.getAllArtistsP(page, limit);
     return {
-      data,
-      pagination: {
-        total,
-        page,
-        limit,
-        totalpages: Math.ceil(total / limit)
-      }
-    }
+      data: UserMapper.toDTOs(data),
+      pagination: { total, page, limit, totalpages: Math.ceil(total / limit) }
+    };
   }
 
   async listArtistReleases(userId: string, page: number, limit: number) {
     const { data, total } = await this._userRepository.getAllTracksByArtist(userId, page, limit)
     return {
-      data,
+      data: TrackMapper.toDTOs(data),
       pagination: {
         total,
         page,
@@ -174,26 +175,28 @@ export default class UserUseCase {
         totalPages: Math.ceil(total / limit)
       }
     }
-
   }
+
   async login(email: string, password: string) {
     const user = await this._userRepository.findByEmail(email);
     if (!user) return { success: false, message: MESSAGES.USER_NOT_FOUND };
-    if (user.role === MESSAGES.ADMIN || user.role === MESSAGES.ARTIST) return { success: false, message: MESSAGES.USER_LOGIN_ONLY };
+    if (user.role === MESSAGES.ADMIN || user.role === MESSAGES.ARTIST)
+      return { success: false, message: MESSAGES.USER_LOGIN_ONLY };
     if (user.isActive === false) return { success: false, message: MESSAGES.ACCOUNT_SUSPENDED };
 
     const isPasswordValid = await this._passwordService.comparePassword(password, user.password);
     if (!isPasswordValid) throw new Error(MESSAGES.LOGIN_FAILED);
 
     const token = jwt.sign(
-      { userId: user._id, email: user.email, role: MESSAGES.USER },
+      { userId: user._id, email: user.email, role: "user" },
       process.env.JWT_SECRET!,
-      { expiresIn: "15m" } // Short-lived access token
+      { expiresIn: "15m" }
     );
+
     const refreshToken = jwt.sign(
       { userId: user._id },
       process.env.JWT_REFRESH_SECRET!,
-      { expiresIn: "7d" } // Long-lived refresh token
+      { expiresIn: "7d" }
     );
 
     return {
@@ -201,7 +204,7 @@ export default class UserUseCase {
       message: MESSAGES.LOGIN_SUCCESS,
       token,
       refreshToken,
-      user,
+      user: UserMapper.toDTO(user)
     };
   }
 
@@ -220,14 +223,9 @@ export default class UserUseCase {
 
       let user = await this._userRepository.findByEmail(email);
 
-      if (user?.isActive === false) {
-        return { success: false, message: MESSAGES.ACCOUNT_SUSPENDED };
-      }
+      if (user?.isActive === false) return { success: false, message: MESSAGES.ACCOUNT_SUSPENDED };
 
       if (!user) {
-        const [firstName, ...rest] = name.split(" ");
-        const lastName = rest.join(" ");
-
         const newUser: IUser = {
           username: name,
           email,
@@ -235,23 +233,20 @@ export default class UserUseCase {
           profilePic: picture || "",
           role: "user",
           isGoogleUser: true,
-          country: "USA", gender: "male", year: 20, phone: 1234567890,
-          toObject: function (): IUser {
-            throw new Error(MESSAGES.GOOGLE_LOGIN_FAILED);
-          }
+          country: "USA",
+          gender: "male",
+          year: 20,
+          phone: 1234567890,
+          toObject: function () { return { ...this }; }
         };
-
         user = await this._userRepository.add(newUser);
       }
-
-      const userObj: IUser = { ...(typeof user.toObject === "function" ? user.toObject() : user), _id: user._id!.toString() };
 
       const token = jwt.sign(
         { userId: user._id!.toString(), email: user.email, role: "user" },
         process.env.JWT_SECRET!,
         { expiresIn: "15m" }
       );
-
       const refreshToken = jwt.sign(
         { userId: user._id!.toString() },
         process.env.JWT_REFRESH_SECRET!,
@@ -263,13 +258,12 @@ export default class UserUseCase {
         message: MESSAGES.LOGIN_SUCCESS,
         token,
         refreshToken,
-        user: userObj,
+        user: UserMapper.toDTO(user)
       };
     } catch (error) {
       return { success: false, message: MESSAGES.GOOGLE_LOGIN_FAILED };
     }
   }
-
 
   async refresh(refreshToken: string) {
     try {
@@ -301,42 +295,40 @@ export default class UserUseCase {
     }
   }
 
-
   async uploadProfile(userId: string, file: Express.Multer.File) {
     try {
       const cloudinaryResponse = await uploadProfileCloud(file);
-
       const profilePicUrl = cloudinaryResponse.secure_url;
-
-      // Update the user profile with the new image URL
       const updatedUser = await this._userRepository.updateProfile(userId, profilePicUrl);
-
-      if (!updatedUser) {
-        return { success: false, message: MESSAGES.PROFILE_UPDATE_FAILED };
-      }
-
-      return { success: true, message: MESSAGES.PROFILE_UPDATE_SUCCESS, user: updatedUser };
-    } catch (error) {
+      if (!updatedUser) return { success: false, message: MESSAGES.PROFILE_UPDATE_FAILED };
+      return { success: true, message: MESSAGES.PROFILE_UPDATE_SUCCESS, user: UserMapper.toDTO(updatedUser) };
+    } catch {
       return { success: false, message: MESSAGES.ERROR_UPDATING_PROFILE };
     }
-
   }
+
   async uploadBanner(userId: string, file: Express.Multer.File, isVideo: boolean) {
     try {
       const cloudinaryResponse = await uploadProfileCloud(file);
-
       const BannerPicUrl = cloudinaryResponse.secure_url;
       const updatedUser = await this._userRepository.uploadBanner(userId, BannerPicUrl);
-      if (!updatedUser) {
-        return { success: false, message: MESSAGES.BANNER_UPDATE_FAILED };
-      }
-
-      return { success: true, message: MESSAGES.BANNER_UPDATE_SUCCESS, user: updatedUser, isVideo: isVideo };
-    } catch (error) {
+      if (!updatedUser) return { success: false, message: MESSAGES.BANNER_UPDATE_FAILED };
+      return { success: true, message: MESSAGES.BANNER_UPDATE_SUCCESS, user: UserMapper.toDTO(updatedUser), isVideo };
+    } catch {
       return { success: false, message: MESSAGES.ERROR_UPDATING_PROFILE };
     }
-
   }
+
+  async updateBio(userId: string, bio: string) {
+    try {
+      const updated = await this._userRepository.updateBio(userId, bio);
+      if (!updated) return { success: false, message: MESSAGES.ERROR_UPDATING_PROFILE };
+      return { success: true, message: MESSAGES.PROFILE_UPDATE_SUCCESS, user: UserMapper.toDTO(updated) };
+    } catch {
+      return { success: false, message: MESSAGES.ERROR_UPDATING_PROFILE };
+    }
+  }
+
   async updateImagePlaylist(id: string, file: Express.Multer.File) {
     try {
       const cloudinaryResponse = await uploadImageToCloud(file);
@@ -353,28 +345,17 @@ export default class UserUseCase {
     }
 
   }
-  async updateBio(userId: string, bio: string) {
-    try {
-      const updated = await this._userRepository.updateBio(userId, bio);
-      if (!updated) {
-        return { success: false, message: MESSAGES.ERROR_UPDATING_PROFILE };
-      }
-      return { success: true, message: MESSAGES.PROFILE_UPDATE_SUCCESS, user: updated };
-    } catch (error) {
-      console.error(error);
-      return { success: false, message: MESSAGES.ERROR_UPDATING_PROFILE };
-    }
-  }
 
-  async allAlbums() {
+
+
+  async allAlbums(): Promise<AlbumDTO[]> {
     const albums = await this._userRepository.allAlbums() as IAlbum[];
-    return albums;
+    return AlbumMapper.toDTOs(albums);
   }
-  async albumView(albumId: string) {
-    const albums = await this._userRepository.albumView(albumId) as IAlbum;
-    return albums;
+  async albumView(albumId: string): Promise<AlbumDTO | null> {
+    const album = await this._userRepository.albumView(albumId) as IAlbum;
+    return album ? AlbumMapper.toDTO(album) : null;
   }
-
 
   async usernameUpdate(userId: string, username: string) {
     try {
@@ -395,29 +376,20 @@ export default class UserUseCase {
 
   async getliked(songIds: string, userId: string) {
     try {
-      const liked = await this._userRepository.getliked(songIds, userId)
-      return liked
+      const liked = await this._userRepository.getliked(songIds, userId);
+
+      if (!liked) return null;
+      return TrackMapper.toDTOs(liked);
     } catch (error) {
-      console.log(error)
-      return null
+      console.log(error);
+      return null;
     }
   }
 
 
-
   async addToLiked(userId: string, trackId: string) {
-    try {
-      const user = await this._userRepository.addToLiked(userId, trackId);
-
-      if (!user) {
-        return null;
-      }
-
-      return user;
-    } catch (error) {
-      console.error(MESSAGES.ERROR_UPDATING_PROFILE, error);
-      throw new Error(MESSAGES.ERROR_UPDATING_PROFILE);
-    }
+    const user = await this._userRepository.addToLiked(userId, trackId);
+    return user ? UserMapper.toDTO(user) : null;
   }
 
   async addToPlaylist(userId: string, playlistId: string, trackId: string) {
@@ -434,49 +406,27 @@ export default class UserUseCase {
     }
   }
 
-
-  async createPlaylist(_id: string, newplaylist: IPlaylist) {
-    try {
-      const playlist = await this._userRepository.createPlaylist(_id, newplaylist);
-
-      if (!playlist) {
-        return null;
-      }
-
-      return playlist;
-    } catch (error) {
-      console.error(MESSAGES.ERROR_UPDATING_PROFILE, error);
-      throw new Error(MESSAGES.ERROR_UPDATING_PROFILE);
-    }
+  async createPlaylist(_id: string, newplaylist: IPlaylist): Promise<PlaylistDTO | null> {
+    const playlist = await this._userRepository.createPlaylist(_id, newplaylist);
+    return playlist ? PlaylistMapper.toDTO(playlist) : null;
   }
+
   async getAllPlaylist(userId: string) {
-    try {
-      const playlist = await this._userRepository.findByCreator(userId);
-
-      if (!playlist) {
-        return null;
-      }
-
-      return playlist;
-    } catch (error) {
-      console.error(MESSAGES.ERROR_UPDATING_PROFILE, error);
-      throw new Error(MESSAGES.ERROR_UPDATING_PROFILE);
-    }
+    const playlists = await this._userRepository.findByCreator(userId);
+    return playlists ? PlaylistMapper.toDTOs(playlists) : [];
   }
-  async getPlaylist(id: string, pageNum: number, limitNum: number, skip: number) {
-    try {
-      const playlist = await this._userRepository.getPlaylist(id, pageNum, limitNum, skip);
-
-      if (!playlist) {
-        return null;
-      }
-
-      return playlist;
-    } catch (error) {
-      console.error(MESSAGES.ERROR_UPDATING_PROFILE, error);
-      throw new Error(MESSAGES.ERROR_UPDATING_PROFILE);
-    }
+  async getPlaylist(
+    id: string,
+    pageNum: number,
+    limitNum: number,
+    skip: number
+  ): Promise<PlaylistDTO | null> {
+    const playlist = await this._userRepository.getPlaylist(id, pageNum, limitNum, skip);
+    return playlist ? PlaylistMapper.toDTO(playlist as any) : null;
   }
+
+
+
   async deletePlaylist(id: string) {
     try {
       const playlist = await this._userRepository.deletePlaylist(id);
@@ -503,13 +453,14 @@ export default class UserUseCase {
       throw new Error(MESSAGES.ERROR_UPDATING_PROFILE);
     }
   }
+
   async getAllTracks() {
     try {
       const tracks = await this._userRepository.getAllTracks();
       if (!tracks) {
         return null
       }
-      return tracks
+    return TrackMapper.toDTOs(tracks);
 
     } catch (error) {
       console.error(MESSAGES.ERROR_UPDATING_PROFILE, error);
@@ -541,32 +492,29 @@ export default class UserUseCase {
 
 
   async getUpdatedArtist(artistId: string) {
-    return await this._userRepository.getupdatedArtist(artistId);
+    const artist = await this._userRepository.getupdatedArtist(artistId);
+
+    if (!artist) return null;
+
+    return ArtistMapper.toDTO(artist as IArtist);
   }
+
   async execute(userId: string, priceId: string, couponCode?: string) {
     try {
       const user = await this._userRepository.findById(userId);
-      if (!user) {
-        throw new Error(MESSAGES.USER_NOT_FOUND);
-      }
+      if (!user) throw new Error(MESSAGES.USER_NOT_FOUND);
 
-      // Retrieve price and product
       const price = await this._stripe.prices.retrieve(priceId);
       const product = await this._stripe.products.retrieve(price.product as string);
       const planName = product.name;
 
-      // Base session configuration
       const sessionConfig: Stripe.Checkout.SessionCreateParams = {
         payment_method_types: ["card", "link"],
         line_items: [{ price: priceId, quantity: 1 }],
         mode: "subscription",
         success_url: MESSAGES.SUCCESS_URL,
         cancel_url: MESSAGES.CANCEL_URL,
-        metadata: {
-          userId,
-          couponCode: couponCode || "",
-          planName, // Store planName for webhook
-        },
+        metadata: { userId, couponCode: couponCode || "", planName }
       };
 
       if (couponCode) {
@@ -576,23 +524,17 @@ export default class UserUseCase {
         const currentUses = coupon.uses ?? 0;
         const usedUsers = coupon.users ?? [];
 
-        if (
-          coupon.status !== MESSAGES.ACTIVE ||
-          currentUses >= coupon.maxUses ||
-          new Date(coupon.expires) < new Date()
-        ) {
+        if (coupon.status !== MESSAGES.ACTIVE || currentUses >= coupon.maxUses || new Date(coupon.expires) < new Date()) {
           throw new Error(MESSAGES.COUPON_EXPIRED);
         }
 
         const isCouponUsed = await this._userRepository.checkCouponisUsed(couponCode, userId);
-        if (isCouponUsed) {
-          throw new Error(MESSAGES.COUPON_ALREADY_USED);
-        }
+        if (isCouponUsed) throw new Error(MESSAGES.COUPON_ALREADY_USED);
 
         const stripeCoupon = await this._stripe.coupons.create({
           percent_off: coupon.discountAmount,
           duration: "once",
-          name: `Coupon_${couponCode}`,
+          name: `Coupon_${couponCode}`
         });
 
         sessionConfig.discounts = [{ coupon: stripeCoupon.id }];
@@ -604,7 +546,6 @@ export default class UserUseCase {
       throw error;
     }
   }
-
 
 
   async confirmPayment(rawBody: Buffer, signature: string) {
@@ -670,8 +611,9 @@ export default class UserUseCase {
     return banners;
 
   }
-  async becomeArtist(id: string) {
-    return await this._userRepository.becomeArtist(id)
+  async becomeArtist(userId: string) {
+    const updatedUser = await this._userRepository.becomeArtist(userId);
+    return updatedUser ? UserMapper.toDTO(updatedUser) : null;
   }
 
 

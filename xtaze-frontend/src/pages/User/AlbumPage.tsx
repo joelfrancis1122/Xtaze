@@ -101,10 +101,10 @@ const toggleModal = () => {
             >
               {albums.map((album) => (
                 <Card
-                  key={album._id}
+                  key={album.id}
                   className="bg-gray-800/50 border-gray-700 rounded-lg p-4 hover:bg-gray-800/80 transition-all duration-300 cursor-pointer"
                   role="listitem"
-                  onClick={() => navigate(`/albumView?albumId=${album._id}`)}
+                  onClick={() => navigate(`/albumView?albumId=${album.id}`)}
                 >
                   <div className="w-full h-40 bg-gray-700 rounded-md overflow-hidden mb-3">
                     {album.coverImage ? (

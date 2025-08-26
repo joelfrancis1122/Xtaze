@@ -1,21 +1,9 @@
-
-import { injectable } from "inversify";
+import { injectable, inject } from "inversify";
 import { MESSAGES } from "../../domain/constants/messages";
-import { IGenre } from "../../domain/entities/IGenre";
 import { IGenreRepository } from "../../domain/repositories/IGenreRepository";
-import IGenreDependencies from "../../infrastructure/repositories/IDependencies/IGenreDependencies";
-import { inject } from "inversify";
 import TYPES from "../../domain/constants/types";
-
-
-
-// export class GenreUseCase {
-
-//   private _genreRepository: IGenreRepository
-//   constructor(dependencies: IGenreDependencies) {
-//     this._genreRepository = dependencies.repository.GenreRepository
-
-//   }
+import { GenreMapper } from "../mappers/GenreMapper";
+import { GenreDTO } from "../dtos/GenreDTO";
 
 @injectable()
 export class GenreUseCase {
@@ -27,12 +15,10 @@ export class GenreUseCase {
     this._genreRepository = genreRepository;
   }
 
-
-  async listGenre(page: number, limit: number){
-
+  async listGenre(page: number, limit: number) {
     const { data, total } = await this._genreRepository.getAllGenres(page, limit);
     return {
-      data,
+      data: GenreMapper.toDTOs(data),
       pagination: {
         total,
         page,
@@ -42,47 +28,49 @@ export class GenreUseCase {
     };
   }
 
-
-  async listActiveGenres(){
-    return await this._genreRepository.getAllActiveGenres() as IGenre[];
+  async listActiveGenres(): Promise<GenreDTO[]> {
+    const genres = await this._genreRepository.getAllActiveGenres();
+    return GenreMapper.toDTOs(genres);
   }
-
 
   async createGenre(name: string) {
     const dupe = await this._genreRepository.findDupe(name);
-
     if (dupe) {
       return { success: false, message: MESSAGES.GENRE_EXISTS };
     }
 
-    const data = await this._genreRepository.createGenre(name);
-
-    return { success: true, message: MESSAGES.GENRE_SUCCESS, genre: data ?? undefined };
+    const genre = await this._genreRepository.createGenre(name);
+    return { success: true, message: MESSAGES.GENRE_SUCCESS, genre: GenreMapper.toDTO(genre) };
   }
 
-
-
-  async toggleBlockUnblockGenre(id: string){
+  async toggleBlockUnblockGenre(id: string) {
     const genre = await this._genreRepository.getGenreById(id);
     if (!genre) {
       throw new Error(MESSAGES.GENRE_NOTFOUND);
     }
 
-    // const newStatus = genre.isBlocked==true ? false : true;
     const newStatus = !genre.isBlocked;
-    return await this._genreRepository.updateGenreStatus(id, newStatus);
+    const updatedGenre = await this._genreRepository.updateGenreStatus(id, newStatus);
+    return updatedGenre ? GenreMapper.toDTO(updatedGenre) : null;
   }
 
-
-  async editGenre(id: string, name: string){
-    const dupe = await this._genreRepository.findDupe(name)
+  async editGenre(id: string, name: string) {
+    const dupe = await this._genreRepository.findDupe(name);
     if (dupe) {
-      return { success: false, message: MESSAGES.GENRE_EXISTS }
+      return { success: false, message: MESSAGES.GENRE_EXISTS };
     }
+
     const updatedGenre = await this._genreRepository.editGenre(id, name);
-    return { success: true, message: MESSAGES.GENRE_UPDATE, genre: updatedGenre ?? undefined }
 
+    if (!updatedGenre) {
+      return { success: false, message: MESSAGES.GENRE_NOTFOUND };
+    }
+
+    return {
+      success: true,
+      message: MESSAGES.GENRE_UPDATE,
+      genre: GenreMapper.toDTO(updatedGenre),
+    };
   }
-
 
 }

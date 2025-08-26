@@ -1,7 +1,7 @@
 import { ArtistMonetization, MusicMonetization } from "../entities/IMonetization";
 import IUser from "../entities/IUser";
 import { ITrack } from "../entities/ITrack";
-import { IVerificationRequest } from "../entities/IVeridicationRequest";
+import { IVerificationRequest } from "../entities/IVerificationRequest";
 import { IVerificationStatusResponse } from "../entities/IVerificationStatusResponse ";
 import { IAlbum } from "../entities/IAlbum";
 

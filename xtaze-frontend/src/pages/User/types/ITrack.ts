@@ -1,5 +1,5 @@
 export interface Track {
-  _id: string
+  id: string
   title: string
   album?: string |null
   artists: string | string[];

@@ -2,7 +2,7 @@ import { IAlbum } from "../entities/IAlbum";
 import { ArtistMonetization, MusicMonetization } from "../entities/IMonetization";
 import { ITrack } from "../entities/ITrack";
 import IUser from "../entities/IUser";
-import { IVerificationRequest } from "../entities/IVeridicationRequest";
+import { IVerificationRequest } from "../entities/IVerificationRequest";
 
 export interface IArtistRepository {
   findByEmail: (email: string) => Promise<IUser>;

@@ -60,6 +60,7 @@ export default class AdminController {
   async allBanners(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const allBanners = await this._adminUseCase.getAllBanners();
+      console.log(allBanners,"asdsad")
       res.status(HttpStatus.OK).json({ message: MESSAGES.BANNER_ADDED_SUCCESS, data: allBanners });
     } catch (error) {
       next(error);
@@ -274,6 +275,7 @@ export default class AdminController {
       next(error);
     }
   }
+
   async getAllTracksArtist(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { userId } = req.query;

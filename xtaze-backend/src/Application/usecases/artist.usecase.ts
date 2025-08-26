@@ -2,20 +2,21 @@ import IPasswordService from "../../domain/service/IPasswordService"
 
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
-import IUser from "../../domain/entities/IUser";
 import { IArtistRepository } from "../../domain/repositories/IArtistRepository";
 import { ITrack } from "../../domain/entities/ITrack";
 import { uploadIdproofCloud, uploadImageToCloud, uploadSongToCloud } from "../../infrastructure/service/cloudinary.service";
 import { IUserRepository } from "../../domain/repositories/IUserRepository";
-import { ArtistMonetization, MusicMonetization } from "../../domain/entities/IMonetization";
-import { IVerificationStatusResponse } from "../../domain/entities/IVerificationStatusResponse ";
 import { MESSAGES } from "../../domain/constants/messages";
 import { IAlbum } from "../../domain/entities/IAlbum";
 import { injectable } from "inversify";
 import { inject } from "inversify";
 import TYPES from "../../domain/constants/types";
+import { ArtistMapper } from "../mappers/ArtistMapper";
+import { IArtist } from "../../domain/entities/IArtist";
+import { TrackMapper } from "../mappers/TrackMapper";
+import { AlbumMapper } from "../mappers/ALbumMapper";
+import { ArtistMonetizationMapper } from "../mappers/ArtistMonetizationMapper";
 
-import ArtistRepository from "../../infrastructure/repositories/artist.repository";
 dotenv.config();
 @injectable()
 export default class ArtistUseCase {
@@ -34,12 +35,11 @@ export default class ArtistUseCase {
   }
 
 
-  async login(email: string, password: string){
+  async login(email: string, password: string) {
     const artist = await this._artistRepository.findByEmail(email);
     if (!artist) {
       return { success: false, message: MESSAGES.USER_NOT_FOUND };
     }
-    // Check if the role is 'artist'
     if (artist.role !== "artist") {
       return { success: false, message: MESSAGES.ARTIST_LOGIN_ONLY };
     }
@@ -65,10 +65,10 @@ export default class ArtistUseCase {
       message: MESSAGES.LOGIN_SUCCESS,
       token,
       ArefreshToken,
-      artist
+      artist: ArtistMapper.toDTO(artist as IArtist)
     };
   }
-  async refresh(refreshToken: string){
+  async refresh(refreshToken: string) {
     try {
       const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET!) as { userId: string };
       const user = await this._userRepository.findById(decoded.userId);
@@ -97,7 +97,7 @@ export default class ArtistUseCase {
     }
   }
 
-  async trackUpload(songName: string, artist: string[], genre: string[], albumId: string, songFile: Express.Multer.File, imageFile: Express.Multer.File){
+  async trackUpload(songName: string, artist: string[], genre: string[], albumId: string, songFile: Express.Multer.File, imageFile: Express.Multer.File) {
     const data = { title: songName, artists: artist, genre: genre, albumId, fileUrl: songFile, img: imageFile }
     const songUpload = await uploadSongToCloud(songFile);
     const imageUpload = await uploadImageToCloud(imageFile);
@@ -131,10 +131,11 @@ export default class ArtistUseCase {
   }
 
 
-  async listArtists(page: number, limit: number){
+  async listArtists(page: number, limit: number) {
     const { data, total } = await this._artistRepository.getAllArtistsP(page, limit);
+   
     return {
-      data,
+      data: ArtistMapper.toDTOs(data as IArtist[]),
       pagination: {
         total,
         page,
@@ -144,7 +145,7 @@ export default class ArtistUseCase {
     }
   }
 
-  async listActiveArtists(page: number, limit: number){
+  async listActiveArtists(page: number, limit: number) {
     const { data, total } = await this._artistRepository.listActiveArtists(page, limit);
     return {
       data,
@@ -161,15 +162,16 @@ export default class ArtistUseCase {
     const album = await this._artistRepository.albumsongs(id) as IAlbum;
     const tracks = await this._artistRepository.findTracksByIds(album.tracks);
     return {
-      ...album,
-      tracks,
-    } as unknown as IAlbum;
+      ...AlbumMapper.toDTO(album),
+      tracks: tracks
+    };
+
   }
 
   async listArtistReleases(userId: string, page: number, limit: number) {
-    const { data, total } = await this._artistRepository.getAllTracksByArtist(userId, page, limit)
+    const { data, total } = await this._artistRepository.getAllTracksByArtist(userId, page, limit);
     return {
-      data,
+      data: TrackMapper.toDTOs(data),
       pagination: {
         total,
         page,
@@ -178,18 +180,20 @@ export default class ArtistUseCase {
       }
     }
 
+
   }
   async increment(trackId: string, id: string) {
 
     return await this._artistRepository.increment(trackId, id);
 
   }
-  async allAlbums(userid: string) {
+async allAlbums(userid: string) {
+  const albums = await this._artistRepository.allAlbums(userid);
+  return AlbumMapper.toDTOs(albums as IAlbum[]); // cast to array
+}
 
-    return await this._artistRepository.allAlbums(userid as string);
 
-  }
-  async uploadAlbums(artistId: string, name: string, description: string, image?: Express.Multer.File){
+  async uploadAlbums(artistId: string, name: string, description: string, image?: Express.Multer.File) {
     const imageUpload = image ? await uploadImageToCloud(image) : null;
 
     const newAlbum: IAlbum = {
@@ -200,14 +204,16 @@ export default class ArtistUseCase {
       tracks: []
     };
 
-    return await this._artistRepository.uploadAlbum(newAlbum);
+    const album = await this._artistRepository.uploadAlbum(newAlbum);
+    if (!album) return null
+    return AlbumMapper.toDTO(album);
   }
 
-  async statsOfArtist(userId: string, page: number, limit: number){
+  async statsOfArtist(userId: string, page: number, limit: number) {
 
     const { data, total } = await this._artistRepository.statsOfArtist(userId, page, limit);
     return {
-      data,
+      data: ArtistMonetizationMapper.toDTOs(data),  
       pagination: {
         total,
         page,
@@ -215,21 +221,20 @@ export default class ArtistUseCase {
         totalPages: Math.ceil(total / limit),
       },
     };
-
   }
-  async saveCard(artistId: string, paymentMethodId: string){
+  async saveCard(artistId: string, paymentMethodId: string) {
 
     return await this._artistRepository.saveCard(artistId, paymentMethodId);
 
 
   }
-  async checkcard(artistId: string){
+  async checkcard(artistId: string) {
 
     return await this._artistRepository.checkcard(artistId);
   }
 
 
-  async usernameUpdate(userId: string, username: string){
+  async usernameUpdate(userId: string, username: string) {
     try {
       const updated = await this._userRepository.usernameUpdate(userId, username);
 
@@ -247,7 +252,7 @@ export default class ArtistUseCase {
 
 
 
-  async getVerificationStatus(artistId: string){
+  async getVerificationStatus(artistId: string) {
 
     const verification = await this._artistRepository.getVerificationStatus(artistId);
     if (!verification) {
@@ -262,7 +267,7 @@ export default class ArtistUseCase {
     };
   }
 
-  async requestVerification(artistId: string, imageFile: Express.Multer.File){
+  async requestVerification(artistId: string, imageFile: Express.Multer.File) {
     const imageUpload = imageFile ? await uploadIdproofCloud(imageFile) : null;
     if (!imageUpload) return null
     let image = imageUpload.secure_url

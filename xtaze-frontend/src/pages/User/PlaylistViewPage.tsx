@@ -86,7 +86,7 @@ export default function PlaylistPageView() {
     const fetchInitialData = async () => {
       try {
         setLoading(true);
-
+        console.log(id,'asda')
         const { tracks: initialTracks, total } = await fetchPlaylistTracks(id as string, 1, limit);
         setTracks(initialTracks || []);
         setTotalTracks(total || 0);
@@ -95,7 +95,7 @@ export default function PlaylistPageView() {
 
         if (userId) {
           const playlistsResponse = await getMyplaylist(userId);
-          const matchedPlaylist = playlistsResponse.find((playlist) => playlist._id?.toString() === id?.toString());
+          const matchedPlaylist = playlistsResponse.find((playlist) => playlist.id?.toString() === id?.toString());
           if (matchedPlaylist) {
             setPlaylistName(matchedPlaylist.title || "Unnamed Playlist");
             setPlaylistImage(matchedPlaylist.imageUrl || image);
@@ -338,7 +338,7 @@ export default function PlaylistPageView() {
               </div>
               {tracks.map((track, index) => (
                 <div
-                  key={track._id}
+                  key={track.id}
                   className="grid grid-cols-[48px_3fr_2fr_48px] sm:grid-cols-[48px_2fr_1fr_1fr_48px] gap-2 sm:gap-4 px-4 sm:px-6 py-3 sm:py-4 hover:bg-[#212121] active:bg-[#212121] transition-colors duration-200 cursor-pointer items-center group"
                 >
                   <span className="text-gray-400 text-base sm:text-lg text-center">

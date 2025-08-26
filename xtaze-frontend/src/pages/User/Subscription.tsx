@@ -107,14 +107,14 @@ const validateCoupon = async () => {
 
   const handleGetPremium = async (priceId: string) => {
     const stripe = await stripePromise;
-    if (!stripe || !user?._id) {
+    if (!stripe || !user?.id) {
       toast.error("Stripe not loaded or user not logged in.", { position: "top-right" });
       return;
     }
     try {
       const token = localStorage.getItem("token");
       if (!token) throw new Error("No authentication token found");
-      const sessionId = await initiateCheckout(user._id, priceId, appliedCoupon?.code ?? "");
+      const sessionId = await initiateCheckout(user.id, priceId, appliedCoupon?.code ?? "");
       const { error } = await stripe.redirectToCheckout({ sessionId });
       if (error) {
         toast.error(error.message, { position: "top-right" });

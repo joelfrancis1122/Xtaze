@@ -10,7 +10,7 @@ import { motion } from "framer-motion";
 import { fetchGenres, addGenre, toggleBlockGenre, updateGenre } from "../../services/adminService";
 
 interface Genre {
-  _id: string;
+  id: string;
   name: string;
   isBlocked: boolean;
 }
@@ -29,22 +29,32 @@ export default function GenreManagement() {
   //     .catch((err) => console.error("Error fetching genres:", err));
   // }, []);
 
-  
-useEffect(() => {
-  const fetchData = async () => {
-    try {
-      const res = await fetchGenres(page, 10);
 
-      setGenres(res.data);
-      
-      setTotalPages(res.pagination.totalPages);
-    } catch (err) {
-      console.error("Error fetching genres:", err);
-    }
-  };
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await fetchGenres(page, 10);
 
-  fetchData();
-}, [page]);
+        setGenres(res.data);
+
+        setTotalPages(res.pagination.totalPages);
+      } catch (err) {
+        console.error("Error fetching genres:", err);
+      }
+    };
+
+    fetchData();
+  }, [page]);
+  // const handleDeleteGenre = async (id: string) => {
+  //   try {
+  //     await deleteGenre(id);
+  //     setGenres((prevGenres) => prevGenres.filter((genre) => genre.id !== id));
+  //     toast.success("Genre deleted successfully!");
+  //   } catch (error) {
+  //     console.error("Error deleting genre:", error);
+  //     toast.error("Failed to delete genre. Please try again.");
+  //   }
+  // };
 
 
   const handleAddGenre = async (event: React.FormEvent) => {
@@ -70,7 +80,7 @@ useEffect(() => {
     try {
       setGenres((prevGenres) =>
         prevGenres.map((genre) =>
-          genre._id === id ? { ...genre, isBlocked: !genre.isBlocked } : genre
+          genre.id === id ? { ...genre, isBlocked: !genre.isBlocked } : genre
         )
       );
       await toggleBlockGenre(id);
@@ -82,7 +92,7 @@ useEffect(() => {
   };
 
   const handleEditClick = (genre: Genre) => {
-    setEditingGenreId(genre._id);
+    setEditingGenreId(genre.id);
     setEditedGenreName(genre.name);
   };
 
@@ -97,7 +107,7 @@ useEffect(() => {
       if (result.success) {
         setGenres((prevGenres) =>
           prevGenres.map((genre) =>
-            genre._id === id ? { ...genre, name: editedGenreName.trim().toLowerCase() } : genre
+            genre.id === id ? { ...genre, name: editedGenreName.trim().toLowerCase() } : genre
           )
         );
         setEditingGenreId(null);
@@ -150,9 +160,9 @@ useEffect(() => {
             </TableHead>
             <TableBody>
               {genres.map((genre) => (
-                <TableRow key={genre._id} className="border-b h-16 hover:bg-[#2f2f2f]">
+                <TableRow key={genre.id} className="border-b h-16 hover:bg-[#2f2f2f]">
                   <TableCell className="p-4 flex items-center gap-2">
-                    {editingGenreId === genre._id ? (
+                    {editingGenreId === genre.id ? (
                       <input
                         type="text"
                         value={editedGenreName}
@@ -187,11 +197,11 @@ useEffect(() => {
                     </motion.span>
                   </TableCell>
                   <TableCell className="p-4 w-[250px] flex justify-center gap-2">
-                    {editingGenreId === genre._id ? (
+                    {editingGenreId === genre.id ? (
                       <Button
                         size="sm"
-                        onClick={(e) => handleSaveEdit(e, genre._id)}
-                        className="flex items-center gap-1 w-[80px] justify-center bg- var(--foreground) !important; hover:bg- var(--foreground) !important;-700"
+                        onClick={(e) => handleSaveEdit(e, genre.id)}
+                        className="flex items-center gap-1 w-[80px] justify-center bg- var(--foreground) hover:bg- var(--foreground)"
                       >
                         <Save className="h-4 w-4" /> Save
                       </Button>
@@ -199,23 +209,38 @@ useEffect(() => {
                       <Button
                         size="sm"
                         onClick={() => handleEditClick(genre)}
-                        className="flex items-center gap-1 w-[80px] justify-center bg- var(--foreground) !important; hover:bg- var(--foreground) !important"
+                        className="flex items-center gap-1 w-[80px] justify-center bg- var(--foreground) hover:bg- var(--foreground)"
                       >
                         <Edit className="h-4 w-4" /> Edit
                       </Button>
                     )}
+
+
                   </TableCell>
-                  <TableCell className="p-4 w-[250px] justify-center gap-2">
-                    <Button
-                      size="sm"
-                      variant={genre.isBlocked ? "outline" : "destructive"}
-                      onClick={() => toggleBlockGenreHandler(genre._id)}
-                      className="flex items-center gap-1 w-[110px] justify-center whitespace-nowrap h-[32px]"
-                    >
-                      {genre.isBlocked ? <CheckCircle className="h-4 w-4" /> : <Ban className="h-4 w-4" />}
-                      <span className="w-[60px] text-center">{genre.isBlocked ? "Unblock" : "Block"}</span>
-                    </Button>
+
+                  <TableCell className="p-4 w-[250px]">
+                    <div className="flex justify-center items-center gap-2">
+                      <Button
+                        size="sm"
+                        variant={genre.isBlocked ? "outline" : "destructive"}
+                        onClick={() => toggleBlockGenreHandler(genre.id)}
+                        className="flex items-center gap-1 w-[110px] justify-center whitespace-nowrap h-[32px]"
+                      >
+                        {genre.isBlocked ? <CheckCircle className="h-4 w-4" /> : <Ban className="h-4 w-4" />}
+                        <span className="w-[60px] text-center">{genre.isBlocked ? "Unblock" : "Block"}</span>
+                      </Button>
+                      {/* 🗑️ Delete Button */}
+                      {/* <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={() => handleDeleteGenre(genre.id)}
+                        className="flex items-center gap-1 w-[80px] justify-center"
+                      >
+                        <Ban className="h-4 w-4" /> Delete
+                      </Button> */}
+                    </div>
                   </TableCell>
+
                 </TableRow>
               ))}
             </TableBody>
