@@ -58,7 +58,7 @@ const PreviewModal: React.FC<PreviewModalProps> = ({ track, isOpen, toggleModal,
           .filter((t) => {
             const trackGenres = Array.isArray(t.genre) ? t.genre : t.genre ? [t.genre] : [];
             return (
-              t._id !== track._id &&
+              t.id !== track.id &&
               trackGenres.some((genre) => currentGenres.includes(genre))
             );
           })
@@ -70,7 +70,7 @@ const PreviewModal: React.FC<PreviewModalProps> = ({ track, isOpen, toggleModal,
     } else if (viewMode === "suggested" && allTracks.length === 0) {
       setSuggestedTracks([]);
     }
-  }, [viewMode, allTracks, track.genre, track._id]);
+  }, [viewMode, allTracks, track.genre, track.id]);
 
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
@@ -211,7 +211,7 @@ const PreviewModal: React.FC<PreviewModalProps> = ({ track, isOpen, toggleModal,
                     ) : suggestedTracks.length > 0 ? (
                       suggestedTracks.map((suggestedTrack) => (
                         <div
-                          key={suggestedTrack._id}
+                          key={suggestedTrack.id}
                           className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 hover:bg-zinc-700 active:bg-zinc-700 rounded-lg cursor-pointer group"
                         >
                           <div className="relative w-16 h-16 sm:w-20 sm:h-20 bg-zinc-800 rounded">
