@@ -59,10 +59,10 @@ export default function ExplorePage() {
 
   const handleLike = async (trackId: string) => {
     const token = localStorage.getItem("token");
-    if (!token || !trackId || !user?._id) return;
+    if (!token || !trackId || !user?.id) return;
     const isCurrentlyLiked = likedSongs.has(trackId);
     try {
-      const updatedUser = await toggleLike(user._id, trackId);
+      const updatedUser = await toggleLike(user.id, trackId);
       dispatch(saveSignupData(updatedUser));
       setLikedSongs((prev) => {
         const newLiked = new Set(prev);
@@ -82,7 +82,7 @@ export default function ExplorePage() {
 
   const handleAddToQueue = (track: Track) => {
     const queueEntry = {
-      id: track._id || track.fileUrl,
+      id: track.id || track.fileUrl,
       title: track.title,
       artists: track.artists,
       fileUrl: track.fileUrl,
@@ -98,13 +98,13 @@ export default function ExplorePage() {
 
   const handleAddToPlaylist = async (trackId: string, playlistId: string) => {
     const token = localStorage.getItem("token");
-    if (!token || !user?._id) {
+    if (!token || !user?.id) {
       toast.error("Please log in to add to playlist");
       return;
     }
     try {
-      await addTrackToPlaylist(user._id, playlistId, trackId);
-      const playlist = playlists.find((p) => p._id === playlistId);
+      await addTrackToPlaylist(user.id, playlistId, trackId);
+      const playlist = playlists.find((p) => p.id === playlistId);
       if (!playlist) throw new Error("Playlist not found");
       toast.success(`Added to ${playlist.title}`);
       setDropdownTrackId(null);
@@ -197,8 +197,8 @@ export default function ExplorePage() {
 
         setTopCharts(topTracks);
 
-        if (user?._id) {
-          const fetchedPlaylists = await getMyplaylist(user._id);
+        if (user?.id) {
+          const fetchedPlaylists = await getMyplaylist(user.id);
           setPlaylists(fetchedPlaylists);
         }
       } catch (error) {
@@ -207,7 +207,7 @@ export default function ExplorePage() {
     };
 
     fetchData();
-  }, [user?._id]);
+  }, [user?.id]);
 
   useEffect(() => {
     if (user?.likedSongs) {
@@ -305,7 +305,7 @@ export default function ExplorePage() {
               {recentSongs.length > 0 ? (
                 recentSongs.map((track) => (
                   <Link
-                    key={track._id}
+                    key={track.id}
                     to="#"
                     className="group bg-[#1d1d1d] rounded-lg p-3 sm:p-4 hover:bg-[#242424] transition-colors flex flex-col"
                   >
@@ -344,20 +344,20 @@ export default function ExplorePage() {
                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
-                            setDropdownTrackId(dropdownTrackId === track._id ? null : track._id);
+                            setDropdownTrackId(dropdownTrackId === track.id ? null : track.id);
                           }}
                         >
                           <Plus size={18} />
                         </button>
-                        {dropdownTrackId === track._id && (
+                        {dropdownTrackId === track.id && (
                           <div className="absolute left-0 mt-8 w-40 sm:w-48 bg-[#242424] rounded-md shadow-lg z-20 pointer-events-auto">
                             <ul className="py-1 text-sm sm:text-base">
                               {playlists.length > 0 ? (
                                 playlists.map((playlist) => (
                                   <li
-                                    key={playlist._id}
+                                    key={playlist.id}
                                     className="px-3 sm:px-4 py-1.5 sm:py-2 hover:bg-[#333333] cursor-pointer text-white"
-                                    onClick={() => handleAddToPlaylist(track._id || track.fileUrl, playlist._id as string)}
+                                    onClick={() => handleAddToPlaylist(track.id || track.fileUrl, playlist.id as string)}
                                   >
                                     {playlist.title}
                                   </li>
@@ -370,17 +370,17 @@ export default function ExplorePage() {
                         )}
                         <button
                           className={`p-1.5 sm:p-2 hover:bg-[#333333] rounded-full pointer-events-auto ${
-                            likedSongs.has(track._id || track.fileUrl) ? "text-red-500" : "text-white"
+                            likedSongs.has(track.id || track.fileUrl) ? "text-red-500" : "text-white"
                           }`}
                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
-                            handleLike(track._id || track.fileUrl);
+                            handleLike(track.id || track.fileUrl);
                           }}
                         >
                           <Heart
                             size={18}
-                            fill={likedSongs.has(track._id || track.fileUrl) ? "currentColor" : "none"}
+                            fill={likedSongs.has(track.id || track.fileUrl) ? "currentColor" : "none"}
                           />
                         </button>
                         <button
@@ -441,7 +441,7 @@ export default function ExplorePage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                 {topCharts.map((track) => (
                   <Link
-                    key={track._id}
+                    key={track.id}
                     to="#"
                     className="group bg-[#1d1d1d] rounded-lg p-3 sm:p-4 hover:bg-[#242424] transition-colors flex flex-col"
                   >
@@ -480,20 +480,20 @@ export default function ExplorePage() {
                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
-                            setDropdownTrackId(dropdownTrackId === track._id ? null : track._id);
+                            setDropdownTrackId(dropdownTrackId === track.id ? null : track.id);
                           }}
                         >
                           <Plus size={18} />
                         </button>
-                        {dropdownTrackId === track._id && (
+                        {dropdownTrackId === track.id && (
                           <div className="absolute left-0 mt-8 w-40 sm:w-48 bg-[#242424] rounded-md shadow-lg z-20 pointer-events-auto">
                             <ul className="py-1 text-sm sm:text-base">
                               {playlists.length > 0 ? (
                                 playlists.map((playlist) => (
                                   <li
-                                    key={playlist._id}
+                                    key={playlist.id}
                                     className="px-3 sm:px-4 py-1.5 sm:py-2 hover:bg-[#333333] cursor-pointer text-white"
-                                    onClick={() => handleAddToPlaylist(track._id || track.fileUrl, playlist._id as string)}
+                                    onClick={() => handleAddToPlaylist(track.id || track.fileUrl, playlist.id as string)}
                                   >
                                     {playlist.title}
                                   </li>
@@ -506,17 +506,17 @@ export default function ExplorePage() {
                         )}
                         <button
                           className={`p-1.5 sm:p-2 hover:bg-[#333333] rounded-full pointer-events-auto ${
-                            likedSongs.has(track._id || track.fileUrl) ? "text-red-500" : "text-white"
+                            likedSongs.has(track.id || track.fileUrl) ? "text-red-500" : "text-white"
                           }`}
                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
-                            handleLike(track._id || track.fileUrl);
+                            handleLike(track.id || track.fileUrl);
                           }}
                         >
                           <Heart
                             size={18}
-                            fill={likedSongs.has(track._id || track.fileUrl) ? "currentColor" : "none"}
+                            fill={likedSongs.has(track.id || track.fileUrl) ? "currentColor" : "none"}
                           />
                         </button>
                         <button

@@ -149,7 +149,7 @@ const navigate = useNavigate()
         setGenres(genreResponse.genres);
         setAlbums(albumResponse);
         console.log(artist,"odi odi odi",genreResponse)
-        // dispatch(saveArtistData(genreResponse.artist));
+        dispatch(saveArtistData(genreResponse.artist));
         console.log(artist,"od")
       } catch (error: any) {
         toast.error(error.message || "Error fetching data. Please try again.");

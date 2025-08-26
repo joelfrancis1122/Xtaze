@@ -44,7 +44,6 @@ import TYPES from "./types";
 // repositories
 import { GenreRepository } from "../../infrastructure/repositories/genre.repository";
 import UserRepository from "../../infrastructure/repositories/user.repository";
-import ArtistRepository from "../../infrastructure/repositories/artist.repository";
 import AdminRepository from "../../infrastructure/repositories/admin.repository";
 
 // services
@@ -68,6 +67,7 @@ import { TrackUseCase } from "../../Application/usecases/track.usecase";
 import { ITrackRepository } from "../repositories/ITrackRepository";
 import { TrackRepository } from "../../infrastructure/repositories/track.repository";
 import TrackController from "../../presentation/controller/track.controller";
+import { ArtistRepository } from "../../infrastructure/repositories/artist.repository";
 
 const container = new Container();
 

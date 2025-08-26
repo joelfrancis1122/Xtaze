@@ -20,9 +20,10 @@ import { ArtistMapper } from "../mappers/ArtistMapper";
 import { UserMapper } from "../mappers/UserMapper";
 import { TrackMapper } from "../mappers/TrackMapper";
 import { AlbumDTO } from "../dtos/AlbumDTO";
-import { AlbumMapper } from "../mappers/ALbumMapper";
 import { PlaylistMapper } from "../mappers/PlaylistMapper";
 import { PlaylistDTO } from "../dtos/PlaylistDTO";
+import { AlbumMapper } from "../mappers/AlbumMapper";
+
 dotenv.config();
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2023-08-16" });

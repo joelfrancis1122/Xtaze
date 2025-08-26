@@ -14,7 +14,7 @@ import TYPES from "../../domain/constants/types";
 import { ArtistMapper } from "../mappers/ArtistMapper";
 import { IArtist } from "../../domain/entities/IArtist";
 import { TrackMapper } from "../mappers/TrackMapper";
-import { AlbumMapper } from "../mappers/ALbumMapper";
+import { AlbumMapper } from "../mappers/AlbumMapper";
 import { ArtistMonetizationMapper } from "../mappers/ArtistMonetizationMapper";
 
 dotenv.config();

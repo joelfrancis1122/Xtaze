@@ -404,7 +404,7 @@ export default function ArtistProfile() {
                   </div>
                 )}
                 <p className="text-white">{user?.email}</p>
-                <p className="text-white">{user?.gender || "Genre not specified"}</p>
+                {/* <p className="text-white">{user?.gender || "Gender not specified"}</p> */}
               </div>
             </Card>
 
