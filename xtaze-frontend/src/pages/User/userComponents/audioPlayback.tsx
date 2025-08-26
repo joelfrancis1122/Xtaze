@@ -137,7 +137,7 @@ export const useAudioPlayback = (tracks: Track[]) => {
   };
 
   const updateRecentSongs = (track: Track) => {
-    const trackId = track._id || track.fileUrl;
+    const trackId = track.id || track.fileUrl;
     const recentSongs = JSON.parse(localStorage.getItem("recentSongs") || "[]");
     const newEntry = { id: trackId, playedAt: new Date().toISOString() };
     const updatedSongs = [

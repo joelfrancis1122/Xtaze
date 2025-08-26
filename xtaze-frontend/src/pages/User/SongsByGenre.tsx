@@ -88,7 +88,7 @@ export default function GenrePage() {
   useEffect(() => {
     const fetchData = async () => {
       const token = localStorage.getItem("token");
-      if (!token || !user?._id) {
+      if (!token || !user?.id) {
         console.error("No token or user ID found. Please login.");
         return;
       }
@@ -98,7 +98,7 @@ export default function GenrePage() {
         setTracks(genreTracks);
         setGenreName(genre || "");
 
-        const fetchedPlaylists = await getMyplaylist(user._id);
+        const fetchedPlaylists = await getMyplaylist(user.id);
         setPlaylists(fetchedPlaylists);
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -106,7 +106,7 @@ export default function GenrePage() {
     };
 
     fetchData();
-  }, [genre, user?._id]);
+  }, [genre, user?.id]);
 
   // Audio playback logic
   useEffect(() => {
@@ -166,10 +166,10 @@ export default function GenrePage() {
 
   const handleLike = async (trackId: string) => {
     const token = localStorage.getItem("token");
-    if (!token || !trackId || !user?._id) return;
+    if (!token || !trackId || !user?.id) return;
     const isCurrentlyLiked = likedSongs.has(trackId);
     try {
-      const updatedUser = await toggleLike(user._id, trackId);
+      const updatedUser = await toggleLike(user.id, trackId);
       dispatch(saveSignupData(updatedUser));
       setLikedSongs((prev) => {
         const newLiked = new Set(prev);
@@ -189,7 +189,7 @@ export default function GenrePage() {
 
   const handleAddToQueue = (track: Track) => {
     const queueEntry = {
-      id: track._id || track.fileUrl,
+      id: track.id || track.fileUrl,
       title: track.title,
       artists: track.artists,
       fileUrl: track.fileUrl,
@@ -205,13 +205,13 @@ export default function GenrePage() {
 
   const handleAddToPlaylist = async (trackId: string, playlistId: string) => {
     const token = localStorage.getItem("token");
-    if (!token || !user?._id) {
+    if (!token || !user?.id) {
       toast.error("Please log in to add to playlist");
       return;
     }
     try {
-      await addTrackToPlaylist(user._id, playlistId, trackId);
-      const playlist = playlists.find((p) => p._id === playlistId);
+      await addTrackToPlaylist(user.id, playlistId, trackId);
+      const playlist = playlists.find((p) => p.id === playlistId);
       if (!playlist) throw new Error("Playlist not found");
       toast.success(`Added to ${playlist.title}`);
       setDropdownTrackId(null);
@@ -277,7 +277,7 @@ export default function GenrePage() {
               {tracks.length > 0 ? (
                 tracks.map((track) => (
                   <Link
-                    key={track._id}
+                    key={track.id}
                     to="#"
                     className="group bg-[#1d1d1d] rounded-lg p-4 hover:bg-[#242424] transition-colors flex flex-col"
                   >
@@ -321,20 +321,20 @@ export default function GenrePage() {
                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
-                            setDropdownTrackId(dropdownTrackId === track._id ? null : track._id);
+                            setDropdownTrackId(dropdownTrackId === track.id ? null : track.id);
                           }}
                         >
                           <Plus size={16} />
                         </button>
-                        {dropdownTrackId === track._id && (
+                        {dropdownTrackId === track.id && (
                           <div className="absolute left-0 mt-8 w-48 bg-[#242424] rounded-md shadow-lg z-20 pointer-events-auto">
                             <ul className="py-1">
                               {playlists.length > 0 ? (
                                 playlists.map((playlist) => (
                                   <li
-                                    key={playlist._id}
+                                    key={playlist.id}
                                     className="px-4 py-2 hover:bg-[#333333] cursor-pointer text-white"
-                                    onClick={() => handleAddToPlaylist(track._id || track.fileUrl, playlist._id as string)}
+                                    onClick={() => handleAddToPlaylist(track.id || track.fileUrl, playlist.id as string)}
                                   >
                                     {playlist.title}
                                   </li>
@@ -344,7 +344,7 @@ export default function GenrePage() {
                               )}
                               {/* <li
                                 className="px-4 py-2 hover:bg-[#333333] cursor-pointer text-white border-t border-gray-700"
-                                onClick={() => navigate(`/playlists/${user?._id}`)}
+                                onClick={() => navigate(`/playlists/${user?.id}`)}
                               >
                                 Create New Playlist
                               </li> */}
@@ -353,17 +353,17 @@ export default function GenrePage() {
                         )}
                         <button
                           className={`p-1 hover:bg-[#333333] rounded-full pointer-events-auto ${
-                            likedSongs.has(track._id || track.fileUrl) ? "text-red-500" : "text-white"
+                            likedSongs.has(track.id || track.fileUrl) ? "text-red-500" : "text-white"
                           }`}
                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
-                            handleLike(track._id || track.fileUrl);
+                            handleLike(track.id || track.fileUrl);
                           }}
                         >
                           <Heart
                             size={16}
-                            fill={likedSongs.has(track._id || track.fileUrl) ? "currentColor" : "none"}
+                            fill={likedSongs.has(track.id || track.fileUrl) ? "currentColor" : "none"}
                           />
                         </button>
                         <button
