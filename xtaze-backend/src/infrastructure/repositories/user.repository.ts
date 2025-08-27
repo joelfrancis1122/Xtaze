@@ -18,14 +18,6 @@ export default class UserRepository extends BaseRepository<IUser> implements IUs
     super(UserModel);
   }
 
-  // async add(userData: IUser): Promise<IUser> {
-  //   try {
-  //     const user = await UserModel.create(userData)
-  //     return user as unknown as IUser
-  //   } catch (error) {
-  //     throw error
-  //   }
-  // }
 
   async add(userData: IUser): Promise<IUser> {
     try {
@@ -45,11 +37,12 @@ export default class UserRepository extends BaseRepository<IUser> implements IUs
       throw error
     }
   }
+
   async increment(trackId: string, userId: string) {
     const trackDoc = await Track.findById(trackId);
 
     if (!trackDoc) return null;
-
+console.log("its working",trackDoc)
     // Ensure defaults
     trackDoc.listeners = trackDoc.listeners || [];
     trackDoc.playHistory = trackDoc.playHistory || [];

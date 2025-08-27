@@ -35,6 +35,7 @@ export default class ArtistUseCase {
   }
 
 
+
   async login(email: string, password: string) {
     const artist = await this._artistRepository.findByEmail(email);
     if (!artist) {

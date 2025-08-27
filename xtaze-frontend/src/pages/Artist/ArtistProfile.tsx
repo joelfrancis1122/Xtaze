@@ -61,7 +61,6 @@ export default function ArtistProfile() {
 
       try {
         const fetchedTracks = await fetchArtistTracks(user.id, page, limit);
-
         const mappedTracks = fetchedTracks.data.map((track) => ({
           _id: track._id,
           title: track.title,
@@ -72,6 +71,7 @@ export default function ArtistProfile() {
         setTotalPages(fetchedTracks.pagination.totalPages);
 
         const verificationData = await getVerificationStatus(user.id);
+        console.log("vea",verificationData)
         setVerification(verificationData || { status: "unsubmitted" });
       } catch (error: any) {
         console.error("Error fetching data:", error);
@@ -250,6 +250,7 @@ export default function ArtistProfile() {
 
     try {
       await requestVerification(user.id, formData);
+    
       setVerification({ status: "pending" });
       toast.success("Verification request submitted!");
       setSelectedFile(null);

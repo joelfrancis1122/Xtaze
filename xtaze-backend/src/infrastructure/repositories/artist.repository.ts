@@ -8,6 +8,7 @@ import { ArtistMonetization } from "../../domain/entities/IMonetization";
 import { Track } from "../db/models/TrackModel";
 import UserModel from "../db/models/UserModel";
 import { AlbumModel } from "../db/models/AlbumModel";
+import VerificationModel from "../db/models/VerificationRequestModel";
 
 @injectable()
 export class ArtistRepository implements IArtistRepository {
@@ -61,12 +62,15 @@ export class ArtistRepository implements IArtistRepository {
   }
 
   async increment(trackId: string, userId: string): Promise<ITrack | null> {
+    console.log("ehtyy")
     return await Track.findByIdAndUpdate(
       trackId,
       { $addToSet: { listeners: userId } },
       { new: true }
     ).lean<ITrack>().exec();
+
   }
+
 
   async statsOfArtist(
     userId: string,
@@ -86,7 +90,7 @@ export class ArtistRepository implements IArtistRepository {
 
     const monetizationData: ArtistMonetization[] = allTracks.map(track => {
       const typedTrack = track as any;
-      const totalPlays = typedTrack.playHistory?.reduce((sum:any, h:any) => sum + h.plays, 0) || 0
+      const totalPlays = typedTrack.playHistory?.reduce((sum: any, h: any) => sum + h.plays, 0) || 0
       const monthlyPlays = typedTrack.playHistory?.find((h: { month: string; }) => h.month === currentMonth)?.plays || 0;
 
       return {
@@ -112,7 +116,8 @@ export class ArtistRepository implements IArtistRepository {
   }
 
   async getVerificationStatus(artistId: string): Promise<IVerificationRequest | null> {
-    return await UserModel.findOne({ artistId }).lean<IVerificationRequest>().exec();
+    const verification = await VerificationModel.findOne({ artistId }).exec();
+    return verification as any
   }
 
   async requestVerification(artistId: string, imageFile: string): Promise<IVerificationRequest | null> {

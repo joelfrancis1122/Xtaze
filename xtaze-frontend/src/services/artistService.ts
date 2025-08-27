@@ -317,6 +317,8 @@ export const saveCard = async (artistId: string, paymentMethodId: string): Promi
 
 export const getVerificationStatus = async (artistId: string): Promise<VerificationStatus> => {
   try {
+    console.log(artistId,"insane")
+
     const response = await apiCall<{ success: boolean; data: VerificationStatus }>(
       artistApi,
       HTTP_METHODS.GET,
@@ -332,7 +334,7 @@ export const getVerificationStatus = async (artistId: string): Promise<Verificat
 
 export const requestVerification = async (artistId: string,formData: FormData): Promise<{ idProof: string }> => {
   formData.append("artistId", artistId);
-
+console.log(artistApi,formData,"insane")
   const data = await apiCall<{ success: boolean; idProof?: string; message?: string }>(
     artistApi,
     HTTP_METHODS.POST,
