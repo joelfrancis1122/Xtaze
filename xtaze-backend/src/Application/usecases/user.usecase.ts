@@ -474,7 +474,7 @@ export default class UserUseCase {
       if (!tracks) {
         return null
       }
-      return tracks
+      return TrackMapper.toDTOs(tracks)
 
     } catch (error) {
       console.error(MESSAGES.ERROR_UPDATING_PROFILE, error);

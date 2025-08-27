@@ -171,6 +171,7 @@ export const fetchAllTrack = async (): Promise<Track[]> => {
 export const fetchGenreTracks = async (genre: string): Promise<Track[]> => {
   const data = await apiCall<{ success: boolean; data: Track[] }>(userApi, HTTP_METHODS.GET, `/fetchGenreTracks?GenreName=${genre}`);
   // if (!data.success) throw new Error("Failed to fetch genre tracks");
+  console.log("insane",data)
   return data.data;
 };
 
@@ -239,7 +240,6 @@ export const createPlaylists = async (userId: string, playlistData: Partial<Play
 // Get My Playlists
 export const getMyplaylist = async (userId: string): Promise<Playlist[]> => {
   const data = await apiCall<{ success: boolean; data: Playlist[] }>(userApi, HTTP_METHODS.GET, `/getPlaylist?userId=${userId}`);
-  console.log(data,"sdadsad",userId)
   if (!data.success) throw new Error("Failed to get playlists");
   return data.data;
 };
