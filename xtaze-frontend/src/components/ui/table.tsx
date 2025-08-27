@@ -13,7 +13,6 @@ export const TableHead = ({ className, ...props }: React.ThHTMLAttributes<HTMLTa
   <th className={cn("border-b px-4 py-2 text-left", className)} {...props} />
 );
 
-
 export const TableBody = ({ className, ...props }: React.HTMLAttributes<HTMLTableSectionElement>) => (
   <tbody className={cn(className)} {...props} />
 );

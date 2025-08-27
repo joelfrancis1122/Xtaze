@@ -149,19 +149,19 @@ export default function GenreManagement() {
         </Card>
         <Card className="mt-6 p-4 w-full bg- var(--foreground) !important; text-white shadow-lg">
           <h2 className="text-lg font-semibold mb-4">Genre List</h2>
-          <Table className="w-full">
-            <TableHead>
-              <TableRow className="bg- var(--foreground) !important;">
-                <TableCell className="text-left p-4 mt-7">Genre Name</TableCell>
-                <TableCell className="text-left p-4 ">Status</TableCell>
-                <TableCell className="text-left p-4 "></TableCell>
-                <TableCell className="text-left p-2 ">Actions</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
+          <table className="w-full">
+            <thead>
+              <tr className="bg- var(--foreground) !important;">
+                <td className="text-left p-4 mt-3">Genre Name</td>
+                <td className="text-left p-4 mt-8">Status</td>
+                <td className="text-left p-4 "></td>
+                <td className="text-left p-2 ">Actions</td>
+              </tr>
+            </thead>
+            <tbody>
               {genres.map((genre) => (
-                <TableRow key={genre.id} className="border-b h-16 hover:bg-[#2f2f2f]">
-                  <TableCell className="p-4 flex items-center gap-2">
+                <tr key={genre.id} className="border-b h-16 hover:bg-[#2f2f2f]">
+                  <td className="p-4 flex items-center gap-2">
                     {editingGenreId === genre.id ? (
                       <input
                         type="text"
@@ -178,8 +178,8 @@ export default function GenreManagement() {
                     ) : (
                       <span className="truncate">{genre.name}</span>
                     )}
-                  </TableCell>
-                  <TableCell className="p-4 w-[120px] text-center">
+                  </td>
+                  <td className="p-4 w-[120px] text-center">
                     <motion.span
                       className={`blur relative px-6 py-2 text-sm font-semibold text-white shadow transition-all duration-300 ease-in-out
                       ${genre.isBlocked ? "bg-red-900/70 shadow-red-500/50 hover:bg-red-700" : "bg-green-900/70 shadow-green-500/50 hover:bg-green-700"}`}
@@ -195,8 +195,8 @@ export default function GenreManagement() {
                     >
                       {genre.isBlocked ? "O" : "O"}
                     </motion.span>
-                  </TableCell>
-                  <TableCell className="p-4 w-[250px] flex justify-center gap-2">
+                  </td>
+                  <td className="p-4 w-[250px] flex justify-center gap-2">
                     {editingGenreId === genre.id ? (
                       <Button
                         size="sm"
@@ -216,9 +216,9 @@ export default function GenreManagement() {
                     )}
 
 
-                  </TableCell>
+                  </td>
 
-                  <TableCell className="p-4 w-[250px]">
+                  <td className="p-4 w-[250px]">
                     <div className="flex justify-center items-center gap-2">
                       <Button
                         size="sm"
@@ -239,12 +239,12 @@ export default function GenreManagement() {
                         <Ban className="h-4 w-4" /> Delete
                       </Button> */}
                     </div>
-                  </TableCell>
+                  </td>
 
-                </TableRow>
+                </tr>
               ))}
-            </TableBody>
-          </Table>
+            </tbody>
+          </table>
           <div className="flex justify-between items-center mt-4">
             <Button
               disabled={page === 1}

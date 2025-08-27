@@ -27,6 +27,5 @@ export default interface IArtistUseCase {
     getVerificationStatus(artistId:string): Promise<IVerificationStatusResponse|null>
     usernameUpdate(userId:string,username:string): Promise<IUser|null>
 
-
 }
 
