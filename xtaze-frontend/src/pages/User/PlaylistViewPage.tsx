@@ -334,7 +334,7 @@ export default function PlaylistPageView() {
               </div>
               {tracks.map((track, index) => (
                 <div
-                  key={track.id}
+                  key={index}
                   className="grid grid-cols-[48px_3fr_2fr_48px] sm:grid-cols-[48px_2fr_1fr_1fr_48px] gap-2 sm:gap-4 px-4 sm:px-6 py-3 sm:py-4 hover:bg-[#212121] active:bg-[#212121] transition-colors duration-200 cursor-pointer items-center group"
                 >
                   <span className="text-gray-400 text-base sm:text-lg text-center">

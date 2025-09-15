@@ -223,7 +223,7 @@ const UserAlbumViewPage = () => {
               >
                 {songs.map((song, index) => (
                   <div
-                    key={song.id}
+                    key={index}
                     role="listitem"
                     className={cn(
                       "flex items-center bg-gray-800/50 border border-gray-700 rounded-lg p-4 hover:bg-gray-800/80 transition-all duration-300 group",

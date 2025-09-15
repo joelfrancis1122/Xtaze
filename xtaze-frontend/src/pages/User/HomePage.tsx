@@ -361,9 +361,9 @@ useEffect(() => {
                       className="flex transition-transform duration-500 ease-in-out w-full"
                       style={{ transform: `translateX(-${currentIndex * 100}%)` }}
                     >
-                      {banners.map((banner) => (
+                      {banners.map((banner,index) => (
                         <div
-                          key={banner.id}
+                          key={index}
                           className="min-w-full w-full flex-shrink-0 relative cursor-pointer"
                         >
                           <img

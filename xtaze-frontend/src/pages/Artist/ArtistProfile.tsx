@@ -451,8 +451,8 @@ export default function ArtistProfile() {
               <h2 className="text-lg font-semibold text-white mb-4">Releases</h2>
               <div className="space-y-4">
                 {tracks.length > 0 ? (
-                  tracks.map((track) => (
-                    <div key={track._id} className="bg-black p-4 border border-white">
+                  tracks.map((track,index) => (
+                    <div key={index} className="bg-black p-4 border border-white">
                       <p className="text-white font-semibold">{track.title}</p>
                       <p className="text-white text-sm">Listeners: {track.listeners.length.toLocaleString()}</p>
                     </div>

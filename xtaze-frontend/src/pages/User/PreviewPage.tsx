@@ -250,9 +250,9 @@ const PreviewModal: React.FC<PreviewModalProps> = ({
                     {loadingTracks ? (
                       <p className="text-gray-400 text-xs md:text-sm">Loading tracks...</p>
                     ) : suggestedTracks.length > 0 ? (
-                      suggestedTracks.map((s) => (
+                      suggestedTracks.map((s,i) => (
                         <div
-                          key={s.id}
+                          key={i}
                           className="flex items-center gap-2 md:gap-3 px-2 md:px-3 py-1.5 md:py-2 rounded-xl hover:bg-[#1f1f1f]/80 transition cursor-pointer"
                           onClick={() => handlePlayTrack(s)}
                         >
