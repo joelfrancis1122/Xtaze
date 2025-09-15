@@ -117,8 +117,8 @@ export default function AdminAnalytics() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {artists.map((artist) => (
-                                    <tr key={artist.id} className="border-b border-gray-700">
+                                {artists.map((artist,index) => (
+                                    <tr key={index} className="border-b border-gray-700">
                                         <td className="py-2 text-white">{artist.username}</td>
                                         <td className="py-2 text-white">{artist.verification.status}</td>
                                         <td className="py-2">
