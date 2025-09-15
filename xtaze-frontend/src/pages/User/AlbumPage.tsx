@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "../../components/ui/button";
 import { Card } from "../../components/ui/card";
-import Sidebar from "./userComponents/SideBar";
+
 import { toast } from "sonner";
 import { getMyAlbums } from "../../services/userService";
 import { ArrowLeft } from "lucide-react";
@@ -15,13 +15,13 @@ import { Track } from "./types/ITrack";
 import { useAudioPlayback } from "./userComponents/audioPlayback";
 import { audio } from "../../utils/audio";
 import { setCurrentTrack, setIsPlaying } from "../../redux/audioSlice";
+import SidebarX from "./userComponents/Sidebr";
 
 const AlbumList = () => {
   const { userId } = useParams<{ userId: string }>();
   const navigate = useNavigate();
   const [albums, setAlbums] = useState<IAlbum[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 const [isModalOpen, setIsModalOpen] = useState(false);
   const { currentTrack, isPlaying, isShuffled, isRepeating } = useSelector((state: RootState) => state.audio);
   const dispatch = useDispatch();
@@ -69,16 +69,12 @@ const toggleModal = () => {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white font-sans px-4">
-      <div className="flex">
-        <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
-        {isSidebarOpen && (
-          <div
-            className="fixed inset-0 bg-black/50 z-20 md:hidden"
-            onClick={() => setIsSidebarOpen(false)}
-          ></div>
-        )}
-        <main className="flex-1 md:ml-[240px] px-4 sm:px-6 py-4 sm:py-7">
+    <div className="flex h-screen flex-col bg-black text-white">
+         <div className="flex flex-1 relative">
+           <SidebarX>
+
+           
+           <main>
           <Button
             className="mb-6 bg-gold-400 text-navy-900 hover:bg-gold-500 font-semibold px-4 py-2 shadow-xl hover:shadow-2xl transition-all duration-300"
             onClick={handleBack}
@@ -86,9 +82,9 @@ const toggleModal = () => {
           >
             <ArrowLeft className="h-5 w-5 mr-2" /> Back
           </Button>
-          <h1 className="text-3xl sm:text-4xl font-extrabold mb-6 animate-fade-in">
+            <h2 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6 ml-5">
             All Albums
-          </h1>
+          </h2>
           {isLoading ? (
             <p className="text-gray-300">Loading albums...</p>
           ) : albums.length === 0 ? (
@@ -102,7 +98,7 @@ const toggleModal = () => {
               {albums.map((album) => (
                 <Card
                   key={album.id}
-                  className="bg-gray-800/50 border-gray-700 rounded-lg p-4 hover:bg-gray-800/80 transition-all duration-300 cursor-pointer"
+                  className="bg-gray-800/50 border-gray-700 rounded-lg p-4 hover:bg-gray-800/80 transition-all duration-300 cursor-pointer ml-5"
                   role="listitem"
                   onClick={() => navigate(`/albumView?albumId=${album.id}`)}
                 >
@@ -129,6 +125,8 @@ const toggleModal = () => {
             </div>
           )}
         </main>
+        </SidebarX>
+   
               {currentTrack && (
           <MusicPlayer
             currentTrack={currentTrack}

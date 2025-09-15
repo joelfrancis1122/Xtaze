@@ -5,13 +5,12 @@ import { Card } from "../../components/ui/card";
 import ArtistSidebar from "./artistComponents/artist-aside";
 import { RootState } from "../../store/store";
 import { useSelector } from "react-redux";
-import { Elements, CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
-import { loadStripe } from "@stripe/stripe-js";
 import { toast } from "sonner";
-import { checkCardStatus, fetchSongEarnings, saveCard } from "../../services/artistService";
-
-// ✅ Stripe setup
-const stripePromise = loadStripe("pk_test_51QuvsvQV9aXBcHmZPYCW1A2NRrd5mrEffAOVJMFOlrYDOl9fmb028A85ZE9WfxKMdNgTTA5MYoG4ZwCUQzHVydZj00eBUQVOo9");
+import {
+  checkCardStatus,
+  fetchSongEarnings,
+  saveCard,
+} from "../../services/artistService";
 
 interface SongEarnings {
   trackId: string;
@@ -22,8 +21,9 @@ interface SongEarnings {
   monthlyEarnings: number;
 }
 
-// ✅ Card Input Component
+// ✅ Card Input Component (lazy loads stripe hooks)
 const CardInput = ({ artistId, onCardSaved }: { artistId: string; onCardSaved: () => void }) => {
+  const { useStripe, useElements, CardElement } = require("@stripe/react-stripe-js");
   const stripe = useStripe();
   const elements = useElements();
   const [cardLoading, setCardLoading] = useState(false);
@@ -77,13 +77,24 @@ export default function ArtistMonetizePage() {
   const [error, setError] = useState<string | null>(null);
   const [hasCard, setHasCard] = useState(false);
 
-  // 🔑 Pagination state
   const [page, setPage] = useState(1);
   const [limit] = useState(5);
   const [totalPages, setTotalPages] = useState(1);
 
   const user = useSelector((state: RootState) => state.artist.signupData);
-  console.log("user",user)
+
+  // 🔥 Stripe loaded only when needed
+  const [StripeElements, setStripeElements] = useState<any>(null);
+  const [stripePromise, setStripePromise] = useState<any>(null);
+
+  const loadStripeLibs = async () => {
+    const { Elements } = await import("@stripe/react-stripe-js");
+    const { loadStripe } = await import("@stripe/stripe-js");
+    const stripe = await loadStripe("pk_test_51QuvsvQV9aXBcHmZPYCW1A2NRrd5mrEffAOVJMFOlrYDOl9fmb028A85ZE9WfxKMdNgTTA5MYoG4ZwCUQzHVydZj00eBUQVOo9");
+    setStripeElements(() => Elements);
+    setStripePromise(stripe);
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -91,7 +102,6 @@ export default function ArtistMonetizePage() {
         if (!user) return;
 
         const { data, totalPages } = await fetchSongEarnings(user.id, page, limit);
-        console.log(data,totalPages,"achar")
         setSongs(data);
         setTotalPages(totalPages);
 
@@ -117,6 +127,7 @@ export default function ArtistMonetizePage() {
       <div className="grid lg:grid-cols-[280px_1fr]">
         <ArtistSidebar />
         <main className="flex-1 pl-0.4 pr-6 pt-5 pb-6">
+          {/* header */}
           <div className="mb-6 flex items-center justify-between">
             <div className="space-y-1">
               <button
@@ -127,7 +138,9 @@ export default function ArtistMonetizePage() {
                 <ChevronLeft className="h-5 w-5 text-gray-400" />
               </button>
               <h1 className="text-2xl font-bold">Monetize</h1>
-              <div className="text-sm text-muted-foreground">Your song earnings overview</div>
+              <div className="text-sm text-muted-foreground">
+                Your song earnings overview
+              </div>
             </div>
           </div>
 
@@ -138,13 +151,13 @@ export default function ArtistMonetizePage() {
               <div>
                 <p className="text-gray-400">Total Earnings</p>
                 <p className="text-2xl font-bold">
-                  ${songs.reduce((sum, song) => sum + song.totalEarnings, 0).toFixed(2)}
+                  ${songs.reduce((sum, s) => sum + s.totalEarnings, 0).toFixed(2)}
                 </p>
               </div>
               <div>
                 <p className="text-gray-400">This Month’s Earnings</p>
                 <p className="text-2xl font-bold">
-                  ${songs.reduce((sum, song) => sum + song.monthlyEarnings, 0).toFixed(2)}
+                  ${songs.reduce((sum, s) => sum + s.monthlyEarnings, 0).toFixed(2)}
                 </p>
               </div>
             </div>
@@ -157,13 +170,23 @@ export default function ArtistMonetizePage() {
           {!hasCard && (
             <Card className="mt-6 p-6">
               <h2 className="text-lg font-semibold mb-4">Add Card Details</h2>
-              <Elements stripe={stripePromise}>
-                <CardInput artistId={user?.id || ""} onCardSaved={handleCardSaved} />
-              </Elements>
+
+              {!StripeElements ? (
+                <button
+                  onClick={loadStripeLibs}
+                  className="bg-green-700 text-white px-4 py-2 rounded hover:bg-green-600"
+                >
+                  Enable Card Input
+                </button>
+              ) : (
+                <StripeElements stripe={stripePromise}>
+                  <CardInput artistId={user?.id || ""} onCardSaved={handleCardSaved} />
+                </StripeElements>
+              )}
             </Card>
           )}
 
-          {/* Songs Table with Pagination */}
+          {/* Songs table + pagination */}
           {loading ? (
             <p className="text-gray-400 text-center py-4">Loading song data...</p>
           ) : error ? (
@@ -179,9 +202,9 @@ export default function ArtistMonetizePage() {
                   <span>Total Earnings</span>
                   <span>Monthly Earnings</span>
                 </div>
-                {songs.map((song, index) => (
+                {songs.map((song, i) => (
                   <div
-                    key={song.trackId || index}
+                    key={song.trackId || i}
                     className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr] gap-4 px-6 py-4 hover:bg-[#212121] transition-all duration-200 items-center"
                   >
                     <span className="text-white truncate">{song.trackName}</span>
@@ -193,7 +216,7 @@ export default function ArtistMonetizePage() {
                 ))}
               </div>
 
-              {/* ✅ Pagination Controls */}
+              {/* Pagination */}
               <div className="flex justify-center items-center gap-2 mt-4">
                 <button
                   disabled={page === 1}

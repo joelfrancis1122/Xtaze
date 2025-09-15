@@ -29,9 +29,8 @@ export function PopularArtists() {
 
         // ✅ fetch all artists instead of just page 5
         const { data: artistList } = await listActiveArtists(1, 9999); 
-
         const filtered = artistList.filter((artist) => artist.role === "artist");
-
+        
         function getRecentMonths(count: number): string[] {
           const now = new Date();
           return Array.from({ length: count }, (_, i) => {
@@ -55,7 +54,6 @@ export function PopularArtists() {
                   track.listeners.forEach((listener) => listenersSet.add(listener));
                 }
               });
-
               return { ...artist, monthlyListeners: listenersSet.size };
             } catch {
               return { ...artist, monthlyListeners: 0 };
@@ -67,7 +65,6 @@ export function PopularArtists() {
         const sorted = artistsWithListeners.sort(
           (a, b) => b.monthlyListeners - a.monthlyListeners
         );
-
         setAllArtists(sorted);
         setLoading(false);
       } catch (err) {
@@ -81,7 +78,6 @@ export function PopularArtists() {
 
   const totalPages = Math.ceil(allArtists.length / limit);
   const paginatedArtists = allArtists.slice((page - 1) * limit, page * limit);
-
   if (loading) return <div className="text-center text-white">Loading...</div>;
   if (error) return <div className="text-center text-red-500">{error}</div>;
 

@@ -3,7 +3,6 @@ import { Link, useNavigate } from "react-router-dom";
 import { Play, Pause, Plus, Heart, Download, ListMusic } from "lucide-react";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "../../store/store";
-import Sidebar from "./userComponents/SideBar";
 import { fetchAllTrack, toggleLike, addTrackToPlaylist, getMyplaylist } from "../../services/userService";
 import { Track } from "./types/ITrack";
 import { setCurrentTrack, setIsPlaying, setCurrentTime, setDuration } from "../../redux/audioSlice";
@@ -15,6 +14,7 @@ import { toast } from "sonner";
 import { Playlist } from "./types/IPlaylist";
 import { UserSignupData } from "./types/IUser";
 import { saveSignupData } from "../../redux/userSlice";
+import SidebarX from "./userComponents/Sidebr";
 
 export default function ExplorePage() {
   const { currentTrack, isPlaying, isShuffled, isRepeating } = useSelector((state: RootState) => state.audio);
@@ -29,7 +29,6 @@ export default function ExplorePage() {
   const [likedSongs, setLikedSongs] = useState<Set<string>>(new Set());
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [dropdownTrackId, setDropdownTrackId] = useState<string | null>(null);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -268,15 +267,9 @@ export default function ExplorePage() {
   }, [currentTrack, isPlaying, isRepeating, dispatch, handleSkipForward]);
 
   return (
-    <div className="flex min-h-screen bg-black text-white">
-      <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
-      {isSidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black/50 z-20 md:hidden"
-          onClick={() => setIsSidebarOpen(false)}
-        ></div>
-      )}
-      <div className="flex-1 md:ml-64 transition-all duration-300">
+    <div className="flex h-screen flex-col bg-black text-white">
+      <div className="flex flex-1 relative">
+              <SidebarX>
         <main className="container px-4 py-6 sm:px-6 sm:py-8">
           {/* Breadcrumbs on Mobile, Hidden on PC */}
           <nav className="md:hidden text-sm text-gray-400 mb-4">
@@ -549,6 +542,8 @@ export default function ExplorePage() {
             )}
           </section>
         </main>
+
+          </SidebarX>
 
         {currentTrack && (
           <MusicPlayer

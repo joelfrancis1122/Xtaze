@@ -149,7 +149,7 @@ export default class ArtistUseCase {
   async listActiveArtists(page: number, limit: number) {
     const { data, total } = await this._artistRepository.listActiveArtists(page, limit);
     return {
-      data,
+      data:ArtistMapper.toDTOs(data as IArtist[]),
       pagination: {
         total,
         page,

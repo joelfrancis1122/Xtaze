@@ -1,7 +1,6 @@
 import { useEffect, useState, ChangeEvent } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { MoreHorizontal, PauseCircle, PlayCircle, Share2, ChevronLeft } from "lucide-react";
-import Sidebar from "./userComponents/SideBar";
 import { fetchPlaylistTracks, deletePlaylist, updatePlaylistName, updatePlaylistImage, getMyplaylist } from "../../services/userService";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../store/store";
@@ -13,6 +12,7 @@ import PreviewModal from "./PreviewPage";
 import { toast } from "sonner";
 import { Track } from "./types/ITrack";
 import { useAudioPlayback } from "./userComponents/audioPlayback";
+import SidebarX from "./userComponents/Sidebr";
 
 export default function PlaylistPageView() {
   const { userId, id } = useParams();
@@ -27,7 +27,6 @@ export default function PlaylistPageView() {
   const [playlistName, setPlaylistName] = useState("");
   const [description, setPlaylistDes] = useState("");
   const [playlistImage, setPlaylistImage] = useState(image);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
@@ -210,14 +209,11 @@ export default function PlaylistPageView() {
 
   return (
     <div className="flex min-h-screen bg-black text-white">
-      <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
-      {isSidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black/50 z-20 md:hidden"
-          onClick={() => setIsSidebarOpen(false)}
-        ></div>
-      )}
-      <div className="flex-1 md:ml-[240px] px-4 sm:px-6 py-4 sm:py-7 pb-20">
+   <SidebarX>
+
+    <main>
+
+      <div className="flex-1 px-4 sm:px-6 py-4 sm:py-7 pb-20">
         <nav className="md:hidden text-sm text-gray-400 mb-4 sm:mb-6">
           <a
             href="/home"
@@ -389,6 +385,10 @@ export default function PlaylistPageView() {
             </div>
           )}
         </div>
+    </div>
+
+    </main>
+   </SidebarX>
 
         {currentTrack && (
           <MusicPlayer
@@ -414,6 +414,5 @@ export default function PlaylistPageView() {
           />
         )}
       </div>
-    </div>
   );
 }

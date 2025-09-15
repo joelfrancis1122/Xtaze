@@ -1,6 +1,8 @@
 import axios from "axios";
 import { DeezerTrack, IDeezerRepository } from "../../domain/repositories/IDeezerRepository";
 import { BaseRepository } from "./BaseRepository";
+import UserModel from "../db/models/UserModel";
+import IUser from "../../domain/entities/IUser";
 
 const DEEZER_PLAYLIST_API = "https://api.deezer.com/playlist/1313621735/tracks";
 const LIMIT = 100;
@@ -24,4 +26,7 @@ export class DeezerRepository implements IDeezerRepository {
       throw new Error("Failed to fetch Deezer songs");
     }
   }
+    async getUserUpdated(userId: string): Promise<IUser | null> {
+      return await UserModel.findById({ _id: userId });
+    }
 }

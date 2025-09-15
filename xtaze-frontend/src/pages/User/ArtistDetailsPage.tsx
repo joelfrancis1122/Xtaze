@@ -3,7 +3,6 @@ import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "../../store/store";
 import { saveSignupData } from "../../redux/userSlice";
 import { setCurrentTrack, setIsPlaying } from "../../redux/audioSlice";
-import Sidebar from "./userComponents/SideBar";
 import MusicPlayer from "./userComponents/TrackBar";
 import PreviewModal from "./PreviewPage";
 import { useParams } from "react-router-dom";
@@ -15,6 +14,7 @@ import { Track } from "./types/ITrack";
 import { useAudioPlayback } from "./userComponents/audioPlayback";
 import { fetchAllArtistsVerification } from "../../services/userService";
 import { useNavigate } from "react-router-dom";
+import SidebarX from "./userComponents/Sidebr";
 
 interface Artist {
   id: string;
@@ -38,7 +38,6 @@ export default function ArtistDetailsPage() {
   const [tracks, setTracks] = useState<Track[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [likedSongs, setLikedSongs] = useState<Set<string>>(new Set());
   const [playlists, setPlaylists] = useState<any[]>([]);
   const [dropdownTrackId, setDropdownTrackId] = useState<string | null>(null);
@@ -220,16 +219,11 @@ export default function ArtistDetailsPage() {
   if (!artistId) return <div>Artist not found</div>;
 
   return (
-    <div className="flex h-screen flex-col bg-black text-white">
-      <div className="flex flex-1">
-        <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
-        {isSidebarOpen && (
-          <div
-            className="fixed inset-0 bg-black/50 z-20 md:hidden"
-            onClick={() => setIsSidebarOpen(false)}
-          />
-        )}
-        <main className="flex-1 min-h-screen md:ml-[240px] bg-black overflow-y-auto">
+   <div className="flex h-screen flex-col bg-black text-white">
+      <div className="flex flex-1 relative">
+        <SidebarX>
+
+        <main>
           <section className="px-4 sm:px-6 py-4 sm:py-6 pb-20">
             <nav className="md:hidden text-sm text-gray-400 mb-4 sm:mb-6">
               <a
@@ -437,6 +431,8 @@ export default function ArtistDetailsPage() {
             )}
           </section>
         </main>
+        </SidebarX>
+
       </div>
       {currentTrack && (
         <MusicPlayer

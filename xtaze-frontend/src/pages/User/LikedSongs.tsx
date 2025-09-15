@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import Sidebar from "./userComponents/SideBar";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "../../store/store";
 import { useNavigate } from "react-router-dom";
@@ -14,6 +13,7 @@ import MusicPlayer from "./userComponents/TrackBar";
 import PreviewModal from "./PreviewPage";
 import { DragDropContext, Droppable, Draggable, DropResult } from "react-beautiful-dnd";
 import { useAudioPlayback } from "./userComponents/audioPlayback";
+import SidebarX from "./userComponents/Sidebr";
 
 interface UserSignupData {
   id?: string;
@@ -38,7 +38,6 @@ export default function LikedSongsPage() {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { currentTrack, isPlaying, isShuffled, isRepeating } = useSelector((state: RootState) => state.audio);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const { handlePlay: baseHandlePlay, handleSkipBack, handleSkipForward, handleToggleShuffle, handleToggleRepeat } =
     useAudioPlayback(likedSongs);
@@ -167,16 +166,12 @@ export default function LikedSongsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white flex">
-      <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
-      {isSidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black/50 z-20 md:hidden"
-          onClick={() => setIsSidebarOpen(false)}
-        ></div>
-      )}
-      <main className="flex-1 md:ml-[240px] py-6 sm:py-16 px-4 sm:px-10 pb-24 transition-all duration-300">
-        <nav className="md:hidden text-sm text-gray-400 mb-4 sm:mb-6">
+    <div className="flex h-screen flex-col bg-black text-white">
+      {/* <div className="flex flex-1 relative"> */}
+        <SidebarX>
+
+      <main>
+        <nav className="md:hidden text-sm text-gray-400 mb-4 sm:mb-2">
           <a
             href="/home"
             className="hover:text-white transition-colors"
@@ -187,12 +182,11 @@ export default function LikedSongsPage() {
           >
             Home
           </a>
-          <span className="mx-2"></span>
           <span className="text-white">Liked Songs</span>
         </nav>
-        <div className="max-w-7xl mx-auto space-y-6 sm:space-y-10">
+        <div className="max-w-8xl mx-auto space-y-6 sm:space-y-10 ml-7 mt-5">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-4">
-            <h1 className="text-3xl sm:text-5xl font-bold">Liked Songs</h1>
+            <h1 className="text-3xl sm:text-3xl font-bold">Liked Songs</h1>
             <p className="text-gray-400 text-sm sm:text-base">{likedSongs.length} songs</p>
           </div>
           {loading ? (
@@ -324,6 +318,8 @@ export default function LikedSongsPage() {
           />
         )}
       </main>
+        </SidebarX>
+
     </div>
   );
 }

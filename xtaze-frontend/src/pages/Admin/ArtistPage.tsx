@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { Button } from "../../components/ui/button";
 import { Card } from "../../components/ui/card";
-import { Table, TableHead, TableRow, TableCell, TableBody } from "../../components/ui/table";
+import { Table, TableRow, TableCell, TableBody } from "../../components/ui/table";
 import { Ban, CheckCircle } from "lucide-react";
 import profileImg from "../../assets/profile4.jpeg";
 import Sidebar from "./adminComponents/aside-side";
@@ -66,14 +66,14 @@ export default function ArtistList() {
         <h1 className="text-2xl font-bold mb-4">Artists</h1>
         <Card className="p-4 w-full">
           <Table className="w-full">
-            <TableHead>
-              <TableRow>
+            <thead>
+              <tr>
                 <th className="text-left p-4 min-w-[200px] font-semibold">Client</th>
                 <th className="text-left p-4 min-w-[150px] font-semibold">Role</th>
                 <th className="text-left p-4 min-w-[100px] font-semibold">Status</th>
                 <th className="text-left p-4 min-w-[200px] font-semibold">Actions</th>
-              </TableRow>
-            </TableHead>
+              </tr>
+            </thead>
 
             <TableBody>
               {artists.map((artist) => (

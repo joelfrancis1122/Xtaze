@@ -3,7 +3,6 @@ import { Link, useParams, useNavigate } from "react-router-dom";
 import { ChevronLeft, Play, Pause, Plus, Heart, Download, ListMusic } from "lucide-react";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "../../store/store";
-import Sidebar from "./userComponents/SideBar";
 import { fetchGenreTracks, toggleLike, addTrackToPlaylist, getMyplaylist } from "../../services/userService";
 import { Track } from "./types/ITrack";
 import {  setCurrentTime, setDuration } from "../../redux/audioSlice";
@@ -15,6 +14,7 @@ import { toast } from "sonner";
 import { Playlist } from "./types/IPlaylist";
 import { UserSignupData } from "./types/IUser";
 import { saveSignupData } from "../../redux/userSlice";
+import SidebarX from "./userComponents/Sidebr";
 
 export default function GenrePage() {
   const { currentTrack, isPlaying, isShuffled, isRepeating } = useSelector(
@@ -31,7 +31,6 @@ export default function GenrePage() {
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [dropdownTrackId, setDropdownTrackId] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const {
     handlePlay: baseHandlePlay,
@@ -250,14 +249,9 @@ export default function GenrePage() {
 
   return (
     <div className="flex min-h-screen bg-black text-white">
-  <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
-        {isSidebarOpen && (
-          <div
-            className="fixed inset-0 bg-black/50 z-20 md:hidden"
-            onClick={() => setIsSidebarOpen(false)}
-          ></div>
-        )}
-      <div className="flex-1 ml-64">
+      <div className="flex-1">
+<SidebarX>
+
         <main className="container px-4 py-8">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-4">
@@ -396,6 +390,7 @@ export default function GenrePage() {
             </div>
           </section>
         </main>
+</SidebarX>
 
         {currentTrack && (
           <MusicPlayer

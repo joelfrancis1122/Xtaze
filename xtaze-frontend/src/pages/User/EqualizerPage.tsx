@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { Music, Undo } from "lucide-react";
-import Sidebar from "./userComponents/SideBar";
 import { audio, audioContext, updateEqualizer, resetEqualizer } from "../../utils/audio";
 import { useSelector } from "react-redux";
 import { RootState } from "../../store/store";
@@ -9,8 +8,8 @@ import MusicPlayer from "./userComponents/TrackBar";
 import PreviewModal from "./PreviewPage";
 import { useAudioPlayback } from "./userComponents/audioPlayback";
 import { Track } from "./types/ITrack";
+import SidebarX from "./userComponents/Sidebr";
 
-// Type assertion for ReactApexChart
 const ReactApexChart = ReactApexChartOriginal as unknown as React.FC<{
   options: ApexCharts.ApexOptions;
   series: ApexCharts.ApexOptions["series"];
@@ -32,6 +31,7 @@ export default function EqualizerPage() {
     { name: "8kHz", frequency: 8000, defaultValue: 0 },
     { name: "16kHz", frequency: 16000, defaultValue: 0 },
   ];
+
   const presets = {
     flat: bands.map(() => 0),
     bass: [6, 5, 4, 2, 1, 0, 0, 0, 0, 0],
@@ -43,18 +43,22 @@ export default function EqualizerPage() {
     classical: [1, 2, 2, 1, 0, -1, -1, 0, 1, 2],
     jazz: [3, 3, 2, 1, 0, 1, 2, 2, 1, 0],
   };
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
   const [equalizerValues, setEqualizerValues] = useState(() => {
     const saved = localStorage.getItem("equalizerValues");
     return saved ? JSON.parse(saved) : bands.map((band) => band.defaultValue);
   });
+
   const [activePreset, setActivePreset] = useState(() => {
     const saved = localStorage.getItem("activePreset");
     return saved ? saved : "custom";
   });
+
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const { currentTrack, isPlaying, isShuffled, isRepeating } = useSelector((state: RootState) => state.audio);
+  const { currentTrack, isPlaying, isShuffled, isRepeating } = useSelector(
+    (state: RootState) => state.audio
+  );
   const {
     handlePlay: baseHandlePlay,
     handleSkipBack,
@@ -63,13 +67,9 @@ export default function EqualizerPage() {
     handleToggleRepeat,
   } = useAudioPlayback([]);
 
-  const toggleModal = () => {
-    setIsModalOpen((prevState) => !prevState);
-  };
+  const toggleModal = () => setIsModalOpen((prev) => !prev);
 
-  const handlePlayFromModal = (track: Track) => {
-    baseHandlePlay(track);
-  };
+  const handlePlayFromModal = (track: Track) => baseHandlePlay(track);
 
   useEffect(() => {
     if (!audioContext) return;
@@ -90,10 +90,7 @@ export default function EqualizerPage() {
     }
 
     updateEqualizer(equalizerValues);
-
-    return () => {
-      document.removeEventListener("click", resumeAudioContext);
-    };
+    return () => document.removeEventListener("click", resumeAudioContext);
   }, [equalizerValues, currentTrack]);
 
   useEffect(() => {
@@ -130,178 +127,209 @@ export default function EqualizerPage() {
   const chartOptions: ApexCharts.ApexOptions = {
     chart: {
       type: "area",
-      height: 130,
-      background: "#000000",
+      height: 200,
+      background: "transparent",
       toolbar: { show: false },
-      zoom: { enabled: false }, // Disable zoom
-      selection: { enabled: false }, // Disable selection
-      events: {
-        click: undefined, // Disable click events
-        mouseMove: undefined, // Disable mouse move events
-      },
+      zoom: { enabled: false },
     },
-    stroke: {
-      curve: "smooth",
-      width: 3,
-      colors: ["#ff0000"],
-    },
+    stroke: { curve: "smooth", width: 3, colors: ["#ef4444"] },
     fill: {
-      type: "solid",
-      opacity: 0.1,
-      colors: ["#ff0000"],
+      type: "gradient",
+      gradient: {
+        shadeIntensity: 1,
+        opacityFrom: 0.4,
+        opacityTo: 0.1,
+        stops: [0, 100],
+      },
     },
     xaxis: {
       categories: bands.map((band) => band.name),
-      labels: { show: false },
+      labels: { style: { colors: "#6b7280", fontSize: "12px" } },
       axisBorder: { show: false },
       axisTicks: { show: false },
     },
     yaxis: {
       min: -12,
       max: 12,
-      tickAmount: 4,
+      tickAmount: 6,
       labels: {
-        style: { colors: "#9ca3af" },
-        offsetX: -5,
+        style: { colors: "#6b7280", fontSize: "12px" },
+        formatter: (v) => `${v > 0 ? "+" : ""}${v}dB`,
       },
-      axisBorder: { show: false },
     },
     grid: {
-      borderColor: "#000000",
-      strokeDashArray: 4,
-      padding: { top: 0, bottom: 0, left: 10, right: 10 },
+      borderColor: "#374151",
+      strokeDashArray: 2,
       yaxis: { lines: { show: true } },
-      xaxis: { lines: { show: false } },
+      xaxis: { lines: { show: true } },
     },
-    tooltip: { enabled: false },
+    tooltip: {
+      enabled: true,
+      theme: "dark",
+      y: { formatter: (v) => `${v > 0 ? "+" : ""}${v} dB` },
+    },
     dataLabels: { enabled: false },
   };
 
   const chartSeries: ApexCharts.ApexOptions["series"] = [
-    {
-      name: "Equalizer",
-      data: equalizerValues,
-    },
+    { name: "Frequency Response", data: equalizerValues },
   ];
 
+  const presetLabels: Record<string, string> = {
+    flat: "Flat",
+    bass: "Bass Boost",
+    treble: "Treble Boost",
+    vocal: "Vocal",
+    electronic: "Electronic",
+    rock: "Rock",
+    pop: "Pop",
+    classical: "Classical",
+    jazz: "Jazz",
+    custom: "Custom",
+  };
+
   return (
-    <div className="flex min-h-screen bg-var(--foreground) !important text-white">
-      <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
-      {isSidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black/50 z-20 md:hidden"
-          onClick={() => setIsSidebarOpen(false)}
-        ></div>
-      )}
-      <div className="flex-1 ml-64 py-8 px-6 bg-black">
-        <div className="!bg-black border border-[#1f2937] rounded-lg">
-          <div className="border-b border-[#1f2937] p-6">
-            <div className="flex items-center justify-between">
+    <div className="flex h-screen bg-black text-white overflow-hidden">
+      <SidebarX>
+        <div className="max-w-max mx-auto">
+          <div className="flex-1 p-4 md:p-6 lg:p-8 max-w-full">
+
+            {/* Header */}
+            <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
-                <h2 className="text-2xl font-bold flex items-center gap-2 text-white bg-var(--foreground) ">
-                  <Music className="h-6 w-6" /> Audio Equalizer
-                </h2>
-                <p className="text-gray-400">Customize your sound experience</p>
+                <h1 className="text-2xl md:text-3xl font-bold flex items-center gap-3">
+                  <Music className="h-6 w-6 md:h-7 md:w-7 text-red-500" />
+                  Audio Equalizer
+                </h1>
+                <p className="text-gray-400 mt-2">
+                  Fine-tune your sound experience with precision
+                </p>
               </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={resetEqualizerSettings}
-                  className="bg-var(--foreground) !important text-gray-400 border border[#1f2937] hover:bg-[#1f2937] hover:text-white transition w-10 h-10 flex items-center justify-center rounded-full"
-                >
-                  <Undo className="h-4 w-4" />
-                </button>
-              </div>
+              <button
+                onClick={resetEqualizerSettings}
+                className="bg-gray-950 hover:bg-gray-700 text-gray-300 hover:text-white px-4 py-2 rounded-lg border border-gray-700 flex items-center gap-2"
+              >
+                <Undo className="h-4 w-4" />
+                Reset
+              </button>
             </div>
-          </div>
-          <div className="p-6">
-            <div className="mb-8">
-              <div className="bg-var(--foreground) !important border border[#1f2937] rounded-lg flex flex-wrap gap-2 p-2">
-                {[
-                  "flat",
-                  "bass",
-                  "treble",
-                  "vocal",
-                  "electronic",
-                  "rock",
-                  "pop",
-                  "classical",
-                  "jazz",
-                  "custom",
-                ].map((preset) => (
+
+            {/* Presets */}
+            <div className="bg-gray-950/50 border border-y-gray-950 rounded-xl p-6 mb-8">
+              <h2 className="text-lg font-semibold mb-4">Sound Presets</h2>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-10 gap-3">
+                {Object.keys(presets).concat(["custom"]).map((preset) => (
                   <button
                     key={preset}
-                    onClick={() => applyPreset(preset as keyof typeof presets | "custom")}
-                    className={`text-gray-400 hover:text-white bg-var(--foreground) !important hover:bg-[#1f2937] rounded-md px-3 py-1 transition ${activePreset === preset ? "bg-[#1f2937] text-white" : ""}`}
+                    onClick={() =>
+                      applyPreset(preset as keyof typeof presets | "custom")
+                    }
+                    className={`px-3 py-2 rounded-lg text-sm font-medium border transition-all duration-200 ${activePreset === preset
+                        ? "bg-red-500 text-white border-red-500 shadow-lg shadow-red-500/25"
+                        : "bg-gray-950 text-gray-300 border-gray-700 hover:bg-gray-700 hover:text-white"
+                      }`}
                   >
-                    {preset.charAt(0).toUpperCase() + preset.slice(1).replace("bass", "Bass Boost").replace("treble", "Treble Boost")}
+                    {presetLabels[preset]}
                   </button>
                 ))}
               </div>
             </div>
-            <div className="w-full h-[150px] mb-10 bg-var(--foreground) !important rounded-lg border border-[#1f2937] relative" style={{ touchAction: "none" }}>
-              <div className="p-2 pb-6">
+
+            {/* Frequency Response Chart */}
+            <div className="bg-gray-950/50 border border-gray-950 rounded-xl p-6 mb-8">
+              <h2 className="text-lg font-semibold mb-4">Frequency Response</h2>
+              <div className="bg-black/30 rounded-lg p-4 border border-gray-950 w-auto">
                 <ReactApexChart
                   options={chartOptions}
                   series={chartSeries}
                   type="area"
-                  height={130}
+                  height={200}
                 />
-              </div>
-              <div className="absolute bottom-1 left-0 right-0 flex justify-between px-4 text-xs text-gray-500">
-                {bands.map((band) => (
-                  <div key={band.frequency}>{band.name}</div>
-                ))}
               </div>
             </div>
 
-            <div className="mb-10 bg-var(--foreground) !important p-20 rounded-lg border border-[#1f2937] overflow-x-auto">
-              <div className="flex space-x-4 min-w-max">
-                {bands.map((band, index) => (
-                  <div key={band.frequency} className="flex flex-col items-center gap-2 w-20">
-                    <input
-                      type="range"
-                      min={-12}
-                      max={12}
-                      step={1}
-                      value={equalizerValues[index]}
-                      onChange={(e) => handleSliderChange(index, e.target.value)}
-                      className="w-24 h-1 rounded-full appearance-none cursor-pointer rotate-270 transform origin-center bg-[#1f2937] border-zinc-900 
-                      [&::-webkit-slider-runnable-track]:bg-red-500 
-                      [&::-webkit-slider-runnable-track]:h-1 
-                      [&::-webkit-slider-runnable-track]:rounded-full 
-                      [&::-webkit-slider-runnable-track]:opacity-50 
-                      [&::-moz-range-track]:bg-white 
-                      [&::-moz-range-track]:h-1 
-                      [&::-moz-range-track]:rounded-full 
-                      [&::-moz-range-track]:opacity-50 
-                      [&::-webkit-slider-thumb]:appearance-none 
-                      [&::-webkit-slider-thumb]:w-4 
-                      [&::-webkit-slider-thumb]:h-4 
-                      [&::-webkit-slider-thumb]:bg-red-500 
-                      [&::-webkit-slider-thumb]:rounded-full 
-                      [&::-webkit-slider-thumb]:opacity-100 
-                      [&::-webkit-slider-thumb]:-mt-[6px] 
-                      [&::-moz-range-thumb]:w-4 
-                      [&::-moz-range-thumb]:h-4 
-                      [&::-moz-range-thumb]:bg-white 
-                      [&::-moz-range-thumb]:rounded-full 
-                      [&::-moz-range-thumb]:opacity-100 
-                      [&::-moz-range-thumb]:-mt-[6px]"
-                    />
-                    <div className="text-center mt-[50px]">
-                      <div className="text-xs font-medium text-white">{band.name}</div>
-                      <div className="text-xs text-red-400">
-                        {equalizerValues[index] > 0 ? "+" : ""}
-                        {equalizerValues[index]} dB
+            {/* Equalizer Controls */}
+            <div className="bg-gray-950/50 border border-gray-950 rounded-xl p-6">
+              <h2 className="text-lg font-semibold mb-6">Equalizer Controls</h2>
+              <div className="overflow-x-auto pb-4">
+                <div className="flex justify-center min-w-max px-4">
+                  <div className="flex space-x-6 md:space-x-8">
+                    {bands.map((band, index) => (
+                      <div
+                        key={band.frequency}
+                        className="flex flex-col items-center"
+                      >
+                        <div className="mb-2 h-8 flex items-center">
+                          <span
+                            className={`text-sm font-medium px-2 py-1 rounded ${equalizerValues[index] > 0
+                                ? "text-green-400 bg-green-500/10"
+                                : equalizerValues[index] < 0
+                                  ? "text-red-400 bg-red-500/10"
+                                  : "text-gray-400 bg-gray-500/10"
+                              }`}
+                          >
+                            {equalizerValues[index] > 0 ? "+" : ""}
+                            {equalizerValues[index]}dB
+                          </span>
+                        </div>
+
+                        {/* Slider */}
+                        <div className="relative h-48 flex items-center">
+                         <input
+  type="range"
+  min={-12}
+  max={12}
+  step={1}
+  value={equalizerValues[index]}
+  onChange={(e) => handleSliderChange(index, e.target.value)}
+  className="w-24 h-1 rounded-full appearance-none cursor-pointer rotate-270 transform origin-center bg-[#1f2937] border-zinc-900 
+    [&::-webkit-slider-runnable-track]:bg-red-500 
+    [&::-webkit-slider-runnable-track]:h-1 
+    [&::-webkit-slider-runnable-track]:rounded-full 
+    [&::-webkit-slider-runnable-track]:opacity-50 
+    [&::-moz-range-track]:bg-white 
+    [&::-moz-range-track]:h-1 
+    [&::-moz-range-track]:rounded-full 
+    [&::-moz-range-track]:opacity-50 
+
+    /* 🔴 Thumb (Chrome, Safari, Edge) */
+    [&::-webkit-slider-thumb]:appearance-none 
+    [&::-webkit-slider-thumb]:w-4 
+    [&::-webkit-slider-thumb]:h-4 
+    [&::-webkit-slider-thumb]:bg-red-500 
+    [&::-webkit-slider-thumb]:rounded-full 
+    [&::-webkit-slider-thumb]:border-2 
+    [&::-webkit-slider-thumb]:border-white 
+    [&::-webkit-slider-thumb]:shadow-md 
+    [&::-webkit-slider-thumb]:-mt-[6px] 
+
+    /* 🔴 Thumb (Firefox) */
+    [&::-moz-range-thumb]:w-4 
+    [&::-moz-range-thumb]:h-4 
+    [&::-moz-range-thumb]:bg-red-500 
+    [&::-moz-range-thumb]:rounded-full 
+    [&::-moz-range-thumb]:border-2 
+    [&::-moz-range-thumb]:border-white 
+    [&::-moz-range-thumb]:shadow-md 
+    [&::-moz-range-thumb]:-mt-[6px]"
+/>
+
+                        </div>
+
+                        <div className="mt-2 text-xs font-medium text-white">
+                          {band.name}
+                        </div>
                       </div>
-                    </div>
+                    ))}
                   </div>
-                ))}
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
+      </SidebarX>
+
+      {/* Music Player */}
       {currentTrack && (
         <MusicPlayer
           currentTrack={currentTrack}
@@ -317,6 +345,8 @@ export default function EqualizerPage() {
           toggleModal={toggleModal}
         />
       )}
+
+      {/* Preview Modal */}
       {currentTrack && (
         <PreviewModal
           track={currentTrack}

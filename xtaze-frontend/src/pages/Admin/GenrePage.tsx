@@ -8,6 +8,7 @@ import Sidebar from "./adminComponents/aside-side";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { fetchGenres, addGenre, toggleBlockGenre, updateGenre } from "../../services/adminService";
+import { Table, TableBody } from "../../components/ui/table";
 
 interface Genre {
   id: string;
@@ -149,102 +150,87 @@ export default function GenreManagement() {
         </Card>
         <Card className="mt-6 p-4 w-full bg- var(--foreground) !important; text-white shadow-lg">
           <h2 className="text-lg font-semibold mb-4">Genre List</h2>
-          <table className="w-full">
-            <thead>
-              <tr className="bg- var(--foreground) !important;">
-                <td className="text-left p-4 mt-3">Genre Name</td>
-                <td className="text-left p-4 mt-8">Status</td>
-                <td className="text-left p-4 "></td>
-                <td className="text-left p-2 ">Actions</td>
-              </tr>
-            </thead>
-            <tbody>
-              {genres.map((genre) => (
-                <tr key={genre.id} className="border-b h-16 hover:bg-[#2f2f2f]">
-                  <td className="p-4 flex items-center gap-2">
-                    {editingGenreId === genre.id ? (
-                      <input
-                        type="text"
-                        value={editedGenreName}
-                        onChange={(e) => {
-                          if (e.target.value.length <= 15) {
-
-                            setEditedGenreName(e.target.value.trim())
-                          }
-                        }}
-
-                        className="border p-2 rounded-md w-[200px] bg-[#222222] border-gray-600 text-white focus:outline-none focus:ring-2 focus:ring-white-500"
-                      />
-                    ) : (
-                      <span className="truncate">{genre.name}</span>
-                    )}
-                  </td>
-                  <td className="p-4 w-[120px] text-center">
-                    <motion.span
-                      className={`blur relative px-6 py-2 text-sm font-semibold text-white shadow transition-all duration-300 ease-in-out
-                      ${genre.isBlocked ? "bg-red-900/70 shadow-red-500/50 hover:bg-red-700" : "bg-green-900/70 shadow-green-500/50 hover:bg-green-700"}`}
-                      style={{
-                        borderRadius: "50%",
-                        paddingLeft: "15px",
-                        paddingRight: "15px",
-                        paddingTop: "10px",
-                        paddingBottom: "10px",
-                        display: "inline-block",
-                        backdropFilter: "blur(1px)",
-                      }}
-                    >
-                      {genre.isBlocked ? "O" : "O"}
-                    </motion.span>
-                  </td>
-                  <td className="p-4 w-[250px] flex justify-center gap-2">
-                    {editingGenreId === genre.id ? (
-                      <Button
-                        size="sm"
-                        onClick={(e) => handleSaveEdit(e, genre.id)}
-                        className="flex items-center gap-1 w-[80px] justify-center bg- var(--foreground) hover:bg- var(--foreground)"
-                      >
-                        <Save className="h-4 w-4" /> Save
-                      </Button>
-                    ) : (
-                      <Button
-                        size="sm"
-                        onClick={() => handleEditClick(genre)}
-                        className="flex items-center gap-1 w-[80px] justify-center bg- var(--foreground) hover:bg- var(--foreground)"
-                      >
-                        <Edit className="h-4 w-4" /> Edit
-                      </Button>
-                    )}
-
-
-                  </td>
-
-                  <td className="p-4 w-[250px]">
-                    <div className="flex justify-center items-center gap-2">
-                      <Button
-                        size="sm"
-                        variant={genre.isBlocked ? "outline" : "destructive"}
-                        onClick={() => toggleBlockGenreHandler(genre.id)}
-                        className="flex items-center gap-1 w-[110px] justify-center whitespace-nowrap h-[32px]"
-                      >
-                        {genre.isBlocked ? <CheckCircle className="h-4 w-4" /> : <Ban className="h-4 w-4" />}
-                        <span className="w-[60px] text-center">{genre.isBlocked ? "Unblock" : "Block"}</span>
-                      </Button>
-                      {/* 🗑️ Delete Button */}
-                      {/* <Button
-                        size="sm"
-                        variant="destructive"
-                        onClick={() => handleDeleteGenre(genre.id)}
-                        className="flex items-center gap-1 w-[80px] justify-center"
-                      >
-                        <Ban className="h-4 w-4" /> Delete
-                      </Button> */}
-                    </div>
-                  </td>
-
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <Table className="w-full">
+  <thead>
+    <tr className="bg- var(--foreground) !important;">
+      <th className="text-left p-4">Genre Name</th>
+      <th className="text-left p-4">Status</th>
+      <th className="text-center p-3"></th>
+      <th className="text-center p-2">Actions</th>
+    </tr>
+  </thead>
+  <TableBody>
+    {genres.map((genre) => (
+      <tr key={genre.id} className="border-b h-16 hover:bg-[#2f2f2f]">
+        <td className="p-4 flex items-center gap-2">
+          {editingGenreId === genre.id ? (
+            <input
+              type="text"
+              value={editedGenreName}
+              onChange={(e) => {
+                if (e.target.value.length <= 15) {
+                  setEditedGenreName(e.target.value.trim());
+                }
+              }}
+              className="border p-2 rounded-md w-[200px] bg-[#222222] border-gray-600 text-white focus:outline-none focus:ring-2 focus:ring-white-500"
+            />
+          ) : (
+            <span className="truncate">{genre.name}</span>
+          )}
+        </td>
+        <td className="p-4 w-[120px] text-center">
+          <motion.span
+            className={`blur relative px-6 py-2 text-sm font-semibold text-white shadow transition-all duration-300 ease-in-out
+            ${genre.isBlocked ? "bg-red-900/70 shadow-red-500/50 hover:bg-red-700" : "bg-green-900/70 shadow-green-500/50 hover:bg-green-700"}`}
+            style={{
+              borderRadius: "50%",
+              paddingLeft: "15px",
+              paddingRight: "15px",
+              paddingTop: "10px",
+              paddingBottom: "10px",
+              display: "inline-block",
+              backdropFilter: "blur(1px)",
+            }}
+          >
+            {genre.isBlocked ? "O" : "O"}
+          </motion.span>
+        </td>
+        <td className="p-4 w-[250px] flex justify-center gap-2">
+          {editingGenreId === genre.id ? (
+            <Button
+              size="sm"
+              onClick={(e) => handleSaveEdit(e, genre.id)}
+              className="flex items-center gap-1 w-[80px] justify-center bg- var(--foreground) hover:bg- var(--foreground)"
+            >
+              <Save className="h-4 w-4" /> Save
+            </Button>
+          ) : (
+            <Button
+              size="sm"
+              onClick={() => handleEditClick(genre)}
+              className="flex items-center gap-1 w-[80px] justify-center bg- var(--foreground) hover:bg- var(--foreground)"
+            >
+              <Edit className="h-4 w-4" /> Edit
+            </Button>
+          )}
+        </td>
+        <td className="p-4 w-[250px]">
+          <div className="flex justify-center items-center gap-2">
+            <Button
+              size="sm"
+              variant={genre.isBlocked ? "outline" : "destructive"}
+              onClick={() => toggleBlockGenreHandler(genre.id)}
+              className="flex items-center gap-1 w-[110px] justify-center whitespace-nowrap h-[32px]"
+            >
+              {genre.isBlocked ? <CheckCircle className="h-4 w-4" /> : <Ban className="h-4 w-4" />}
+              <span className="w-[60px] text-center">{genre.isBlocked ? "Unblock" : "Block"}</span>
+            </Button>
+          </div>
+        </td>
+      </tr>
+    ))}
+  </TableBody>
+</Table>
           <div className="flex justify-between items-center mt-4">
             <Button
               disabled={page === 1}

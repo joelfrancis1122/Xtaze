@@ -6,17 +6,15 @@ import { clearSignupData, saveSignupData } from "../../redux/userSlice";
 import { toast } from "sonner";
 import Cropper, { Area } from "react-easy-crop";
 import { Camera, Power, Search, Edit2 } from "lucide-react";
-import Sidebar from "./userComponents/SideBar";
 import { becomeArtist, uploadProfileImage, updateUsername } from "../../services/userService";
 import { UserSignupData } from "./types/IUser";
 import profileImg from "../../assets/profile4.jpeg";
+import SidebarX from "./userComponents/Sidebr";
 
 export default function Home() {
   const user = useSelector((state: RootState) => state.user.signupData) as UserSignupData | null;
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-
   const [imageSrc, setImageSrc] = useState<string | null>(null);
   const [crop, setCrop] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const [zoom, setZoom] = useState<number>(1);
@@ -186,10 +184,10 @@ export default function Home() {
 
       <div className="flex flex-1 relative">
         {/* Sidebar (Visible on PC only) */}
-        <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
+<SidebarX>
 
         {/* Main Content */}
-        <main className="flex-1 min-h-screen bg-black md:ml-64 transition-all duration-300">
+        <main className="flex-1 min-h-screen bg-black transition-all duration-300">
           {/* Header */}
           <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 gap-4">
             {/* Breadcrumbs on Mobile, Hidden on PC */}
@@ -367,6 +365,8 @@ export default function Home() {
             </div>
           </section>
         </main>
+</SidebarX>
+
       </div>
     </div>
   );

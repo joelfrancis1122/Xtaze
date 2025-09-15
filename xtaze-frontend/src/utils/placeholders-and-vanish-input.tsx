@@ -1,7 +1,7 @@
-
 import { AnimatePresence, motion } from "framer-motion";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { cn } from "../utils/utils";
+import { Search } from "lucide-react"; // 👈 make sure lucide-react is installed
 
 export function PlaceholdersAndVanishInput({
   placeholders,
@@ -156,7 +156,7 @@ export function PlaceholdersAndVanishInput({
 
   const vanishAndSubmit = () => {
     const inputValue = inputRef.current?.value || "";
-    if (!inputValue) return; // Early return if input is empty
+    if (!inputValue) return;
 
     setAnimating(true);
     draw();
@@ -178,18 +178,25 @@ export function PlaceholdersAndVanishInput({
   return (
     <form
       className={cn(
-        "w-full relative max-w-xl mx-auto bg-white dark:bg-zinc-800 h-12 rounded-full overflow-hidden shadow-[0px_2px_3px_-1px_rgba(0,0,0,0.1),_0px_1px_0px_0px_rgba(25,28,33,0.02),_0px_0px_0px_1px_rgba(25,28,33,0.08)] transition duration-200",
+        "w-full relative max-w-xl mx-auto bg-white dark:bg-zinc-800 h-12 rounded-full overflow-hidden shadow transition duration-200",
         value && "bg-gray-50"
       )}
       onSubmit={handleSubmit}
     >
-      <canvas
-        className={cn(
-          "absolute pointer-events-none text-base transform scale-50 top-[20%] left-2 sm:left-8 origin-top-left filter invert dark:invert-0 pr-20",
-          !animating ? "opacity-0" : "opacity-100"
-        )}
-        ref={canvasRef}
+      {/* 🔍 Search icon */}
+      <Search
+        className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 z-20"
+        size={20}
       />
+
+     <canvas
+  className={cn(
+    "absolute pointer-events-none text-base transform scale-50 top-[20%] left-2 sm:left-8 origin-top-left filter invert dark:invert-0 pr-20",
+    !animating ? "opacity-0" : "opacity-100",
+  )}
+  ref={canvasRef}
+/>
+
       <input
         onChange={(e) => {
           if (!animating) {
@@ -202,7 +209,7 @@ export function PlaceholdersAndVanishInput({
         value={value}
         type="text"
         className={cn(
-          "w-full relative text-sm sm:text-base z-50 border-none dark:text-white bg-transparent text-black h-full rounded-full focus:outline-none focus:ring-0 pl-4 sm:pl-10 pr-20",
+          "w-full relative text-sm sm:text-base z-50 border-none dark:text-white bg-transparent text-black h-full rounded-full focus:outline-none focus:ring-0 pl-10 sm:pl-12 pr-20", // 👈 added padding-left for icon
           animating && "text-transparent dark:text-transparent"
         )}
       />
@@ -243,7 +250,7 @@ export function PlaceholdersAndVanishInput({
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: -15, opacity: 0 }}
               transition={{ duration: 0.3, ease: "linear" }}
-              className="dark:text-zinc-500 text-sm sm:text-base font-normal text-neutral-500 pl-4 sm:pl-12 text-left w-[calc(100%-2rem)] truncate"
+              className="dark:text-zinc-500 text-sm sm:text-base font-normal text-neutral-500 pl-10 sm:pl-12 text-left w-[calc(100%-2rem)] truncate" // 👈 shifted placeholder
             >
               {placeholders[currentPlaceholder]}
             </motion.p>

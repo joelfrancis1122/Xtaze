@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import Sidebar from "./userComponents/SideBar";
 import { fetchArtists } from "../../services/userService";
 import { useNavigate } from "react-router-dom";
 import MusicPlayer from "./userComponents/TrackBar";
@@ -9,6 +8,7 @@ import PreviewModal from "./PreviewPage";
 import { useAudioPlayback } from "./userComponents/audioPlayback";
 import { audio } from "../../utils/audio";
 import { Track } from "./types/ITrack";
+import SidebarX from "./userComponents/Sidebr";
 
 interface Artist {
   id: string;
@@ -22,7 +22,6 @@ export default function ArtistPage() {
   const [artists, setArtists] = useState<Artist[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const navigate = useNavigate();
@@ -59,16 +58,11 @@ export default function ArtistPage() {
   }, []);
 
   return (
-    <div className="flex h-screen flex-col bg-black text-white">
-      <div className="flex flex-1">
-        <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
-        {isSidebarOpen && (
-          <div
-            className="fixed inset-0 bg-black/50 z-20 md:hidden"
-            onClick={() => setIsSidebarOpen(false)}
-          ></div>
-        )}
-        <main className="flex-1 min-h-screen md:ml-[240px] bg-black overflow-y-auto px-4">
+ <div className="flex h-screen flex-col bg-black text-white">
+      <div className="flex flex-1 relative">
+        <SidebarX>
+
+        <main>
           <section className="px-4 sm:px-6 py-4 sm:py-6 pb-20">
             <nav className="md:hidden text-sm text-gray-400 mb-4 sm:mb-6">
               <a
@@ -119,6 +113,8 @@ export default function ArtistPage() {
             )}
           </section>
         </main>
+        </SidebarX>
+
       </div>
       {currentTrack && (
         <MusicPlayer

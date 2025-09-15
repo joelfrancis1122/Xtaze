@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import Sidebar from "./userComponents/SideBar";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import SidebarX from "./userComponents/Sidebr";
 
 const API_KEY = import.meta.env.VITE_YOUTUBE_API;
 
@@ -14,6 +14,7 @@ interface Video {
   thumbnail: string;
 }
 
+
 export default function VideoPage() {
   const navigate = useNavigate();
   const [trendingVideos, setTrendingVideos] = useState<Video[]>([]);
@@ -24,7 +25,6 @@ export default function VideoPage() {
   const [hipHopVideos, setHipHopVideos] = useState<Video[]>([]);
   const [jazzVideos, setJazzVideos] = useState<Video[]>([]);
   const [highViewsVideos, setHighViewsVideos] = useState<Video[]>([]);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [dropdownVideoId, setDropdownVideoId] = useState<string | null>(null);
   const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
@@ -241,15 +241,11 @@ export default function VideoPage() {
 
   return (
     <div className="flex h-screen flex-col bg-black text-white">
-      <div className="flex flex-1">
-        <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
-        {isSidebarOpen && (
-          <div
-            className="fixed inset-0 bg-black/50 z-20 md:hidden"
-            onClick={() => setIsSidebarOpen(false)}
-          ></div>
-        )}
-        <main className="flex-1 min-h-screen md:ml-64 bg-black overflow-y-auto transition-all duration-300">
+      <div className="flex flex-1 relative">
+      <SidebarX>
+
+
+        <main>
           <section className="px-4 sm:px-6 py-4 sm:py-6">
             {/* Breadcrumbs on Mobile, Hidden on PC */}
             <nav className="md:hidden text-sm text-gray-400 mb-3 sm:mb-4">
@@ -277,6 +273,8 @@ export default function VideoPage() {
             {renderVideoSection("High Views (Australia)", highViewsVideos)}
           </section>
         </main>
+      </SidebarX>
+
       </div>
     </div>
   );

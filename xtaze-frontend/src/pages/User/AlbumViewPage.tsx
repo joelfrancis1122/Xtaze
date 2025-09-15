@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { useNavigate, useLocation, useParams } from "react-router-dom";
 import { Button } from "../../components/ui/button";
 import { Card } from "../../components/ui/card";
-import Sidebar from "./userComponents/SideBar";
 import { toast } from "sonner";
 import { Play, Pause, ArrowLeft, Share2 } from "lucide-react";
 import { cn } from "../../../lib/utils";
@@ -16,6 +15,7 @@ import MusicPlayer from "./userComponents/TrackBar";
 import PreviewModal from "./PreviewPage";
 import { setCurrentTrack, setIsPlaying } from "../../redux/audioSlice";
 import { Track } from "./types/ITrack";
+import SidebarX from "./userComponents/Sidebr";
 
 const UserAlbumViewPage = () => {
   const navigate = useNavigate();
@@ -26,7 +26,6 @@ const UserAlbumViewPage = () => {
   const [album, setAlbum] = useState<IAlbum | null>(null);
   const [songs, setSongs] = useState<ISong[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { currentTrack, isPlaying, isShuffled, isRepeating } = useSelector((state: RootState) => state.audio);
   const dispatch = useDispatch();
@@ -101,16 +100,11 @@ const UserAlbumViewPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white font-sans">
-      <div className="flex">
-        <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
-        {isSidebarOpen && (
-          <div
-            className="fixed inset-0 bg-black/50 z-20 md:hidden"
-            onClick={() => setIsSidebarOpen(false)}
-          ></div>
-        )}
-        <main className="flex-1 md:ml-[240px] px-4 sm:px-6 py-4 sm:py-7 pb-20 max-w-7xl mx-auto">
+ <div className="flex h-screen flex-col bg-black text-white">
+      <div className="flex flex-1 relative">
+        <SidebarX>
+
+        <main>
           {/* Breadcrumb Navigation (Mobile) */}
           <nav className="md:hidden text-sm text-gray-400 mb-4 sm:mb-6">
             <a
@@ -299,6 +293,8 @@ const UserAlbumViewPage = () => {
             )}
           </Card>
         </main>
+        </SidebarX>
+
         {currentTrack && (
           <MusicPlayer
             currentTrack={currentTrack}

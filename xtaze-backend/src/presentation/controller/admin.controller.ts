@@ -283,6 +283,7 @@ export default class AdminController {
       if (userId) {
         tracks = await this._adminUseCase.listArtistReleases(userId as string);
       }
+      console.log("asd",tracks)
       res.status(HttpStatus.OK).json({ success: true, message: MESSAGES.ARTIST_TRACKS_LIST_SUCCESS, tracks });
     } catch (error) {
       next(error);

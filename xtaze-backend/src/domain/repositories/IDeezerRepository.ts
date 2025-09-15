@@ -1,3 +1,5 @@
+import IUser from "../entities/IUser";
+
 export interface DeezerTrack{
     id:number;
     title:string;
@@ -8,4 +10,5 @@ export interface DeezerTrack{
 
 export interface IDeezerRepository {
     fetchSongs(): Promise<DeezerTrack[]>;
+    getUserUpdated(userId: string): Promise<IUser | null>; 
   }

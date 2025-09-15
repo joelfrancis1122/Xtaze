@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Plus, Play } from "lucide-react";
 import { Input } from "../../components/ui/input";
-import Sidebar from "./userComponents/SideBar";
 import { toast } from "sonner";
 import { createPlaylists, getMyplaylist } from "../../services/userService";
 import image from "../../assets/ab67706f0000000216605bf6c66f6e5a783411b8.jpeg";
@@ -14,10 +13,10 @@ import { useAudioPlayback } from "./userComponents/audioPlayback";
 import { Track } from "./types/ITrack";
 import { audio } from "../../utils/audio";
 import PreviewModal from "./PreviewPage";
+import SidebarX from "./userComponents/Sidebr";
 
 export default function PlaylistsPage() {
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [newPlaylistName, setNewPlaylistName] = useState("");
   const [newPlaylistDescription, setNewPlaylistDescription] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -82,15 +81,12 @@ export default function PlaylistsPage() {
   }, [userId]);
 
   return (
-    <div className="flex min-h-screen bg-black text-white px-4">
-      <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
-      {isSidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black/50 z-20 md:hidden"
-          onClick={() => setIsSidebarOpen(false)}
-        ></div>
-      )}
-      <div className="flex-1 md:ml-[240px] px-4 sm:px-6 py-4 sm:py-6 pb-20 overflow-y-auto">
+    <div className="flex h-screen flex-col bg-black text-white">
+      <div className="flex flex-1 relative">
+        <SidebarX>
+
+        <main>
+      <div className="flex-1 px-4 sm:px-6 py-4 sm:py-6 pb-20">
         <nav className="md:hidden text-sm text-gray-400 mb-4 sm:mb-6">
           <a
             href="/home"
@@ -115,6 +111,7 @@ export default function PlaylistsPage() {
           </button>
         </div>
 
+
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 overflow-hidden">
           {playlists.length > 0 ? (
             playlists.map((playlist) => (
@@ -130,7 +127,7 @@ export default function PlaylistsPage() {
                     className="w-full h-full object-cover rounded-md"
                   />
                   <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors duration-200" />
-                  <button className="absolute bottom-2 right-2 bg-blue-600 text-white p-2 sm:p-3 rounded-full md:opacity-0 md:group-hover:opacity-100 opacity-100 transition-opacity duration-200">
+                  <button className="absolute bottom-2 right-2 bg-gray-800 text-white p-2 sm:p-3 rounded-full md:opacity-0 md:group-hover:opacity-100 opacity-100 transition-opacity duration-200">
                     <Play className="h-4 w-4 sm:h-5 sm:w-5" />
                   </button>
                 </div>
@@ -184,6 +181,12 @@ export default function PlaylistsPage() {
           </div>
         )}
       </div>
+        
+      </main>
+        </SidebarX>
+      </div>
+
+
       {currentTrack && (
         <MusicPlayer
           currentTrack={currentTrack}

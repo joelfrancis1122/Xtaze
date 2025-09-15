@@ -66,10 +66,8 @@ console.log("its working",trackDoc)
 
     // Save updated document
     await trackDoc.save();
-
-    // ✅ Convert Mongoose doc -> Plain object -> DTO
     const plainTrack = { ...trackDoc.toObject(), _id: trackDoc._id.toString() };
-    return TrackMapper.toDTO(plainTrack);
+    return plainTrack
   }
 
   async updatePassword(user: IUser): Promise<IUser> {

@@ -41,11 +41,11 @@ export class ArtistRepository implements IArtistRepository {
   async listActiveArtists(page: number, limit: number): Promise<{ data: IUser[]; total: number }> {
     const skip = (page - 1) * limit;
     const [data, total] = await Promise.all([
-      UserModel.find({ isActive: true }).skip(skip).limit(limit).lean<IUser>().exec(),
+      UserModel.find({ isActive: true,role:"artist" }).skip(skip).limit(limit).lean<IUser>().exec(),
       UserModel.countDocuments({ isActive: true })
     ]);
     return { data, total } as any
-  }
+  }   
 
   async getAllTracksByArtist(userId: string, page: number, limit: number): Promise<{ data: ITrack[]; total: number }> {
     try {
@@ -61,16 +61,53 @@ export class ArtistRepository implements IArtistRepository {
     }
   }
 
-  async increment(trackId: string, userId: string): Promise<ITrack | null> {
-    console.log("ehtyy")
-    return await Track.findByIdAndUpdate(
-      trackId,
-      { $addToSet: { listeners: userId } },
-      { new: true }
-    ).lean<ITrack>().exec();
+async increment(trackId: string, userId: string): Promise<ITrack | null> {
+  console.log("increment track play");
 
-  }
+  const currentMonth = new Date().toISOString().slice(0, 7); 
 
+  return await Track.findOneAndUpdate(
+    { _id: trackId },
+    [
+      {
+        $set: {
+          listeners: { $setUnion: ["$listeners", [userId]] }, 
+          playHistory: {
+            $cond: [
+              {
+                $in: [currentMonth, { $map: { input: "$playHistory", as: "p", in: "$$p.month" } }]
+              },
+              {
+                // month exists → increment plays
+                $map: {
+                  input: "$playHistory",
+                  as: "p",
+                  in: {
+                    $cond: [
+                      { $eq: ["$$p.month", currentMonth] },
+                      { $mergeObjects: ["$$p", { plays: { $add: ["$$p.plays", 1] } }] },
+                      "$$p"
+                    ]
+                  }
+                }
+              },
+              {
+                // month not exists → append new object
+                $concatArrays: [
+                  "$playHistory",
+                  [{ month: currentMonth, plays: 1, paymentStatus: false }]
+                ]
+              }
+            ]
+          }
+        }
+      }
+    ],
+    { new: true } 
+  )
+    .lean<ITrack>()
+    .exec();
+}
 
   async statsOfArtist(
     userId: string,

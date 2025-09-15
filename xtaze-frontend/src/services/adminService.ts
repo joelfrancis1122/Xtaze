@@ -227,7 +227,6 @@ export const updateGenre = async (id: string, name: string): Promise<{ success: 
 
 export const fetchBanners = async (): Promise<IBanner[]> => {
   const data = await apiCall<{ data: IBanner[] }>(adminApi, HTTP_METHODS.GET, "/banners/all", undefined);
-  console.log(data, "ass")
   return data.data;
 };
 export const createBanner = async (

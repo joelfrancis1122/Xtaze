@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import Sidebar from "./userComponents/SideBar";
+
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "../../store/store";
 import { useNavigate } from "react-router-dom";
@@ -12,6 +12,7 @@ import MusicPlayer from "./userComponents/TrackBar";
 import { audio } from "../../utils/audio";
 import { UserSignupData } from "./types/IUser";
 import { useAudioPlayback } from "./userComponents/audioPlayback";
+import SidebarX from "./userComponents/Sidebr";
 
 interface RecentSongItem {
   id: string;
@@ -21,7 +22,6 @@ interface RecentSongItem {
 export default function RecentSongsPage() {
   const [recentSongs, setRecentSongs] = useState<Track[]>([]);
   const [tracks, setTracks] = useState<Track[]>([]);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -123,14 +123,9 @@ export default function RecentSongsPage() {
 
   return (
     <div className="min-h-screen bg-black text-white flex px-1">
-      <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
-      {isSidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black/50 z-20 md:hidden"
-          onClick={() => setIsSidebarOpen(false)}
-        ></div>
-      )}
-      <main className="flex-1 md:ml-[240px] px-4 sm:px-10 py-8 sm:py-16 pb-20">
+  <SidebarX>
+
+      <main className="flex-1 px-4 sm:px-10 py-8 sm:py-16 pb-20">
         <nav className="md:hidden text-sm text-gray-400 mb-4 sm:mb-6">
           <a
             href="/home"
@@ -221,6 +216,8 @@ export default function RecentSongsPage() {
             </div>
           )}
         </div>
+        </main>
+  </SidebarX>
 
         {currentTrack && (
           <MusicPlayer
@@ -237,7 +234,6 @@ export default function RecentSongsPage() {
             toggleModal={() => {}}
           />
         )}
-      </main>
     </div>
   );
 }

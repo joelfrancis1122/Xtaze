@@ -2,15 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { PricingCard } from "./userComponents/pricing-card";
-import Sidebar from "./userComponents/SideBar";
-import { loadStripe } from "@stripe/stripe-js";
 import { useSelector } from "react-redux";
 import { RootState } from "../../store/store";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { fetchPricingPlans, initiateCheckout, verifyCoupon } from "../../services/userService";
+import SidebarX from "./userComponents/Sidebr";
 
-const stripePromise = loadStripe("pk_test_51QuvsvQV9aXBcHmZPYCW1A2NRrd5mrEffAOVJMFOlrYDOl9fmb028A85ZE9WfxKMdNgTTA5MYoG4ZwCUQzHVydZj00eBUQVOo9");
+
 
 interface PricingPlan {
   name: string;
@@ -34,7 +33,6 @@ interface Coupon {
 export default function PricingPage() {
   const user = useSelector((state: RootState) => state.user.signupData);
   const navigate = useNavigate();
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const [plans, setPlans] = useState<PricingPlan[]>([
     {
@@ -104,25 +102,34 @@ const validateCoupon = async () => {
     const discount = (appliedCoupon.discountAmount / 100) * price;
     return Math.max(0, price - discount); // Ensure price doesn’t go below 0
   };
-
-  const handleGetPremium = async (priceId: string) => {
-    const stripe = await stripePromise;
-    if (!stripe || !user?.id) {
-      toast.error("Stripe not loaded or user not logged in.", { position: "top-right" });
+const handleGetPremium = async (priceId: string) => {
+  try {
+    if (!user?.id) {
+      toast.error("User not logged in.", { position: "top-right" });
       return;
     }
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) throw new Error("No authentication token found");
-      const sessionId = await initiateCheckout(user.id, priceId, appliedCoupon?.code ?? "");
-      const { error } = await stripe.redirectToCheckout({ sessionId });
-      if (error) {
-        toast.error(error.message, { position: "top-right" });
-      }
-    } catch (error: any) {
-      toast.error(error.response.data.message, { position: "top-right" });
+
+    const token = localStorage.getItem("token");
+    if (!token) throw new Error("No authentication token found");
+
+    const { loadStripe } = await import("@stripe/stripe-js");
+    const stripe = await loadStripe("pk_test_51QuvsvQV9aXBcHmZPYCW1A2NRrd5mrEffAOVJMFOlrYDOl9fmb028A85ZE9WfxKMdNgTTA5MYoG4ZwCUQzHVydZj00eBUQVOo9");
+
+    if (!stripe) {
+      toast.error("Failed to load Stripe", { position: "top-right" });
+      return;
     }
-  };
+
+    const sessionId = await initiateCheckout(user.id, priceId, appliedCoupon?.code ?? "");
+    const { error } = await stripe.redirectToCheckout({ sessionId });
+
+    if (error) {
+      toast.error(error.message, { position: "top-right" });
+    }
+  } catch (error: any) {
+    toast.error(error.response?.data?.message || error.message, { position: "top-right" });
+  }
+};
 
   if (user?.premium !== "Free") {
     return null;
@@ -130,14 +137,9 @@ const validateCoupon = async () => {
 
   return (
     <div className="min-h-screen bg-black text-white flex">
-       <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
-             {isSidebarOpen && (
-               <div
-                 className="fixed inset-0 bg-black/50 z-20 md:hidden"
-                 onClick={() => setIsSidebarOpen(false)}
-               ></div>
-             )}
-      <main className="flex-1 ml-64 py-20 px-4 overflow-y-auto">
+<SidebarX>
+
+      <main className="flex-1 py-20 px-4 overflow-y-auto">
         <div className="max-w-4xl mx-auto space-y-12">
           <div className="text-center space-y-4">
             <h1 className="text-4xl font-bold">Simple pricing for everyone</h1>
@@ -192,6 +194,8 @@ const validateCoupon = async () => {
           )}
         </div>
       </main>
+</SidebarX>
+
     </div>
   );
 }
