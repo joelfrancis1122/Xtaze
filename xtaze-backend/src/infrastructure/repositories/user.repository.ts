@@ -1,4 +1,3 @@
-import { TrackMapper } from "../../Application/mappers/TrackMapper";
 import { IAlbum } from "../../domain/entities/IAlbum";
 import { IBanner } from "../../domain/entities/IBanner";
 import { ICoupon } from "../../domain/entities/ICoupon";
