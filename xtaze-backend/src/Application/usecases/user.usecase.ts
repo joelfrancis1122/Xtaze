@@ -23,6 +23,7 @@ import { AlbumDTO } from "../dtos/AlbumDTO";
 import { PlaylistMapper } from "../mappers/PlaylistMapper";
 import { PlaylistDTO } from "../dtos/PlaylistDTO";
 import { AlbumMapper } from "../mappers/AlbumMapper";
+import mongoose from "mongoose";
 
 dotenv.config();
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
@@ -617,47 +618,51 @@ export default class UserUseCase {
     return updatedUser ? UserMapper.toDTO(updatedUser) : null;
   }
 
+async getSubscriptionHistoryFromStripe() {
+  try {
+    const sessions = await this._stripe.checkout.sessions.list({
+      limit: 50,
+      expand: ["data.customer"],
+    });
 
-  async getSubscriptionHistoryFromStripe() {
-    try {
-      const sessions = await this._stripe.checkout.sessions.list({
-        limit: 50, // Max 100, adjust as needed
-        expand: ["data.customer"], // Expand customer for email
-      });
+    const completedSessions = sessions.data.filter(
+      (session) => session.status === "complete"
+    );
 
-      const completedSessions = sessions.data.filter(
-        (session) => session.status === "complete"
-      );
+    const history: SubscriptionHistory[] = await Promise.all(
+      completedSessions.map(async (session) => {
+        const userId = session.metadata?.userId || "unknown";
+        const planName = session.metadata?.planName || "Unknown Plan";
+        const price = (session.amount_total || 0) / 100;
+        const purchaseDate = new Date(session.created * 1000).toISOString();
 
-      const history: SubscriptionHistory[] = await Promise.all(
-        completedSessions.map(async (session) => {
-          const userId = session.metadata?.userId || MESSAGES.MY_NAME;
-          const planName = session.metadata?.planName || "Unknown Plan";
-          const price = (session.amount_total || 0) / 100;
-          const purchaseDate = new Date(session.created * 1000).toISOString();
+        let email = (session.customer as Stripe.Customer)?.email || "N/A";
 
-          let email = (session.customer as Stripe.Customer)?.email || "N/A";
-          if (!email || email === "N/A") {
-            const user = await this._userRepository.findById(userId);
-            email = user?.email || "N/A";
-          }
+        // ✅ Only try DB lookup if userId is valid ObjectId
+        if ((!email || email === "N/A") && mongoose.Types.ObjectId.isValid(userId)) {
+          const user = await this._userRepository.findById(userId);
+          email = user?.email || "N/A";
+        }
 
-          return {
-            userId,
-            email,
-            planName,
-            price,
-            purchaseDate,
-          };
-        })
-      );
+        return {
+          userId,
+          email,
+          planName,
+          price,
+          purchaseDate,
+        };
+      })
+    );
 
-      return history.sort((a, b) => new Date(b.purchaseDate).getTime() - new Date(a.purchaseDate).getTime());
-    } catch (error) {
-      throw error;
-    }
+    return history.sort(
+      (a, b) =>
+        new Date(b.purchaseDate).getTime() - new Date(a.purchaseDate).getTime()
+    );
+  } catch (error) {
+    console.error("Error fetching subscription history:", error);
+    throw error;
   }
-
+}
 
   async getArtistByName(username: string) {
 

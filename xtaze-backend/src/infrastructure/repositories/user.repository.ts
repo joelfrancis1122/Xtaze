@@ -165,12 +165,14 @@ console.log("its working",trackDoc)
 
     return { data, total };
   }
-  async listActiveArtists(
-    page: number,
-    limit: number
-  ): Promise<{ data: IUser[]; total: number }> {
+ async listActiveArtists(
+  page: number,
+  limit: number
+): Promise<{ data: IUser[]; total: number }> {
+  try {
     const skip = (page - 1) * limit;
     const query = { role: { $nin: ["admin", "user"] } };
+
     const [artists, total] = await Promise.all([
       UserModel.find(query)
         .skip(skip)
@@ -178,12 +180,18 @@ console.log("its working",trackDoc)
         .lean(),
       UserModel.countDocuments(query),
     ]);
+
     const data: IUser[] = artists.map((artist: any) => ({
       ...artist,
       _id: artist._id.toString(),
     }));
+
     return { data, total };
+  } catch (err: any) {
+    console.error("Error listing active artists:", err.message || err);
+    return { data: [], total: 0 }; 
   }
+}
 
   async uploadBanner(userId: string, BannerPicUrl: string): Promise<IUser | null> {
     try {

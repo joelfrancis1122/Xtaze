@@ -27,8 +27,7 @@ export function PopularArtists() {
         const token = localStorage.getItem("adminToken");
         if (!token) throw new Error("No token found. Please login.");
 
-        // ✅ fetch all artists instead of just page 5
-        const { data: artistList } = await listActiveArtists(1, 9999); 
+        const { data: artistList } = await listActiveArtists(1, 100); 
         const filtered = artistList.filter((artist) => artist.role === "artist");
         
         function getRecentMonths(count: number): string[] {

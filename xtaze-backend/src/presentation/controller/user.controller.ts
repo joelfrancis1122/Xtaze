@@ -383,7 +383,6 @@ console.log("ias",id)
 
 
       const playlist = await this._userUseCase.getAllPlaylist(userId as string)
-      console.log(playlist,"asdads")
       res.status(HttpStatus.OK).json({ success: true, data: playlist });
     } catch (error) {
       next(error);
