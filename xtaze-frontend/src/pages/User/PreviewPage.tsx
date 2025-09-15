@@ -20,12 +20,13 @@ interface QueueTrack {
 }
 
 const genreColors: Record<string, string> = {
-  Pop: "from-purple-900/90 to-fuchsia-800/90",
-  Rock: "from-red-900/90 to-rose-800/90",
-  Jazz: "from-blue-900/90 to-indigo-800/90",
-  HipHop: "from-yellow-900/90 to-amber-800/90",
-  EDM: "from-cyan-900/90 to-teal-800/90",
-  Classical: "from-emerald-900/90 to-green-800/90",
+  pop: "from-purple-900/40 to-fuchsia-800/10",
+  Pop: "from-purple-900/40 to-fuchsia-800/10",
+  Rock: "from-red-900/40 to-rose-800/10",
+Films: "from-black/95 via-purple-900/70 to-black/90",
+  HipHop: "from-yellow-900/40 to-amber-800/10",
+  EDM: "from-cyan-900/40 to-teal-800/10",
+  alternative: "from-emerald-900/40 to-green-800/10",
   Default: "from-[#1a1a1a] to-[#0f0f0f]",
 };
 
@@ -70,16 +71,16 @@ const PreviewModal: React.FC<PreviewModalProps> = ({
       const currentGenres = Array.isArray(track.genre)
         ? track.genre
         : track.genre
-        ? [track.genre]
-        : [];
+          ? [track.genre]
+          : [];
       if (currentGenres.length > 0) {
         const filteredTracks = allTracks
           .filter((t) => {
             const trackGenres = Array.isArray(t.genre)
               ? t.genre
               : t.genre
-              ? [t.genre]
-              : [];
+                ? [t.genre]
+                : [];
             return (
               t.id !== track.id &&
               trackGenres.some((genre) => currentGenres.includes(genre))
@@ -158,27 +159,43 @@ const PreviewModal: React.FC<PreviewModalProps> = ({
             <div className="flex flex-col md:flex-row flex-1 overflow-hidden px-4 md:px-12 pb-10 gap-8">
               {/* Left - Artwork */}
               <div className="w-full md:w-[55%] flex flex-col items-center justify-start md:pr-12 mt-6 md:mt-20">
-                <div className="relative">
+                {/* Artwork block */}
+                <div className="relative flex items-center justify-center w-40 h-40 md:w-[410px] md:h-[400px] z-10">
+                  {/* Blurred glowing background */}
+                  <img
+                    src={track.img || "/default-track.jpg"}
+                    alt="Track blur bg"
+                    className="absolute inset-0 w-full h-full object-cover rounded-3xl blur-lg opacity-30 scale-125 
+                 shadow-[0_0_60px_rgba(0,0,0,0.6)] "
+                  />
+
+                  {/* Gradient overlay for smoother blend */}
+                  <div className="absolute inset-0 rounded-2xl bg-gradient-to-t from-black/20 via-transparent to-black/10 animate-gradient-slow"  />
+
+                  {/* Main sharp image */}
                   <img
                     src={track.img || "/default-track.jpg"}
                     alt="Track artwork"
-                    className="w-40 h-40 md:w-[410px] md:h-[400px] object-cover rounded-2xl shadow-2xl"
+                    className="w-full h-full object-cover rounded-2xl shadow-2xl relative z-10 animate-gradient-slow"
                   />
-                  <button className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-2xl opacity-0 hover:opacity-100 transition">
+
+                  {/* Overlay button */}
+                  <button className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-2xl opacity-0 hover:opacity-100 transition z-20">
                     <Info size={24} className="md:w-8 md:h-8" />
                   </button>
                 </div>
-                <div className="mt-4 md:mt-6 text-center">
+
+                {/* Title + Artists */}
+                <div className="mt-4 md:mt-6 text-center relative z-20">
                   <h3 className="text-lg md:text-3xl font-extrabold tracking-tight">
                     {track.title}
                   </h3>
                   <p className="text-gray-300 text-sm md:text-lg mt-1">
-                    {Array.isArray(track.artists)
-                      ? track.artists.join(", ")
-                      : track.artists}
+                    {Array.isArray(track.artists) ? track.artists.join(", ") : track.artists}
                   </p>
                 </div>
               </div>
+
 
               {/* Right - Queue/Suggested/Credits */}
               <div className="w-full md:w-[45%] pl-2 md:pl-6 flex flex-col mt-6 md:mt-20">
@@ -194,11 +211,10 @@ const PreviewModal: React.FC<PreviewModalProps> = ({
                       <button
                         key={tab.id}
                         onClick={() => setViewMode(tab.id as "queue" | "suggested" | "credits")}
-                        className={`flex items-center gap-1.5 md:gap-2 px-3 md:px-5 py-1.5 md:py-2.5 rounded-xl border text-xs md:text-sm font-medium transition shadow-md ${
-                          viewMode === tab.id
-                            ? "bg-white text-black border-white"
-                            : "border-gray-600 text-gray-400 hover:text-white hover:border-white/60"
-                        }`}
+                        className={`flex items-center gap-1.5 md:gap-2 px-3 md:px-5 py-1.5 md:py-2.5 rounded-xl border text-xs md:text-sm font-medium transition shadow-md ${viewMode === tab.id
+                          ? "bg-white text-black border-white"
+                          : "border-gray-600 text-gray-400 hover:text-white hover:border-white/60"
+                          }`}
                       >
                         <Icon size={14} className="md:w-4 md:h-4" /> {tab.label}
                       </button>
@@ -250,7 +266,7 @@ const PreviewModal: React.FC<PreviewModalProps> = ({
                     {loadingTracks ? (
                       <p className="text-gray-400 text-xs md:text-sm">Loading tracks...</p>
                     ) : suggestedTracks.length > 0 ? (
-                      suggestedTracks.map((s,i) => (
+                      suggestedTracks.map((s, i) => (
                         <div
                           key={i}
                           className="flex items-center gap-2 md:gap-3 px-2 md:px-3 py-1.5 md:py-2 rounded-xl hover:bg-[#1f1f1f]/80 transition cursor-pointer"
@@ -312,4 +328,3 @@ const PreviewModal: React.FC<PreviewModalProps> = ({
 };
 
 export default PreviewModal;
-  
