@@ -260,8 +260,6 @@ export default class UserController {
       const page = Number(req.query.page) || 1;
       const limit = Number(req.query.limit) || 100;
       const listArtists = await this._userUseCase.listArtists(page, limit);
-            console.log(listArtists,"ssasas")
-
       res.status(HttpStatus.OK).json({ success: true, message: MESSAGES.LIST_OF_ARTISTS, data: listArtists.data });
     } catch (error) {
       next(error);
@@ -322,7 +320,6 @@ export default class UserController {
     try {
       const { songIds } = req.body
       const userId = req.query.userId as string;
-      console.log(songIds,userId,"isnnsns")
       const tracks = await this._userUseCase.getliked(songIds as string, userId as string)
       res.json({ success: true, tracks });
 
@@ -337,9 +334,7 @@ export default class UserController {
       const pageNum = parseInt(page as string, 10);
       const limitNum = parseInt(limit as string, 10);
       const skip = (pageNum - 1) * limitNum;
-console.log("ias",id)
       const track = await this._userUseCase.getPlaylist(id as string, pageNum, limitNum, skip)
-        console.log(track,"aniiiii")
       res.json({ success: true, data: track });
     } catch (error) {
       next(error);
@@ -510,7 +505,6 @@ console.log("ias",id)
   async becomeArtist(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { id } = req.body
-      console.log("came")
       const updated = await this._userUseCase.becomeArtist(id as string);
       res.status(HttpStatus.OK).json({ data: updated });
     } catch (error: unknown) {
@@ -531,7 +525,6 @@ async getAllTracksArtist(req: Request, res: Response, next: NextFunction): Promi
     const limitNum = Number(limit) || 10;
 
     const tracks = await this._userUseCase.listArtistReleases(userId as string, pageNum, limitNum);
-    console.log("odu",tracks)
     res.status(HttpStatus.OK).json({
       success: true,
       message: MESSAGES.ARTIST_TRACKS_LIST_SUCCESS,

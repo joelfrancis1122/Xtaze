@@ -41,8 +41,6 @@ export default class UserRepository extends BaseRepository<IUser> implements IUs
     const trackDoc = await Track.findById(trackId);
 
     if (!trackDoc) return null;
-console.log("its working",trackDoc)
-    // Ensure defaults
     trackDoc.listeners = trackDoc.listeners || [];
     trackDoc.playHistory = trackDoc.playHistory || [];
 

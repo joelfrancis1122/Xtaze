@@ -69,7 +69,6 @@ export default class ArtistController {
       const limit = Number(req.query.limit) || 10;
 
       const listArtists = await this._artistnUseCase.listArtists(page, limit);
-      console.log(listArtists,"anssiisiii")
       res.status(HttpStatus.OK).json({ success: true, message: MESSAGES.LIST_OF_ARTISTS, data: listArtists });
     } catch (error) {
       next(error);
@@ -99,7 +98,6 @@ export default class ArtistController {
       if (userId) {
         tracks = await this._artistnUseCase.listArtistReleases(userId as string, pageNum, limitNum);
       }
-      console.log(tracks,"Ssasas")
       res.status(HttpStatus.OK).json({ success: true, message: MESSAGES.ARTIST_TRACKS_LIST_SUCCESS, tracks });
     } catch (error) {
       next(error);
@@ -142,9 +140,6 @@ export default class ArtistController {
     try {
       const { trackId, id } = req.body;
       const rese = await this._artistnUseCase.increment(trackId as string, id as string);
-      console.log(rese,"sydneya")
-      
-
       res.status(HttpStatus.OK).json({ success: true, message: MESSAGES.LISTENER_INCREMENT_SUCCESS });
     } catch (error) {
       next(error);
