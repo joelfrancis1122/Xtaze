@@ -413,7 +413,6 @@ export default class UserUseCase {
 
   async fetchVerification(page: number, limit: number) {
     const { data, total } = await this._adminRepository.fetchVerification(page, limit);
-    console.log(data, "sasaasa")
     return {
       data: VerificationMapper.toDTOs(data),
       pagination: {
