@@ -134,7 +134,6 @@ const navigate = useNavigate()
   };
 
   useEffect(() => {
-    console.log(artist,"artistdata")
     const fetchData = async () => {
       if (!token || !artist?.id) {
         toast.error("Please log in to fetch genres and albums.");
@@ -148,9 +147,7 @@ const navigate = useNavigate()
         ]);
         setGenres(genreResponse.genres);
         setAlbums(albumResponse);
-        console.log(artist,"odi odi odi",genreResponse)
         dispatch(saveArtistData(genreResponse.artist));
-        console.log(artist,"od")
       } catch (error: any) {
         toast.error(error.message || "Error fetching data. Please try again.");
       }

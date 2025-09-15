@@ -1,20 +1,14 @@
 
 import { useState, useEffect } from "react";
-import { useSelector } from "react-redux";
-import { RootState } from "../../store/store";
 import { Trash2, Edit, Plus, Save } from "lucide-react";
 import { toast } from "sonner";
 import Sidebar from "./adminComponents/aside-side";
 import { createBanner, deleteBanner, fetchBanners, updateBanner } from "../../services/adminService";
 import { IBanner } from "../User/types/IBanner";
 
-interface UserSignupData {
-  id?: string;
-  role?: string;
-}
+
 
 export default function AdminBannerManagement() {
-  const user = useSelector((state: RootState) => state.user.signupData) as UserSignupData | null;
   const [banners, setBanners] = useState<IBanner[]>([]);
   const [loading, setLoading] = useState(true);
   const [newBanner, setNewBanner] = useState<Partial<IBanner & { file?: File }>>({
@@ -26,16 +20,12 @@ export default function AdminBannerManagement() {
   const [editingBanner, setEditingBanner] = useState<IBanner | null>(null);
   const [editingFile, setEditingFile] = useState<File | null>(null);
 
-  // Check if user is admin
-
-  // Fetch banners
   useEffect(() => {
     const loadBanners = async () => {
       try {
         const token = localStorage.getItem("adminToken");
         if (!token) throw new Error("No token found");
         const fetchedBanners = await fetchBanners();
-        console.log(fetchedBanners, "sadhauksdaydsk")
         setBanners(fetchedBanners);
       } catch (error) {
         console.error("Error fetching banners:", error);
@@ -52,9 +42,7 @@ export default function AdminBannerManagement() {
     e.preventDefault();
     try {
       const token = localStorage.getItem("adminToken");
-      console.log(user, "authh")
       if (!token) throw new Error("Authentication required");
-      console.log(newBanner, "this is newbanner ")
       const createdBanner = await createBanner(
 
         {

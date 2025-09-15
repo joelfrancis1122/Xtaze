@@ -85,7 +85,6 @@ export default function PlaylistPageView() {
     const fetchInitialData = async () => {
       try {
         setLoading(true);
-        console.log(id,'asda')
         const { tracks: initialTracks, total } = await fetchPlaylistTracks(id as string, 1, limit);
         setTracks(initialTracks || []);
         setTotalTracks(total || 0);

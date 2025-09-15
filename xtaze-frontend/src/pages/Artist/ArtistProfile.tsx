@@ -71,7 +71,6 @@ export default function ArtistProfile() {
         setTotalPages(fetchedTracks.pagination.totalPages);
 
         const verificationData = await getVerificationStatus(user.id);
-        console.log("vea",verificationData)
         setVerification(verificationData || { status: "unsubmitted" });
       } catch (error: any) {
         console.error("Error fetching data:", error);

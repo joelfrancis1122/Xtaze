@@ -88,7 +88,6 @@ export default function ArtistDetailsPage() {
             verificationStatus,
           };
           setArtist(artistData);
-          console.log(fetchedTracks, "achuuuuu")
           setTracks(fetchedTracks);
           setError(null);
           if (user?.id) {
@@ -131,7 +130,6 @@ export default function ArtistDetailsPage() {
 
   const handleLike = async (trackId: string) => {
     const token = localStorage.getItem("token");
-    console.log(trackId, user?.id, "asdasd")
     if (!token || !trackId || !user?.id) {
       toast.error("Please log in to like songs");
       return;

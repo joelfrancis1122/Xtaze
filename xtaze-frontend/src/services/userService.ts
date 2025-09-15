@@ -133,7 +133,6 @@ export const loginUser = async (email: string, password: string, dispatch: Retur
   const data = await apiCall<{ success: boolean; token: string; user: UserSignupData }>(userApi, HTTP_METHODS.POST, "/login", { email, password });
   if (!data.success) throw new Error("Failed to login");
   localStorage.setItem("token", data.token);
-  console.log("tosss",data.user)
   dispatch(saveSignupData(data.user));
 };
 
@@ -171,20 +170,17 @@ export const fetchAllTrack = async (): Promise<Track[]> => {
 export const fetchGenreTracks = async (genre: string): Promise<Track[]> => {
   const data = await apiCall<{ success: boolean; data: Track[] }>(userApi, HTTP_METHODS.GET, `/fetchGenreTracks?GenreName=${genre}`);
   // if (!data.success) throw new Error("Failed to fetch genre tracks");
-  console.log("insane",data)
   return data.data;
 };
 
 // Fetch Liked Songs
 export const fetchLikedSongs = async (userId: string, songIds: string[]): Promise<Track[]> => {
-  console.log(userId,"kitttyyy",songIds)
   const data = await apiCall<{ success: boolean; tracks: Track[] }>(
     userApi,
     HTTP_METHODS.POST,
     `/getliked?userId=${userId}`,
     { songIds }
   );
-  console.log(data,"sss")
   if (!data.success) throw new Error("Failed to fetch liked songs");
   return data.tracks;
 };
@@ -251,7 +247,6 @@ export const getMyAlbums = async (): Promise<IAlbum[]> => {
 export const fetchAlbumSongs = async (albumId:string): Promise<IAlbum> => {
   const data = await apiCall<{ success: boolean; data: IAlbum }>(userApi, HTTP_METHODS.GET, `/albumsongs?albumId=${albumId}`
   );
-  console.log(data,"sassasasass")
   // if (!data.success) throw new Error("Failed to get Albums");
   return data.data;
 };
@@ -263,7 +258,6 @@ export const fetchPlaylistTracks = async (id: string, page: number = 1, limit: n
     HTTP_METHODS.GET,
     `/getTracksInPlaylist?id=${id}&page=${page}&limit=${limit}`
   );
-  console.log(data,"sugian",id)
   if (!data.success) throw new Error("Failed to fetch playlist tracks");
   return data.data;
 };
@@ -277,7 +271,6 @@ export const fetchBanners = async (): Promise<IBanner[]> => {
 
 // Add Track to Playlist
 export const addTrackToPlaylist = async (userId: string, playlistId: string, trackId: string): Promise<void> => {
-  console.log(trackId,"achar")
   const data = await apiCall<{ success: boolean }>(userApi, HTTP_METHODS.POST, "/addToPlaylist", { userId, playlistId, trackId });
   if (!data.success) throw new Error("Failed to add track to playlist");
 };
@@ -350,7 +343,6 @@ export const verifyCoupon = async (code: string): Promise<any> => {
 export const fetchArtists = async (): Promise<Artist[]> => {
   const data = await apiCall<{ success: boolean; data: any[] }>(userApi, HTTP_METHODS.GET, "/listArtists");
   // if (!data.success) throw new Error("Failed to fetch artists");
-  console.log(data,"new")
   return data.data.map((artist: any) => ({
     id: artist.id,
     name: artist.username,

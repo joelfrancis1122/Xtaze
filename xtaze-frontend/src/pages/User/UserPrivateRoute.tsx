@@ -10,7 +10,7 @@ const PrivateRoute = () => {
   const user = useSelector((state: RootState) => state.user.signupData);
   if (!token || role !== "user" || !user?.isActive) {
     dispatch(clearSignupData())
-    console.log("clear ayi poi")
+    console.log("all cleared")
     audio.pause();
     audio.src = "";
     localStorage.removeItem("token");

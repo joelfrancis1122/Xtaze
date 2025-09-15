@@ -236,9 +236,7 @@ export default class UserRepository extends BaseRepository<IUser> implements IUs
 
   async getliked(songIds: string, userId: string) {
     try {
-      console.log(songIds,"omsam")
       const tracks = await Track.find({ _id: { $in: songIds } });
-      console.log(tracks,"insnae")
       return tracks as any
     } catch (error) {
       console.error("Error in getliked:", error);
@@ -379,22 +377,17 @@ export default class UserRepository extends BaseRepository<IUser> implements IUs
       const playlistid = trackId
       const trackid = playlistId
       const playlist = await PlaylistModel.findOne({ createdBy: userId, _id: playlistid });
-console.log(trackid,playlistid,"ahca")
       if (!playlist) {
         console.error("Playlist not found or does not belong to user");
         return null;
       }
-console.log(trackId,playlist,"aiiiii")
       playlist.tracks = playlist.tracks || [];
-      // Add the track to the playlist if it's not already present
       if (!playlist.tracks.includes(trackid)) {
         playlist.tracks.push(trackid);
       } else {
         return null
       }
 
-      // Save the updated playlist
-      console.log(playlist,"achar")
       const updatedPlaylist = await playlist.save();
       return updatedPlaylist as IPlaylist;
     } catch (error) {

@@ -143,7 +143,6 @@ export const fetchArtistTracks = async (
     HTTP_METHODS.GET,
     `/getAllTracksArtist?userId=${artistId}&page=${page}&limit=${limit}`
   );
-console.log(data,'3')
   return data.tracks; 
 };
 
@@ -156,7 +155,6 @@ export const fetchActiveGenres = async (artistId: string): Promise<{ artist: any
     undefined,
 
   );
-  console.log(data,"1")
   return { genres: data.data, artist: data.artist };
   if (!data.success) throw new Error(data.message || "Failed to fetch genres");
 };
@@ -208,7 +206,6 @@ export const createAlbum = async (albumData: {
 export const fetchAlbums = async (artistId: string): Promise<IAlbum[]> => {
   const data = await apiCall<{ success: boolean; data: IAlbum[] }>(artistApi, HTTP_METHODS.GET, `/albums?artistId=${artistId}`);
   // if (!data.success) throw new Error(data.message || "Failed to fetch albums");
-console.log(data,'asdas')
   return data.data;
 };
 
@@ -317,7 +314,6 @@ export const saveCard = async (artistId: string, paymentMethodId: string): Promi
 
 export const getVerificationStatus = async (artistId: string): Promise<VerificationStatus> => {
   try {
-    console.log(artistId,"insane")
 
     const response = await apiCall<{ success: boolean; data: VerificationStatus }>(
       artistApi,
@@ -334,7 +330,6 @@ export const getVerificationStatus = async (artistId: string): Promise<Verificat
 
 export const requestVerification = async (artistId: string,formData: FormData): Promise<{ idProof: string }> => {
   formData.append("artistId", artistId);
-console.log(artistApi,formData,"insane")
   const data = await apiCall<{ success: boolean; idProof?: string; message?: string }>(
     artistApi,
     HTTP_METHODS.POST,

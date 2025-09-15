@@ -102,11 +102,9 @@ export default function Home() {
           user.id,
           user.premium || "Free"
         );
-        console.log(fetchedTracks, "siinei",user)
         setTracks(fetchedTracks);
 
         if (updatedUser) {
-          console.log(updatedUser,"updated")
           dispatch(saveSignupData(updatedUser));
         }
 
@@ -150,9 +148,7 @@ export default function Home() {
     };
     loadBanners();
   }, []);
-useEffect(() => {
-    console.log(tracks, "yeyeyye")
-  })
+
   // Auto-slide banners
   useEffect(() => {
     if (banners.length <= 1) return;
@@ -179,7 +175,6 @@ useEffect(() => {
             : track
         )
       );
-      console.log(tracks,'insane two')
     } catch (error) {
       console.error("Error incrementing listeners:", error);
     }
@@ -315,9 +310,7 @@ useEffect(() => {
     handlePlay(track);
   };
 
-  useEffect(() => {
-    console.log(tracks, "yeyeyye")
-  })
+
   const filteredTracks = tracks.filter((track) => {
 
     const query = searchQuerysaved;

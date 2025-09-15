@@ -29,11 +29,9 @@ export function TopSongsTable() {
   const user = useSelector((state: RootState) => state.artist.signupData);
 
   useEffect(() => {
-          console.log(playingSongId,topSongs,"its sname")
 
     const fetchSongs = async () => {
       const token = localStorage.getItem("artistToken");
-      console.log(token,user,'asdasda')
       if (!token || !user?.id) {
         setError("Token or User ID not found. Please login.");
         setTopSongs([]);
@@ -42,7 +40,6 @@ export function TopSongsTable() {
 
       try {
         const { data, pagination } = await fetchArtistTracks(user.id, page, limit);
-        console.log(data,"sss")
         setTopSongs(data || []);
         setTotalPages(pagination?.totalPages || 1);
       } catch (error) {

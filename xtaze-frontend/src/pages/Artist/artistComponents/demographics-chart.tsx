@@ -43,7 +43,6 @@ export function DemographicsChart() {
 
       try {
         const tracks = await fetchArtistTracks(user.id);
-          console.log(tracks,'achi ',tracks)
         const listenerIds = Array.from(
           new Set(tracks.data.flatMap((track) => track.listeners))
         );

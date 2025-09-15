@@ -64,7 +64,6 @@ export function ArtistSongUpdatePage() {
     }
     try {
       const response = await fetchArtistTracks(user.id, page, limit);
-      console.log(response,"ssss")
       if (Array.isArray(response.data)) {
         setTopSongs(response.data);
         setTotalPages(response.pagination.totalPages);
@@ -87,7 +86,6 @@ export function ArtistSongUpdatePage() {
     if (!audioRef.current) {
       audioRef.current = new Audio(song.fileUrl);
     }
-    console.log(playingSongId,song,"asiasidiasidasidis")
     if (playingSongId === song.id) {
       audioRef.current.pause();
       setPlayingSongId(null);
@@ -205,7 +203,6 @@ export function ArtistSongUpdatePage() {
   const [albums, setAlbums] = useState<IAlbum[]>([]);
   useEffect(() => {
     const fetchData = async () => {
-      console.log("tooororo", artist)
       if (!token || !artist?.id) {
         toast.error("Please log in to fetch genres and albums.");
         return;
@@ -219,7 +216,6 @@ export function ArtistSongUpdatePage() {
 
         setGenres(genreResponse.genres);
         setAlbums(albumResponse);
-        console.log(genreResponse,albumResponse,"adi adi ad iad i")
         dispatch(saveArtistData(genreResponse.artist));
       } catch (error: any) {
         toast.error(error.message || "Error fetching data. Please try again.");
