@@ -376,6 +376,6 @@ export const fetchAllArtistsVerification = async (): Promise<any> => {
 // Update Username
 export const updateUsername = async (id: string, name: string): Promise<UserSignupData> => {
   const data = await apiCall<{ success: boolean; data: UserSignupData }>(userApi, HTTP_METHODS.PUT, `/usersName?id=${id}`, { username: name });
-  if (!data.success) throw new Error("Failed to update username");
   return data.data;
+  if (!data.success) throw new Error("Failed to update username");
 };

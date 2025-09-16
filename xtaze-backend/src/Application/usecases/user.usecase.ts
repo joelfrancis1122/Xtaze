@@ -367,7 +367,7 @@ export default class UserUseCase {
         return null;
       }
 
-      return updated;
+      return UserMapper.toDTO(updated);
 
     } catch (error) {
       console.error(MESSAGES.ERROR_UPDATING_PROFILE, error);
