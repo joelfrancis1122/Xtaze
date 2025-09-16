@@ -486,7 +486,8 @@ export default class UserRepository extends BaseRepository<IUser> implements IUs
         throw new Error("Artist not found");
       }
 
-      const query = { artists: artist.username };
+          const query = { artists: { $regex: `^${artist.username}$`, $options: "i" } };
+
       const [data, total] = await Promise.all([
         Track.find(query)
           .sort({ createdAt: -1 })
@@ -582,7 +583,10 @@ export default class UserRepository extends BaseRepository<IUser> implements IUs
 
   async getArtistByName(username: string): Promise<IUser | null> {
     try {
-      const admin = await UserModel.findOne({ username });
+     const admin = await UserModel.findOne({
+  username: { $regex: new RegExp(`^${username}$`, "i") },
+});
+
       return admin as unknown as IUser
     } catch (error) {
       throw error

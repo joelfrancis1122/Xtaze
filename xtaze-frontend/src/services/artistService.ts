@@ -232,6 +232,7 @@ export const updateTrackByArtist = async (trackId: string, songData: {
   if (songData.albumId) formData.append("album", songData.albumId);
   if (songData.img) formData.append("img", songData.img);
   if (songData.fileUrl) formData.append("fileUrl", songData.fileUrl);
+  console.log(songData,"insane")
   const data = await apiCall<{ success: boolean; track: unknown }>(
     artistApi,
     HTTP_METHODS.PUT,

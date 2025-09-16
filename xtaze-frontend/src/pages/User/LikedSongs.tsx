@@ -8,7 +8,7 @@ import { audio, audioContext, updateEqualizer } from "../../utils/audio";
 import { setCurrentTrack, setIsPlaying } from "../../redux/audioSlice";
 import { saveSignupData } from "../../redux/userSlice";
 import { Track } from "./types/ITrack";
-import { fetchLikedSongs, toggleLike } from "../../services/userService";
+import { fetchLikedSongs, incrementListeners, toggleLike } from "../../services/userService";
 import MusicPlayer from "./userComponents/TrackBar";
 import PreviewModal from "./PreviewPage";
 import { DragDropContext, Droppable, Draggable, DropResult } from "react-beautiful-dnd";
@@ -38,6 +38,7 @@ export default function LikedSongsPage() {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { currentTrack, isPlaying, isShuffled, isRepeating } = useSelector((state: RootState) => state.audio);
+  const [tracks, setTracks] = useState<Track[]>([]);
 
   const { handlePlay: baseHandlePlay, handleSkipBack, handleSkipForward, handleToggleShuffle, handleToggleRepeat } =
     useAudioPlayback(likedSongs);
@@ -112,8 +113,29 @@ export default function LikedSongsPage() {
       navigate("/", { replace: true });
     }
   }, [user, navigate]);
+  const handleIncrementListeners = async (trackId: string) => {
+    const token = localStorage.getItem("token");
+    if (!token || !trackId || !user?.id) return;
 
+    try {
+      await incrementListeners(trackId, user.id);
+
+      setTracks((prevTracks) =>
+        prevTracks.map((track) =>
+          track.id === trackId
+            ? {
+              ...track,
+              listeners: [...(track.listeners || []), user.id].filter(Boolean) as string[],
+            }
+            : track
+        )
+      );
+    } catch (error) {
+      console.error("Error incrementing listeners:", error);
+    }
+  };
   const handlePlay = (track: Track) => {
+    console.log(tracks)
     if (currentTrack?.fileUrl === track.fileUrl) {
       if (isPlaying) {
         audio.pause();
@@ -124,6 +146,7 @@ export default function LikedSongsPage() {
     } else {
       dispatch(setCurrentTrack(track));
       audio.src = track.fileUrl;
+      handleIncrementListeners(currentTrack?.id || "")
       audio.play().then(() => dispatch(setIsPlaying(true))).catch((err) => console.error("Playback error:", err));
     }
   };
@@ -168,157 +191,157 @@ export default function LikedSongsPage() {
   return (
     <div className="flex h-screen flex-col bg-black text-white">
       {/* <div className="flex flex-1 relative"> */}
-        <SidebarX>
+      <SidebarX>
 
-      <main>
-        <nav className="md:hidden text-sm text-gray-400 mb-4 sm:mb-2">
-          <a
-            href="/home"
-            className="hover:text-white transition-colors"
-            onClick={(e) => {
-              e.preventDefault();
-              navigate("/home");
-            }}
-          >
-            Home
-          </a>
-          <span className="text-white">Liked Songs</span>
-        </nav>
-        <div className="max-w-8xl mx-auto space-y-6 sm:space-y-10 ml-7 mt-5">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-4">
-            <h1 className="text-3xl sm:text-3xl font-bold">Liked Songs</h1>
-            <p className="text-gray-400 text-sm sm:text-base">{likedSongs.length} songs</p>
-          </div>
-          {loading ? (
-            <div className="text-center py-4 text-sm sm:text-base text-gray-400">
-              Loading liked songs...
+        <main>
+          <nav className="md:hidden text-sm text-gray-400 mb-4 sm:mb-2">
+            <a
+              href="/home"
+              className="hover:text-white transition-colors"
+              onClick={(e) => {
+                e.preventDefault();
+                navigate("/home");
+              }}
+            >
+              Home
+            </a>
+            <span className="text-white">Liked Songs</span>
+          </nav>
+          <div className="max-w-8xl mx-auto space-y-6 sm:space-y-10 ml-7 mt-5">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-4">
+              <h1 className="text-3xl sm:text-3xl font-bold">Liked Songs</h1>
+              <p className="text-gray-400 text-sm sm:text-base">{likedSongs.length} songs</p>
             </div>
-          ) : likedSongs.length > 0 ? (
-            <div className="bg-[#151515] rounded-xl shadow-lg border border-black-900 overflow-hidden">
-              <div className="hidden md:grid grid-cols-[48px_48px_2fr_1fr_1fr_48px_48px] gap-4 px-6 py-4 text-gray-400 text-lg font-semibold border-b border-gray-700">
-                <span className="text-center"></span>
-                <span className="text-center">#</span>
-                <span>Title</span>
-                <span>Artist</span>
-                <span>Album</span>
-                <span></span>
-                <span></span>
+            {loading ? (
+              <div className="text-center py-4 text-sm sm:text-base text-gray-400">
+                Loading liked songs...
               </div>
-              <div className="md:hidden grid grid-cols-[32px_2fr_48px] gap-2 px-4 py-2 text-gray-400 text-sm font-semibold border-b border-gray-700">
-                <span className="text-center">#</span>
-                <span>Title</span>
-                <span></span>
-              </div>
-              <DragDropContext onDragEnd={onDragEnd}>
-                <Droppable droppableId="likedSongs">
-                  {(provided) => (
-                    <div {...provided.droppableProps} ref={provided.innerRef}>
-                      {likedSongs.map((song, index) => (
-                        <Draggable key={song.id} draggableId={song.id} index={index}>
-                          {(provided) => (
-                            <div
-                              ref={provided.innerRef}
-                              {...provided.draggableProps}
-                              className="md:grid md:grid-cols-[48px_48px_2fr_1fr_1fr_48px_48px] md:gap-4 grid grid-cols-[32px_2fr_48px] gap-2 px-4 sm:px-6 py-2 sm:py-4 hover:bg-[#212121] active:bg-[#212121] transition-colors duration-200 cursor-pointer items-center group box-content"
-                            >
+            ) : likedSongs.length > 0 ? (
+              <div className="bg-[#151515] rounded-xl shadow-lg border border-black-900 overflow-hidden">
+                <div className="hidden md:grid grid-cols-[48px_48px_2fr_1fr_1fr_48px_48px] gap-4 px-6 py-4 text-gray-400 text-lg font-semibold border-b border-gray-700">
+                  <span className="text-center"></span>
+                  <span className="text-center">#</span>
+                  <span>Title</span>
+                  <span>Artist</span>
+                  <span>Album</span>
+                  <span></span>
+                  <span></span>
+                </div>
+                <div className="md:hidden grid grid-cols-[32px_2fr_48px] gap-2 px-4 py-2 text-gray-400 text-sm font-semibold border-b border-gray-700">
+                  <span className="text-center">#</span>
+                  <span>Title</span>
+                  <span></span>
+                </div>
+                <DragDropContext onDragEnd={onDragEnd}>
+                  <Droppable droppableId="likedSongs">
+                    {(provided) => (
+                      <div {...provided.droppableProps} ref={provided.innerRef}>
+                        {likedSongs.map((song, index) => (
+                          <Draggable key={song.id} draggableId={song.id} index={index}>
+                            {(provided) => (
                               <div
-                                {...provided.dragHandleProps}
-                                className="hidden md:flex items-center justify-center"
+                                ref={provided.innerRef}
+                                {...provided.draggableProps}
+                                className="md:grid md:grid-cols-[48px_48px_2fr_1fr_1fr_48px_48px] md:gap-4 grid grid-cols-[32px_2fr_48px] gap-2 px-4 sm:px-6 py-2 sm:py-4 hover:bg-[#212121] active:bg-[#212121] transition-colors duration-200 cursor-pointer items-center group box-content"
                               >
-                                <GripVertical size={20} className="text-gray-400" />
-                              </div>
-                              <span className="text-gray-400 text-sm sm:text-lg text-center">{index + 1}</span>
-                              <div className="flex items-center space-x-2 sm:space-x-4 truncate">
-                                <div className="relative w-10 sm:w-12 h-10 sm:h-12 rounded-md overflow-hidden flex-shrink-0">
-                                  <img
-                                    src={song.img || "/placeholder.svg"}
-                                    alt={song.title}
-                                    className="w-full h-full object-cover"
-                                  />
+                                <div
+                                  {...provided.dragHandleProps}
+                                  className="hidden md:flex items-center justify-center"
+                                >
+                                  <GripVertical size={20} className="text-gray-400" />
+                                </div>
+                                <span className="text-gray-400 text-sm sm:text-lg text-center">{index + 1}</span>
+                                <div className="flex items-center space-x-2 sm:space-x-4 truncate">
+                                  <div className="relative w-10 sm:w-12 h-10 sm:h-12 rounded-md overflow-hidden flex-shrink-0">
+                                    <img
+                                      src={song.img || "/placeholder.svg"}
+                                      alt={song.title}
+                                      className="w-full h-full object-cover"
+                                    />
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handlePlay(song);
+                                      }}
+                                      className="absolute inset-0 flex items-center justify-center bg-black/70 md:opacity-0 md:group-hover:opacity-100 opacity-100 transition-opacity duration-200 rounded-md box-content"
+                                    >
+                                      {currentTrack?.fileUrl === song.fileUrl && isPlaying ? (
+                                        <PauseCircle size={20} className="text-white" />
+                                      ) : (
+                                        <PlayCircle size={20} className="text-white" />
+                                      )}
+                                    </button>
+                                  </div>
+                                  <div className="truncate">
+                                    <h3 className="text-white font-medium text-sm sm:text-lg truncate">{song.title}</h3>
+                                    <p className="text-gray-400 text-xs sm:text-sm truncate md:hidden">
+                                      {Array.isArray(song.artists) ? song.artists.join(", ") : song.artists}
+                                    </p>
+                                  </div>
+                                </div>
+                                <span className="text-gray-400 text-sm sm:text-lg truncate hidden md:block">
+                                  {Array.isArray(song.artists) ? song.artists.join(", ") : song.artists}
+                                </span>
+                                <span className="text-gray-400 text-sm sm:text-lg truncate hidden md:block">
+                                  {song.album}
+                                </span>
+                                <div className="hidden md:flex items-center justify-end md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-200"></div>
+                                <div className="flex items-center justify-end md:opacity-0 md:group-hover:opacity-100 opacity-100 transition-opacity duration-200">
                                   <button
                                     onClick={(e) => {
                                       e.stopPropagation();
-                                      handlePlay(song);
+                                      handleUnlike(song.id);
                                     }}
-                                    className="absolute inset-0 flex items-center justify-center bg-black/70 md:opacity-0 md:group-hover:opacity-100 opacity-100 transition-opacity duration-200 rounded-md box-content"
+                                    title="Unlike this song"
+                                    className="p-2 rounded-full hover:bg-[#333333] active:bg-[#333333] transition-colors duration-200 box-content"
                                   >
-                                    {currentTrack?.fileUrl === song.fileUrl && isPlaying ? (
-                                      <PauseCircle size={20} className="text-white" />
-                                    ) : (
-                                      <PlayCircle size={20} className="text-white" />
-                                    )}
+                                    <Heart size={20} className="text-red-500 fill-red-500" />
                                   </button>
                                 </div>
-                                <div className="truncate">
-                                  <h3 className="text-white font-medium text-sm sm:text-lg truncate">{song.title}</h3>
-                                  <p className="text-gray-400 text-xs sm:text-sm truncate md:hidden">
-                                    {Array.isArray(song.artists) ? song.artists.join(", ") : song.artists}
-                                  </p>
-                                </div>
                               </div>
-                              <span className="text-gray-400 text-sm sm:text-lg truncate hidden md:block">
-                                {Array.isArray(song.artists) ? song.artists.join(", ") : song.artists}
-                              </span>
-                              <span className="text-gray-400 text-sm sm:text-lg truncate hidden md:block">
-                                {song.album}
-                              </span>
-                              <div className="hidden md:flex items-center justify-end md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-200"></div>
-                              <div className="flex items-center justify-end md:opacity-0 md:group-hover:opacity-100 opacity-100 transition-opacity duration-200">
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleUnlike(song.id);
-                                  }}
-                                  title="Unlike this song"
-                                  className="p-2 rounded-full hover:bg-[#333333] active:bg-[#333333] transition-colors duration-200 box-content"
-                                >
-                                  <Heart size={20} className="text-red-500 fill-red-500" />
-                                </button>
-                              </div>
-                            </div>
-                          )}
-                        </Draggable>
-                      ))}
-                      {provided.placeholder}
-                    </div>
-                  )}
-                </Droppable>
-              </DragDropContext>
-            </div>
-          ) : (
-            <div className="bg-[#1d1d1d] p-4 sm:p-8 rounded-xl shadow-md border border-gray-800 text-center">
-              <p className="text-gray-400 text-sm sm:text-lg">
-                No liked songs yet. Start liking some premium tracks!
-              </p>
-            </div>
-          )}
-        </div>
+                            )}
+                          </Draggable>
+                        ))}
+                        {provided.placeholder}
+                      </div>
+                    )}
+                  </Droppable>
+                </DragDropContext>
+              </div>
+            ) : (
+              <div className="bg-[#1d1d1d] p-4 sm:p-8 rounded-xl shadow-md border border-gray-800 text-center">
+                <p className="text-gray-400 text-sm sm:text-lg">
+                  No liked songs yet. Start liking some premium tracks!
+                </p>
+              </div>
+            )}
+          </div>
 
-        {currentTrack && (
-          <MusicPlayer
-            currentTrack={currentTrack}
-            isPlaying={isPlaying}
-            handlePlay={baseHandlePlay}
-            handleSkipBack={handleSkipBack}
-            handleSkipForward={handleSkipForward}
-            toggleShuffle={handleToggleShuffle}
-            toggleRepeat={handleToggleRepeat}
-            isShuffled={isShuffled}
-            isRepeating={isRepeating}
-            audio={audio}
-            toggleModal={toggleModal}
-          />
-        )}
-        {currentTrack && (
-          <PreviewModal
-            track={currentTrack}
-            isOpen={isModalOpen}
-            toggleModal={toggleModal}
-            onPlayTrack={handlePlayFromModal}
-          />
-        )}
-      </main>
-        </SidebarX>
+          {currentTrack && (
+            <MusicPlayer
+              currentTrack={currentTrack}
+              isPlaying={isPlaying}
+              handlePlay={baseHandlePlay}
+              handleSkipBack={handleSkipBack}
+              handleSkipForward={handleSkipForward}
+              toggleShuffle={handleToggleShuffle}
+              toggleRepeat={handleToggleRepeat}
+              isShuffled={isShuffled}
+              isRepeating={isRepeating}
+              audio={audio}
+              toggleModal={toggleModal}
+            />
+          )}
+          {currentTrack && (
+            <PreviewModal
+              track={currentTrack}
+              isOpen={isModalOpen}
+              toggleModal={toggleModal}
+              onPlayTrack={handlePlayFromModal}
+            />
+          )}
+        </main>
+      </SidebarX>
 
     </div>
   );

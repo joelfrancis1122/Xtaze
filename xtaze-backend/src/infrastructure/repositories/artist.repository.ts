@@ -21,9 +21,38 @@ export class ArtistRepository implements IArtistRepository {
     return await track.save() as any
   }
 
-  async updateTrackByArtist(data: ITrack, trackId: string): Promise<ITrack | null> {
-    return await Track.findByIdAndUpdate(trackId, data, { new: true }).lean<ITrack>().exec();
+async updateTrackByArtist(
+  data: ITrack,
+  trackId: string
+): Promise<ITrack | null> {
+  try {
+
+    const updatedTrack = await Track.findByIdAndUpdate(trackId, data, {
+      new: true,
+    })
+      .lean<ITrack>()
+      .exec();
+
+    if (!updatedTrack) {
+      throw new Error("Track not found");
+    }
+
+    if (data.albumId) {
+      const albumObjectId = data.albumId
+
+      await AlbumModel.findByIdAndUpdate(
+        albumObjectId,
+        { $addToSet: { tracks: updatedTrack._id } },
+        { new: true }
+      ).exec();
+    }
+
+    return updatedTrack;
+  } catch (error) {
+    console.error("Error updating track:", error);
+    throw new Error("Failed to update track");
   }
+}
 
   async getAllArtists(): Promise<IUser[]> {
     return await UserModel.find().lean<IUser[]>().exec();

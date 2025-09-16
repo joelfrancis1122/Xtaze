@@ -135,7 +135,7 @@ export default function PlaylistsPage() {
                   <h3 className="text-base sm:text-lg font-semibold truncate">{playlist.title}</h3>
                   <p className="text-xs sm:text-sm text-gray-400 mt-1 truncate">{playlist.description}</p>
                   <p className="text-xs text-gray-500 mt-1 sm:mt-2 truncate">
-                    {playlist.tracks.length} tracks • Created by {playlist.createdBy}
+                    {/* {playlist.tracks.length} tracks • Created by {playlist.createdBy} */}
                   </p>
                 </div>
               </div>

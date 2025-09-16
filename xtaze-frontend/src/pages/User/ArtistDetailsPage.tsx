@@ -7,7 +7,10 @@ import MusicPlayer from "./userComponents/TrackBar";
 import PreviewModal from "./PreviewPage";
 import { useParams } from "react-router-dom";
 import { fetchArtistTracks, fetchUserByUsername, toggleLike, getMyplaylist, addTrackToPlaylist } from "../../services/userService";
-import { Play, Pause, Plus, Heart, Download, ListMusic, BadgeCheck } from "lucide-react";
+import { Play, Pause, Plus, Heart, Download, ListMusic } from "lucide-react";
+import { CheckBadgeIcon } from "@heroicons/react/24/solid";
+
+
 import { toast } from "sonner";
 import { audio } from "../../utils/audio";
 import { Track } from "./types/ITrack";
@@ -76,7 +79,7 @@ export default function ArtistDetailsPage() {
             (record: { userId: string }) => record.userId === artistId
           );
           const verificationStatus = verificationRecord ? verificationRecord.status : "unsubmitted";
-
+          console.log(userResponse, "odi")
           const artistData: Artist = {
             id: artistId,
             name: artistUsername,
@@ -98,6 +101,7 @@ export default function ArtistDetailsPage() {
           setError("No tracks found for this artist");
         }
       } catch (err: any) {
+        console.log(err)
         setError("Failed to load artist details or tracks");
       } finally {
         setLoading(false);
@@ -185,6 +189,8 @@ export default function ArtistDetailsPage() {
     localStorage.setItem("playQueue", JSON.stringify(updatedQueue));
     toast.success(`Added ${track.title} to queue`);
   };
+ 
+
 
   const handleDownload = async (fileUrl: string, title: string) => {
     const token = localStorage.getItem("token");
@@ -217,218 +223,215 @@ export default function ArtistDetailsPage() {
   if (!artistId) return <div>Artist not found</div>;
 
   return (
-   <div className="flex h-screen flex-col bg-black text-white">
+    <div className="flex h-screen flex-col bg-black text-white">
       <div className="flex flex-1 relative">
         <SidebarX>
 
-        <main>
-          <section className="px-4 sm:px-6 py-4 sm:py-6 pb-20">
-            <nav className="md:hidden text-sm text-gray-400 mb-4 sm:mb-6">
-              <a
-                href="/home"
-                className="hover:text-white transition-colors"
-                onClick={(e) => {
-                  e.preventDefault();
-                  navigate("/home");
-                }}
-              >
-                Home
-              </a>
-              <span className="mx-2"></span>
-              <a
-                href="/artists"
-                className="hover:text-white transition-colors"
-                onClick={(e) => {
-                  e.preventDefault();
-                  navigate("/artists");
-                }}
-              >
-                Artists
-              </a>
-              <span className="mx-2"></span>
-              <span className="text-white">{artist?.name || "Artist"}</span>
-            </nav>
-            {loading ? (
-              <div className="text-center py-3 sm:py-4 text-sm sm:text-base text-gray-400">
-                Loading artist details...
-              </div>
-            ) : error ? (
-              <div className="text-red-400 text-center py-3 sm:py-4 text-sm sm:text-base">
-                {error}
-              </div>
-            ) : artist ? (
-              <>
-                <div className="relative w-full h-[200px] sm:h-[300px] rounded-lg overflow-hidden shadow-lg mb-4 sm:mb-6">
-                  {artist.banner && isVideo(artist.banner) ? (
-                    <video
-                      src={artist.banner}
-                      autoPlay
-                      loop
-                      muted
-                      className="w-full h-full object-cover opacity-80"
-                    />
-                  ) : (
-                    <img
-                      src={artist.banner || "/default-banner.jpg"}
-                      alt={`${artist.name} banner`}
-                      className="w-full h-full object-cover opacity-80"
-                    />
-                  )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-                  <div className="absolute inset-0 flex items-center px-4 sm:px-6">
-                    <img
-                      src={artist.profilePic}
-                      alt={artist.name}
-                      className="w-24 h-24 sm:w-32 sm:h-32 object-cover rounded-full border-2 border-white"
-                    />
-                    <div className="ml-4 sm:ml-6">
-                      <div className="flex items-center">
-                        <h2
-                          className="text-2xl sm:text-4xl font-bold text-white"
-                          style={{ textShadow: '2px 2px 6px rgba(0, 0, 0, 0.8)' }}
-                        >
-                          {artist.name}
-                        </h2>
-                        {artist.verificationStatus === "approved" && (
-                          <BadgeCheck
-                            size={20}
-                            className="ml-2 text-blue-600 fill-blue-600 stroke-white sm:size-10"
-                            strokeWidth={1.5}
-                          />
+          <main>
+            <section className="px-4 sm:px-6 py-4 sm:py-6 pb-20">
+              <nav className="md:hidden text-sm text-gray-400 mb-4 sm:mb-6">
+                <a
+                  href="/home"
+                  className="hover:text-white transition-colors"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    navigate("/home");
+                  }}
+                >
+                  Home
+                </a>
+                <span className="mx-2"></span>
+                <a
+                  href="/artists"
+                  className="hover:text-white transition-colors"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    navigate("/artists");
+                  }}
+                >
+                  Artists
+                </a>
+                <span className="mx-2"></span>
+                <span className="text-white">{artist?.name || "Artist"}</span>
+              </nav>
+              {loading ? (
+                <div className="text-center py-3 sm:py-4 text-sm sm:text-base text-gray-400">
+                  Loading artist details...
+                </div>
+              ) : error ? (
+                <div className="text-red-400 text-center py-3 sm:py-4 text-sm sm:text-base">
+                  {error}
+                </div>
+              ) : artist ? (
+                <>
+                  <div className="relative w-full h-[200px] sm:h-[300px] rounded-lg overflow-hidden shadow-lg mb-4 sm:mb-6">
+                    {artist.banner && isVideo(artist.banner) ? (
+                      <video
+                        src={artist.banner}
+                        autoPlay
+                        loop
+                        muted
+                        className="w-full h-full object-cover opacity-80"
+                      />
+                    ) : (
+                      <img
+                        src={artist.banner || "/default-banner.jpg"}
+                        alt={`${artist.name} banner`}
+                        className="w-full h-full object-cover opacity-80"
+                      />
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+                    <div className="absolute inset-0 flex items-center px-4 sm:px-6">
+                      <img
+                        src={artist?.profilePic}
+                        alt={artist.name}
+                        className="w-24 h-24 sm:w-32 sm:h-32 object-cover rounded-full border-2 border-white"
+                      />
+                      <div className="ml-4 sm:ml-6">
+                        <div className="flex items-center">
+                          <h2
+                            className="text-2xl sm:text-4xl font-bold text-white"
+                            style={{ textShadow: '2px 2px 6px rgba(0, 0, 0, 0.8)' }}
+                          >
+                            {artist.name}
+                          </h2>
+                          {artist.verificationStatus === "approved" && (
+                            <CheckBadgeIcon className="w-8 h-8 text-blue-600 ml-2" />
+
+                          )}
+                        </div>
+                        {artist.bio && (
+                          <p
+                            className="text-gray-300 mt-1 sm:mt-2 text-sm sm:text-base"
+                            style={{ textShadow: '1px 1px 4px rgba(0, 0, 0, 0.8)' }}
+                          >
+                            {artist.bio}
+                          </p>
+                        )}
+                        {totalListeners > 0 && (
+                          <p
+                            className="text-gray-300 text-sm sm:text-base"
+                            style={{ textShadow: '1px 1px 4px rgba(0, 0, 0, 0.8)' }}
+                          >
+                            Listeners: {totalListeners}
+                          </p>
                         )}
                       </div>
-                      {artist.bio && (
-                        <p
-                          className="text-gray-300 mt-1 sm:mt-2 text-sm sm:text-base"
-                          style={{ textShadow: '1px 1px 4px rgba(0, 0, 0, 0.8)' }}
-                        >
-                          {artist.bio}
-                        </p>
-                      )}
-                      {totalListeners > 0 && (
-                        <p
-                          className="text-gray-300 text-sm sm:text-base"
-                          style={{ textShadow: '1px 1px 4px rgba(0, 0, 0, 0.8)' }}
-                        >
-                          Listeners: {totalListeners}
-                        </p>
-                      )}
                     </div>
                   </div>
-                </div>
 
-                <h3 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">Songs</h3>
-                {tracks.length > 0 ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-6 overflow-hidden">
-                    {tracks.map((track) => (
-                      <div
-                        key={track.id}
-                        className="group bg-[#1d1d1d] rounded-lg p-3 sm:p-4 hover:bg-[#242424] active:bg-[#242424] transition-colors duration-200 flex flex-col box-content"
-                      >
-                        <div className="w-full h-[180px] sm:h-[200px] flex flex-col mb-2 sm:mb-3">
-                          <div className="relative w-full h-[90%]">
+                  <h3 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">Songs</h3>
+                  {tracks.length > 0 ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-6 overflow-hidden">
+                      {tracks.map((track) => (
+                        <div
+                          key={track.id}
+                          className="group bg-[#1d1d1d] rounded-lg p-3 sm:p-4 hover:bg-[#242424] active:bg-[#242424] transition-colors duration-200 flex flex-col box-content"
+                        >
+                          <div className="w-full h-[180px] sm:h-[200px] flex flex-col mb-2 sm:mb-3">
+                            <div className="relative w-full h-[90%]">
+                              <img
+                                src={track.img || "/placeholder.svg"}
+                                alt={track.title}
+                                className="w-full h-full object-cover rounded-t-md"
+                              />
+                              <button
+                                onClick={() => handlePlay(track)}
+                                className="absolute inset-0 flex items-center justify-center bg-black/50 md:opacity-0 md:group-hover:opacity-100 opacity-100 transition-opacity duration-200 z-10 rounded-t-md"
+                              >
+                                {currentTrack?.fileUrl === track.fileUrl && isPlaying ? (
+                                  <Pause size={20} className="text-white" />
+                                ) : (
+                                  <Play size={20} className="text-white" />
+                                )}
+                              </button>
+                            </div>
                             <img
                               src={track.img || "/placeholder.svg"}
-                              alt={track.title}
-                              className="w-full h-full object-cover rounded-t-md"
+                              alt={`${track.title} blur`}
+                              className="w-full h-[10%] object-cover rounded-b-md blur-lg"
                             />
-                            <button
-                              onClick={() => handlePlay(track)}
-                              className="absolute inset-0 flex items-center justify-center bg-black/50 md:opacity-0 md:group-hover:opacity-100 opacity-100 transition-opacity duration-200 z-10 rounded-t-md"
-                            >
-                              {currentTrack?.fileUrl === track.fileUrl && isPlaying ? (
-                                <Pause size={20} className="text-white" />
-                              ) : (
-                                <Play size={20} className="text-white" />
-                              )}
-                            </button>
                           </div>
-                          <img
-                            src={track.img || "/placeholder.svg"}
-                            alt={`${track.title} blur`}
-                            className="w-full h-[10%] object-cover rounded-b-md blur-lg"
-                          />
-                        </div>
-                        <div className="text-white font-semibold truncate text-sm sm:text-base">
-                          {track.title}
-                        </div>
-                        <div className="text-gray-400 text-xs sm:text-sm truncate">
-                          {Array.isArray(track.artists) ? track.artists.join(", ") : track.artists}
-                        </div>
-                        {user?.premium !== "Free" && (
-                          <div className="relative flex gap-2 mt-2 md:opacity-0 md:group-hover:opacity-100 opacity-100 transition-opacity duration-200">
-                            <button
-                              className="p-2 hover:bg-[#333333] active:bg-[#333333] rounded-full text-white"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setDropdownTrackId(dropdownTrackId === track.id ? null : track.id);
-                              }}
-                            >
-                              <Plus size={20} />
-                            </button>
-                            {dropdownTrackId === track.id && (
-                              <div className="absolute left-auto right-0 mt-8 w-40 sm:w-48 bg-[#242424] rounded-md shadow-lg z-20">
-                                <ul className="py-1">
-                                  {playlists.length > 0 ? (
-                                    playlists.map((playlist) => (
-                                      <li
-                                        key={playlist.id}
-                                        className="px-3 sm:px-4 py-1 sm:py-2 hover:bg-[#333333] cursor-pointer text-sm sm:text-base text-white"
-                                        onClick={() => handleAddToPlaylist(track.id, playlist.id)}
-                                      >
-                                        {playlist.title}
+                          <div className="text-white font-semibold truncate text-sm sm:text-base">
+                            {track.title}
+                          </div>
+                          <div className="text-gray-400 text-xs sm:text-sm truncate">
+                            {Array.isArray(track.artists) ? track.artists.join(", ") : track.artists}
+                          </div>
+                          {user?.premium !== "Free" && (
+                            <div className="relative flex gap-2 mt-2 md:opacity-0 md:group-hover:opacity-100 opacity-100 transition-opacity duration-200">
+                              <button
+                                className="p-2 hover:bg-[#333333] active:bg-[#333333] rounded-full text-white"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setDropdownTrackId(dropdownTrackId === track.id ? null : track.id);
+                                }}
+                              >
+                                <Plus size={20} />
+                              </button>
+                              {dropdownTrackId === track.id && (
+                                <div className="absolute left-auto right-0 mt-8 w-40 sm:w-48 bg-[#242424] rounded-md shadow-lg z-20">
+                                  <ul className="py-1">
+                                    {playlists.length > 0 ? (
+                                      playlists.map((playlist) => (
+                                        <li
+                                          key={playlist.id}
+                                          className="px-3 sm:px-4 py-1 sm:py-2 hover:bg-[#333333] cursor-pointer text-sm sm:text-base text-white"
+                                          onClick={() => handleAddToPlaylist(track.id, playlist.id)}
+                                        >
+                                          {playlist.title}
+                                        </li>
+                                      ))
+                                    ) : (
+                                      <li className="px-3 sm:px-4 py-1 sm:py-2 text-gray-400 text-sm sm:text-base">
+                                        No playlists available
                                       </li>
-                                    ))
-                                  ) : (
-                                    <li className="px-3 sm:px-4 py-1 sm:py-2 text-gray-400 text-sm sm:text-base">
-                                      No playlists available
-                                    </li>
-                                  )}
-                                </ul>
-                              </div>
-                            )}
-                            <button
-                              onClick={() => handleLike(track.id)}
-                              className={`p-2 hover:bg-[#333333] active:bg-[#333333] rounded-full ${likedSongs.has(track.id) ? "text-red-500" : "text-white"}`}
-                            >
-                              <Heart size={20} fill={likedSongs.has(track.id) ? "currentColor" : "none"} />
-                            </button>
-                            <button
-                              className="p-2 hover:bg-[#333333] active:bg-[#333333] rounded-full text-white"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDownload(track.fileUrl, track.title);
-                              }}
-                            >
-                              <Download size={20} />
-                            </button>
-                            <button
-                              className="p-2 hover:bg-[#333333] active:bg-[#333333] rounded-full text-white"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleAddToQueue(track);
-                              }}
-                            >
-                              <ListMusic size={20} />
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-gray-400 text-center py-3 sm:py-4 text-sm sm:text-base">
-                    No songs found for this artist.
-                  </div>
-                )}
-              </>
-            ) : (
-              <div className="text-gray-400 text-center py-3 sm:py-4 text-sm sm:text-base">
-                Artist not found.
-              </div>
-            )}
-          </section>
-        </main>
+                                    )}
+                                  </ul>
+                                </div>
+                              )}
+                              <button
+                                onClick={() => handleLike(track.id)}
+                                className={`p-2 hover:bg-[#333333] active:bg-[#333333] rounded-full ${likedSongs.has(track.id) ? "text-red-500" : "text-white"}`}
+                              >
+                                <Heart size={20} fill={likedSongs.has(track.id) ? "currentColor" : "none"} />
+                              </button>
+                              <button
+                                className="p-2 hover:bg-[#333333] active:bg-[#333333] rounded-full text-white"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDownload(track.fileUrl, track.title);
+                                }}
+                              >
+                                <Download size={20} />
+                              </button>
+                              <button
+                                className="p-2 hover:bg-[#333333] active:bg-[#333333] rounded-full text-white"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleAddToQueue(track);
+                                }}
+                              >
+                                <ListMusic size={20} />
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-gray-400 text-center py-3 sm:py-4 text-sm sm:text-base">
+                      No songs found for this artist.
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="text-gray-400 text-center py-3 sm:py-4 text-sm sm:text-base">
+                  Artist not found.
+                </div>
+              )}
+            </section>
+          </main>
         </SidebarX>
 
       </div>
