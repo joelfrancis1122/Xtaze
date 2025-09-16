@@ -80,7 +80,7 @@ interface DesktopSidebarProps {
 }
 
 export const DesktopSidebar = ({ className, children }: DesktopSidebarProps) => {
-  const { open, setOpen, animate } = useSidebar();
+  const { open, animate } = useSidebar();
   return (
     <motion.div
       className={cn(
@@ -90,8 +90,6 @@ export const DesktopSidebar = ({ className, children }: DesktopSidebarProps) => 
       animate={{
         width: animate ? (open ? "240px" : "75px") : "300px",
       }}
-      onMouseEnter={() => setOpen(true)}
-      onMouseLeave={() => setOpen(false)}
     >
       {children}
     </motion.div>

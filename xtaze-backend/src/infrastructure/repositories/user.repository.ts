@@ -1,8 +1,8 @@
 import { IAlbum } from "../../domain/entities/IAlbum";
+import IUser from "../../domain/entities/IUser";
 import { IBanner } from "../../domain/entities/IBanner";
 import { ICoupon } from "../../domain/entities/ICoupon";
 import { IPlaylist } from "../../domain/entities/IPlaylist";
-import IUser from "../../domain/entities/IUser";
 import { IUserRepository } from "../../domain/repositories/IUserRepository";
 import { AlbumModel } from "../db/models/AlbumModel";
 import BannerModel from "../db/models/BannerModel";
@@ -441,13 +441,13 @@ export default class UserRepository extends BaseRepository<IUser> implements IUs
       if (user.likedSongs?.includes(trackId)) {
         updatedUser = await UserModel.findByIdAndUpdate(
           userId,
-          { $pull: { likedSongs: trackId } }, // Remove from likedSongs
+          { $pull: { likedSongs: trackId } }, 
           { new: true }
         );
       } else {
         updatedUser = await UserModel.findByIdAndUpdate(
           userId,
-          { $addToSet: { likedSongs: trackId } }, // Add to likedSongs
+          { $addToSet: { likedSongs: trackId } }, 
           { new: true }
         );
       }
@@ -456,7 +456,7 @@ export default class UserRepository extends BaseRepository<IUser> implements IUs
         throw new Error("User update failed");
       }
 
-      return updatedUser.toObject<IUser>(); // Convert Mongoose document to plain object
+      return updatedUser.toObject<IUser>();
     } catch (error) {
       console.error("Error in toggling liked song:", error);
       throw error;

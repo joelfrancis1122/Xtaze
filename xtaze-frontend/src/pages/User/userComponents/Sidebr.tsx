@@ -16,6 +16,8 @@ import {
   Sliders,
   Users,
   Crown,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { motion } from "motion/react";
 import { cn } from "../../../utils/utils";
@@ -26,7 +28,6 @@ import ProfileP from "../../../assets/profile4.jpeg";
 import { clearSignupData } from "../../../redux/userSlice";
 import { clearAudioState } from "../../../redux/audioSlice";
 
-/* -------------------- ✅ Sidebar -------------------- */
 export default function SidebarX({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   const signupData = useSelector((state: RootState) => state.user.signupData);
@@ -53,7 +54,6 @@ export default function SidebarX({ children }: { children: React.ReactNode }) {
     navigate("/profile");
   };
 
-  // ✅ All nav items handled with navigate/onClick
   const links = [
     { label: "Home", icon: HomeIcon, onClick: () => navigate("/") },
     ...(signupData?.premium !== "Free"
@@ -76,7 +76,6 @@ export default function SidebarX({ children }: { children: React.ReactNode }) {
 
   return (
     <div className={cn("flex w-full flex-1 flex-col md:flex-row overflow-hidden h-screen")}>
-      {/* Sidebar */}
       <Sidebar open={open} setOpen={setOpen} animate>
         <SidebarBody className="justify-between gap-10">
           <div className="flex flex-1 flex-col overflow-x-hidden overflow-y-auto">
@@ -91,7 +90,10 @@ export default function SidebarX({ children }: { children: React.ReactNode }) {
                 <button
                   key={idx}
                   onClick={link.onClick}
-                  className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-neutral-200 dark:hover:bg-neutral-700 text-neutral-700 dark:text-neutral-200 transition-colors"
+                  className={cn(
+                    "flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors",
+                    "text-neutral-700 dark:text-neutral-200"
+                  )}
                 >
                   <link.icon className="h-5 w-5 shrink-0" />
                   {open && <span className="text-sm font-medium">{link.label}</span>}
@@ -99,16 +101,27 @@ export default function SidebarX({ children }: { children: React.ReactNode }) {
               ))}
             </div>
           </div>
+
+          <button
+            onClick={() => setOpen(!open)}
+            className="flex items-center justify-center gap-2 px-3 py-2 rounded-lg hover:bg-neutral-200 dark:hover:bg-neutral-700 text-neutral-700 dark:text-neutral-200 transition-colors"
+          >
+            {open ? (
+              <>
+                <ChevronLeft className="h-5 w-5" />
+              </>
+            ) : (
+              <ChevronRight className="h-5 w-5" />
+            )}
+          </button>
         </SidebarBody>
       </Sidebar>
 
-      {/* Dynamic Content */}
       <main className="flex-1 overflow-y-auto">{children}</main>
     </div>
   );
 }
 
-/* -------------------- ✅ Logo when sidebar is open -------------------- */
 export const Logo = ({
   signupData,
   handleProfileClick,
@@ -144,7 +157,6 @@ export const Logo = ({
   </div>
 );
 
-/* -------------------- ✅ Logo when sidebar is collapsed -------------------- */
 export const LogoIcon = ({
   signupData,
   handleProfileClick,

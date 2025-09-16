@@ -328,7 +328,8 @@ export default function Home() {
   return (
     <div className="flex h-screen flex-col bg-black text-white">
       <div className="flex flex-1 relative">
-        <Sidebarx>
+        <Sidebarx >
+          
           <main>
             <header className="flex justify-between items-center p-4 sticky top-0 bg-black z-50">
               <div className="relative flex-1 mx-4">
