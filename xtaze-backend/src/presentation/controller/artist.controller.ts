@@ -91,7 +91,6 @@ export default class ArtistController {
   async getAllTracksArtist(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { userId, page = 1, limit = 10 } = req.query;
-
       const pageNum = Number(page) || 1;
       const limitNum = Number(limit) || 10;
       let tracks = null;

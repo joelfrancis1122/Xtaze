@@ -52,7 +52,7 @@ export class ArtistRepository implements IArtistRepository {
       const skip = (page - 1) * limit;
       const artist = await UserModel.findById(userId);
       if (!artist) { throw new Error("Artist not found"); }
-      const query = { artists: artist.username };
+    const query = { artists: { $regex: `^${artist.username}$`, $options: "i" } };
       const [data, total] = await Promise.all(
         [Track.find(query).sort({ createdAt: -1 }).skip(skip).limit(limit).lean(), Track.countDocuments(query),]);
       return { data, total } as any
