@@ -68,6 +68,10 @@ import { ITrackRepository } from "../repositories/ITrackRepository";
 import { TrackRepository } from "../../infrastructure/repositories/track.repository";
 import TrackController from "../../presentation/controller/track.controller";
 import { ArtistRepository } from "../../infrastructure/repositories/artist.repository";
+import { IDeezerRepository } from "../repositories/IDeezerRepository";
+import { DeezerRepository } from "../../infrastructure/repositories/deezer.repository";
+import { FetchDeezerSongsUseCase } from "../../Application/usecases/deezer.usecase";
+import { DeezerController } from "../../presentation/controller/deezer.controller";
 
 const container = new Container();
 
@@ -77,6 +81,7 @@ container.bind<UserRepository>(TYPES.UserRepository).to(UserRepository);
 container.bind<ArtistRepository>(TYPES.ArtistRepository).to(ArtistRepository);
 container.bind<AdminRepository>(TYPES.AdminRepository).to(AdminRepository);
 container.bind<ITrackRepository>(TYPES.TrackRepository).to(TrackRepository);
+container.bind<IDeezerRepository>(TYPES.DeezerRepository).to(DeezerRepository);
 
 
 // ------------------ Services ------------------
@@ -90,6 +95,7 @@ container.bind<UserUseCase>(TYPES.UserUseCase).to(UserUseCase);
 container.bind<ArtistUseCase>(TYPES.ArtistUseCase).to(ArtistUseCase);
 container.bind<AdminUseCase>(TYPES.AdminUseCase).to(AdminUseCase);
 container.bind<ITrackUseCase>(TYPES.TrackUseCase).to(TrackUseCase);
+container.bind<FetchDeezerSongsUseCase>(TYPES.DeezerUseCase).to(FetchDeezerSongsUseCase); 
 
 // ------------------ Controllers ------------------
 container.bind<GenreController>(GenreController).toSelf();
@@ -97,6 +103,7 @@ container.bind<UserController>(UserController).toSelf();
 container.bind<ArtistController>(ArtistController).toSelf();
 container.bind<AdminController>(AdminController).toSelf();
 container.bind<TrackController>(TrackController).toSelf();
+container.bind<DeezerController>(DeezerController).toSelf(); 
 
 export default container;
 

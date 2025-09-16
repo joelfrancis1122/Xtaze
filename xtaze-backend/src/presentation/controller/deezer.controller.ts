@@ -1,19 +1,22 @@
 import { Request, Response } from "express";
 import { HttpStatus } from "../../domain/constants/httpStatus";
-import { FetchDeezerSongsUseCase } from "../../Application/usecases/deezer.usecase";
 import { MESSAGES } from "../../domain/constants/messages";
+import { inject, injectable } from "inversify";
+import TYPES from "../../domain/constants/types";
+import { IDeezerUseCase } from "../../domain/usecase/IDeezerUsecase";
 
+@injectable()
 export class DeezerController {
-  private fetchDeezerSongsUseCase: FetchDeezerSongsUseCase;
+  private deezerUseCase: IDeezerUseCase;
 
-  constructor(fetchDeezerSongsUseCase: FetchDeezerSongsUseCase) {
-    this.fetchDeezerSongsUseCase = fetchDeezerSongsUseCase;
+  constructor(@inject(TYPES.DeezerUseCase) deezerUseCase: IDeezerUseCase) {
+    this.deezerUseCase = deezerUseCase;
   }
 
   async getDeezerSongs(req: Request, res: Response): Promise<void> {
     try {
       const userId = req.query.userId as string | undefined;
-      const { songs, user } = await this.fetchDeezerSongsUseCase.execute(userId);
+      const { songs, user } = await this.deezerUseCase.execute(userId);
 
       if (songs.length === 0) {
         res.status(HttpStatus.NOT_FOUND).json({ error: MESSAGES.NO_SONG });
@@ -21,9 +24,10 @@ export class DeezerController {
         res.json({ success: true, songs, user });
       }
     } catch (error: unknown) {
-      res
-        .status(HttpStatus.INTERNAL_SERVER_ERROR)
-        .json({ error: MESSAGES.DEEZER_FAILED, details: (error as Error).message });
+      res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+        error: MESSAGES.DEEZER_FAILED,
+        details: (error as Error).message,
+      });
     }
   }
 }

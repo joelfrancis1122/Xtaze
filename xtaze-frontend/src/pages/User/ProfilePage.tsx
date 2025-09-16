@@ -256,24 +256,6 @@ export default function Home() {
                 <span className="mx-2"> </span>
                 <span className="text-white">Profile</span>
               </nav>
-              <div className="relative w-full sm:w-auto">
-                <Search
-                  className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-                  size={18}
-                />
-                <input
-                  type="search"
-                  placeholder="Search"
-                  className="bg-[#242424] rounded-full py-2 pl-10 pr-4 w-full sm:w-[250px] text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                />
-              </div>
-              <button
-                className="p-2 hover:bg-[#242424] rounded-full"
-                onClick={handleLogout}
-                aria-label="Log out"
-              >
-                <Power size={18} />
-              </button>
             </header>
 
             <section className="px-4 sm:px-6 py-4">
@@ -411,7 +393,7 @@ export default function Home() {
               <h3 className="text-lg sm:text-xl font-bold mt-6 sm:mt-8 mb-4 text-white">Advanced Settings</h3>
               <div className="bg-[#1d1d1d] p-4 sm:p-6 rounded-lg shadow-md">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4">
-                  <p className="text-white text-base sm:text-lg">Change Password</p>
+                  {/* <p className="text-white text-base sm:text-lg">Change Password</p> */}
                 </div>
                 <div
                   onClick={() => navigate("/equalizer")}
