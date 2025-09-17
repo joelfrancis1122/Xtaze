@@ -155,7 +155,7 @@ export default function RecentSongsPage() {
                 <span className="text-center">#</span>
                 <span>Title</span>
                 <span>Artist</span>
-                <span className="hidden sm:block">Album</span>
+                <span className="hidden sm:block">Genre</span>
                 <span className="hidden sm:block">Played</span>
                 <span></span>
               </div>
@@ -198,7 +198,7 @@ export default function RecentSongsPage() {
                     {Array.isArray(song.artists) ? song.artists.join(", ") : song.artists}
                   </span>
                   <span className="hidden sm:block text-gray-400 text-sm sm:text-lg truncate">
-                    {song.album}
+                    {song.genre}
                   </span>
                   <span className="hidden sm:block text-gray-400 text-sm sm:text-lg truncate">
                     {formatPlayedDate((song as any).playedAt)}

@@ -328,7 +328,7 @@ export default function PlaylistPageView() {
                 <span className="text-center">#</span>
                 <span>Title</span>
                 <span>Artist</span>
-                <span className="hidden sm:block">Album</span>
+                <span className="hidden sm:block">Genre</span>
                 <span className="text-right"></span>
               </div>
               {tracks.map((track, index) => (
@@ -367,7 +367,7 @@ export default function PlaylistPageView() {
                     {Array.isArray(track.artists) ? track.artists.join(", ") : track.artists}
                   </span>
                   <span className="hidden sm:block text-gray-400 text-sm sm:text-lg truncate">
-                    {track.album}
+                    {track.genre}
                   </span>
                   <div className="flex items-center justify-end space-x-2 md:opacity-0 md:group-hover:opacity-100 opacity-100 transition-opacity duration-200"></div>
                 </div>
