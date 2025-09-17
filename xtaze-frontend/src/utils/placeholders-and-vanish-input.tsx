@@ -1,8 +1,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { cn } from "../utils/utils";
-import { Search } from "lucide-react"; // 👈 make sure lucide-react is installed
-
+import { Search } from "lucide-react"; 
 export function PlaceholdersAndVanishInput({
   placeholders,
   onChange,

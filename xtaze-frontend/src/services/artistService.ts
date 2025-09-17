@@ -99,6 +99,9 @@ const apiCall = async <T>(
   }
 };
 
+
+
+
 export const loginArtist = async (email: string,password: string,dispatch: ReturnType<typeof useDispatch>): Promise<void> => {
   const data = await apiCall<{ success: boolean; artist: any; message?: string }>(
     artistApi,

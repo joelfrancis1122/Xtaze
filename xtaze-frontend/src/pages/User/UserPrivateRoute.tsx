@@ -4,16 +4,15 @@ import { RootState } from "../../store/store";
 import { clearSignupData } from "../../redux/userSlice";
 import { audio } from "../../utils/audio";
 const PrivateRoute = () => {
-  const token = localStorage.getItem("token");
   const dispatch = useDispatch()
   const role = useSelector((state: RootState) => state.user.signupData?.role);
   const user = useSelector((state: RootState) => state.user.signupData);
-  if (!token || role !== "user" || !user?.isActive) {
+  if (role !== "user" || !user?.isActive) {
     dispatch(clearSignupData())
     console.log("all cleared")
     audio.pause();
     audio.src = "";
-    localStorage.removeItem("token");
+    // localStorage.removeItem("token");
     return <Navigate to="/" replace />;
   }
   return <Outlet />;

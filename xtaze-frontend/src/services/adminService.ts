@@ -16,24 +16,34 @@ const apiCall = async <T>(
   instance: any,
   method: typeof HTTP_METHODS[keyof typeof HTTP_METHODS],
   url: string,
-  data?: any,
+  data?: any
 ): Promise<T> => {
   try {
     const token = localStorage.getItem("adminToken");
-    const config = {
-      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    const config: any = {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
       withCredentials: true,
     };
-    const response = method === "get"
-      ? await instance[method](url, config)
-      : method === "delete"
-        ? await instance.delete(url, config)
-        : await instance[method](url, data, config);
+
+    let response;
+    switch (method) {
+      case "get":
+        response = await instance.get(url, config);
+        break;
+      case "post":
+      case "put":
+        response = await instance[method](url, data, config);
+        break;
+      case "delete":
+        response = await instance.delete(url, { ...config, data });
+        break;
+      default:
+        throw new Error(`Unsupported method: ${method}`);
+    }
 
     if (!response.data) throw new Error(`Failed to ${method} ${url}`);
     return response.data as T;
   } catch (error: any) {
-
     console.error(`Error in ${method} ${url}:`, error);
     throw error;
   }

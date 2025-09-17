@@ -13,9 +13,9 @@ import {
   YAxis,
 } from "recharts";
 import { RootState } from "../../../store/store";
-import {fetchUserDetails } from "../../../services/adminService";
 import { aggregateDemographics } from "../../../utils/demographics";
 import { fetchArtistTracks } from "../../../services/artistService";
+import { fetchUserDetails } from "../../../services/adminService";
 
 // Define the structure for chart data
 interface ChartData {

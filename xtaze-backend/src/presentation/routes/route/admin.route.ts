@@ -1,7 +1,7 @@
 import express, { NextFunction, Request, Response } from "express";
 import GenreController from "../../../presentation/controller/genre.controller";
 import AdminController from "../../../presentation/controller/admin.controller";
-import { authenticateAdmin} from "../../middlewares/authMiddleware";
+import { authenticateAdmin, authenticateArtist} from "../../middlewares/authMiddleware";
 import ArtistController from "../../../presentation/controller/artist.controller";
 import upload from "../../middlewares/uploadMiddleware";
 import UserController from "../../../presentation/controller/user.controller";
@@ -45,8 +45,8 @@ router.post("/coupons/verify",authenticateAdmin,(req:Request,res:Response,next:N
 
 router.get("/music/monetization",authenticateAdmin,(req: Request, res: Response, next: NextFunction) => adminController.getMusicMonetization(req, res, next));
 router.post("/artistPayout",authenticateAdmin,(req: Request, res: Response, next: NextFunction) => adminController.artistPayout(req, res, next));
-router.post("/getUsersByIds",authenticateAdmin,(req: Request, res: Response, next: NextFunction) => adminController.getUsersByIds(req, res, next));
 router.put("/updateVerificationStatus",authenticateAdmin,(req: Request, res: Response, next: NextFunction) => adminController.updateVerificationStatus(req, res, next));
+router.post("/getUsersByIds",(req: Request, res: Response, next: NextFunction) => adminController.getUsersByIds(req, res, next));
 
 export default router;
 

@@ -4,13 +4,14 @@ import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import { HttpStatus } from "../../domain/constants/httpStatus";
+import UserModel from "../../infrastructure/db/models/UserModel";
 
 dotenv.config();
 
 const SECRET_KEY = process.env.JWT_SECRET || "kitila";
 
 interface AuthenticatedRequest extends Request {
-  user?: { id: string; email: string; role: string; [key: string]: any };
+  user?: { id: string; email: string; role: string;[key: string]: any };
 }
 
 class AppError extends Error {
@@ -38,19 +39,38 @@ const authenticateToken = (req: AuthenticatedRequest, res: Response, next: NextF
   }
 };
 
-//role based access control 
-export const authenticateUser = (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
+export const authenticateUser = async (
+  req: AuthenticatedRequest,
+  _res: Response,
+  next: NextFunction
+): Promise<void> => {
   try {
-    authenticateToken(req, res, () => {
-      if (req.user?.role !== "user") {
-        throw new AppError("Forbidden: User role required", HttpStatus.FORBIDDEN);
-      }
-      next();
+
+    const token = req.headers.authorization?.split(" ")[1];
+    if (!token) {
+      throw { status: HttpStatus.UNAUTHORIZED, message: "No token provided" };
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
+    req.user = { id: decoded.userId, email: decoded.email, role: decoded.role };
+    const user = await UserModel.findById(req.user.id);
+    if (!user) {
+      throw { status: HttpStatus.UNAUTHORIZED, message: "User not found" };
+    }
+    if (!user.isActive) {
+      throw { status: HttpStatus.FORBIDDEN, message: "Account disabled" };
+    }
+    if (req.user.role !== "user") {
+      throw { status: HttpStatus.FORBIDDEN, message: "User role required" };
+    }
+    next();
+  } catch (err: any) {
+    next({
+      statusCode: err.status || HttpStatus.UNAUTHORIZED,
+      message: err.message || "Invalid token",
     });
-  } catch (error) {
-    next(error);
   }
-};
+}
 
 export const authenticateArtist = (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
   try {

@@ -82,12 +82,7 @@ export default function Home() {
 
   useEffect(() => {
     const getTracksAndLikedSongsAndPlaylists = async () => {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        console.error("No token found or invalid role. Please login.");
-        setLoading(false);
-        return;
-      }
+    
 
       try {
         if (!user || !user.id) {

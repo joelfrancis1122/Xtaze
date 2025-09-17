@@ -51,7 +51,7 @@ export default class UserUseCase {
         return { success: false, message: MESSAGES.LOGIN_FAILED };
 
       const token = jwt.sign(
-        { userId: admin._id, email: admin.email, role: MESSAGES.ADMIN },
+        { userId: admin._id, email: admin.email, role: MESSAGES.ADMIN ,},
         process.env.JWT_SECRET!,
         { expiresIn: "7d" }
       );
