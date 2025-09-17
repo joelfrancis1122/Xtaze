@@ -24,9 +24,7 @@ export function PopularArtists() {
     const fetchTopArtists = async () => {
       try {
         setLoading(true);
-        const token = localStorage.getItem("adminToken");
-        if (!token) throw new Error("No token found. Please login.");
-
+        
         const { data: artistList } = await listActiveArtists(1, 100); 
         const filtered = artistList.filter((artist) => artist.role === "artist");
         

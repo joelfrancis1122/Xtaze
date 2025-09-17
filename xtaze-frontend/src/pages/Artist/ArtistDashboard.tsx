@@ -24,9 +24,8 @@ const ArtistDashboard = () => {
 
   useEffect(() => {
     const fetchMetrics = async () => {
-      const token = localStorage.getItem("artistToken");
 
-      if (!token || !user?.id) {
+      if (!user?.id) {
         console.error("Token or User ID not found. Please login.");
         setMostListenedSong("None");
         setTotalSongs("0");

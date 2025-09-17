@@ -36,7 +36,6 @@ const Login = () => {
       window.google.accounts.id.initialize({
         client_id: "132673285232-qlck5fpb2ak6n2ge8boj4g509vm7qbqh.apps.googleusercontent.com",
         callback: handleGoogleLogin,
-        auto_select: false,
       });
       window.google.accounts.id.renderButton(document.getElementById("googleLoginButton"), {
         theme: "outline",

@@ -38,8 +38,7 @@ export default function RecentSongsPage() {
 
   useEffect(() => {
     const getRecentSongs = async () => {
-      const token = localStorage.getItem("token");
-      if (!token || !user?.id) {
+      if (!user?.id) {
         setRecentSongs([]);
         setTracks([]);
         setLoading(false);
