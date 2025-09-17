@@ -35,13 +35,13 @@ router.post("/stripe/createProduct",authenticateAdmin,(req:Request,res:Response,
 router.get("/stripe/plans",authenticateAdmin,(req:Request,res:Response,next:NextFunction)=>adminController.getPlans(req,res,next))
 router.post("/stripe/products/delete",authenticateAdmin,(req:Request,res:Response,next:NextFunction)=>adminController.archiveSubscriptionPlan(req,res,next))
 router.put("/stripe/products/",authenticateAdmin,(req:Request,res:Response,next:NextFunction)=>adminController.updateSubscriptionPlan(req,res,next))
+router.get("/stripe/subscription-history",authenticateAdmin,(req: Request, res: Response, next: NextFunction) => userController.getSubscriptionHistory(req, res, next));
 
 router.get("/coupons",authenticateAdmin,(req:Request,res:Response,next:NextFunction)=>adminController.getCoupons(req,res,next))
 router.post("/coupons",authenticateAdmin,(req:Request,res:Response,next:NextFunction)=>adminController.createCoupon(req,res,next))
 router.put("/coupons",authenticateAdmin,(req:Request,res:Response,next:NextFunction)=>adminController.updateCoupon(req,res,next))
 router.delete("/coupons",authenticateAdmin,(req:Request,res:Response,next:NextFunction)=>adminController.deleteCoupon(req,res,next))
 router.post("/coupons/verify",authenticateAdmin,(req:Request,res:Response,next:NextFunction)=>adminController.verifyCoupon(req,res,next))
-router.get("/stripe/subscription-history",authenticateAdmin,(req: Request, res: Response, next: NextFunction) => userController.getSubscriptionHistory(req, res, next));
 
 router.get("/music/monetization",authenticateAdmin,(req: Request, res: Response, next: NextFunction) => adminController.getMusicMonetization(req, res, next));
 router.post("/artistPayout",authenticateAdmin,(req: Request, res: Response, next: NextFunction) => adminController.artistPayout(req, res, next));

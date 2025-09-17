@@ -544,6 +544,7 @@ export default class UserUseCase {
 
       const session = await this._stripe.checkout.sessions.create(sessionConfig);
       return session;
+      
     } catch (error) {
       throw error;
     }

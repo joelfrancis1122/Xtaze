@@ -543,7 +543,7 @@ export const updateVerificationStatus = async (
       { status, feedback },
 
     );
-    console.log(response,'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
+    console.log(response)
     return response;
   } catch (error) {
     console.error("Error in updateVerificationStatus service:", error);

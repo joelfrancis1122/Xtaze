@@ -322,7 +322,7 @@ export const fetchPlans = async (): Promise<string> => {
 
 // Fetch Pricing Plans
 export const fetchPricingPlans = async (): Promise<any[]> => {
-  const data = await apiCall<{ success: boolean; data: any[] }>(adminApi, HTTP_METHODS.GET, "/stripe/plans");
+  const data = await apiCall<{ success: boolean; data: any[] }>(userApi, HTTP_METHODS.GET, "/stripe/plans");
   if (!data.success) throw new Error("Failed to fetch pricing plans");
   return data.data.map((plan: any) => ({
     name: plan.product.name,

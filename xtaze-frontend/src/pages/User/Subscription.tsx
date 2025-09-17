@@ -23,7 +23,7 @@ interface PricingPlan {
 interface Coupon {
   _id: string;
   code: string;
-  discountAmount: number; // Percentage
+  discountAmount: number; 
   expires: string;
   maxUses: number;
   uses: number;

@@ -25,6 +25,7 @@ router.post("/refresh",(req:Request,res:Response,next:NextFunction)=>userControl
 router.post("/uploadProfilepic", authenticateUser,upload.single("profileImage"),(req:Request,res:Response,next:NextFunction)=>userController.uploadProfilepic(req,res,next))
 router.put("/updateBio",authenticateUser,(req:Request,res:Response,next:NextFunction)=>userController.updateBio(req,res,next))
 
+router.get("/stripe/plans",(req:Request,res:Response,next:NextFunction)=>adminController.getPlans(req,res,next))
 router.post("/checkOut",authenticateUser, async (req: Request, res: Response, next: NextFunction) => {await userController.checkOut(req, res, next)});
 router.post("/toggle-like",authenticateUser,(req:Request,res:Response,next:NextFunction)=>userController.toggleLike(req,res,next))
 router.post("/getliked",authenticateUser,(req:Request,res:Response,next:NextFunction)=>userController.getliked(req,res,next))
