@@ -17,42 +17,58 @@ export class ArtistRepository implements IArtistRepository {
   }
 
   async upload(data: ITrack): Promise<ITrack | null> {
-    const track = new Track(data);
-    return await track.save() as any
+    try {
+      const track = new Track(data);
+      const savedTrack = await track.save();
+
+      if (data.albumId) {
+        await AlbumModel.findByIdAndUpdate(
+          data.albumId,
+          { $addToSet: { tracks: savedTrack._id } },
+          { new: true }
+        ).exec();
+      }
+
+      return savedTrack.toObject() as any;
+    } catch (error) {
+      console.error("Error uploading track:", error);
+      throw new Error("Failed to upload track");
+    }
   }
 
-async updateTrackByArtist(
-  data: ITrack,
-  trackId: string
-): Promise<ITrack | null> {
-  try {
 
-    const updatedTrack = await Track.findByIdAndUpdate(trackId, data, {
-      new: true,
-    })
-      .lean<ITrack>()
-      .exec();
+  async updateTrackByArtist(
+    data: ITrack,
+    trackId: string
+  ): Promise<ITrack | null> {
+    try {
 
-    if (!updatedTrack) {
-      throw new Error("Track not found");
+      const updatedTrack = await Track.findByIdAndUpdate(trackId, data, {
+        new: true,
+      })
+        .lean<ITrack>()
+        .exec();
+
+      if (!updatedTrack) {
+        throw new Error("Track not found");
+      }
+
+      if (data.albumId) {
+        const albumObjectId = data.albumId
+
+        await AlbumModel.findByIdAndUpdate(
+          albumObjectId,
+          { $addToSet: { tracks: updatedTrack._id } },
+          { new: true }
+        ).exec();
+      }
+
+      return updatedTrack;
+    } catch (error) {
+      console.error("Error updating track:", error);
+      throw new Error("Failed to update track");
     }
-
-    if (data.albumId) {
-      const albumObjectId = data.albumId
-
-      await AlbumModel.findByIdAndUpdate(
-        albumObjectId,
-        { $addToSet: { tracks: updatedTrack._id } },
-        { new: true }
-      ).exec();
-    }
-
-    return updatedTrack;
-  } catch (error) {
-    console.error("Error updating track:", error);
-    throw new Error("Failed to update track");
   }
-}
 
   async getAllArtists(): Promise<IUser[]> {
     return await UserModel.find().lean<IUser[]>().exec();
@@ -61,8 +77,8 @@ async updateTrackByArtist(
   async getAllArtistsP(page: number, limit: number): Promise<{ data: IUser[]; total: number }> {
     const skip = (page - 1) * limit;
     const [data, total] = await Promise.all([
-      UserModel.find().skip(skip).limit(limit).lean<IUser>().exec(),
-      UserModel.countDocuments()
+      UserModel.find({ role: { $ne: "admin" } }).skip(skip).limit(limit).lean<IUser>().exec(),
+      UserModel.countDocuments({ role: { $ne: "admin" } })
     ]);
     return { data, total } as any
   }
@@ -81,7 +97,7 @@ async updateTrackByArtist(
       const skip = (page - 1) * limit;
       const artist = await UserModel.findById(userId);
       if (!artist) { throw new Error("Artist not found"); }
-    const query = { artists: { $regex: `^${artist.username}$`, $options: "i" } };
+      const query = { artists: { $regex: `^${artist.username}$`, $options: "i" } };
       const [data, total] = await Promise.all(
         [Track.find(query).sort({ createdAt: -1 }).skip(skip).limit(limit).lean(), Track.countDocuments(query),]);
       return { data, total } as any
@@ -173,9 +189,19 @@ async updateTrackByArtist(
 
 
   async saveCard(artistId: string, paymentMethodId: string): Promise<IUser | null> {
-    return await UserModel.findByIdAndUpdate(artistId, { paymentMethodId }, { new: true }).lean<IUser>().exec();
-  }
+    try {
+      const updatedArtist = await UserModel.findByIdAndUpdate(
+        artistId,
+        { stripePaymentMethodId: paymentMethodId },
+        { new: true }
+      );
 
+      return updatedArtist ? ({ ...updatedArtist.toObject(), _id: updatedArtist._id.toString() } as unknown as IUser) : null;
+    } catch (error) {
+      console.error(error);
+      return null;
+    }
+  }
   async checkcard(artistId: string): Promise<IUser | null> {
     return await UserModel.findById(artistId).lean<IUser>().exec();
   }
@@ -186,8 +212,26 @@ async updateTrackByArtist(
   }
 
   async requestVerification(artistId: string, imageFile: string): Promise<IVerificationRequest | null> {
-    const request = new UserModel({ artistId, documentUrl: imageFile, status: "pending" });
-    return await request.save() as any
+    try {
+      await VerificationModel.deleteOne({ artistId });
+
+      const verificationRequest: IVerificationRequest = {
+        artistId,
+        idProof: imageFile,
+        status: "pending",
+        submittedAt: new Date(),
+        reviewedAt: null,
+        feedback: null,
+      };
+
+      const newVerification = new VerificationModel(verificationRequest);
+      const savedVerification = await newVerification.save();
+
+      return savedVerification as any;
+    } catch (error) {
+      console.error("Error in verificationRepository.requestVerification:", error);
+      throw new Error("Failed to save verification request");
+    }
   }
 
   async usernameUpdate(userId: string, username: string): Promise<IUser | null> {

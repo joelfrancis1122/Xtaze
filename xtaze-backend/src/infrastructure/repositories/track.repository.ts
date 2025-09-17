@@ -14,6 +14,6 @@ import { BaseRepository } from "./BaseRepository";
   }
 
   async getAll(): Promise<ITrack[]> {
-    return await Track.find().sort({ createdAt: -1 }) as any
+    return await Track.find().sort({ createdAt: -1 }).populate("albumId","name") as any
   }
 }

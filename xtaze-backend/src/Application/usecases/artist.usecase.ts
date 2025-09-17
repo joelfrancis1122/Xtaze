@@ -272,11 +272,12 @@ async allAlbums(userid: string) {
     const imageUpload = imageFile ? await uploadIdproofCloud(imageFile) : null;
     if (!imageUpload) return null
     let image = imageUpload.secure_url
+    console.log("STAR")
     const verification = await this._artistRepository.requestVerification(artistId, image as string);
     if (!verification) {
       return { status: "unsubmitted" };
     }
-
+console.log(verification,"pdi")
     return {
       status: verification.status,
       idProof: verification.idProof,

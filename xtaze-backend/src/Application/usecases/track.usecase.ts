@@ -4,13 +4,22 @@ import TYPES from "../../domain/constants/types";
 import ITrackUseCase from "../../domain/usecase/ITrackUsecase";
 import { TrackDTO } from "../dtos/TrackDTO";
 import { TrackMapper } from "../mappers/TrackMapper";
+import { IUserRepository } from "../../domain/repositories/IUserRepository";
+import { UserMapper } from "../mappers/UserMapper";
+import { UserDTO } from "../dtos/UserDTO";
 
 @injectable()
 export class TrackUseCase implements ITrackUseCase {
   private _trackRepository: ITrackRepository;
+  private _userRepository: IUserRepository
 
-  constructor(@inject(TYPES.TrackRepository) trackRepository: ITrackRepository) {
+  constructor(
+    @inject(TYPES.TrackRepository) trackRepository: ITrackRepository,
+    @inject(TYPES.UserRepository) userRepository: IUserRepository
+  ) {
+
     this._trackRepository = trackRepository;
+    this._userRepository = userRepository
   }
 
   async uploadTrack(songFile: Express.Multer.File, imageFile: Express.Multer.File): Promise<TrackDTO> {
@@ -30,9 +39,16 @@ export class TrackUseCase implements ITrackUseCase {
     return TrackMapper.toDTO(savedTrack);
   }
 
-  async getAllTracks(): Promise<TrackDTO[] | null> {
-    const tracks = await this._trackRepository.getAll();
-    if (!tracks) return null;
-    return TrackMapper.toDTOs(tracks);
-  }
+async getAllTracks(
+  userId: string
+): Promise<{ tracks: TrackDTO[]; userData: UserDTO | null }> {
+  const tracks = await this._trackRepository.getAll()
+  const user = userId ? await this._userRepository.findById(userId) : null;
+
+  return {
+    tracks: tracks ? TrackMapper.toDTOs(tracks) : [],
+    userData: user ? UserMapper.toDTO(user) : null,
+  };
+}
+
 }

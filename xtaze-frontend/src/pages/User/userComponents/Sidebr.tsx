@@ -85,35 +85,43 @@ export default function SidebarX({ children }: { children: React.ReactNode }) {
               <LogoIcon signupData={signupData} handleProfileClick={handleProfileClick} />
             )}
 
-            <div className="mt-8 flex flex-col gap-2">
-              {links.map((link, idx) => (
-                <button
-                  key={idx}
-                  onClick={link.onClick}
-                  className={cn(
-                    "flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors",
-                    "text-neutral-700 dark:text-neutral-200"
-                  )}
-                >
-                  <link.icon className="h-5 w-5 shrink-0" />
-                  {open && <span className="text-sm font-medium">{link.label}</span>}
-                </button>
-              ))}
-            </div>
+      <div className="mt-8 flex flex-col gap-2">
+  {links.map((link, idx) => (
+    <div key={idx} className="relative group flex justify-center">
+      <button
+        onClick={link.onClick}
+        className={cn(
+          "relative flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors",
+          "text-neutral-700 dark:text-neutral-200"
+        )}
+      >
+        <link.icon className="h-5 w-5 shrink-0" />
+        {open && <span className="text-sm font-medium">{link.label}</span>}
+      </button>
+
+      {/* Label above icon (only when collapsed) */}
+      {!open && (
+        <span className="absolute -top-6 text-xs font-medium bg-black text-white px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-all duration-200 whitespace-nowrap">
+          {link.label}
+        </span>
+      )}
+    </div>
+  ))}
+</div>
+
           </div>
 
-          <button
-            onClick={() => setOpen(!open)}
-            className="flex items-center justify-center gap-2 px-3 py-2 rounded-lg hover:bg-neutral-200 dark:hover:bg-neutral-700 text-neutral-700 dark:text-neutral-200 transition-colors"
-          >
-            {open ? (
-              <>
-                <ChevronLeft className="h-5 w-5" />
-              </>
-            ) : (
-              <ChevronRight className="h-5 w-5" />
-            )}
-          </button>
+         <button
+  onClick={() => setOpen(!open)}
+  className="hidden md:flex items-center justify-center gap-2 px-3 py-2 rounded-lg hover:bg-neutral-200 dark:hover:bg-neutral-700 text-neutral-700 dark:text-neutral-200 transition-colors mb-20"
+>
+  {open ? (
+    <ChevronLeft className="h-5 w-5" />
+  ) : (
+    <ChevronRight className="h-5 w-5" />
+  )}
+</button>
+
         </SidebarBody>
       </Sidebar>
 

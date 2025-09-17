@@ -79,7 +79,6 @@ export default function ArtistDetailsPage() {
             (record: { userId: string }) => record.userId === artistId
           );
           const verificationStatus = verificationRecord ? verificationRecord.status : "unsubmitted";
-          console.log(userResponse, "odi")
           const artistData: Artist = {
             id: artistId,
             name: artistUsername,

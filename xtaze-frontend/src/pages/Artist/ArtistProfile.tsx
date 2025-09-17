@@ -248,6 +248,7 @@ export default function ArtistProfile() {
     formData.append("idProof", selectedFile);
 
     try {
+      console.log(user,"sssssssss",formData)
       await requestVerification(user.id, formData);
     
       setVerification({ status: "pending" });

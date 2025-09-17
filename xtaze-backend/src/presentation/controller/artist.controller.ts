@@ -221,6 +221,7 @@ export default class ArtistController {
   async saveCard(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { artistId, paymentMethodId } = req.body;
+      console.log("never ")
       await this._artistnUseCase.saveCard(artistId, paymentMethodId);
       res.status(HttpStatus.OK).json({ success: true, message: MESSAGES.CARD_SAVE_SUCCESS });
     } catch (error: unknown) {
@@ -264,9 +265,9 @@ export default class ArtistController {
 
   async requestVerification(req: Request, res: Response, next: NextFunction): Promise<void> {
     const { artistId } = req.body;
-
+console.log("===============")
     let imageFile: Express.Multer.File | undefined;
-
+    console.log(artistId,req.files,"Ss")
     if (req.files && !Array.isArray(req.files)) {
       const imageFiles = req.files["idProof"];
       imageFile = imageFiles?.[0];

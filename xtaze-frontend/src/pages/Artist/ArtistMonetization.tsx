@@ -11,6 +11,7 @@ import {
   fetchSongEarnings,
   saveCard,
 } from "../../services/artistService";
+import { CardElement, useElements, useStripe } from "@stripe/react-stripe-js";
 
 interface SongEarnings {
   trackId: string;
@@ -23,7 +24,6 @@ interface SongEarnings {
 
 // ✅ Card Input Component (lazy loads stripe hooks)
 const CardInput = ({ artistId, onCardSaved }: { artistId: string; onCardSaved: () => void }) => {
-  const { useStripe, useElements, CardElement } = require("@stripe/react-stripe-js");
   const stripe = useStripe();
   const elements = useElements();
   const [cardLoading, setCardLoading] = useState(false);

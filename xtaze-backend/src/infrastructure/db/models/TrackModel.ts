@@ -16,7 +16,7 @@ export interface ITrack {
 const TrackSchema = new Schema<ITrack>({
   title: { type: String, required: true },
   genre: { type: [String], required: true },
-  albumId: { type: String, required: true },
+  albumId: { type: String, ref: "Album", required: true },
   fileUrl: { type: String, required: true },
   img: { type: String, required: true },
   createdAt: { type: Date, default: Date.now },

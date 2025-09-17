@@ -311,21 +311,25 @@ const navigate = useNavigate()
               </LabelInputContainer>
               <LabelInputContainer>
                 <Label htmlFor="albumId">Album</Label>
-                <select
-                  id="albumId"
-                  name="albumId"
-                  value={songData.albumId}
-                  onChange={handleSongChange}
-                  className="bg-gray-800 text-white border border-gray-700 rounded-lg p-2 w-full"
-                  aria-describedby="albumId-desc"
-                >
-                  {/* <option value="">No Album</option> */}
-                  {albums.map((album) => (
-                    <option key={album.id} value={album.id}>
-                      {album.name}
-                    </option>
-                  ))}
-                </select>
+               <select
+  id="albumId"
+  name="albumId"
+  value={songData.albumId}
+  onChange={handleSongChange}
+  className="bg-gray-800 text-white border border-gray-700 rounded-lg p-2 w-full"
+  aria-describedby="albumId-desc"
+  required
+>
+  <option value="" disabled>
+    No Album
+  </option>
+  {albums.map((album) => (
+    <option key={album.id} value={album.id}>
+      {album.name}
+    </option>
+  ))}
+</select>
+
                 <span id="albumId-desc" className="text-sm text-gray-400">
                   Select an album or create a new one.
                 </span>

@@ -26,7 +26,10 @@ const apiCall = async <T>(
     };
     const response = method === "get"
       ? await instance[method](url, config)
-      : await instance[method](url, data, config);
+      : method === "delete"
+        ? await instance.delete(url, config)
+        : await instance[method](url, data, config);
+
     if (!response.data) throw new Error(`Failed to ${method} ${url}`);
     return response.data as T;
   } catch (error: any) {
@@ -229,6 +232,7 @@ export const fetchBanners = async (): Promise<IBanner[]> => {
   const data = await apiCall<{ data: IBanner[] }>(adminApi, HTTP_METHODS.GET, "/banners/all", undefined);
   return data.data;
 };
+
 export const createBanner = async (
   banner: {
     id?: string;
@@ -263,7 +267,7 @@ export const createBanner = async (
 
 export const updateBanner = async (
   id: string,
-  banner: { id?:string,title: string; description: string; file?: File; action: string; isActive: boolean },
+  banner: { id?: string, title: string; description: string; file?: File; action: string; isActive: boolean },
 
 ): Promise<IBanner> => {
   const formData = new FormData();
@@ -539,6 +543,7 @@ export const updateVerificationStatus = async (
       { status, feedback },
 
     );
+    console.log(response,'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
     return response;
   } catch (error) {
     console.error("Error in updateVerificationStatus service:", error);

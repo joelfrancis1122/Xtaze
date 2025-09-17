@@ -4,6 +4,7 @@ import { CouponDTO } from "../dtos/CouponDTO";
 export class CouponMapper {
   static toDTO(coupon: ICoupon): CouponDTO {
     return {
+      id: coupon.id!,
       code: coupon.code,
       discountAmount: coupon.discountAmount,
       expires: coupon.expires,

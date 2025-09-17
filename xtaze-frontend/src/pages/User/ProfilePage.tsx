@@ -5,7 +5,7 @@ import { RootState } from "../../store/store";
 import { clearSignupData, saveSignupData } from "../../redux/userSlice";
 import { toast } from "sonner";
 import Cropper, { Area } from "react-easy-crop";
-import { Camera, Power, Search, Edit2, CheckCircle, XCircle } from "lucide-react";
+import { Camera, Edit2, CheckCircle, XCircle } from "lucide-react";
 import { becomeArtist, uploadProfileImage, updateUsername, checkUsername } from "../../services/userService";
 import { UserSignupData } from "./types/IUser";
 import profileImg from "../../assets/profile4.jpeg";
@@ -85,12 +85,7 @@ export default function Home() {
     }
   }, [newUsername, isEditingUsername, checkUsernameAvailability, user?.username]); // Includes checkUsernameAvailability for completeness, but it's now stable
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    dispatch(clearSignupData());
-    navigate("/", { replace: true });
-  };
-
+ 
   const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;

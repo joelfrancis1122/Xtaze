@@ -162,7 +162,7 @@ export default class AdminRepository extends BaseRepository<IUser> implements IA
   async deleteCoupon(couponId: string): Promise<ICoupon | null> {
     try {
       const coupons = await CouponModel.findByIdAndDelete(couponId);
-      return coupons
+      return coupons as any
     } catch (error: unknown) {
       throw new Error("Failed to save coupon: " + (error as Error).message);
     }

@@ -33,7 +33,7 @@ export default function AdminAnalytics() {
 
             try {
                 const response = await fetchAllArtistsVerification(page, 7);
-
+                console.log(response.data,"achar")
                 const verificationData = response.data;
                 setTotalPages(response.pagination.totalPages);
 
@@ -47,8 +47,8 @@ export default function AdminAnalytics() {
                         new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime()
                     )
                     .map((verification: any) => ({
-                        _id: verification._id,
-                        artistId: verification.artistId,
+                        id: verification.id,
+                        artistId: verification.userId,
                         username: verification.username ?? "Unknown",
                         verification: {
                             status: verification.status,
@@ -56,8 +56,9 @@ export default function AdminAnalytics() {
                             feedback: verification.feedback,
                         },
                     }));
-
-                setArtists(mappedData);
+                    console.log(mappedData,'before')
+                    setArtists(mappedData);
+                    console.log(mappedData,'after')
             } catch (error) {
                 console.error("Error fetching data:", error);
                 toast.error("Failed to load artist data.");
@@ -67,11 +68,8 @@ export default function AdminAnalytics() {
         fetchData();
     }, [token, page]);
 
-    const handleVerify = async (
-        verificationId: string,
-        status: "approved" | "rejected",
-        feedback: string | null = null
-    ) => {
+    const handleVerify = async (verificationId: string,status: "approved" | "rejected",feedback: string | null = null) => {
+      console.log("verificationId",verificationId,feedback,status)
         try {
             const updatedVerification = await updateVerificationStatus(
                 status,
@@ -117,7 +115,7 @@ export default function AdminAnalytics() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {artists.map((artist,index) => (
+                                {artists.map((artist, index) => (
                                     <tr key={index} className="border-b border-gray-700">
                                         <td className="py-2 text-white">{artist.username}</td>
                                         <td className="py-2 text-white">{artist.verification.status}</td>
@@ -150,13 +148,16 @@ export default function AdminAnalytics() {
                                                 <>
                                                     <Button
                                                         className="bg-[#0d1e00] hover:bg-[#1b2414]"
-                                                        onClick={() => handleVerify(artist.id, "approved")}
+                                                        onClick={() => {
+                                                            
+                                                            handleVerify(artist.id, "approved")}}
                                                     >
                                                         Approve
                                                     </Button>
                                                     <Button
                                                         className="ml-4 bg-[#380000] hover:bg-[#241111]"
                                                         onClick={() => {
+                                                            console.log(artist,"sssssssssssssssssss")
                                                             const feedback = prompt("Enter rejection feedback (optional):");
                                                             handleVerify(artist.id, "rejected", feedback);
                                                         }}

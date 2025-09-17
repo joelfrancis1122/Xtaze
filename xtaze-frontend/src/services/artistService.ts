@@ -325,12 +325,13 @@ export const getVerificationStatus = async (artistId: string): Promise<Verificat
     return response.data;
   } catch (error: any) {
     console.error("Error fetching verification status:", error);
-    return { status: "unsubmitted" }; // if no record exists
+    return { status: "unsubmitted" };
   }
 };
 
 export const requestVerification = async (artistId: string,formData: FormData): Promise<{ idProof: string }> => {
   formData.append("artistId", artistId);
+  console.log(formData,"insn")
   const data = await apiCall<{ success: boolean; idProof?: string; message?: string }>(
     artistApi,
     HTTP_METHODS.POST,

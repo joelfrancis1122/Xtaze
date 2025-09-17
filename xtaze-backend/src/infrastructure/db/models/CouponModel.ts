@@ -1,8 +1,9 @@
-import mongoose, { Schema, Document } from "mongoose";
+import mongoose, { Schema, Document, Types } from "mongoose";
 import { ICoupon } from "../../../domain/entities/ICoupon";
-interface CouponModel extends ICoupon, Document {}
-
-const CouponSchema = new Schema<CouponModel>(
+export interface CouponDocument extends Omit<ICoupon, "id">, Document {
+  _id: Types.ObjectId;   // override to match Mongo
+}
+const CouponSchema = new Schema<CouponDocument>(
   {
     
     code: { type: String, required: true, unique: true },
@@ -26,4 +27,4 @@ CouponSchema.pre("save", function (next) {
   next();
 });
 
-export const CouponModel = mongoose.model<CouponModel>("Coupon", CouponSchema);
+export const CouponModel = mongoose.model<CouponDocument>("Coupon", CouponSchema);

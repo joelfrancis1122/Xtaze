@@ -217,13 +217,13 @@ export default function LikedSongsPage() {
                 Loading liked songs...
               </div>
             ) : likedSongs.length > 0 ? (
-              <div className="bg-[#151515] rounded-xl shadow-lg border border-black-900 overflow-hidden">
+              <div className="bg-black rounded-xl shadow-lg border-black-900 overflow-hidden">
                 <div className="hidden md:grid grid-cols-[48px_48px_2fr_1fr_1fr_48px_48px] gap-4 px-6 py-4 text-gray-400 text-lg font-semibold border-b border-gray-700">
                   <span className="text-center"></span>
                   <span className="text-center">#</span>
                   <span>Title</span>
                   <span>Artist</span>
-                  <span>Album</span>
+                  <span>Genre</span>
                   <span></span>
                   <span></span>
                 </div>
@@ -283,7 +283,7 @@ export default function LikedSongsPage() {
                                   {Array.isArray(song.artists) ? song.artists.join(", ") : song.artists}
                                 </span>
                                 <span className="text-gray-400 text-sm sm:text-lg truncate hidden md:block">
-                                  {song.album}
+                                  {song.genre}
                                 </span>
                                 <div className="hidden md:flex items-center justify-end md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-200"></div>
                                 <div className="flex items-center justify-end md:opacity-0 md:group-hover:opacity-100 opacity-100 transition-opacity duration-200">

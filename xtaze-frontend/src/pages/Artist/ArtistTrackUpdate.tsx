@@ -51,35 +51,35 @@ export function ArtistSongUpdatePage() {
     document.head.appendChild(styleSheet);
 
     return () => {
-      document.head.removeChild(styleSheet); 
+      document.head.removeChild(styleSheet);
     };
   }, []);
 
   // Fetch songs on mount
   useEffect(() => {
-  const fetchSongs = async () => {
-    if (!token || !user?.id) {
-      toast.error("Please log in to fetch tracks.");
-      return;
-    }
-    try {
-      const response = await fetchArtistTracks(user.id, page, limit);
-      if (Array.isArray(response.data)) {
-        setTopSongs(response.data);
-        setTotalPages(response.pagination.totalPages);
-      } else {
-        setTopSongs([]);
-        toast.error("No tracks found.");
+    const fetchSongs = async () => {
+      if (!token || !user?.id) {
+        toast.error("Please log in to fetch tracks.");
+        return;
       }
-    } catch (error: any) {
-      console.error("Error fetching tracks:", error);
-      toast.error(error.message || "Error fetching tracks.");
-      setTopSongs([]);
-    }
-  };
+      try {
+        const response = await fetchArtistTracks(user.id, page, limit);
+        if (Array.isArray(response.data)) {
+          setTopSongs(response.data);
+          setTotalPages(response.pagination.totalPages);
+        } else {
+          setTopSongs([]);
+          toast.error("No tracks found.");
+        }
+      } catch (error: any) {
+        console.error("Error fetching tracks:", error);
+        toast.error(error.message || "Error fetching tracks.");
+        setTopSongs([]);
+      }
+    };
 
-  fetchSongs();
-}, [user?.id, page, limit]);
+    fetchSongs();
+  }, [user?.id, page, limit]);
 
   // Play/Pause functionality
   const handlePlayPause = (song: Song) => {
@@ -128,7 +128,13 @@ export function ArtistSongUpdatePage() {
   // Handle text input changes
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setEditedSong((prev) => ({ ...prev, [name]: value }));
+
+    setEditedSong((prev) => {
+      if (name === "genre") {
+        return { ...prev, genre: [value] };
+      }
+      return { ...prev, [name]: value };
+    });
   };
 
   // Handle image file change
@@ -144,13 +150,18 @@ export function ArtistSongUpdatePage() {
   };
   const dispatch = useDispatch();
 
-  // Save updated song
   const saveSong = async () => {
     if (!editingSongId || !editedSong.id) return;
 
     const token = localStorage.getItem("artistToken");
     if (!token) {
       toast.error("No authentication token found. Please login.");
+      return;
+    }
+
+    // Validate album selection
+    if (!editedSong.albumId || editedSong.albumId === "null") {
+      toast.error("Please select a valid album before saving changes.");
       return;
     }
 
@@ -165,7 +176,7 @@ export function ArtistSongUpdatePage() {
         genre: Array.isArray(editedSong.genre)
           ? editedSong.genre
           : (editedSong.genre ? String(editedSong.genre).split(",").map(g => g.trim()) : []),
-        albumId: editedSong.albumId || "",
+        albumId: editedSong.albumId,
         img: imageFile || undefined,
         fileUrl: audioFile || undefined,
       };
@@ -188,6 +199,7 @@ export function ArtistSongUpdatePage() {
       toast.error(error?.message || "An error occurred while updating the song.");
     }
   };
+
 
   // Cancel editing
   const cancelEditing = () => {
@@ -255,40 +267,40 @@ export function ArtistSongUpdatePage() {
                   <th className="px-4 py-2 text-center text-sm font-semibold border-b">Actions</th>
                 </tr>
               </thead>
-         <TableBody>
-  {topSongs && topSongs.length > 0 ? (
-    topSongs.map((song) => {
-      const isPlaying = playingSongId === song.id;
-      return (
-        <TableRow key={song.id} className="hover:bg-gray-700">
-          <TableCell>
-            <button onClick={() => handlePlayPause(song)} className="p-1">
-              {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-            </button>
-          </TableCell>
-          <TableCell className="text-xs md:text-sm font-medium">{song.title}</TableCell>
-          <TableCell className="text-xs md:text-sm text-center">
-            {(song.listeners?.length || 0).toLocaleString()}
-          </TableCell>
-          <TableCell className="text-center">
-            <button
-              onClick={() => startEditing(song)}
-              className="p-1 text-blue-400 hover:text-blue-300"
-            >
-              <Edit2 className="h-4 w-4" />
-            </button>
-          </TableCell>
-        </TableRow>
-      );
-    })
-  ) : (
-    <TableRow>
-      <TableCell colSpan={4} className="text-center text-xs md:text-sm py-4">
-        No tracks available.
-      </TableCell>
-    </TableRow>
-  )}
-</TableBody>
+              <TableBody>
+                {topSongs && topSongs.length > 0 ? (
+                  topSongs.map((song) => {
+                    const isPlaying = playingSongId === song.id;
+                    return (
+                      <TableRow key={song.id} className="hover:bg-gray-700">
+                        <TableCell>
+                          <button onClick={() => handlePlayPause(song)} className="p-1">
+                            {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+                          </button>
+                        </TableCell>
+                        <TableCell className="text-xs md:text-sm font-medium">{song.title}</TableCell>
+                        <TableCell className="text-xs md:text-sm text-center">
+                          {(song.listeners?.length || 0).toLocaleString()}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <button
+                            onClick={() => startEditing(song)}
+                            className="p-1 text-blue-400 hover:text-blue-300"
+                          >
+                            <Edit2 className="h-4 w-4" />
+                          </button>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={4} className="text-center text-xs md:text-sm py-4">
+                      No tracks available.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
 
             </Table>
           </Card>
@@ -351,7 +363,6 @@ export function ArtistSongUpdatePage() {
                     value={editedSong.genre?.[0] || ""}
                     onChange={handleInputChange}
                     className="w-full p-2 bg-gray-800 border border-gray-700 rounded text-white text-sm"
-                    aria-describedby="genre-desc"
                   >
                     <option value="" disabled>
                       Select Genre
@@ -362,34 +373,30 @@ export function ArtistSongUpdatePage() {
                       </option>
                     ))}
                   </select>
+
                   <span id="genre-desc" className="text-xs text-gray-400">
                     Select the song genre.
                   </span>
                 </div>
-                <div>
-                  <label
-                    htmlFor="albumId"
-                    className="block text-xs md:text-sm font-medium mb-1"
-                  >
-                    Album
-                  </label>
-                  <select
-                    id="albumId"
-                    name="albumId"
-                    value={editedSong.albumId || ""}
-                    onChange={handleInputChange}
-                    className="w-full p-2 bg-gray-800 border border-gray-700 rounded text-white text-sm"
-                    aria-describedby="albumId-desc"
-                  >
-                    {/* <option value="">No Album</option> */}
-                    {albums.map((album) => (
-                      <option key={album.id} value={album.id}>
-                        {album.name}
-                      </option>
-                    ))}
-                  </select>
+                <select
+                  id="albumId"
+                  name="albumId"
+                  value={editedSong.albumId || "null"}
+                  onChange={handleInputChange}
+                  className="w-full p-2 bg-gray-800 border border-gray-700 rounded text-white text-sm"
+                  aria-describedby="albumId-desc"
+                >
+                  <option value="null" disabled>
+                    Select an Album
+                  </option>
+                  {albums.map((album) => (
+                    <option key={album.id} value={album.id}>
+                      {album.name}
+                    </option>
+                  ))}
+                </select>
 
-                </div>
+
               </div>
               <div className="flex justify-end gap-2 mt-6">
                 <Button
@@ -407,25 +414,25 @@ export function ArtistSongUpdatePage() {
               </div>
             </Card>
           )}
-        <div className="flex justify-between items-center mt-4">
-  <Button
-    disabled={page === 1}
-    onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
-  >
-    Previous
-  </Button>
+          <div className="flex justify-between items-center mt-4">
+            <Button
+              disabled={page === 1}
+              onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
+            >
+              Previous
+            </Button>
 
-  <span className="text-gray-400">
-    Page {page} of {totalPages}
-  </span>
+            <span className="text-gray-400">
+              Page {page} of {totalPages}
+            </span>
 
-  <Button
-    disabled={page === totalPages || totalPages === 0}
-    onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
-  >
-    Next
-  </Button>
-</div>
+            <Button
+              disabled={page === totalPages || totalPages === 0}
+              onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
+            >
+              Next
+            </Button>
+          </div>
         </main>
       </div>
     </div>

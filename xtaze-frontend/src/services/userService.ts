@@ -153,10 +153,12 @@ export const googleLogin = async (idToken: string, dispatch: ReturnType<typeof u
 export const fetchTracks = async (userId: string, isPremium: string): Promise<{ tracks: Track[]; user?: UserSignupData }> => {
   const instance = isPremium !== "Free" ? providerApi : deezerApi;
   const url = isPremium !== "Free" ? `/getAllTracks?userId=${userId}` : `/songs/deezer?userId=${userId}`;
-  const data = await apiCall<{ success: boolean; tracks?: Track[]; songs?: Track[]; user?: UserSignupData }>(instance, HTTP_METHODS.GET, url);
+  const data = await apiCall<{
+    userData: UserSignupData | undefined; success: boolean; tracks?: Track[]; songs?: Track[]; user?: UserSignupData 
+}>(instance, HTTP_METHODS.GET, url);
   // if (!data.success) throw new Error("Failed to fetch tracks");
   const tracks = (isPremium !== "Free" ? data.tracks : data.songs) || [];
-  return { tracks, user: data.user };
+  return { tracks, user: data.userData };
 };
 
 // Fetch All Tracks

@@ -24,10 +24,10 @@ router.post("/albumsa",authenticateArtist,upload.fields([{ name: "file", maxCoun
 router.get("/listActiveGenres",authenticateArtist,(req:Request,res:Response,next:NextFunction)=>genreController.listActiveGenres(req,res,next))
 router.get("/getAllTracksArtist",authenticateArtist,(req:Request,res:Response,next:NextFunction)=>artistController.getAllTracksArtist(req,res,next))
 router.post("/incrementListeners",authenticateArtist,(req:Request,res:Response,next:NextFunction)=>artistController.incrementListeners(req,res,next))
-router.get("/statsOfArtist",(req:Request,res:Response,next:NextFunction)=>artistController.statsOfArtist(req,res,next))
+router.get("/statsOfArtist",authenticateArtist,(req:Request,res:Response,next:NextFunction)=>artistController.statsOfArtist(req,res,next))
 
-router.get("/checkcard",(req:Request,res:Response,next:NextFunction)=>artistController.checkcard(req,res,next))
-router.post("/saveCard",(req:Request,res:Response,next:NextFunction)=>artistController.saveCard(req,res,next))
+router.get("/checkcard",authenticateArtist,(req:Request,res:Response,next:NextFunction)=>artistController.checkcard(req,res,next))
+router.post("/saveCard",authenticateArtist,(req:Request,res:Response,next:NextFunction)=>artistController.saveCard(req,res,next))
 
 router.put("/updateTrackByArtist",authenticateArtist,upload.fields([{ name: "fileUrl", maxCount: 1 }, { name: "img", maxCount: 1 }]),(req:Request,res:Response,next:NextFunction)=>artistController.updateTrackByArtist(req,res,next))
 router.get("/getVerificationStatus",authenticateArtist,(req:Request,res:Response,next:NextFunction)=>artistController.getVerificationStatus(req,res,next))

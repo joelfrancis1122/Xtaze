@@ -7,7 +7,7 @@ import { Button } from "../../components/ui/button";
 import { createCoupon, deleteCoupon, fetchCoupons, updateCoupon } from "../../services/adminService";
 
 interface Coupon {
-  _id: string;
+  id: string;
   code: string;
   discountAmount: number;
   expires: string;
@@ -88,7 +88,7 @@ export default function AdminCouponPage() {
 
     try {
       const createdCoupon = await createCoupon(newCoupon);
-      setCoupons([...coupons, { ...createdCoupon, _id: createdCoupon._id }]);
+      setCoupons([...coupons, { ...createdCoupon, id: createdCoupon.id }]);
       setNewCoupon({ code: "", discountAmount: 0, expires: "", maxUses: 0 });
       setIsCreateFormOpen(false);
       setErrors({});
@@ -117,8 +117,8 @@ export default function AdminCouponPage() {
     }
 
     try {
-      const updatedCoupon = await updateCoupon(editingCoupon._id, newCoupon);
-      setCoupons(coupons.map((c) => (c._id === editingCoupon._id ? updatedCoupon : c)));
+      const updatedCoupon = await updateCoupon(editingCoupon.id, newCoupon);
+      setCoupons(coupons.map((c) => (c.id === editingCoupon.id ? updatedCoupon : c)));
       setEditingCoupon(null);
       setNewCoupon({ code: "", discountAmount: 0, expires: "", maxUses: 0 });
       setIsModalOpen(false);
@@ -136,7 +136,7 @@ export default function AdminCouponPage() {
     }
     try {
       await deleteCoupon(id);
-      setCoupons(coupons.filter((c) => c._id !== id));
+      setCoupons(coupons.filter((c) => c.id !== id));
       toast.success("Coupon deleted successfully!");
     } catch (error: any) {
       toast.error(error.message || "Failed to delete coupon");
@@ -262,7 +262,7 @@ export default function AdminCouponPage() {
                         <button onClick={() => handleEditCoupon(coupon)} className="text-gray-400 hover:text-white">
                           <Edit size={18} />
                         </button>
-                        <button onClick={() => handleDeleteCoupon(coupon._id)} className="text-gray-400 hover:text-red-500">
+                        <button onClick={() => handleDeleteCoupon(coupon.id)} className="text-gray-400 hover:text-red-500">
                           <Trash2 size={18} />
                         </button>
                       </td>

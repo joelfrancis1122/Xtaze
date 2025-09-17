@@ -104,10 +104,9 @@ export default function Home() {
         );
         setTracks(fetchedTracks);
 
-        if (updatedUser) {
-          dispatch(saveSignupData(updatedUser));
+       if (updatedUser) {
+        dispatch(saveSignupData(updatedUser));
         }
-
         if (user.likedSongs && user.likedSongs.length > 0) {
           const liked = await fetchLikedSongs(user.id || "", user.likedSongs);
           setLikedTracks(liked);
@@ -309,7 +308,9 @@ export default function Home() {
   const handlePlayFromModal = (track: Track) => {
     handlePlay(track);
   };
-
+const handleDotClick = (i: number) => {
+  setCurrentIndex(i);
+};
 
   const filteredTracks = tracks.filter((track) => {
 
@@ -347,54 +348,54 @@ export default function Home() {
 
             <section className="px-6 py-4 pb-25">
               {/* Carousel Banner */}
-              <div className="mb-8">
-                <h2 className="text-3xl font-bold mb-4">Enjoy Hi-Res Songs</h2>
-                <div className="relative w-full h-[300px] rounded-lg overflow-hidden shadow-lg">
-                  <div className="w-full h-full overflow-hidden">
-                    <div
-                      className="flex transition-transform duration-500 ease-in-out w-full"
-                      style={{ transform: `translateX(-${currentIndex * 100}%)` }}
-                    >
-                      {banners.map((banner,index) => (
-                        <div
-                          key={index}
-                          className="min-w-full w-full flex-shrink-0 relative cursor-pointer"
-                        >
-                          <img
-                            src={banner.imageUrl}
-                            alt={banner.title}
-                            className="w-full h-full object-cover opacity-80"
-                          />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent shadow-inner z-10 pointer-events-none" />
-                          <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
-                            <button className="p-4 bg-black/50 rounded-full hover:bg-black/70 transition-colors pointer-events-auto">
-                              <Play size={32} className="text-white" />
-                            </button>
-                          </div>
-                          <div className="absolute bottom-40 left-4 z-20">
-                            <h3 className="text-2xl font-bold text-white shadow-text">{banner.title}</h3>
-                            <p className="text-gray-300 shadow-text">{banner.description}</p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                  {banners.length > 1 && (
-                    <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-2 z-20">
-                      {banners.map((_, index) => (
-                        <button
-                          key={index}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setCurrentIndex(index);
-                          }}
-                          className={`w-2 h-2 rounded-full ${index === currentIndex ? "bg-white" : "bg-gray-500"}`}
-                        />
-                      ))}
-                    </div>
-                  )}
+           <div className="mb-8">
+      <h2 className="text-3xl font-bold mb-4">Enjoy Hi-Res Songs</h2>
+      <div className="relative w-full h-[300px] rounded-lg overflow-hidden shadow-lg">
+        <div className="w-full h-full overflow-hidden">
+          <div
+            className="flex transition-transform duration-500 ease-in-out w-full"
+            style={{ transform: `translateX(-${currentIndex * 100}%)` }}
+          >
+            {banners.map((banner, index) => (
+              <div
+                key={index}
+                className="min-w-full w-full flex-shrink-0 relative cursor-pointer"
+              >
+                <img
+                  src={banner.imageUrl}
+                  alt={banner.title}
+                  className="w-full h-full object-cover opacity-80"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent shadow-inner z-10 pointer-events-none" />
+                <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
+                  <button className="p-4 bg-black/50 rounded-full hover:bg-black/70 transition-colors pointer-events-auto">
+                    <Play size={32} className="text-white" />
+                  </button>
+                </div>
+                <div className="absolute bottom-40 left-4 z-20">
+                  <h3 className="text-2xl font-bold text-white shadow-text">{banner.title}</h3>
+                  <p className="text-gray-300 shadow-text">{banner.description}</p>
                 </div>
               </div>
+            ))}
+          </div>
+        </div>
+        {banners.length > 1 && (
+          <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-2 z-20">
+            {banners.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => handleDotClick(index)}
+                className={`w-2 h-2 rounded-full ${
+                  index === currentIndex ? 'bg-white' : 'bg-gray-500'
+                }`}
+                aria-label={`Go to slide ${index + 1}`}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
 
               {/* New Arrivals Section */}
               <div className="mb-8">

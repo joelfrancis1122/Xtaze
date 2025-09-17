@@ -1,7 +1,7 @@
 export interface Track {
   id: string
   title: string
-  album?: string |null
+  albumId?: string |null
   artists: string | string[];
   artist?: string | string[];
   genre: string

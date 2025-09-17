@@ -35,20 +35,25 @@ export default class TrackController {
     }
   }
 
-  async getAll(req: Request, res: Response, next: NextFunction): Promise<void> {
-    try {
-      const tracks = await this._trackUseCase.getAllTracks();
-      if (!tracks || tracks.length === 0) {
-        throw new AppError(MESSAGES.NO_TRACKS_FOUND, HttpStatus.NOT_FOUND);
-      }
+async getAll(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { userId } = req.query;
 
-      res.status(HttpStatus.OK).json({
-        success: true,
-        message: MESSAGES.TRACKS_AND_USER_FETCH_SUCCESS,
-        tracks,
-      });
-    } catch (error) {
-      next(error);
+    const { tracks, userData } = await this._trackUseCase.getAllTracks(userId as string);
+
+    if (!tracks || tracks.length === 0) {
+      throw new AppError(MESSAGES.NO_TRACKS_FOUND, HttpStatus.NOT_FOUND);
     }
+
+    res.status(HttpStatus.OK).json({
+      success: true,
+      message: MESSAGES.TRACKS_AND_USER_FETCH_SUCCESS,
+      tracks,
+      userData,
+    });
+  } catch (error) {
+    next(error);
   }
+}
+
 }

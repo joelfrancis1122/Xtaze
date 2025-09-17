@@ -7,7 +7,7 @@ export class ArtistMapper {
       id: artist._id!,
       username: artist.username,
       email: artist.email,
-      role: "artist",
+      role: artist.role,
       isActive: artist.isActive ?? true,
       profilePic: artist.profilePic,
       bio: artist.bio,

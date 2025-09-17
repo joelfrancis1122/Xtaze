@@ -236,7 +236,7 @@ export default class UserRepository extends BaseRepository<IUser> implements IUs
 
   async getliked(songIds: string, userId: string) {
     try {
-      const tracks = await Track.find({ _id: { $in: songIds } });
+      const tracks = await Track.find({ _id: { $in: songIds } }).populate("albumId","name")
       return tracks as any
     } catch (error) {
       console.error("Error in getliked:", error);
@@ -545,7 +545,7 @@ export default class UserRepository extends BaseRepository<IUser> implements IUs
   async getAllTracks(): Promise<ITrack[] | null> {
     try {
 
-      const track = await Track.find();
+      const track = await Track.find().populate("albumId","name")
       return track
     } catch (error: unknown) {
       throw new Error((error as Error).message || "Failed to check coupon usage");
