@@ -98,14 +98,15 @@ export default function Home() {
           return;
         }
 
-        const { tracks: fetchedTracks, user: updatedUser } = await fetchTracks(
+        const { tracks: fetchedTracks, user: updatedUsers } = await fetchTracks(
           user.id,
           user.premium || "Free"
         );
+        console.log(updatedUsers,"thats insane")
         setTracks(fetchedTracks);
 
-       if (updatedUser) {
-        dispatch(saveSignupData(updatedUser));
+       if (updatedUsers) {
+        dispatch(saveSignupData(updatedUsers));
         }
         if (user.likedSongs && user.likedSongs.length > 0) {
           const liked = await fetchLikedSongs(user.id || "", user.likedSongs);

@@ -156,9 +156,10 @@ export const fetchTracks = async (userId: string, isPremium: string): Promise<{ 
   const data = await apiCall<{
     userData: UserSignupData | undefined; success: boolean; tracks?: Track[]; songs?: Track[]; user?: UserSignupData 
 }>(instance, HTTP_METHODS.GET, url);
+console.log(data,"achaaa")
   // if (!data.success) throw new Error("Failed to fetch tracks");
   const tracks = (isPremium !== "Free" ? data.tracks : data.songs) || [];
-  return { tracks, user: data.userData };
+  return { tracks, user: data.userData||data.user };
 };
 
 // Fetch All Tracks
