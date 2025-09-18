@@ -41,7 +41,7 @@ export function StatsChart() {
     if (history.length === 0) return;
 
     const filteredHistory = history.filter(
-      (sub) => sub.planName && sub.email // Ensure planName and email are valid
+      (sub) => sub.planName && sub.email 
     );
 
     const dates = filteredHistory.map((sub) => new Date(sub.purchaseDate));
@@ -65,16 +65,15 @@ export function StatsChart() {
         revenue: subscriptionsOnDate.reduce((sum, sub) => sum + sub.price, 0),
       };
     });
-
     setChartData(data);
+    console.log(chartData,"sss")
   }, [history]);
 
   return (
     <div className="h-[300px] w-full">
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={chartData}>
-          {/* <XAxis dataKey="date" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} /> */}
-          {/* <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `${value}`} /> */}
+
           <Tooltip
             content={({ active, payload }) => {
               if (active && payload && payload.length) {

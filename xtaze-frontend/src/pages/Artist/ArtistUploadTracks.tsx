@@ -135,7 +135,7 @@ const navigate = useNavigate()
 
   useEffect(() => {
     const fetchData = async () => {
-      if (!token || !artist?.id) {
+      if ( !artist?.id) {
         toast.error("Please log in to fetch genres and albums.");
         return;
       }

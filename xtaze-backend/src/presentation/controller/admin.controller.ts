@@ -20,14 +20,59 @@ export default class AdminController {
     try {
       const { email, password } = req.body;
       const response = await this._adminUseCase.login(email, password);
+
       if (!response.success) {
         throw new AppError(MESSAGES.LOGIN_FAILED, HttpStatus.BAD_REQUEST);
+      }
+
+      if(response.success&&response.token&&response.AdminrefreshToken){
+        res.cookie("AdminrefreshToken",response.AdminrefreshToken,{
+          httpOnly:true,
+          secure:true,
+          sameSite:"none",
+           maxAge: 7 * 24 * 60 * 60 * 1000,
+          path: "/",
+        })
       }
       res.status(HttpStatus.OK).json(response);
     } catch (error) {
       next(error);
     }
   }
+
+ async refreshToken(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const refreshToken = req.cookies.AdminrefreshToken;
+
+      if (!refreshToken) {
+        throw new AppError(MESSAGES.NO_REFRESH_TOKEN, HttpStatus.FORBIDDEN);
+      }
+
+      const response = await this._adminUseCase.refresh(refreshToken);
+
+      if (response.success && response.token && response.refreshToken) {
+        res.cookie("AdminrefreshToken", response.refreshToken, {
+          httpOnly: true,
+          secure: true,
+          sameSite: "none",
+          maxAge: 7 * 24 * 60 * 60 * 1000,
+          path: "/",     
+        });
+
+        // Return new access token in response
+        res.status(HttpStatus.OK).json({
+          success: true,
+          message: response.message,
+          token: response.token, // New access kitty
+        });
+      } else {
+        res.status(HttpStatus.UNAUTHORIZED).json(response);
+      }
+    } catch (error) {
+      next(error);
+    }
+  }
+
 
   async banners(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {

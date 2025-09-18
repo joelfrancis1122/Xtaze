@@ -26,7 +26,7 @@ const ArtistDashboard = () => {
     const fetchMetrics = async () => {
 
       if (!user?.id) {
-        console.error("Token or User ID not found. Please login.");
+        console.error("User ID not found. Please login.");
         setMostListenedSong("None");
         setTotalSongs("0");
         return;

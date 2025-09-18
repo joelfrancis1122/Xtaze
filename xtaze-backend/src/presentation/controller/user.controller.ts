@@ -151,7 +151,7 @@ export default class UserController {
       const refreshToken = req.cookies.refreshToken;
 
       if (!refreshToken) {
-        throw new AppError(MESSAGES.NO_REFRESH_TOKEN, HttpStatus.UNAUTHORIZED);
+        throw new AppError(MESSAGES.NO_REFRESH_TOKEN, HttpStatus.FORBIDDEN);
       }
 
       const response = await this._userUseCase.refresh(refreshToken);

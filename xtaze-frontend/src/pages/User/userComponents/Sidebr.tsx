@@ -55,7 +55,7 @@ export default function SidebarX({ children }: { children: React.ReactNode }) {
   };
 
   const links = [
-    { label: "Home", icon: HomeIcon, onClick: () => navigate("/") },
+    { label: "Home", icon: HomeIcon, onClick: () => navigate("/home") },
     ...(signupData?.premium !== "Free"
       ? [{ label: "Explore", icon: Music, onClick: () => navigate("/explore") }]
       : []),

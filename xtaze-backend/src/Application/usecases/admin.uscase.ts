@@ -56,18 +56,49 @@ export default class UserUseCase {
         { expiresIn: "7d" }
       );
 
+      const AdminrefreshToken = jwt.sign({userId:admin._id},process.env.JWT_REFRESH_SECRET!,{expiresIn:"7d"})
+      
       return {
         success: true,
         message: MESSAGES.LOGIN_SUCCESS,
         token,
+        AdminrefreshToken,
         admin: AdminMapper.toDTO(admin as IAdmin),
       };
 
     } catch (err: unknown) {
+      console.log(err,"acg")
       throw new AppError(MESSAGES.LOGIN_FAILED, 500);
     }
   }
+  async refresh(refreshToken: string) {
+    try {
+      const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET!) as { userId: string };
+      const user = await this._adminRepository.findById(decoded.userId);
+      if (!user) return { success: false, message: MESSAGES.USER_NOT_FOUND };
 
+      const newToken = jwt.sign(
+        { userId: user._id, email: user.email, role: "admin" },
+        process.env.JWT_SECRET!,
+        { expiresIn: "15m" }
+      );
+      const newRefreshToken = jwt.sign(
+        { userId: user._id },
+        process.env.JWT_REFRESH_SECRET!,
+        { expiresIn: "7d" }
+      );
+
+      return {
+        success: true,
+        message: MESSAGES.TOKEN_REFRESHED,
+        token: newToken,
+        refreshToken: newRefreshToken,
+      };
+    } catch (error) {
+      console.error("Refresh Token Error:", error);
+      return { success: false, message: MESSAGES.INVALID_REFRESH_TOKEN };
+    }
+  }
   async toggleBlockUnblockArtist(id: string) {
     const artist = await this._adminRepository.getArtistById(id);
     if (!artist) throw new Error(MESSAGES.ARTIST_NOTFOUND);

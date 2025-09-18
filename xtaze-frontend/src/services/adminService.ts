@@ -1,5 +1,5 @@
 import { useDispatch } from "react-redux";
-import { saveAdminData } from "../redux/adminSlice";
+import {  saveAdminData } from "../redux/adminSlice";
 import { adminApi } from "../api/axios";
 import { IBanner } from "../pages/User/types/IBanner";
 import { Artist } from "../pages/User/types/IArtist";
@@ -11,10 +11,81 @@ import { MusicMonetization } from "../pages/User/types/IMonetization";
 import { ListenerUser } from "../pages/User/types/IListenerUser";
 import { HTTP_METHODS } from "../constants/httpMethods";
 import { ApiResponse } from "../pages/User/types/IApiResponse";
+import { clearAdminAuthUtil } from "../utils/clearAdminAuth";
+
+const addRefreshInterceptor = (apiInstance: any) => {
+  apiInstance.interceptors.request.use(
+    (config: any) => {
+      const token = localStorage.getItem("adminToken");
+      if (token) {
+        config.headers = config.headers || {};
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+      return config;
+    },
+    (error: any) => Promise.reject(error)
+  );
+
+
+  apiInstance.interceptors.response.use(
+    (response: any) => {
+      const newToken =
+        response.data?.token ||
+        response.headers["authorization"]?.replace("Bearer ", "");
+      if (newToken) {
+        localStorage.setItem("adminToken", newToken);
+      }
+      return response;
+    },
+
+    async (error: any) => {
+      const originalRequest = error.config;
+
+      //if  refresh token expired logout cheyam
+
+      if (
+        error.response?.status === 403 ||
+        error.response?.status === 401 && originalRequest._retry
+
+      ) {
+        console.warn("force logout");
+        clearAdminAuthUtil();
+        return Promise.reject(error);
+      }
+
+      //Handle expired access token
+      if (error.response?.status === 401 && !originalRequest._retry) {
+        originalRequest._retry = true;
+        try {
+          const response = await adminApi.post("/refresh", {}, { withCredentials: true });
+          const newToken = response.data.token;
+          if (!newToken) {
+            console.error("No new token → logout");
+            clearAdminAuthUtil();
+            return Promise.reject(error);
+          }
+
+          localStorage.setItem("token", newToken);
+          originalRequest.headers["Authorization"] = `Bearer ${newToken}`;
+          return apiInstance(originalRequest);
+        } catch (refreshErr) {
+          console.error("Refresh token failed → logout");
+          clearAdminAuthUtil();
+          return Promise.reject(refreshErr);
+        }
+      }
+
+      return Promise.reject(error);
+    }
+  );
+};
+
+
+[adminApi].forEach(addRefreshInterceptor);
 
 const apiCall = async <T>(
   instance: any,
-  method: typeof HTTP_METHODS[keyof typeof HTTP_METHODS],
+  method: "get" | "post" | "put" | "patch" | "delete",
   url: string,
   data?: any
 ): Promise<T> => {
@@ -25,29 +96,20 @@ const apiCall = async <T>(
       withCredentials: true,
     };
 
-    let response;
-    switch (method) {
-      case "get":
-        response = await instance.get(url, config);
-        break;
-      case "post":
-      case "put":
-        response = await instance[method](url, data, config);
-        break;
-      case "delete":
-        response = await instance.delete(url, { ...config, data });
-        break;
-      default:
-        throw new Error(`Unsupported method: ${method}`);
-    }
+    // For "get" and "delete" data must go inside config
+    const response =
+      method === "get" || method === "delete"
+        ? await instance[method](url, { ...config, ...(data ? { data } : {}) })
+        : await instance[method](url, data, config);
 
-    if (!response.data) throw new Error(`Failed to ${method} ${url}`);
+    if (!response?.data) throw new Error(`Failed to ${method.toUpperCase()} ${url}`);
     return response.data as T;
   } catch (error: any) {
-    console.error(`Error in ${method} ${url}:`, error);
+    console.error(`Error in ${method.toUpperCase()} ${url}:`, error);
     throw error;
   }
 };
+
 
 
 export const loginAdmin = async (email: string, password: string, dispatch: ReturnType<typeof useDispatch>): Promise<void> => {
@@ -338,6 +400,7 @@ export const fetchSubscriptionHistory = async (): Promise<any> => {
       undefined,
 
     );
+    console.log(data.data,"lovee")
     return data.data;
   } catch (error: any) {
     console.error("Error fetching subscription history:", error);

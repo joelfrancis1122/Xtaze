@@ -39,7 +39,7 @@ export default class ArtistController {
     try {
       const ArefreshToken = req.cookies.ArefreshToken;
 
-      if (!ArefreshToken) throw new AppError(MESSAGES.REFRESH_TOKEN_REQUIRED, HttpStatus.UNAUTHORIZED);
+      if (!ArefreshToken) throw new AppError(MESSAGES.REFRESH_TOKEN_REQUIRED, HttpStatus.FORBIDDEN);
       const response = await this._artistnUseCase.refresh(ArefreshToken);
 
       if (response.success && response.token && response.ArefreshToken) {

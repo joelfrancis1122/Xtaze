@@ -190,7 +190,7 @@ export default class UserUseCase {
     if (!isPasswordValid) throw new Error(MESSAGES.LOGIN_FAILED);
 
     const token = jwt.sign(
-      { userId: user._id, email: user.email, role: "user" },
+      { userId: user._id, email: user.email, role: MESSAGES.USER },
       process.env.JWT_SECRET!,
       { expiresIn: "15m" }
     );
@@ -639,7 +639,7 @@ async getSubscriptionHistoryFromStripe() {
 
         let email = (session.customer as Stripe.Customer)?.email || "N/A";
 
-        // ✅ Only try DB lookup if userId is valid ObjectId
+  
         if ((!email || email === "N/A") && mongoose.Types.ObjectId.isValid(userId)) {
           const user = await this._userRepository.findById(userId);
           email = user?.email || "N/A";

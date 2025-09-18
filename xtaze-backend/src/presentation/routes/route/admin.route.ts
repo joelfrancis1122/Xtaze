@@ -14,6 +14,7 @@ const artistController = container.get<ArtistController>(ArtistController)
 const userController = container.get<UserController>(UserController);
 
 router.post("/login",(req:Request,res:Response,next:NextFunction)=>adminController.login(req,res,next))
+router.post("/refresh",(req:Request,res:Response,next:NextFunction)=>adminController.refreshToken(req,res,next))
 
 router.get("/genreList",authenticateAdmin,(req:Request,res:Response,next:NextFunction)=>genreController.listGenre(req,res,next))
 router.post("/genreCreate",authenticateAdmin,(req:Request,res:Response,next:NextFunction)=>genreController.createGenre(req,res,next))

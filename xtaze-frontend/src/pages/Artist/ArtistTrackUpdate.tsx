@@ -58,7 +58,7 @@ export function ArtistSongUpdatePage() {
   // Fetch songs on mount
   useEffect(() => {
     const fetchSongs = async () => {
-      if (!token || !user?.id) {
+      if (!user?.id) {
         toast.error("Please log in to fetch tracks.");
         return;
       }
@@ -215,7 +215,7 @@ export function ArtistSongUpdatePage() {
   const [albums, setAlbums] = useState<IAlbum[]>([]);
   useEffect(() => {
     const fetchData = async () => {
-      if (!token || !artist?.id) {
+      if (!artist?.id) {
         toast.error("Please log in to fetch genres and albums.");
         return;
       }

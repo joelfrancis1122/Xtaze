@@ -8,7 +8,7 @@ import { Artist } from "../pages/User/types/IArtist";
 import { UserSignupData } from "../pages/User/types/IUser";
 import { HTTP_METHODS } from "../constants/httpMethods";
 import { IAlbum } from "../pages/User/types/IAlbums";
-import { clearAuth } from "../utils/clearAuth";
+import { clearAuthUtil } from "../utils/clearAuth";
 
 const addRefreshInterceptor = (apiInstance: any) => {
   apiInstance.interceptors.request.use(
@@ -23,6 +23,7 @@ const addRefreshInterceptor = (apiInstance: any) => {
     (error: any) => Promise.reject(error)
   );
 
+
   apiInstance.interceptors.response.use(
     (response: any) => {
       const newToken =
@@ -33,20 +34,23 @@ const addRefreshInterceptor = (apiInstance: any) => {
       }
       return response;
     },
+  
     async (error: any) => {
       const originalRequest = error.config;
 
-      // 🔹 If user is banned or refresh already failed → logout, no retry
+      //if user is banned or refresh token expired logout cheyam
+
       if (
-        error.response?.status === 403 || // banned/forbidden
-        error.response?.status === 401 && originalRequest._retry // already retried once
+        error.response?.status === 403 || 
+        error.response?.status === 401 && originalRequest._retry 
+
       ) {
-        console.warn("User unauthorized or banned → force logout");
-        clearAuth(); // your logout helper
+        console.warn("force logout");
+        clearAuthUtil(); 
         return Promise.reject(error);
       }
 
-      // 🔹 Handle expired access token
+      //Handle expired access token
       if (error.response?.status === 401 && !originalRequest._retry) {
         originalRequest._retry = true;
         try {
@@ -54,7 +58,7 @@ const addRefreshInterceptor = (apiInstance: any) => {
           const newToken = response.data.token;
           if (!newToken) {
             console.error("No new token → logout");
-            clearAuth();
+            clearAuthUtil();
             return Promise.reject(error);
           }
 
@@ -63,7 +67,7 @@ const addRefreshInterceptor = (apiInstance: any) => {
           return apiInstance(originalRequest);
         } catch (refreshErr) {
           console.error("Refresh token failed → logout");
-          clearAuth();
+          clearAuthUtil();
           return Promise.reject(refreshErr);
         }
       }
@@ -74,10 +78,9 @@ const addRefreshInterceptor = (apiInstance: any) => {
 };
 
 
-// Apply interceptors
-[userApi, providerApi, deezerApi].forEach(addRefreshInterceptor); // Only user-related APIs
+[userApi, providerApi, deezerApi].forEach(addRefreshInterceptor); 
 
-// Refresh Token
+//Refresh Token
 export const refreshToken = async (): Promise<string | null> => {
   try {
     const response = await userApi.post("/refresh", {}, { withCredentials: true });
@@ -89,8 +92,6 @@ export const refreshToken = async (): Promise<string | null> => {
     return null;
   } catch (error) {
     console.error("Refresh error:", error);
-    // localStorage.removeItem("token");
-    document.cookie = "refreshToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
     return null;
   }
 };

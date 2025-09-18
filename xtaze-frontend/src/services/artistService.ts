@@ -6,6 +6,7 @@ import { VerificationStatus } from "../pages/User/types/IverficationStatus";
 import { ArtistS } from "../pages/User/types/IArtist";
 import { HTTP_METHODS } from "../constants/httpMethods";
 import { IAlbum } from "../pages/User/types/IAlbums";
+import { clearArtistAuthUtil } from "../utils/clearArtistAuth";
 
 const addRefreshInterceptor = (apiInstance: any) => {
   apiInstance.interceptors.request.use(
@@ -29,34 +30,41 @@ const addRefreshInterceptor = (apiInstance: any) => {
       }
       return response;
     },
-    async (error: any) => {
+async (error: any) => {
       const originalRequest = error.config;
+      //if user is banned or refresh token expired logout cheyam
+      if (
+        error.response?.status === 403 || 
+        error.response?.status === 401 && originalRequest._retry 
+
+      ) {
+        console.warn("force logout");
+        clearArtistAuthUtil(); 
+        return Promise.reject(error);
+      }
+
+      //Handle expired access token
       if (error.response?.status === 401 && !originalRequest._retry) {
         originalRequest._retry = true;
-        originalRequest._retryCount = (originalRequest._retryCount || 0) + 1;
-        if (originalRequest._retryCount > 3) {
-          console.error("Max retry limit reached, clearing auth");
-          localStorage.removeItem("artistToken");
-          throw new Error("Failed to refresh token after multiple attempts");
-        }
         try {
-          console.log("Calling artist refresh token due to 401");
           const response = await artistApi.post("/refresh", {}, { withCredentials: true });
           const newToken = response.data.token;
           if (!newToken) {
-            console.error("Artist refresh token failed, clearing auth");
-            localStorage.removeItem("artistToken");
-            throw new Error("Failed to refresh token");
+            console.error("No new token → logout");
+            clearArtistAuthUtil();
+            return Promise.reject(error);
           }
-          localStorage.setItem("artistToken", newToken);
+
+          localStorage.setItem("token", newToken);
           originalRequest.headers["Authorization"] = `Bearer ${newToken}`;
           return apiInstance(originalRequest);
-        } catch (refreshError) {
-          console.error("Refresh error:", refreshError);
-          localStorage.removeItem("artistToken");
-          throw refreshError;
+        } catch (refreshErr) {
+          console.error("Refresh token failed → logout");
+          clearArtistAuthUtil();
+          return Promise.reject(refreshErr);
         }
       }
+
       return Promise.reject(error);
     }
   );

@@ -1,9 +1,9 @@
 import { store } from "../store/store";
-import { clearSignupData } from "../redux/userSlice";
 import { clearAudioState } from "../redux/audioSlice";
 import { audio } from "./audio";
+import { clearAdminData } from "../redux/adminSlice";
 
-export const clearAuthUtil = () => {
+export const clearAdminAuthUtil = () => {
   try {
     console.log("Logging out user");
 
@@ -12,11 +12,12 @@ export const clearAuthUtil = () => {
       audio.src = "";
     }
 
-    store.dispatch(clearSignupData());
+    store.dispatch(clearAdminData());
     store.dispatch(clearAudioState());
 
     localStorage.removeItem("token");
 
+    document.cookie = "refreshToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
   } catch (err) {
     console.error("clearAuthUtil error:", err);
   }

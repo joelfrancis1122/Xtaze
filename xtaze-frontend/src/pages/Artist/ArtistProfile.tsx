@@ -50,11 +50,6 @@ export default function ArtistProfile() {
   const [limit] = useState(5);
   const token = localStorage.getItem("artistToken");
   useEffect(() => {
-    if (!token) {
-      console.error("No token found. Please login.");
-      navigate("/artist");
-      return;
-    }
 
     const fetchData = async () => {
       if (!user?.id) return;
@@ -80,7 +75,7 @@ export default function ArtistProfile() {
     };
 
     fetchData();
-  }, [navigate, user?.id, token, page, limit]);
+  }, [navigate, user?.id, page, limit]);
 
   useEffect(() => {
     setUsernameText(user?.username || "");

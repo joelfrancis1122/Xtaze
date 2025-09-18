@@ -82,7 +82,7 @@ export default function Home() {
 
   useEffect(() => {
     const getTracksAndLikedSongsAndPlaylists = async () => {
-    
+
 
       try {
         if (!user || !user.id) {
@@ -97,7 +97,7 @@ export default function Home() {
           user.id,
           user.premium || "Free"
         );
-        console.log(updatedUsers,"thats insane")
+        console
         setTracks(fetchedTracks);
 
        if (updatedUsers) {

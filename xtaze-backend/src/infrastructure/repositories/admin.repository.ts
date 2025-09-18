@@ -27,6 +27,15 @@ export default class AdminRepository extends BaseRepository<IUser> implements IA
     }
   }
 
+  async findById(userId: string): Promise<IUser | null> {
+    try {
+      return await UserModel.findById(userId);
+    } catch (error) {
+      console.error("Error finding user by ID:", error);
+      return null;
+    }
+  }
+
   async updateVerificationStatus(
     status: string,
     feedback: string | null,
