@@ -42,7 +42,6 @@ export default function Home() {
   const { handlePlay: baseHandlePlay, handleSkipBack, handleSkipForward, handleToggleShuffle, handleToggleRepeat } =
     useAudioPlayback(tracks);
 
-  // Audio context setup
   useEffect(() => {
     if (!audioContext) return;
     console.log(likedTracks)

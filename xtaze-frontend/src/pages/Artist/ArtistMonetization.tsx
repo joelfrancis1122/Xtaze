@@ -21,8 +21,6 @@ interface SongEarnings {
   totalEarnings: number;
   monthlyEarnings: number;
 }
-
-// ✅ Card Input Component (lazy loads stripe hooks)
 const CardInput = ({ artistId, onCardSaved }: { artistId: string; onCardSaved: () => void }) => {
   const stripe = useStripe();
   const elements = useElements();

@@ -31,7 +31,7 @@ export class GenreRepository extends BaseRepository<IGenre> implements IGenreRep
   }
 
   async getGenreById(id: string): Promise<IGenre | null> {
-    return await GenreModel.findById(id).lean();
+    return await this.findById(id);
   }
 
   async updateGenreStatus(id: string, status: boolean): Promise<IGenre | null> {

@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { RootState } from "../../store/store";
@@ -12,6 +12,7 @@ import { Button } from "../../components/ui/button";
 import { Card } from "../../components/ui/card";
 import { getVerificationStatus, requestVerification, updateArtistBanner, updateArtistBio, updateArtistUsername, uploadProfileImage } from "../../services/artistService";
 import { fetchArtistTracks } from "../../services/artistService";
+import { checkUsername } from "../../services/userService";
 
 interface Track {
   _id: string;
@@ -49,6 +50,48 @@ export default function ArtistProfile() {
   const [totalPages, setTotalPages] = useState(1);
   const [limit] = useState(5);
   const token = localStorage.getItem("artistToken");
+  const [usernameStatus, setUsernameStatus] = useState<"idle" | "checking" | "unique" | "already used">("idle");
+
+
+
+  function useDebounce<T extends (...args: any[]) => void>(callback: T, delay: number) {
+    const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+    return useCallback((...args: Parameters<T>) => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      timeoutRef.current = setTimeout(() => callback(...args), delay);
+    }, [callback, delay]);
+  }
+ const performUsernameCheck = useCallback(
+  async (username: string) => {
+    if (!username.trim() || username === user?.username || username.length < 3) {
+      setUsernameStatus("idle");
+      return;
+    }
+
+    setUsernameStatus("checking");
+
+    try {
+      const res = await checkUsername(username);
+      console.log(res,"anana")
+      setUsernameStatus(res ? "unique" : "already used");
+    } catch (error) {
+      console.error("Error checking username:", error);
+      setUsernameStatus("already used"); 
+    }
+  },
+  [user?.username]
+);
+
+  const checkUsernameAvailability = useDebounce(performUsernameCheck, 500);
+  useEffect(() => {
+    if (isEditingUsername) {
+      checkUsernameAvailability(usernameText);
+    } else {
+      setUsernameStatus("idle");
+    }
+  }, [usernameText, isEditingUsername, checkUsernameAvailability]);
+
+
   useEffect(() => {
 
     const fetchData = async () => {
@@ -243,9 +286,9 @@ export default function ArtistProfile() {
     formData.append("idProof", selectedFile);
 
     try {
-      console.log(user,"sssssssss",formData)
+      console.log(user, "sssssssss", formData)
       await requestVerification(user.id, formData);
-    
+
       setVerification({ status: "pending" });
       toast.success("Verification request submitted!");
       setSelectedFile(null);
@@ -358,47 +401,41 @@ export default function ArtistProfile() {
                     <input
                       value={usernameText}
                       onChange={(e) => setUsernameText(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") handleUsernameSave();
-                        if (e.key === "Escape") {
-                          setIsEditingUsername(false);
-                          setUsernameText(user?.username || "");
-                        }
-                      }}
-                      className="text-xl font-semibold text-white bg-black border border-white rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-white w-fit"
                       placeholder="Enter your username"
                       maxLength={50}
-                      autoFocus
+                      className="text-xl font-semibold text-white bg-black border border-white rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-white"
                     />
+                    <div className="flex gap-2 items-center">
+                      {usernameStatus === "checking" && <span className="text-gray-400">Checking...</span>}
+                      {usernameStatus === "unique" && <CheckCircle size={18} className="text-green-500" />}
+                      {usernameStatus === "already used" && <span className="text-red-500">already used</span>}
+                    </div>
                     <div className="flex gap-2">
+                      <Button
+                        className="bg-black text-white border border-white"
+                        onClick={handleUsernameSave}
+                        disabled={usernameStatus !== "unique"}
+                      >
+                        Save
+                      </Button>
                       <Button
                         className="bg-black text-white border border-white"
                         onClick={() => {
                           setIsEditingUsername(false);
                           setUsernameText(user?.username || "");
+                          setUsernameStatus("idle");
                         }}
                       >
                         Cancel
                       </Button>
-                      <Button
-                        className="bg-black text-white border border-white"
-                        onClick={handleUsernameSave}
-                      >
-                        Save
-                      </Button>
                     </div>
                   </div>
                 ) : (
-                  <div
-                    className="flex items-center gap-2 hover:underline cursor-pointer"
-                    onClick={() => !isEditingBio && setIsEditingUsername(true)}
-                  >
-                    <h2 className="text-xl font-semibold text-white">{user?.username}</h2>
-                    {verification.status === "approved" && (
-                      <Verified size={30} className="text-blue-600" />
-                    )}
-                  </div>
+                  <h2 className="text-xl font-semibold text-white cursor-pointer" onClick={() => setIsEditingUsername(true)}>
+                    {user?.username} {verification.status === "approved" && <Verified className="inline text-blue-500" />}
+                  </h2>
                 )}
+
                 <p className="text-white">{user?.email}</p>
                 {/* <p className="text-white">{user?.gender || "Gender not specified"}</p> */}
               </div>
@@ -446,7 +483,7 @@ export default function ArtistProfile() {
               <h2 className="text-lg font-semibold text-white mb-4">Releases</h2>
               <div className="space-y-4">
                 {tracks.length > 0 ? (
-                  tracks.map((track,index) => (
+                  tracks.map((track, index) => (
                     <div key={index} className="bg-black p-4 border border-white">
                       <p className="text-white font-semibold">{track.title}</p>
                       <p className="text-white text-sm">Listeners: {track.listeners.length.toLocaleString()}</p>

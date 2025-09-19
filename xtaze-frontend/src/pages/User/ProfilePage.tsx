@@ -51,14 +51,14 @@ export default function Home() {
 
   const token = localStorage.getItem("token");
 
-  // Stable callback for the API check (prevents recreation)
+
   const performUsernameCheck = useCallback(async (username: string, currentUserUsername: string | undefined) => {
     if (!username.trim() || username.trim() === currentUserUsername) {
       setUsernameStatus("idle");
       return;
     }
     if (username.trim().length < 3) {
-      setUsernameStatus("idle"); // Early exit for invalid length
+      setUsernameStatus("idle"); 
       return;
     }
 
@@ -71,12 +71,10 @@ export default function Home() {
       setUsernameStatus("taken");
       toast.error(error.message || "Error checking username availability", { position: "top-right" });
     }
-  }, []); // No dependencies; uses params instead
+  }, []); 
 
-  // Now debounce the stable callback (won't recreate unnecessarily)
   const checkUsernameAvailability = useDebounce(performUsernameCheck, 500);
 
-  // Effect to trigger debounced check only when editing and username changes meaningfully
   useEffect(() => {
     if (isEditingUsername) {
       checkUsernameAvailability(newUsername, user?.username);

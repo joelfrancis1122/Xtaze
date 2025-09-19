@@ -400,7 +400,6 @@ export const fetchSubscriptionHistory = async (): Promise<any> => {
       undefined,
 
     );
-    console.log(data.data,"lovee")
     return data.data;
   } catch (error: any) {
     console.error("Error fetching subscription history:", error);
