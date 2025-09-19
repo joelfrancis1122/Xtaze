@@ -1,16 +1,17 @@
 import { useSelector } from "react-redux";
-import { Navigate, Outlet } from "react-router-dom";
+import { Navigate, Outlet, useNavigate } from "react-router-dom";
 import { RootState } from "../../store/store";
 import { useClearAuth } from "../../utils/useClearAuth";
 
 const PrivateRoute = () => {
   const clearAuth = useClearAuth();
+  const navigate = useNavigate()
   const role = useSelector((state: RootState) => state.user.signupData?.role);
   const user = useSelector((state: RootState) => state.user.signupData);
 
   if (role !== "user" || !user?.isActive) {
     clearAuth(); 
-    <Navigate to="/" replace />;
+    navigate("/")
     return null; 
   }
 

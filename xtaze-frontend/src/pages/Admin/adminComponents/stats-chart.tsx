@@ -38,36 +38,49 @@ export function StatsChart() {
 
   // Process chart data when history updates
   useEffect(() => {
-    if (history.length === 0) return;
+  if (history.length === 0) return;
 
-    const filteredHistory = history.filter(
-      (sub) => sub.planName && sub.email 
+  // ✅ Filter only valid subscriptions
+  const filteredHistory = history.filter(
+    (sub) => sub.planName && sub.email
+  );
+
+  // ✅ Normalize all dates to "start of day" (midnight)
+  const dates = filteredHistory.map((sub) => {
+    const d = new Date(sub.purchaseDate);
+    d.setHours(0, 0, 0, 0); 
+    return d;
+  });
+
+  if (dates.length === 0) return;
+
+  const minDate = new Date(Math.min(...dates.map((d) => d.getTime())));
+  const maxDate = new Date(Math.max(...dates.map((d) => d.getTime())));
+
+  // ✅ Build continuous date range from min → max
+  const dateRange: Date[] = [];
+  for (let d = new Date(minDate); d <= maxDate; d.setDate(d.getDate() + 1)) {
+    dateRange.push(new Date(d));
+  }
+
+  console.log("Max Date:", maxDate);
+
+  // ✅ Build chart data
+  const data: ChartData[] = dateRange.map((date) => {
+    const dateStr = date.toISOString().split("T")[0]; // YYYY-MM-DD
+    const subscriptionsOnDate = filteredHistory.filter(
+      (sub) => sub.purchaseDate.split("T")[0] === dateStr
     );
 
-    const dates = filteredHistory.map((sub) => new Date(sub.purchaseDate));
-    const minDate = new Date(Math.min(...dates.map((d) => d.getTime())));
-    const maxDate = new Date(Math.max(...dates.map((d) => d.getTime())));
+    return {
+      date: date.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+      subscriptions: subscriptionsOnDate.length,
+      revenue: subscriptionsOnDate.reduce((sum, sub) => sum + sub.price, 0),
+    };
+  });
 
-    const dateRange: Date[] = [];
-    for (let d = new Date(minDate); d <= maxDate; d.setDate(d.getDate() + 1)) {
-      dateRange.push(new Date(d));
-    }
-
-    const data: ChartData[] = dateRange.map((date) => {
-      const dateStr = date.toISOString().split("T")[0];
-      const subscriptionsOnDate = filteredHistory.filter(
-        (sub) => sub.purchaseDate.split("T")[0] === dateStr
-      );
-
-      return {
-        date: date.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
-        subscriptions: subscriptionsOnDate.length,
-        revenue: subscriptionsOnDate.reduce((sum, sub) => sum + sub.price, 0),
-      };
-    });
-    setChartData(data);
-    console.log(chartData,"sss")
-  }, [history]);
+  setChartData(data);
+}, [history]);
 
   return (
     <div className="h-[300px] w-full">

@@ -465,6 +465,7 @@ export default class UserController {
   async getSubscriptionHistory(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const history = await this._userUseCase.getSubscriptionHistoryFromStripe();
+      console.log(history,"insaneee")
       res.status(HttpStatus.OK).json({ data: history });
     } catch (error: unknown) {
       next(error);
