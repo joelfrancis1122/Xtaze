@@ -1,22 +1,21 @@
-import { IAlbum } from "../../domain/entities/IAlbum";
 import IUser from "../../domain/entities/IUser";
+import BannerModel from "../db/models/BannerModel";
+import PlaylistModel from "../db/models/PlaylistModel";
+import UserModel from "../db/models/UserModel";
+import { IAlbum } from "../../domain/entities/IAlbum";
 import { IBanner } from "../../domain/entities/IBanner";
 import { ICoupon } from "../../domain/entities/ICoupon";
 import { IPlaylist } from "../../domain/entities/IPlaylist";
 import { IUserRepository } from "../../domain/repositories/IUserRepository";
 import { AlbumModel } from "../db/models/AlbumModel";
-import BannerModel from "../db/models/BannerModel";
 import { CouponModel } from "../db/models/CouponModel";
-import PlaylistModel from "../db/models/PlaylistModel";
 import { ITrack, Track } from "../db/models/TrackModel";
-import UserModel from "../db/models/UserModel";
 import { BaseRepository } from "./BaseRepository";
 
 export default class UserRepository extends BaseRepository<IUser> implements IUserRepository {
   constructor() {
     super(UserModel);
   }
-
 
   async add(userData: IUser): Promise<IUser> {
     try {
@@ -55,13 +54,11 @@ export default class UserRepository extends BaseRepository<IUser> implements IUs
       trackDoc.playHistory[monthIndex].plays += 1;
     }
 
-    // ✅ Add listener without 
     await Track.updateOne(
       { _id: trackId },
       { $addToSet: { listeners: userId } }
     );
 
-    // Save updated document
     await trackDoc.save();
     const plainTrack = { ...trackDoc.toObject(), _id: trackDoc._id.toString() };
     return plainTrack
@@ -163,33 +160,33 @@ export default class UserRepository extends BaseRepository<IUser> implements IUs
 
     return { data, total };
   }
- async listActiveArtists(
-  page: number,
-  limit: number
-): Promise<{ data: IUser[]; total: number }> {
-  try {
-    const skip = (page - 1) * limit;
-    const query = { role: { $nin: ["admin", "user"] } };
+  async listActiveArtists(
+    page: number,
+    limit: number
+  ): Promise<{ data: IUser[]; total: number }> {
+    try {
+      const skip = (page - 1) * limit;
+      const query = { role: { $nin: ["admin", "user"] } };
 
-    const [artists, total] = await Promise.all([
-      UserModel.find(query)
-        .skip(skip)
-        .limit(limit)
-        .lean(),
-      UserModel.countDocuments(query),
-    ]);
+      const [artists, total] = await Promise.all([
+        UserModel.find(query)
+          .skip(skip)
+          .limit(limit)
+          .lean(),
+        UserModel.countDocuments(query),
+      ]);
 
-    const data: IUser[] = artists.map((artist: any) => ({
-      ...artist,
-      _id: artist._id.toString(),
-    }));
+      const data: IUser[] = artists.map((artist: any) => ({
+        ...artist,
+        _id: artist._id.toString(),
+      }));
 
-    return { data, total };
-  } catch (err: any) {
-    console.error("Error listing active artists:", err.message || err);
-    return { data: [], total: 0 }; 
+      return { data, total };
+    } catch (err: any) {
+      console.error("Error listing active artists:", err.message || err);
+      return { data: [], total: 0 };
+    }
   }
-}
 
   async uploadBanner(userId: string, BannerPicUrl: string): Promise<IUser | null> {
     try {
@@ -236,7 +233,7 @@ export default class UserRepository extends BaseRepository<IUser> implements IUs
 
   async getliked(songIds: string, userId: string) {
     try {
-      const tracks = await Track.find({ _id: { $in: songIds } }).populate("albumId","name")
+      const tracks = await Track.find({ _id: { $in: songIds } }).populate("albumId", "name")
       return tracks as any
     } catch (error) {
       console.error("Error in getliked:", error);
@@ -282,12 +279,11 @@ export default class UserRepository extends BaseRepository<IUser> implements IUs
         return { tracks: [], total: 0 };
       }
 
-      // Fetch all track details based on the track IDs
       const tracks = await Track.find({ _id: { $in: playlist.tracks } })
         .skip(skip)
         .limit(limitNum);
       const total = playlist.tracks.length;
-      return { tracks, total }; // Return an array of track details
+      return { tracks, total }; 
     } catch (error) {
       console.error("Error finding tracks for playlist:", error);
       return null;
@@ -326,8 +322,8 @@ export default class UserRepository extends BaseRepository<IUser> implements IUs
 
       return await PlaylistModel.findByIdAndUpdate(
         id,
-        { title: playlistName }, // Update the title field
-        { new: true } // Return the updated document
+        { title: playlistName },
+        { new: true } 
       );
 
     } catch (error) {
@@ -355,13 +351,11 @@ export default class UserRepository extends BaseRepository<IUser> implements IUs
         title: newPlaylist.title,
         description: newPlaylist.description,
         imageUrl: newPlaylist.imageUrl,
-        createdBy: userId, // Assign userId instead of newPlaylist.createdBy
+        createdBy: userId, 
         tracks: newPlaylist.tracks || [],
       });
 
       const savedPlaylist = await playlist.save();
-
-      // Fetch the fully saved playlist (ensuring all fields, including _id, are included)
       const completePlaylist = await PlaylistModel.findById(savedPlaylist._id).lean();
 
       return completePlaylist as any;
@@ -441,13 +435,13 @@ export default class UserRepository extends BaseRepository<IUser> implements IUs
       if (user.likedSongs?.includes(trackId)) {
         updatedUser = await UserModel.findByIdAndUpdate(
           userId,
-          { $pull: { likedSongs: trackId } }, 
+          { $pull: { likedSongs: trackId } },
           { new: true }
         );
       } else {
         updatedUser = await UserModel.findByIdAndUpdate(
           userId,
-          { $addToSet: { likedSongs: trackId } }, 
+          { $addToSet: { likedSongs: trackId } },
           { new: true }
         );
       }
@@ -479,14 +473,12 @@ export default class UserRepository extends BaseRepository<IUser> implements IUs
   ): Promise<{ data: ITrack[]; total: number }> {
     try {
       const skip = (page - 1) * limit;
-
-      // Step 1: Find artist
       const artist = await UserModel.findById(userId);
       if (!artist) {
         throw new Error("Artist not found");
       }
 
-          const query = { artists: { $regex: `^${artist.username}$`, $options: "i" } };
+      const query = { artists: { $regex: `^${artist.username}$`, $options: "i" } };
 
       const [data, total] = await Promise.all([
         Track.find(query)
@@ -545,7 +537,7 @@ export default class UserRepository extends BaseRepository<IUser> implements IUs
   async getAllTracks(): Promise<ITrack[] | null> {
     try {
 
-      const track = await Track.find().populate("albumId","name")
+      const track = await Track.find().populate("albumId", "name")
       return track
     } catch (error: unknown) {
       throw new Error((error as Error).message || "Failed to check coupon usage");
@@ -556,7 +548,7 @@ export default class UserRepository extends BaseRepository<IUser> implements IUs
       const updatedUser = await UserModel.findByIdAndUpdate(
         id,
         { $set: { role: "artist" } },
-        { new: true } // Return the updated document
+        { new: true }
       );
 
       return updatedUser as unknown as IUser
@@ -583,9 +575,9 @@ export default class UserRepository extends BaseRepository<IUser> implements IUs
 
   async getArtistByName(username: string): Promise<IUser | null> {
     try {
-     const admin = await UserModel.findOne({
-  username: { $regex: new RegExp(`^${username}$`, "i") },
-});
+      const admin = await UserModel.findOne({
+        username: { $regex: new RegExp(`^${username}$`, "i") },
+      });
 
       return admin as unknown as IUser
     } catch (error) {

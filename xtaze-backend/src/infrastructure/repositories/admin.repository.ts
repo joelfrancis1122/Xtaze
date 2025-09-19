@@ -114,9 +114,9 @@ export default class AdminRepository extends BaseRepository<IUser> implements IA
   async StripefindByname(artistName: string): Promise<string | null> {
     const artist = await UserModel.findOne({ username: artistName });
 
-    if (!artist) return null; // Ensure artist exists before accessing properties
+    if (!artist) return null;
 
-    return artist.stripePaymentMethodId || null; // Return stripePaymentId or null if undefined
+    return artist.stripePaymentMethodId || null;
   }
 
 
