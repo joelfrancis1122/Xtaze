@@ -91,7 +91,7 @@ export default function SidebarX({ children }: { children: React.ReactNode }) {
                   key={idx}
                   onClick={link.onClick}
                   className={cn(
-                    "flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors",
+                    "flex items-center gap-3 px-1 py-1 rounded-lg hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors",
                     "text-neutral-700 dark:text-neutral-200"
                   )}
                 >

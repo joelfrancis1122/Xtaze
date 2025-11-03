@@ -322,7 +322,7 @@ const handleDotClick = (i: number) => {
   const otherSongs = filteredTracks.slice(5);
 
   return (
-    <div className="flex h-screen flex-col bg-black text-white">
+<div className="flex h-screen flex-col text-white bg-[url('https://wallpapers.com/images/hd/pewdiepie-light-red-waves-yutpgt2az0sp3cyk.jpg')] bg-cover bg-center bg-black/90 bg-blend-overlay">
       <div className="flex flex-1 relative">
         <Sidebarx >
           
