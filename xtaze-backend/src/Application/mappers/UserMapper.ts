@@ -1,4 +1,5 @@
 import IUser from "../../domain/entities/IUser";
+
 import { UserDTO } from "../dtos/UserDTO";
 
 export class UserMapper {
