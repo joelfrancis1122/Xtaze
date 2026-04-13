@@ -1,0 +1,111 @@
+import { useEffect, useState } from "react";
+
+import { Card } from "../../components/ui/card";
+import { MetricsCard } from "../Admin/adminComponents/metrics-card";
+import { DemographicsChart } from "./artistComponents/demographics-chart";
+import { MonthlyListenersChart } from "./artistComponents/monthly-listeners-chart";
+import { TopSongsTable } from "./artistComponents/top-songs-table";
+import ArtistSidebar from "./artistComponents/artist-aside";
+import { useSelector } from "react-redux";
+import { RootState } from "../../store/store";
+import { fetchArtistTracks } from "../../services/artistService";
+
+interface PlayHistory {
+  month: string;
+  plays: number;
+}
+
+
+
+const ArtistDashboard = () => {
+  const [mostListenedSong, setMostListenedSong] = useState("None");
+  const [totalSongs, setTotalSongs] = useState("0");
+  const user = useSelector((state: RootState) => state.artist.signupData);
+
+  useEffect(() => {
+    const fetchMetrics = async () => {
+
+      if (!user?.id) {
+        console.error("User ID not found. Please login.");
+        setMostListenedSong("None");
+        setTotalSongs("0");
+        return;
+      }
+
+      try {
+        const tracks = await fetchArtistTracks(user.id);
+        if (!tracks || tracks.data.length === 0) {
+          setMostListenedSong("None");
+          setTotalSongs("0");
+          return;
+        }
+
+        // Calculate Total Number of Songs
+        const totalSongsCount = tracks.data.length;
+        setTotalSongs(totalSongsCount.toLocaleString());
+
+        // Calculate Most Listened Song (based on total plays)
+        let maxPlays = 0;
+        let mostListened = "None";
+        tracks.data.forEach((track) => {
+          const trackPlays = track.playHistory.reduce(
+            (sum: number, entry: PlayHistory) => sum + entry.plays,
+            0
+          );
+          if (trackPlays > maxPlays) {
+            maxPlays = trackPlays;
+            mostListened = track.title;
+          }
+        });
+        setMostListenedSong(mostListened);
+      } catch (error) {
+        console.error("Error fetching metrics:", error);
+        setMostListenedSong("None");
+        setTotalSongs("0");
+      }
+    };
+
+    fetchMetrics();
+  }, [user?.id]);
+
+
+  return (
+    <div className="min-h-screen bg-black text-white">
+      <div className="grid lg:grid-cols-[280px_1fr]">
+        {/* Sidebar Component */}
+        <ArtistSidebar />
+        
+        <main className="flex-1 pl-0.4 pr-6 pt-5 pb-6">
+          <div className="mb-6 flex items-center justify-between">
+            <div className="space-y-1">
+              <h1 className="text-2xl font-bold">Artist Dashboard</h1>
+              <div className="text-sm text-muted-foreground">Last 30 days overview</div>
+            </div>
+           
+          </div>
+          <div className="grid gap-4 md:grid-cols-3">
+            <MetricsCard title="Most Listened Song" value={mostListenedSong} />
+            <MetricsCard title="Total Number of Songs" value={totalSongs} />
+          </div>
+          <Card className="mt-6 p-6">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-lg font-semibold">Monthly Listeners</h2>
+            </div>
+            <MonthlyListenersChart />
+          </Card>
+          <div className="mt-6 grid gap-6 md:grid-cols-2">
+            <Card className="p-6 ">
+              <DemographicsChart />
+            </Card>
+            <Card className="p-6">
+              <h1 className="mb-4 text-2xl font-semibold">Top Songs</h1>
+              <TopSongsTable />
+            </Card>
+          </div>
+        </main>
+      </div>
+    </div>
+  );
+};
+
+export default ArtistDashboard;

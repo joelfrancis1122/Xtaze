@@ -1,0 +1,625 @@
+import { useDispatch } from "react-redux";
+import {  saveAdminData } from "../redux/adminSlice";
+import { adminApi } from "../api/axios";
+import { IBanner } from "../pages/User/types/IBanner";
+import { Artist } from "../pages/User/types/IArtist";
+import { IGenre } from "../pages/User/types/IGenre";
+import { Track } from "../pages/User/types/ITrack";
+import { Coupon } from "../pages/User/types/ICoupon";
+import { SubscriptionPlan } from "../pages/User/types/IStripe";
+import { MusicMonetization } from "../pages/User/types/IMonetization";
+import { ListenerUser } from "../pages/User/types/IListenerUser";
+import { HTTP_METHODS } from "../constants/httpMethods";
+import { ApiResponse } from "../pages/User/types/IApiResponse";
+import { clearAdminAuthUtil } from "../utils/clearAdminAuth";
+
+const addRefreshInterceptor = (apiInstance: any) => {
+  apiInstance.interceptors.request.use(
+    (config: any) => {
+      const token = localStorage.getItem("adminToken");
+      if (token) {
+        config.headers = config.headers || {};
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+      return config;
+    },
+    (error: any) => Promise.reject(error)
+  );
+
+
+  apiInstance.interceptors.response.use(
+    (response: any) => {
+      const newToken =
+        response.data?.token ||
+        response.headers["authorization"]?.replace("Bearer ", "");
+      if (newToken) {
+        localStorage.setItem("adminToken", newToken);
+      }
+      return response;
+    },
+
+    async (error: any) => {
+      const originalRequest = error.config;
+
+      //if  refresh token expired logout cheyam
+
+      if (
+        error.response?.status === 403 ||
+        error.response?.status === 401 && originalRequest._retry
+
+      ) {
+        console.warn("force logout");
+        clearAdminAuthUtil();
+        return Promise.reject(error);
+      }
+
+      //Handle expired access token
+      if (error.response?.status === 401 && !originalRequest._retry) {
+        originalRequest._retry = true;
+        try {
+          const response = await adminApi.post("/refresh", {}, { withCredentials: true });
+          const newToken = response.data.token;
+          if (!newToken) {
+            console.error("No new token → logout");
+            clearAdminAuthUtil();
+            return Promise.reject(error);
+          }
+
+          localStorage.setItem("token", newToken);
+          originalRequest.headers["Authorization"] = `Bearer ${newToken}`;
+          return apiInstance(originalRequest);
+        } catch (refreshErr) {
+          console.error("Refresh token failed → logout");
+          clearAdminAuthUtil();
+          return Promise.reject(refreshErr);
+        }
+      }
+
+      return Promise.reject(error);
+    }
+  );
+};
+
+
+[adminApi].forEach(addRefreshInterceptor);
+
+const apiCall = async <T>(
+  instance: any,
+  method: "get" | "post" | "put" | "patch" | "delete",
+  url: string,
+  data?: any
+): Promise<T> => {
+  try {
+    const token = localStorage.getItem("adminToken");
+    const config: any = {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      withCredentials: true,
+    };
+
+    // For "get" and "delete" data must go inside config
+    const response =
+      method === "get" || method === "delete"
+        ? await instance[method](url, { ...config, ...(data ? { data } : {}) })
+        : await instance[method](url, data, config);
+
+    if (!response?.data) throw new Error(`Failed to ${method.toUpperCase()} ${url}`);
+    return response.data as T;
+  } catch (error: any) {
+    console.error(`Error in ${method.toUpperCase()} ${url}:`, error);
+    throw error;
+  }
+};
+
+
+
+export const loginAdmin = async (email: string, password: string, dispatch: ReturnType<typeof useDispatch>): Promise<void> => {
+  const data = await apiCall<{ success: boolean; token: string; admin: any; message?: string }>(
+    adminApi,
+    HTTP_METHODS.POST,
+    "/login",
+    { email, password }
+  );
+  if (!data.success) throw new Error(data.message || "Admin login failed");
+  localStorage.setItem("adminToken", data.token);
+  dispatch(saveAdminData(data.admin));
+};
+export type PaginatedResponse<T> = {
+  data: T[];
+  pagination: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+};
+export type BackendArtistsResponse = {
+  data: {
+    id: string;
+    username: string;
+    role: string;
+    profilePic?: string;
+    isActive: boolean;
+  }[];
+  pagination: {
+    total: number;
+    page: number;
+    limit: number;
+    totalpages: number;
+  };
+};
+
+export const fetchArtists = async (
+  page = 1,
+  limit = 10
+): Promise<PaginatedResponse<Artist>> => {
+  try {
+    const res = await apiCall<ApiResponse<BackendArtistsResponse>>(
+      adminApi,
+      HTTP_METHODS.GET,
+      `/listUsers?page=${page}&limit=${limit}`,
+      undefined
+    );
+
+    if (!res.success) throw new Error(res.message || "Failed to fetch artists");
+    const mappedArtists: Artist[] = res.data.data.map((artist) => ({
+      id: artist.id,
+      name: artist.username,
+      role: artist.role,
+      image: artist.profilePic!,
+      isActive: !!artist.isActive,
+    }));
+
+    return {
+      data: mappedArtists,
+      pagination: {
+        total: res.data.pagination.total,
+        page: res.data.pagination.page,
+        limit: res.data.pagination.limit,
+        totalPages: res.data.pagination.totalpages,
+      },
+    };
+  } catch (error) {
+    console.error("Fetch artists error:", error);
+    throw error;
+  }
+};
+
+export const listActiveArtists = async (
+  page = 1,
+  limit = 10
+): Promise<PaginatedResponse<Artist>> => {
+  try {
+    const res = await apiCall<ApiResponse<BackendArtistsResponse>>(
+      adminApi,
+      HTTP_METHODS.GET,
+      `/listActiveArtists?page=${page}&limit=${limit}`,
+      undefined
+    );
+
+    if (!res.success) throw new Error(res.message || "Failed to fetch artists");
+    const mappedArtists: Artist[] = res.data.data.map((artist) => ({
+      id: artist.id,
+      name: artist.username,
+      role: artist.role,
+      image: artist.profilePic!,
+      isActive: !!artist.isActive,
+    }));
+
+    return {
+      data: mappedArtists,
+      pagination: {
+        total: res.data.pagination.total,
+        page: res.data.pagination.page,
+        limit: res.data.pagination.limit,
+        totalPages: res.data.pagination.totalpages,
+      },
+    };
+  } catch (error) {
+    console.error("Fetch artists error:", error);
+    throw error;
+  }
+};
+
+export const fetchArtistTracks = async (userId: string,): Promise<Track[]> => {
+  try {
+    const data = await apiCall<{ success: boolean; tracks?: Track[]; message?: string }>(
+      adminApi,
+      HTTP_METHODS.GET,
+      `/getAllTracksArtist?userId=${userId}`,
+      undefined,
+    );
+    if (!data.success || !Array.isArray(data.tracks)) {
+      throw new Error(data.message || "Failed to fetch artist tracks");
+    }
+    return data.tracks;
+  } catch (error) {
+    console.error("Error fetching artist tracks:", error);
+    throw error;
+  }
+};
+
+export const toggleBlockArtist = async (id: string, currentStatus: boolean,): Promise<boolean> => {
+  const newStatus = !currentStatus;
+  const data = await apiCall<{ success: boolean; message?: string }>(
+    adminApi,
+    HTTP_METHODS.PATCH,
+    `/toggleBlock/${id}`,
+    { status: newStatus },
+
+  );
+  if (!data.success) throw new Error(data.message || "Failed to toggle artist status");
+  return newStatus;
+};
+
+
+
+export const fetchGenres = async (
+  page = 1,
+  limit = 10
+): Promise<PaginatedResponse<IGenre>> => {
+  const response = await apiCall<ApiResponse<PaginatedResponse<IGenre>>>(
+    adminApi,
+    HTTP_METHODS.GET,
+    `/genreList?page=${page}&limit=${limit}`,
+    undefined
+  );
+
+  return response.data;
+};
+
+
+export const fetchAllTrack = async (): Promise<Track[]> => {
+  const data = await apiCall<{ success: boolean; data: Track[] }>(adminApi, HTTP_METHODS.GET, "/fetchAllTrack", undefined);
+  return data.data;
+};
+
+
+
+export const addGenre = async (name: string,): Promise<IGenre> => {
+  const data = await apiCall<{ data: IGenre; message: string }>(
+    adminApi,
+    HTTP_METHODS.POST,
+    "/genreCreate",
+    { name },
+  );
+  return data.data;
+};
+
+export const toggleBlockGenre = async (id: string): Promise<void> => {
+  await apiCall<{ success: boolean }>(adminApi, HTTP_METHODS.PUT, `/genreToggleBlockUnblock/${id}`, {});
+};
+
+
+export const updateGenre = async (id: string, name: string): Promise<{ success: boolean; message: string }> => {
+  const data = await apiCall<{ data: { success: boolean; message: string } }>(
+    adminApi,
+    HTTP_METHODS.PUT,
+    `/genreUpdate/${id}`,
+    { name },
+  );
+  return data.data;
+};
+
+export const fetchBanners = async (): Promise<IBanner[]> => {
+  const data = await apiCall<{ data: IBanner[] }>(adminApi, HTTP_METHODS.GET, "/banners/all", undefined);
+  return data.data;
+};
+
+export const createBanner = async (
+  banner: {
+    id?: string;
+    title: string;
+    description: string;
+    file?: File;
+    action: string;
+    isActive: boolean;
+    // createdBy: string;
+  }
+): Promise<IBanner> => {
+  const formData = new FormData();
+
+  if (banner.id) formData.append("id", banner.id);
+  formData.append("title", banner.title);
+  formData.append("description", banner.description);
+  if (banner.file) formData.append("image", banner.file);
+  formData.append("action", banner.action);
+  formData.append("isActive", String(banner.isActive));
+  // formData.append("createdBy", banner.createdBy);
+
+  const data = await apiCall<{ data: IBanner }>(
+    adminApi,
+    HTTP_METHODS.POST,
+    "/banners",
+    formData
+  );
+
+  return data.data;
+};
+
+
+export const updateBanner = async (
+  id: string,
+  banner: { id?: string, title: string; description: string; file?: File; action: string; isActive: boolean },
+
+): Promise<IBanner> => {
+  const formData = new FormData();
+  if (banner.id) formData.append("id", banner.id);
+  formData.append("title", banner.title);
+  formData.append("description", banner.description);
+  if (banner.file) formData.append("image", banner.file);
+  formData.append("action", banner.action);
+  formData.append("isActive", String(banner.isActive));
+
+  const data = await apiCall<{ data: IBanner }>(adminApi, HTTP_METHODS.PUT, `/banners/${id}`, formData);
+  return data.data;
+};
+
+export const deleteBanner = async (id: string): Promise<void> => {
+  await apiCall<{ success: boolean }>(adminApi, HTTP_METHODS.DELETE, `/banners/${id}`, undefined);
+
+};
+
+export const fetchUserDetails = async (userIds: string[]): Promise<ListenerUser[]> => {
+  try {
+    const data = await apiCall<{ success: boolean; data: ListenerUser[]; message?: string }>(
+      adminApi,
+      HTTP_METHODS.POST,
+      "/getUsersByIds",
+      { userIds },
+
+    );
+
+    return data.data;
+  } catch (error) {
+    console.error("Error fetching user details:", error);
+    throw error;
+  }
+};
+export const fetchCoupons = async (): Promise<any> => {
+  try {
+    const data = await apiCall<{ success: boolean; data: string[]; message?: string }>(
+      adminApi,
+      HTTP_METHODS.GET,
+      "/coupons",
+    );
+
+    return data.data;
+  } catch (error) {
+    console.error("Error fetching user details:", error);
+    throw error;
+  }
+};
+
+
+export const fetchSubscriptionHistory = async (): Promise<any> => {
+  try {
+    const data = await apiCall<{ data: any }>(
+      adminApi,
+      HTTP_METHODS.GET,
+      "/stripe/subscription-history",
+      undefined,
+
+    );
+    console.log(data.data,"lovee")
+    return data.data;
+  } catch (error: any) {
+    console.error("Error fetching subscription history:", error);
+    throw new Error(error.message || "Failed to fetch subscription history");
+  }
+};
+
+
+
+export const createCoupon = async (couponData: { code: string; discountAmount: number; expires: string; maxUses: number }): Promise<Coupon> => {
+  try {
+    const data = await apiCall<{ result: Coupon }>(
+      adminApi,
+      HTTP_METHODS.POST,
+      "/coupons",
+      { ...couponData, uses: 0 },
+    );
+    return data.result;
+  } catch (error: any) {
+    console.error("Error creating coupon:", error);
+    throw new Error(error.response?.data?.message || "Failed to create coupon");
+  }
+};
+
+export const updateCoupon = async (id: string, couponData: { code: string; discountAmount: number; expires: string; maxUses: number }): Promise<Coupon> => {
+  try {
+    const data = await apiCall<{ data: Coupon }>(
+      adminApi,
+      HTTP_METHODS.PUT,
+      `/coupons?id=${id}`,
+      couponData,
+
+    );
+    return data.data;
+  } catch (error: any) {
+    console.error("Error updating coupon:", error);
+    throw new Error(error.response?.data?.message || "Failed to update coupon");
+  }
+};
+
+export const deleteCoupon = async (id: string): Promise<void> => {
+  try {
+    await apiCall<{ success: boolean }>(
+      adminApi,
+      HTTP_METHODS.DELETE,
+      `/coupons?id=${id}`,
+      undefined,
+
+    );
+  } catch (error: any) {
+    console.error("Error deleting coupon:", error);
+    throw new Error(error.response?.data?.message || "Failed to delete coupon");
+  }
+};
+export const fetchMonetizationData = async (
+  page: number,
+  limit: number
+): Promise<{ data: MusicMonetization[]; pagination: { currentPage: number; totalPages: number; totalItems: number } }> => {
+  try {
+    const response = await apiCall<{
+      data: any[]; // raw response
+      pagination: { currentPage: number; totalPages: number; totalItems: number };
+    }>(
+      adminApi,
+      HTTP_METHODS.GET,
+      `/music/monetization?page=${page}&limit=${limit}`
+    );
+
+    // Map raw API response to MusicMonetization
+    const normalizedData: MusicMonetization[] = response.data.map((item) => ({
+      trackId: item.trackId,
+      trackName: item.trackName,
+      artistName: item.artistName,
+      totalPlays: item.totalPlays,
+      monthlyPlays: item.monthlyPlays ?? 0, // safe fallback
+      totalRevenue: item.totalRevenue ?? 0,
+      monthlyRevenue: item.monthlyRevenue ?? 0,
+      lastUpdated: item.lastUpdated ?? new Date().toISOString(),
+      paymentStatus: item.paymentStatus ?? false,
+    }));
+
+    return {
+      data: normalizedData,
+      pagination: response.pagination,
+    };
+  } catch (error: any) {
+    console.error("Error fetching monetization data:", error);
+    throw new Error(error.response?.data?.message || "Failed to fetch monetization data");
+  }
+};
+
+
+export const initiateArtistPayout = async (artistName: string,): Promise<string> => {
+  try {
+    const data = await apiCall<{ data: { sessionUrl: string } }>(
+      adminApi,
+      HTTP_METHODS.POST,
+      "/artistPayout",
+      { artistName },
+
+    );
+    return data.data.sessionUrl;
+  } catch (error: any) {
+    console.error("Error initiating payout:", error);
+    throw new Error(error.response?.data?.message || "Failed to initiate payout");
+  }
+};
+
+
+
+export const fetchSubscriptionPlans = async (): Promise<SubscriptionPlan[]> => {
+  try {
+    const data = await apiCall<{ data: SubscriptionPlan[] }>(
+      adminApi,
+      HTTP_METHODS.GET,
+      "/stripe/plans",
+      undefined,
+    );
+    return data.data || [];
+  } catch (error: any) {
+    console.error("Error fetching subscription plans:", error);
+    throw new Error(error.response?.data?.message || "Failed to fetch subscription plans");
+  }
+};
+
+export const createSubscriptionPlan = async (
+  planData: { name: string; description?: string; price: number; interval: "month" | "year" },
+): Promise<SubscriptionPlan> => {
+  try {
+    const unitAmount = Math.round(parseFloat(planData.price.toString()) * 100); // Convert dollars to cents
+    const data = await apiCall<{ data: SubscriptionPlan }>(
+      adminApi,
+      HTTP_METHODS.POST,
+      "/stripe/createProduct",
+      {
+        name: planData.name,
+        description: planData.description,
+        price: unitAmount,
+        interval: planData.interval,
+      },
+    );
+    return data.data;
+  } catch (error: any) {
+    console.error("Error creating subscription plan:", error);
+    throw new Error(error.response?.data?.message || "Failed to create subscription plan");
+  }
+};
+
+export const updateSubscriptionPlan = async (
+  productId: string,
+  planData: { name: string; description?: string; price: number; interval: "month" | "year" },
+): Promise<SubscriptionPlan> => {
+  try {
+    const unitAmount = Math.round(parseFloat(planData.price.toString()) * 100); // Convert dollars to cents
+    const data = await apiCall<{ data: SubscriptionPlan }>(
+      adminApi,
+      HTTP_METHODS.PUT,
+      `/stripe/products/?productId=${productId}`,
+      {
+        name: planData.name,
+        description: planData.description,
+        price: unitAmount,
+        interval: planData.interval,
+      },
+    );
+    return data.data;
+  } catch (error: any) {
+    console.error("Error updating subscription plan:", error);
+    throw new Error(error.response?.data?.message || "Failed to update subscription plan");
+  }
+};
+
+export const archiveSubscriptionPlan = async (productId: string,): Promise<void> => {
+  try {
+    await apiCall<{ status: number }>(
+      adminApi,
+      HTTP_METHODS.POST,
+      `/stripe/products/delete?productId=${productId}`,
+      undefined,
+    );
+  } catch (error: any) {
+    console.error("Error archiving subscription plan:", error);
+    throw new Error(error.response?.data?.message || "Failed to archive subscription plan");
+  }
+};
+export const fetchAllArtistsVerification = async (page = 1, limit = 10): Promise<any> => {
+  try {
+    const response = await apiCall<{ data: any }>(
+      adminApi,
+      HTTP_METHODS.GET,
+      `/fetchAllArtistsVerification?page=${page}&limit=${limit}`,
+      undefined,
+    );
+    return response.data
+  } catch (error: any) {
+    console.error("Error archiving verification plan:", error);
+    throw new Error(error.response?.data?.message || "Failed to archive subscription plan");
+  }
+};
+
+
+
+export const updateVerificationStatus = async (
+  status: "approved" | "rejected" | "pending" | "unsubmitted",
+  feedback: string | null,
+  id: string,
+): Promise<any> => {
+  try {
+    const response = await apiCall(
+      adminApi,
+      HTTP_METHODS.PUT,
+      `/updateVerificationStatus?id=${id}`,
+      { status, feedback },
+
+    );
+    console.log(response)
+    return response;
+  } catch (error) {
+    console.error("Error in updateVerificationStatus service:", error);
+    throw error;
+  }
+};

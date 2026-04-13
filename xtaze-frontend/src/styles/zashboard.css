@@ -1,0 +1,52 @@
+/* Base styles */
+:root {
+    --background: hsl(0, 0%, 3.9%);
+    --foreground: hsl(0, 0%, 98%);
+    --card: hsl(0, 0%, 3.9%);
+    --card-foreground: hsl(0, 0%, 98%);
+    --popover: hsl(0, 0%, 3.9%);
+    --popover-foreground: hsl(0, 0%, 98%);
+    --primary: hsl(20.5, 90.2%, 48.2%);
+    --primary-foreground: hsl(60, 9.1%, 97.8%);
+    --secondary: hsl(12, 6.5%, 15.1%);
+    --secondary-foreground: hsl(60, 9.1%, 97.8%);
+    --muted: hsl(12, 6.5%, 15.1%);
+    --muted-foreground: hsl(24, 5.4%, 63.9%);
+    --accent: hsl(12, 6.5%, 15.1%);
+    --accent-foreground: hsl(60, 9.1%, 97.8%);
+    --destructive: hsl(0, 62.8%, 30.6%);
+    --destructive-foreground: hsl(60, 9.1%, 97.8%);
+    --border: hsl(12, 6.5%, 15.1%);
+    --input: hsl(12, 6.5%, 15.1%);
+    --ring: hsl(20.5, 90.2%, 48.2%);
+  }
+  
+  /* Apply base styles */
+  * {
+    border-color: var(--border);
+  }
+  
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+  }
+  
+  /* Custom scrollbar styles */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: var(--background);
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: var(--muted);
+    border-radius: 4px;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--muted-foreground);
+  }
+  /* Ensure text is white and background is dark */
