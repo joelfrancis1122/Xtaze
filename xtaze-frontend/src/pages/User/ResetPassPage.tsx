@@ -25,13 +25,16 @@ const ResetPassword: React.FC = () => {
 
   // Extract token from URL
   useEffect(() => {
+    console.log("EHuuu")
     const queryParams = new URLSearchParams(location.search);
     const tokenFromUrl = queryParams.get("token");
-
+    
     if (tokenFromUrl) {
       setToken(tokenFromUrl);
       console.log(token);
+      console.log("oh");
     } else {
+      console.log("on");
       toast.error("Invalid or missing token", { position: "top-right" });
       navigate("/");
     }
@@ -52,7 +55,7 @@ const ResetPassword: React.FC = () => {
     }
 
     try {
-      await resetPassword(formData.newPassword);
+      await resetPassword(formData.newPassword,token);
       toast.success("Password reset successfully!", { position: "top-right" });
       navigate("/");
     } catch (error) {

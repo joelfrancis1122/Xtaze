@@ -249,8 +249,8 @@ export const forgotPassword = async (email: string): Promise<void> => {
 };
 
 // Reset Password
-export const resetPassword = async (formData: string): Promise<void> => {
-  const data = await apiCall<{ success: boolean; message?: string }>(userApi, HTTP_METHODS.POST, "/resetPassword", { formData });
+export const resetPassword = async (formData: string,token:String): Promise<void> => {
+  const data = await apiCall<{ success: boolean; message?: string }>(userApi, HTTP_METHODS.POST, "/resetPassword", { formData,token });
   if (!data.success) throw new Error(data.message || "Failed to reset password");
 };
 
