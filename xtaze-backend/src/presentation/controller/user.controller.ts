@@ -477,7 +477,7 @@ export default class UserController {
       const signature = req.headers["stripe-signature"] as string;
       // Pass raw body and signature to use case
       await this._userUseCase.confirmPayment(req.body, signature);
-
+console.log("Asas")
       res.status(HttpStatus.OK).json({ received: true });
     } catch (error: unknown) {
       res.status(HttpStatus.BAD_REQUEST).send(`Webhook Error: ${(error as Error).message}`);

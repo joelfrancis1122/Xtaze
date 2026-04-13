@@ -125,8 +125,9 @@ const Login = () => {
           {/* Forgot Password Link */}
           <div className="mt-2 text-right">
             <button
+              type="button" // This prevents the Enter key from triggering this button
               onClick={() => navigate("/forgot-password")}
-              className="text-blue-500 hover:underline text-sm"
+              className="text-blue-500 hover:underline text-sm focus:outline-none"
             >
               Forgot Password?
             </button>

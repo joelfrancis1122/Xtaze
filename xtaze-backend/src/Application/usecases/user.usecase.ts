@@ -505,6 +505,7 @@ export default class UserUseCase {
     try {
       const user = await this._userRepository.findById(userId);
       if (!user) throw new Error(MESSAGES.USER_NOT_FOUND);
+      console.log("heii")
 
       const price = await this._stripe.prices.retrieve(priceId);
       const product = await this._stripe.products.retrieve(price.product as string);
