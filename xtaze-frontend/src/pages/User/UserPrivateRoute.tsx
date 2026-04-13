@@ -1,5 +1,5 @@
 import { useSelector } from "react-redux";
-import {Outlet, useNavigate } from "react-router-dom";
+import {Outlet,} from "react-router-dom";
 import { RootState } from "../../store/store";
 import { useClearAuth } from "../../utils/useClearAuth";
 import { Navigate } from "react-router-dom";
